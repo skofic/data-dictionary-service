@@ -31,7 +31,7 @@ const NewTopo = Object.assign({}, Topo, {
   })
 });
 
-
+/*
 router.get(function (req, res) {
   res.send(topos.all());
 }, 'list')
@@ -40,7 +40,7 @@ router.get(function (req, res) {
 .description(dd`
   Retrieves a list of all topos.
 `);
-
+*/
 
 router.post(function (req, res) {
   const topo = req.body;

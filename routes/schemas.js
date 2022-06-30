@@ -31,7 +31,7 @@ const NewSchema = Object.assign({}, Schema, {
   })
 });
 
-
+/*
 router.get(function (req, res) {
   res.send(schemas.all());
 }, 'list')
@@ -40,7 +40,7 @@ router.get(function (req, res) {
 .description(dd`
   Retrieves a list of all schemas.
 `);
-
+*/
 
 router.post(function (req, res) {
   const schema = req.body;

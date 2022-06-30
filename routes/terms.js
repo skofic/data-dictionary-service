@@ -23,7 +23,7 @@ module.exports = router;
 
 router.tag('term');
 
-
+/*
 router.get(function (req, res) {
   res.send(terms.all());
 }, 'list')
@@ -32,7 +32,7 @@ router.get(function (req, res) {
 .description(dd`
   Retrieves a list of all terms.
 `);
-
+*/
 
 router.post(function (req, res) {
   const term = req.body;
