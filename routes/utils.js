@@ -55,10 +55,10 @@ router.get(
         "The ping response"
     )
     .summary(
-        "Check if on-line"
+        "Check if database is on-line."
     )
     .description(dd`
-  Returns a ping response
+  Returns a "pong" response.
 `);
 
 
@@ -69,7 +69,7 @@ router.get(
  *
  * @path		/echo-get
  * @verb		get
- * @response	{Object}	The request contents.
+ * @response	{Object}	The GET request contents.
  */
 router.get(
     '/echo/get',
@@ -90,13 +90,13 @@ router.get(
 
 
 /**
- * Test POST request contents
+ * Mirror POST request contents
  *
  * The service will return the request contents.
  *
  * @path		/echo-post
- * @verb		get
- * @response	{Object}	The request contents.
+ * @verb		post
+ * @response	{Object}	The POST request contents.
  */
 router.post(
     '/echo/post',

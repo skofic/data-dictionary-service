@@ -25,6 +25,35 @@ module.exports = Object.freeze({
     },
 
     //
+    // Collections.
+    //
+    //	- name:		Collection name.
+    //  - type:     Collection type: D=document, E=Edge.
+    //	- index:	Collection indexes.
+    //
+    collection : {
+        term	: {
+            name : 'terms',
+            type : 'D',
+            index: []
+        },
+        schema	: {
+            name : 'schemas',
+            type : 'E',
+            index: []
+        },
+        topo	: {
+            name : 'topos',
+            type : 'E',
+            index: []
+        },
+        log	: {
+            name : 'logs',
+            type : 'D',
+            index: []
+        },
+
+    //
     // Errors.
     //
     // Errors have a key, code and multilingual message.
