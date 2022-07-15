@@ -18,9 +18,18 @@ const httpError = require('http-errors');				// HTTP errors.
 const status = require('statuses');						// Don't know what it is.
 const errors = require('@arangodb').errors;				// ArangoDB errors.
 const createAuth = require('@arangodb/foxx/auth');		// Authentication framework.
-const createRouter = require('@arangodb/foxx/router');	// Router class.
+const createRouter = require('@arangodb/foxx/router');  // Router class.
 
+//
+//* Import models.
+//
+const Term = require('../models/term');                 // Term model.
+
+//
+// Application.
+//
 const reader = require('../utils/JsonLReader')
+const dictionary = require('../utils/dictionary')
 
 
 //
@@ -33,6 +42,32 @@ module.exports = router;
 // Set router tags.
 //
 router.tag( 'test' );
+
+
+/**
+ * Current test
+ *
+ * The service will return the result for the current test.
+ *
+ * @path		/test/current/:test
+ * @verb		get
+ * @response	{JSON}.
+ */
+router.get(
+    '/test/current/:test',
+    (request, response) => {
+        const root = request.pathParams.test;
+        const result = dictionary.getEnumerations(root);
+        response.send(result);
+    },
+)
+    .response([Term], 'A list of terms.')
+    .summary(
+        "Check if database is on-line."
+    )
+    .description(dd`
+  Returns a "pong" response.
+`);
 
 
 /**

@@ -32,26 +32,23 @@ module.exports = Object.freeze({
     //	- index:	Collection indexes.
     //
     collection : {
-        term	: {
-            name : 'terms',
-            type : 'D',
-            index: []
+        term: {
+            name: 'terms',
+            type: 'D'
         },
-        schema	: {
-            name : 'schemas',
-            type : 'E',
-            index: []
+        schema: {
+            name: 'schemas',
+            type: 'E'
         },
-        topo	: {
-            name : 'topos',
-            type : 'E',
-            index: []
+        topo: {
+            name: 'topos',
+            type: 'E'
         },
-        log	: {
-            name : 'logs',
-            type : 'D',
-            index: []
-        },
+        log: {
+            name: 'logs',
+            type: 'D'
+        }
+    },
 
     //
     // Errors.
@@ -59,7 +56,7 @@ module.exports = Object.freeze({
     // Errors have a key, code and multilingual message.
     //
     error : {
-        kNOT_FOUND: {
+        kMSG_NOT_FOUND: {
             code: 1,
             message: {
                 iso_639_3_eng: "Not found.",
