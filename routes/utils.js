@@ -57,7 +57,7 @@ router.get(
     '/test/current/:test',
     (request, response) => {
         const root = request.pathParams.test;
-        const result = dictionary.getEnumerations(root);
+        const result = dictionary.getAllEnumerations(root);
         response.send(result);
     },
 )

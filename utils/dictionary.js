@@ -28,7 +28,7 @@ const K = require( './constants' );					    // Application constants.
  * @param theRoot {String}: The global identifier of the enumeration root.
  * @return {Array}: The list of terms that comprise the controlled vocabulary.
  */
-function getEnumerations(theRoot)
+function getAllEnumerations(theRoot)
 {
     //
     // Query schema.
@@ -37,17 +37,17 @@ function getEnumerations(theRoot)
     const term = db._collection(module.context.collectionName(K.collection.term.name))
     const result =
         db._query( aql`
-					FOR item IN ${edge}
-						FILTER ${theRoot} IN item._path
-						FILTER item._predicate == "_predicate_enum-of"
-						RETURN item._from
-					`).toArray();
+            FOR edge IN ${edge}
+                FILTER ${theRoot} IN edge._path
+                FILTER edge._predicate == "_predicate_enum-of"
+                RETURN DOCUMENT(${term}, edge._from)
+        `).toArray();
 
     return term.document(result);
     // return result;
 
-} // getEnumerations()
+} // getAllEnumerations()
 
 module.exports = {
-    getEnumerations
+    getAllEnumerations
 }
