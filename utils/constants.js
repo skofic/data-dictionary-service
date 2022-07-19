@@ -56,6 +56,15 @@ module.exports = Object.freeze({
     // Errors have a key, code and multilingual message.
     //
     error : {
+        kMSG_ERROR: {
+            code: -1,
+            message: {
+                iso_639_3_eng: "Untracked error",
+                iso_639_3_ita: "Errore indeterminato",
+                iso_639_3_fra: "Erreur inconnu",
+                iso_639_3_esp: "Error no conoscido"
+            }
+        },
         kMSG_OK: {
             code: 0,
             message: {

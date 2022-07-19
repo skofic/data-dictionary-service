@@ -60,6 +60,7 @@ class ValidationReport
         this.descriptor = theDescriptor
         this.value = theValue
         this.status = K.error[theStatus]
+        this.error = {}
     }
 
 } // ValidationReport
@@ -94,8 +95,9 @@ function validateDescriptor(name, value)
         if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
             report.status = K.error.kMSG_NOT_FOUND
         } else {
-            throw error;                                                        // ==>
+            report.status = K.error.kMSG_ERROR
         }
+        report.error = error
     }
 
     return report                                                               // ==>
