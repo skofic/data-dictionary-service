@@ -30,6 +30,7 @@ const Term = require('../models/term');                 // Term model.
 //
 const reader = require('../utils/JsonLReader')
 const dictionary = require('../utils/dictionary')
+const validation = require('../utils/validation')
 
 
 //
@@ -57,7 +58,7 @@ router.get(
     '/test/current/:test',
     (request, response) => {
         const root = request.pathParams.test;
-        const result = dictionary.getAllEnumerations(root);
+        const result = validation.validateDescriptor(root)
         response.send(result);
     },
 )

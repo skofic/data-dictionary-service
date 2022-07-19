@@ -56,6 +56,15 @@ module.exports = Object.freeze({
     // Errors have a key, code and multilingual message.
     //
     error : {
+        kMSG_OK: {
+            code: 0,
+            message: {
+                iso_639_3_eng: "OK",
+                iso_639_3_ita: "Corretto",
+                iso_639_3_fra: "Correcte",
+                iso_639_3_esp: "Correcto"
+            }
+        },
         kMSG_NOT_FOUND: {
             code: 1,
             message: {
@@ -63,6 +72,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Non trovato.",
                 iso_639_3_fra: "Pas trouvé.",
                 iso_639_3_esp: "No encontré."
+            }
+        },
+        kMSG_NOT_DESCRIPTOR: {
+            code: 2,
+            message: {
+                iso_639_3_eng: "Not a descriptor.",
+                iso_639_3_ita: "Non è un descrittore.",
+                iso_639_3_fra: "Pas un descripteur.",
+                iso_639_3_esp: "No es un descriptór."
             }
         }
     }
