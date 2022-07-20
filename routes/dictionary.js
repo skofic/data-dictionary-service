@@ -51,7 +51,7 @@ router.tag('dictionary');
  * provide the enumeration type root and the service will return the array of terms.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('dict/enum/all/:root', getAllEnumerations, 'all')
+router.get('enum/all/:root', getAllEnumerations, 'all')
     .pathParam('root', enumSchema)
     .response([Term], 'Flat list of all enumeration terms.')
     .summary('Return flattened list of all enumerations')
