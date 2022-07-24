@@ -59,6 +59,7 @@ class ValidationReport
         //
         this.descriptor = theDescriptor
         this.value = theValue
+        this.found = false
         this.status = K.error[theStatus]
         this.error = {}
     }
@@ -91,18 +92,121 @@ function validateDescriptor(name, value)
     //
     try {
         descriptor = terms.document(name)
+        report.found = (
+            (Object.keys(descriptor).length !== 0) &&
+            (descriptor.constructor === Object)
+        )
     } catch (error) {
         if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
             report.status = K.error.kMSG_NOT_FOUND
         } else {
             report.status = K.error.kMSG_ERROR
         }
+
         report.error = error
+
+        return report                                                               // ==>
+    }
+
+    //
+    // Validate descriptor.
+    //
+    if(descriptor.hasOwnProperty(K.term.dataBlock)) {
+        validateDataBlock(descriptor[K.term.dataBlock], report)
+    } else {
+        report.status = K.error.kMSG_NO_DATA_BLOCK
+        return report                                                           // ==>
     }
 
     return report                                                               // ==>
 
 } // validateDescriptor()
+
+/**
+ * Validate data block
+ * This function will validate the provided data block
+ * and return the status in the provided report.
+ * The function will check if any of scalar, array, set or dictionary blocks
+ * are set in the data block and run the corresponding function.
+ * @param theBlock {Object}: The data block.
+ * @param theReport {ValidationReport}: The status report
+ */
+function validateDataBlock(theBlock, theReport)
+{
+    //
+    // Parse data block.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataBlockScalar)) {
+        validateScalar(theBlock[K.term.dataBlockScalar], theReport)
+    } else if(theBlock.hasOwnProperty(K.term.dataBlockArray)) {
+        validateArray(theBlock[K.term.dataBlockArray], theReport)
+    } else if(theBlock.hasOwnProperty(K.term.dataBlockSet)) {
+        validateSet(theBlock[K.term.dataBlockSet], theReport)
+    } else if(theBlock.hasOwnProperty(K.term.dataBlockDict)) {
+        validateDictionary(theBlock[K.term.dataBlockDict], theReport)
+    } else if((Object.keys(theBlock).length !== 0) && (theBlock.constructor === Object)) {
+        return
+    } else {
+        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+    }
+
+} // validateDataBlock()
+
+/******************************************************************************/
+/* DATA BLOCK FUNCTIONS                                                       /*
+/******************************************************************************/
+
+/**
+ * Validate scalar value
+ * The function expects the descriptor's scalar definition and the value,
+ * it should ensure the value is valid and return the converted value if successful.
+ * @param theBlock {Object}: The scalar data block.
+ * @param theReport {ValidationReport}: The status report.
+ */
+function validateScalar(theBlock, theReport)
+{
+    theReport.value = "IS SCALAR"
+
+} // validateScalar()
+
+/**
+ * Validate array value
+ * The function expects the descriptor's array definition and the value,
+ * it should ensure the value is valid and return the converted value if successful.
+ * @param theBlock {Object}: The array data block.
+ * @param theReport {ValidationReport}: The status report.
+ */
+function validateArray(theBlock, theReport)
+{
+    theReport.value = "IS ARRAY"
+
+} // validateArray()
+
+/**
+ * Validate set value
+ * The function expects the descriptor's set definition and the value,
+ * it should ensure the value is valid and return the converted value if successful.
+ * @param theBlock {Object}: The set data block.
+ * @param theReport {ValidationReport}: The status report.
+ */
+function validateSet(theBlock, theReport)
+{
+    theReport.value = "IS SET"
+
+} // validateSet()
+
+/**
+ * Validate dictionary value
+ * The function expects the descriptor's dictionary definition and the value,
+ * it should ensure the value is valid and return the converted value if successful.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ */
+function validateDictionary(theBlock, theReport)
+{
+    theReport.value = "IS DICTIONARY"
+
+} // validateDictionary()
 
 
 module.exports = {
