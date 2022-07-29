@@ -60,7 +60,20 @@ module.exports = Object.freeze({
         dataBlockScalar: "_scalar",
         dataBlockArray: "_array",
         dataBlockSet: "_set",
-        dataBlockDict: "_dict"
+        dataBlockDict: "_dict",
+
+        dataType: "_type",
+
+        dataTypeBool: "_type_boolean",
+        dataTypeInteger: "_type_integer",
+        dataTypeNumber: "_type_number",
+        dataTypeString: "_type_string",
+        dataTypeEnum: "_type_enum",
+        dataTypeRecord: "_type_record",
+        dataTypeTimestamp: "_type_timestamp",
+        dataTypeGeoJson: "_type_geo-json",
+        dataTypeObject: "_type_object"
+
     },
 
     //
@@ -90,7 +103,7 @@ module.exports = Object.freeze({
         kMSG_BAD_DATA_BLOCK: {
             code: -3,
             message: {
-                iso_639_3_eng: "Data block missing required property",
+                iso_639_3_eng: "Data block is missing a required property",
                 iso_639_3_ita: "Il blocco dati non ha una proprietà richiesta",
                 iso_639_3_fra: "Le bloc données n'a pas une proprieté requise",
                 iso_639_3_esp: "El bloque datos falta una propriedad"
@@ -121,6 +134,24 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Non è un descrittore.",
                 iso_639_3_fra: "Pas un descripteur.",
                 iso_639_3_esp: "No es un descriptór."
+            }
+        },
+        kMSG_NO_SET: {
+            code: 3,
+            message: {
+                iso_639_3_eng: "Expecting an array value.",
+                iso_639_3_ita: "Il valore deve essere una lista.",
+                iso_639_3_fra: "La valeur doit être une liste.",
+                iso_639_3_esp: "Esperando un valor de lista."
+            }
+        },
+        kMSG_DUP_SET: {
+            code: 4,
+            message: {
+                iso_639_3_eng: "The set contains duplicate values.",
+                iso_639_3_ita: "Il set contiene valori duplicati.",
+                iso_639_3_fra: "L'ensemble contient des valeurs en double.",
+                iso_639_3_esp: "El conjunto contiene valores duplicados."
             }
         }
     }

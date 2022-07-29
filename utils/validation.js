@@ -83,9 +83,10 @@ function validateDescriptor(name, value)
     let descriptor = {}
 
     //
-    // Instantiate report.
+    // Instantiate report and set value.
     //
     let report = new ValidationReport(name)
+    report.value = value
 
     //
     // Load descriptor.
@@ -105,7 +106,7 @@ function validateDescriptor(name, value)
 
         report.error = error
 
-        return report                                                               // ==>
+        return report                                                           // ==>
     }
 
     //
@@ -165,7 +166,17 @@ function validateDataBlock(theBlock, theReport)
  */
 function validateScalar(theBlock, theReport)
 {
-    theReport.value = "IS SCALAR"
+    //
+    // Check if value is scalar.
+    //
+
+
+    //
+    // Parse data type.
+    //
+    switch (theBlock[K.term.dataType]) {
+
+    }
 
 } // validateScalar()
 
@@ -191,7 +202,35 @@ function validateArray(theBlock, theReport)
  */
 function validateSet(theBlock, theReport)
 {
-    theReport.value = "IS SET"
+    //
+    // Check if value is a set.
+    //
+    if(isArray(theReport.value)) {
+
+        //
+        // Check for duplicates.
+        //
+        if(new Set(theReport.value).size === theReport.value.length) {
+
+            //
+            // Handle data type,
+            // if missing we assume any data type,
+            // thus no validation necessary.
+            //
+            if(theBlock.hasOwnProperty(K.term.dataType)) {
+                for(let value in theReport.value) {
+                    if(!validateValue(theBlock, theReport)) {
+                        return                                                  // ==>
+                    }
+                }
+            }
+
+        } else {
+            theReport.status = K.error.kMSG_DUP_SET
+        }
+    } else {
+        theReport.status = K.error.kMSG_NO_SET
+    }
 
 } // validateSet()
 
@@ -207,6 +246,91 @@ function validateDictionary(theBlock, theReport)
     theReport.value = "IS DICTIONARY"
 
 } // validateDictionary()
+
+/******************************************************************************/
+/* UTILITY FUNCTIONS                                                          /*
+/******************************************************************************/
+
+/**
+ * Validate data value
+ * The function will validate the value provided in the report structure according
+ * to the data type defined in the provided descriptor data block.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
+function validateValue(theBlock, theReport)
+{
+    //
+    // Parse by type.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataType)) {
+        switch(theBlock[K.term.dataType]) {
+            case K.term.dataTypeBool:
+                break
+            case K.term.dataTypeEnum:
+                break
+            case K.term.dataTypeGeoJson:
+                break
+            case K.term.dataTypeInteger:
+                break
+            case K.term.dataTypeNumber:
+                break
+            case K.term.dataTypeObject:
+                break
+            case K.term.dataTypeRecord:
+                break
+            case K.term.dataTypeString:
+                break
+            case K.term.dataTypeTimestamp:
+                break
+        }
+
+        if(theReport.status.code !== 0) {
+            return false                                                        // ==>
+        }
+    }
+
+    return true                                                                 // ==>
+
+} // validateValue()
+
+/**
+ * Check if null.
+ * The function will return true if the provided value is null.
+ * @param item {Any}: The value to test.
+ * @returns {boolean}: True for null, false for other types.
+ */
+function isNull(item)
+{
+    return item !== null                                                        // ==>
+
+} // isNull()
+
+/**
+ * Check if object.
+ * The function will return true if the provided value is an object.
+ * @param item {Any}: The value to test.
+ * @returns {boolean}: True for objects, false for other types.
+ */
+function isObject(item)
+{
+    return item !== null && item.constructor.name === "Object"                  // ==>
+
+} // isObject()
+
+/**
+ * Check if array.
+ * The function will return true if the provided value is an array.
+ * @param item {Any}: The value to test.
+ * @returns {boolean}: True for arrays, false for other types.
+ */
+function isArray(item)
+{
+    return Array.isArray(item)                                                  // ==>
+
+} // isNull()
 
 
 module.exports = {
