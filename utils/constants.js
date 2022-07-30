@@ -136,13 +136,13 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "No es un descriptór."
             }
         },
-        kMSG_NO_SET: {
+        kMSG_NOT_ARRAY: {
             code: 3,
             message: {
-                iso_639_3_eng: "Expecting an array value.",
+                iso_639_3_eng: "Not an array value.",
                 iso_639_3_ita: "Il valore deve essere una lista.",
                 iso_639_3_fra: "La valeur doit être une liste.",
-                iso_639_3_esp: "Esperando un valor de lista."
+                iso_639_3_esp: "Esperando una lista de valores."
             }
         },
         kMSG_DUP_SET: {
@@ -152,6 +152,60 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Il set contiene valori duplicati.",
                 iso_639_3_fra: "L'ensemble contient des valeurs en double.",
                 iso_639_3_esp: "El conjunto contiene valores duplicados."
+            }
+        },
+        kMSG_NOT_SCALAR: {
+            code: 5,
+            message: {
+                iso_639_3_eng: "Not a scalar value.",
+                iso_639_3_ita: "Non è un valore scalare.",
+                iso_639_3_fra: "Pas une valeur scalaire.",
+                iso_639_3_esp: "No es un valor escalar."
+            }
+        },
+        kMSG_NOT_BOOL: {
+            code: 6,
+            message: {
+                iso_639_3_eng: "Not a boolean value.",
+                iso_639_3_ita: "Non è un valore booleano.",
+                iso_639_3_fra: "Pas une valeur booléenne.",
+                iso_639_3_esp: "No es un valor booleano."
+            }
+        },
+        kMSG_NOT_OBJECT: {
+            code: 7,
+            message: {
+                iso_639_3_eng: "Not a structured value.",
+                iso_639_3_ita: "Il valore non è una struttura.",
+                iso_639_3_fra: "La valeur n'est pas une structure.",
+                iso_639_3_esp: "El valor no es una estructura."
+            }
+        },
+        kMSG_NOT_INT: {
+            code: 8,
+            message: {
+                iso_639_3_eng: "Not an integer value.",
+                iso_639_3_ita: "Il valore non è un intero.",
+                iso_639_3_fra: "Pas une valeur entière.",
+                iso_639_3_esp: "No es un valor entero."
+            }
+        },
+        kMSG_NOT_NUMBER: {
+            code: 9,
+            message: {
+                iso_639_3_eng: "Not a numeric value.",
+                iso_639_3_ita: "Il valore non è numerico.",
+                iso_639_3_fra: "Pas une valeur numérique.",
+                iso_639_3_esp: "No es un valor numérico."
+            }
+        },
+        kMSG_NOT_STRING: {
+            code: 10,
+            message: {
+                iso_639_3_eng: "Not a text string value.",
+                iso_639_3_ita: "Il valore non è una strings di testo.",
+                iso_639_3_fra: "Pas une chaîne de charactères.",
+                iso_639_3_esp: "No es un valor texto."
             }
         }
     }

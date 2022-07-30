@@ -3,6 +3,7 @@
 //
 // Import frameworks.
 //
+const _ = require('lodash');                            // Lodash library.
 const db = require('@arangodb').db;						// Database object.
 const aql = require('@arangodb').aql;					// AQL queries.
 const errors = require('@arangodb').errors;             // ArangoDB errors.
@@ -61,14 +62,13 @@ class ValidationReport
         this.value = theValue
         this.found = false
         this.status = K.error[theStatus]
-        this.error = {}
     }
 
 } // ValidationReport
 
 /**
  * Validate descriptor.
- * The function expects a descriptor name and its value: itwill check whether
+ * The function expects a descriptor name and its value: it will check whether
  * the value corresponds to the descriptor definition.
  * @param name {String}: Descriptor name.
  * @param value {Any}: Descriptor value.
@@ -104,13 +104,13 @@ function validateDescriptor(name, value)
             report.status = K.error.kMSG_ERROR
         }
 
-        report.error = error
+        report["error"] = error
 
         return report                                                           // ==>
     }
 
     //
-    // Validate descriptor.
+    // Validate data.
     //
     if(descriptor.hasOwnProperty(K.term.dataBlock)) {
         validateDataBlock(descriptor[K.term.dataBlock], report)
@@ -135,19 +135,50 @@ function validateDescriptor(name, value)
 function validateDataBlock(theBlock, theReport)
 {
     //
-    // Parse data block.
+    // Parse scalar data block.
     //
-    if(theBlock.hasOwnProperty(K.term.dataBlockScalar)) {
+    if(theBlock.hasOwnProperty(K.term.dataBlockScalar))
+    {
         validateScalar(theBlock[K.term.dataBlockScalar], theReport)
-    } else if(theBlock.hasOwnProperty(K.term.dataBlockArray)) {
+    }
+
+    //
+    // Parse array data block.
+    //
+    else if(theBlock.hasOwnProperty(K.term.dataBlockArray))
+    {
         validateArray(theBlock[K.term.dataBlockArray], theReport)
-    } else if(theBlock.hasOwnProperty(K.term.dataBlockSet)) {
+    }
+
+    //
+    // Parse set data block.
+    //
+    else if(theBlock.hasOwnProperty(K.term.dataBlockSet))
+    {
         validateSet(theBlock[K.term.dataBlockSet], theReport)
-    } else if(theBlock.hasOwnProperty(K.term.dataBlockDict)) {
+    }
+
+    //
+    // Parse dictionary data block.
+    //
+    else if(theBlock.hasOwnProperty(K.term.dataBlockDict))
+    {
         validateDictionary(theBlock[K.term.dataBlockDict], theReport)
-    } else if((Object.keys(theBlock).length !== 0) && (theBlock.constructor === Object)) {
-        return
-    } else {
+    }
+
+    //
+    // Parse empty data block.
+    //
+    else if((Object.keys(theBlock).length === 0) && (theBlock.constructor === Object))
+    {
+        return                                                                  // ==>
+    }
+
+    //
+    // Invalid data block.
+    //
+    else
+    {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
     }
 
@@ -169,14 +200,15 @@ function validateScalar(theBlock, theReport)
     //
     // Check if value is scalar.
     //
-
+    if(isArray((theReport.value) || isObject(theReport.value))) {
+        theReport.status = K.error.kMSG_NOT_SCALAR
+        return                                                                  // ==>
+    }
 
     //
     // Parse data type.
     //
-    switch (theBlock[K.term.dataType]) {
-
-    }
+    validateValue(theBlock,theReport, theReport.value)
 
 } // validateScalar()
 
@@ -189,7 +221,24 @@ function validateScalar(theBlock, theReport)
  */
 function validateArray(theBlock, theReport)
 {
-    theReport.value = "IS ARRAY"
+    //
+    // Check if value is an array.
+    //
+    if(isArray(theReport.value)) {
+
+        //
+        // Iterate array values.
+        //
+        for(let value of theReport.value) {
+            if(!validateValue(theBlock, theReport, value)) {
+                theReport.status["value"] = value
+                return                                                          // ==>
+            }
+        }
+
+    } else {
+        theReport.status = K.error.kMSG_NOT_ARRAY
+    }
 
 } // validateArray()
 
@@ -218,8 +267,9 @@ function validateSet(theBlock, theReport)
             // thus no validation necessary.
             //
             if(theBlock.hasOwnProperty(K.term.dataType)) {
-                for(let value in theReport.value) {
-                    if(!validateValue(theBlock, theReport)) {
+                for(let value of theReport.value) {
+                    if(!validateValue(theBlock, theReport, value)) {
+                        theReport.status["value"] = value
                         return                                                  // ==>
                     }
                 }
@@ -229,7 +279,7 @@ function validateSet(theBlock, theReport)
             theReport.status = K.error.kMSG_DUP_SET
         }
     } else {
-        theReport.status = K.error.kMSG_NO_SET
+        theReport.status = K.error.kMSG_NOT_ARRAY
     }
 
 } // validateSet()
@@ -247,41 +297,48 @@ function validateDictionary(theBlock, theReport)
 
 } // validateDictionary()
 
-/******************************************************************************/
-/* UTILITY FUNCTIONS                                                          /*
-/******************************************************************************/
-
 /**
  * Validate data value
  * The function will validate the value provided in the report structure according
  * to the data type defined in the provided descriptor data block.
- * Array values are passed to this function individually.
+ * The value is expected to be .
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
  * @returns {boolean}: true means valid.
  */
-function validateValue(theBlock, theReport)
+function validateValue(theBlock, theReport, theValue)
 {
     //
     // Parse by type.
     //
     if(theBlock.hasOwnProperty(K.term.dataType)) {
         switch(theBlock[K.term.dataType]) {
+            // Boolean.
             case K.term.dataTypeBool:
+                return validateBoolean(theBlock, theReport, theValue)           // ==>
+
+            // Integer.
+            case K.term.dataTypeInteger:
+                return validateInteger(theBlock, theReport, theValue)           // ==>
+
+            // Float.
+            case K.term.dataTypeNumber:
+                return validateNumber(theBlock, theReport, theValue)            // ==>
+
+            // String.
+            case K.term.dataTypeString:
+                return validateString(theBlock, theReport, theValue)            // ==>
+
+            // Object.
+            case K.term.dataTypeObject:
                 break
+
             case K.term.dataTypeEnum:
                 break
             case K.term.dataTypeGeoJson:
                 break
-            case K.term.dataTypeInteger:
-                break
-            case K.term.dataTypeNumber:
-                break
-            case K.term.dataTypeObject:
-                break
             case K.term.dataTypeRecord:
-                break
-            case K.term.dataTypeString:
                 break
             case K.term.dataTypeTimestamp:
                 break
@@ -297,16 +354,136 @@ function validateValue(theBlock, theReport)
 } // validateValue()
 
 /**
- * Check if null.
- * The function will return true if the provided value is null.
- * @param item {Any}: The value to test.
- * @returns {boolean}: True for null, false for other types.
+ * Validate boolean value
+ * The function will return true if the reported value is a boolean.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
  */
-function isNull(item)
+function validateBoolean(theBlock, theReport, theValue)
 {
-    return item !== null                                                        // ==>
+    if(!isBoolean(theValue)) {
+        theReport.status = K.error.kMSG_NOT_BOOL
+        return false                                                            // ==>
+    }
 
-} // isNull()
+    return true                                                                 // ==>
+
+} // validateBoolean()
+
+/**
+ * Validate integer value
+ * The function will return true if the reported value is an integer.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateInteger(theBlock, theReport, theValue)
+{
+    if(!isInteger(theValue)) {
+        theReport.status = K.error.kMSG_NOT_INT
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateInteger()
+
+/**
+ * Validate number value
+ * The function will return true if the reported value is a float or integer.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateNumber(theBlock, theReport, theValue)
+{
+    if(!isNumber(theValue)) {
+        theReport.status = K.error.kMSG_NOT_NUMBER
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateNumber()
+
+/**
+ * Validate string value
+ * The function will return true if the reported value is a string.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateString(theBlock, theReport, theValue)
+{
+    if(!isString(theValue)) {
+        theReport.status = K.error.kMSG_NOT_STRING
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateString()
+
+/******************************************************************************/
+/* UTILITY FUNCTIONS                                                          /*
+/******************************************************************************/
+
+/**
+ * Check if boolean.
+ * The function will return true if the provided value is a boolean.
+ * @param item {Any}: The value to test.
+ * @returns {boolean}: True if boolean.
+ */
+function isBoolean(item)
+{
+    return _.isBoolean(item)                                                    // ==>
+
+} // isBoolean()
+
+/**
+ * Check if integer.
+ * The function will return true if the provided value is an integer.
+ * @param item {Any}: The value to test.
+ * @returns {boolean}: True if integer.
+ */
+function isInteger(item)
+{
+    return _.isInteger(item)                                                    // ==>
+
+} // isInteger()
+
+/**
+ * Check if numeric.
+ * The function will return true if the provided value is a numeric.
+ * @param item {Any}: The value to test.
+ * @returns {boolean}: True if numeric.
+ */
+function isNumber(item)
+{
+    return _.isNumber(item)                                                     // ==>
+
+} // isNumber()
+
+/**
+ * Check if string.
+ * The function will return true if the provided value is a string.
+ * @param item {Any}: The value to test.
+ * @returns {boolean}: True if string.
+ */
+function isString(item)
+{
+    return _.isString(item)                                                     // ==>
+
+} // isString()
 
 /**
  * Check if object.
@@ -316,7 +493,7 @@ function isNull(item)
  */
 function isObject(item)
 {
-    return item !== null && item.constructor.name === "Object"                  // ==>
+    return _.isPlainObject(item)                                                // ==>
 
 } // isObject()
 
@@ -328,9 +505,9 @@ function isObject(item)
  */
 function isArray(item)
 {
-    return Array.isArray(item)                                                  // ==>
+    return _.isArray(item)                                                      //==>
 
-} // isNull()
+} // isArray()
 
 
 module.exports = {
