@@ -24,47 +24,11 @@ const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
 const HTTP_NOT_FOUND = status('not found');
 const HTTP_CONFLICT = status('conflict');
 
+//
+// Import classes.
+//
+const ValidationReport = require('../models/ValidationReport')
 
-/**
- * validation.js
- *
- * This file contains all functions related to data validation.
- */
-
-/**
- * Validation Report
- *
- * This class implements the report generated after validating a descriptor.
- * The report is comprised of:
- * - An enumeration that defines the state: M: Message; W: Warning; E: Error
- * - A numeric code identifying the status.
- * - A Message explaining the status.
- * - The descriptor name.
- * - The reported value.
- */
-class ValidationReport
-{
-    /**
-     * Constructor
-     * @param theDescriptor {String}: The descriptor name.
-     * @param theValue {Any}: The descriptor value,defaults to null.
-     * @param theStatusCode {String}: The status object code, defaults to kMSG_OK.
-     */
-    constructor(
-        theDescriptor,
-        theValue = null,
-        theStatus = "kMSG_OK"
-    ){
-        //
-        // Set data members.
-        //
-        this.descriptor = theDescriptor
-        this.value = theValue
-        this.found = false
-        this.status = K.error[theStatus]
-    }
-
-} // ValidationReport
 
 /**
  * Validate descriptor.
@@ -85,8 +49,7 @@ function validateDescriptor(name, value)
     //
     // Instantiate report and set value.
     //
-    let report = new ValidationReport(name)
-    report.value = value
+    let report = new ValidationReport(name, value)
 
     //
     // Load descriptor.
