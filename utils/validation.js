@@ -190,7 +190,25 @@ function validateArray(theBlock, theReport)
     if(isArray(theReport.value)) {
 
         //
-        // Iterate array values.
+        // Handle array constraints.
+        //
+        if(theBlock.hasOwnProperty(K.term.dataRangeElements)) {
+            if(theBlock.hasOwnProperty(K.term.dataRangeElementsMin)) {
+                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMin] > theReport.value.length) {
+                    theReport.status = K.error.kMSG_NOT_ENOUGH_ELEMENTS
+                    return                                                      // ==>
+                }
+            }
+            if(theBlock.hasOwnProperty(K.term.dataRangeElementsMax)) {
+                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMax] < theReport.value.length) {
+                    theReport.status = K.error.kMSG_TOO_MANY_ELEMENTS
+                    return                                                      // ==>
+                }
+            }
+        }
+
+        //
+        // Validate array values.
         //
         for(let value of theReport.value) {
             if(!validateValue(theBlock, theReport, value)) {

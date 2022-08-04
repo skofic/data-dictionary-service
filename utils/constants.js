@@ -72,8 +72,11 @@ module.exports = Object.freeze({
         dataTypeRecord: "_type_record",
         dataTypeTimestamp: "_type_timestamp",
         dataTypeGeoJson: "_type_geo-json",
-        dataTypeObject: "_type_object"
+        dataTypeObject: "_type_object",
 
+        dataRangeElements: "_elements",
+        dataRangeElementsMin: "_min-items",
+        dataRangeElementsMax: "_max-items"
     },
 
     //
@@ -206,6 +209,24 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Il valore non è una strings di testo.",
                 iso_639_3_fra: "Pas une chaîne de charactères.",
                 iso_639_3_esp: "No es un valor texto."
+            }
+        },
+        kMSG_NOT_ENOUGH_ELEMENTS: {
+            code: 10,
+            message: {
+                iso_639_3_eng: "Not enough elements.",
+                iso_639_3_ita: "Numero di elementi insufficiente.",
+                iso_639_3_fra: "Pas assez d'elements.",
+                iso_639_3_esp: "No suficientes elementos."
+            }
+        },
+        kMSG_TOO_MANY_ELEMENTS: {
+            code: 10,
+            message: {
+                iso_639_3_eng: "Too many elements.",
+                iso_639_3_ita: "Numero di elementi troppo elevato.",
+                iso_639_3_fra: "Trop d'elements.",
+                iso_639_3_esp: "Demaciados elementos."
             }
         }
     }
