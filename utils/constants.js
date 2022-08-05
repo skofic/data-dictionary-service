@@ -76,7 +76,13 @@ module.exports = Object.freeze({
 
         dataRangeElements: "_elements",
         dataRangeElementsMin: "_min-items",
-        dataRangeElementsMax: "_max-items"
+        dataRangeElementsMax: "_max-items",
+
+        dataRangeValid: "_valid-range",
+        dataRangeValidMinInc: "_min-range-inclusive",
+        dataRangeValidMinExc: "_min-range-exclusive",
+        dataRangeValidMaxInc: "_max-range-inclusive",
+        dataRangeValidMaxExc: "_max-range-exclusive"
     },
 
     //
@@ -227,6 +233,24 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Numero di elementi troppo elevato.",
                 iso_639_3_fra: "Trop d'elements.",
                 iso_639_3_esp: "Demaciados elementos."
+            }
+        },
+        kMSG_BELOW_RANGE: {
+            code: 11,
+            message: {
+                iso_639_3_eng: "Below minimum range.",
+                iso_639_3_ita: "Al di sotto dell'intervallo minimo.",
+                iso_639_3_fra: "Au-dessous de la plage minimale.",
+                iso_639_3_esp: "Por debajo del rango mínimo."
+            }
+        },
+        kMSG_OVER_RANGE: {
+            code: 12,
+            message: {
+                iso_639_3_eng: "Over maximum range.",
+                iso_639_3_ita: "Al di sopra della soglia minima.",
+                iso_639_3_fra: "Au-dessus de la plage maximale.",
+                iso_639_3_esp: "Por arriba del rango maximo."
             }
         }
     }

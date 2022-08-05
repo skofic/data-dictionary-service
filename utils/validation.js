@@ -233,34 +233,18 @@ function validateArray(theBlock, theReport)
 function validateSet(theBlock, theReport)
 {
     //
-    // Check if value is a set.
+    // Perform array validation.
     //
-    if(isArray(theReport.value)) {
+    validateArray(theBlock, theReport)
+    if(theReport.status.code !== 0) {
+        return                                                                  // ==>
+    }
 
-        //
-        // Check for duplicates.
-        //
-        if(new Set(theReport.value).size === theReport.value.length) {
-
-            //
-            // Handle data type,
-            // if missing we assume any data type,
-            // thus no validation necessary.
-            //
-            if(theBlock.hasOwnProperty(K.term.dataType)) {
-                for(let value of theReport.value) {
-                    if(!validateValue(theBlock, theReport, value)) {
-                        theReport.status["value"] = value
-                        return                                                  // ==>
-                    }
-                }
-            }
-
-        } else {
-            theReport.status = K.error.kMSG_DUP_SET
-        }
-    } else {
-        theReport.status = K.error.kMSG_NOT_ARRAY
+    //
+    // Check for duplicates.
+    //
+    if(new Set(theReport.value).size !== theReport.value.length) {
+        theReport.status = K.error.kMSG_DUP_SET
     }
 
 } // validateSet()
@@ -313,6 +297,7 @@ function validateValue(theBlock, theReport, theValue)
 
             // Object.
             case K.term.dataTypeObject:
+                return validateObject(theBlock, theReport, theValue)            // ==>
                 break
 
             case K.term.dataTypeEnum:
@@ -370,6 +355,10 @@ function validateInteger(theBlock, theReport, theValue)
         return false                                                            // ==>
     }
 
+    if(!validateRange(theBlock, theReport, theValue)) {
+        return false                                                            // ==>
+    }
+
     return true                                                                 // ==>
 
 } // validateInteger()
@@ -387,6 +376,10 @@ function validateNumber(theBlock, theReport, theValue)
 {
     if(!isNumber(theValue)) {
         theReport.status = K.error.kMSG_NOT_NUMBER
+        return false                                                            // ==>
+    }
+
+    if(!validateRange(theBlock, theReport, theValue)) {
         return false                                                            // ==>
     }
 
@@ -410,9 +403,75 @@ function validateString(theBlock, theReport, theValue)
         return false                                                            // ==>
     }
 
+    if(!validateRange(theBlock, theReport, theValue)) {
+        return false                                                            // ==>
+    }
+
     return true                                                                 // ==>
 
 } // validateString()
+
+/**
+ * Validate object value
+ * The function will return true if the reported value is an object.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateObject(theBlock, theReport, theValue)
+{
+    if(!isObject(theValue)) {
+        theReport.status = K.error.kMSG_NOT_OBJECT
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateObject()
+
+/**
+ * Validate range
+ * The function will return true if the value is within the valid range.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateRange(theBlock, theReport, theValue)
+{
+    if(theBlock.hasOwnProperty(K.term.dataRangeValid)) {
+        const block = theBlock[K.term.dataRangeValid]
+        if(block.hasOwnProperty(K.term.dataRangeValidMinInc)) {
+            if(value < block[K.term.dataRangeValidMinInc]) {
+                theReport.status = K.error.kMSG_BELOW_RANGE
+                return false                                                    // ==>
+            }
+        }
+        if(block.hasOwnProperty(K.term.dataRangeValidMinExc)) {
+            if(value <= block[K.term.dataRangeValidMinExc]) {
+                theReport.status = K.error.kMSG_BELOW_RANGE
+                return false                                                    // ==>
+            }
+        }
+        if(block.hasOwnProperty(K.term.dataRangeValidMaxInc)) {
+            if(value > block[K.term.dataRangeValidMaxInc]) {
+                theReport.status = K.error.kMSG_OVER_RANGE
+                return false                                                    // ==>
+            }
+        }
+        if(block.hasOwnProperty(K.term.dataRangeValidMaxExc)) {
+            if(value >= block[K.term.dataRangeValidMaxExc]) {
+                theReport.status = K.error.kMSG_OVER_RANGE
+                return false                                                    // ==>
+            }
+        }
+    }
+
+    return true                                                                 // ==>
+
+} // validateRange()
 
 /******************************************************************************/
 /* UTILITY FUNCTIONS                                                          /*
