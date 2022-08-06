@@ -63,6 +63,7 @@ module.exports = Object.freeze({
         dataBlockDict: "_dict",
 
         dataType: "_type",
+        dataKind: "_kind",
 
         dataTypeBool: "_type_boolean",
         dataTypeInteger: "_type_integer",

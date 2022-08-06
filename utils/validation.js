@@ -306,6 +306,7 @@ function validateValue(theBlock, theReport, theValue)
 
             // Enumeration.
             case K.term.dataTypeEnum:
+                return validateEnum(theBlock, theReport, theValue)              // ==>
                 break
 
             // Record reference.
@@ -414,10 +415,6 @@ function validateString(theBlock, theReport, theValue)
         return false                                                            // ==>
     }
 
-    if(!validateRange(theBlock, theReport, theValue)) {
-        return false                                                            // ==>
-    }
-
     return true                                                                 // ==>
 
 } // validateString()
@@ -450,6 +447,42 @@ function validateRecord(theBlock, theReport, theValue)
     return false                                                            // ==>
 
 } // validateRecord()
+
+/**
+ * Validate enumeration value
+ * The function will return true if the reported value is an enumeration.
+ * The function will perform the following checks:
+ * - Check if value starts with kind prefix.
+ * - If that is the case:
+ *   - Match edge with path and value.
+ *   - If predicate is enum: succeed.
+ *   - If not,look for enum predicate.
+ * - If that is not the case:
+ *   - Locate term with matching code and path.
+ *   - Replace value in report with preferred enumeration _key.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateEnum(theBlock, theReport, theValue)
+{
+    if(!isString(theValue)) {
+        theReport.status = K.error.kMSG_NOT_STRING
+        return false                                                            // ==>
+    }
+
+    if(theBlock.hasOwnProperty(K.term.dataKind)) {
+        if(_.startsWith(theValue, theBlock[K.term.dataKind])) {
+
+        }
+    } else {
+        // Need to develop function to match and parse enumeration target and preferred.
+    }
+
+    return true                                                                 // ==>
+
+} // validateEnum()
 
 /**
  * Validate object value
