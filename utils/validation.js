@@ -62,7 +62,7 @@ function validateDescriptor(name, value)
         )
     } catch (error) {
         if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
-            report.status = K.error.kMSG_NOT_FOUND
+            report.status = K.error.kMSG_DESCRIPTOR_NOT_FOUND
         } else {
             report.status = K.error.kMSG_ERROR
         }
@@ -303,15 +303,21 @@ function validateValue(theBlock, theReport, theValue)
             // Object.
             case K.term.dataTypeObject:
                 return validateObject(theBlock, theReport, theValue)            // ==>
-                break
 
+            // Enumeration.
             case K.term.dataTypeEnum:
                 break
-            case K.term.dataTypeGeoJson:
-                break
+
+            // Record reference.
             case K.term.dataTypeRecord:
-                break
+                return validateRecord(theBlock, theReport, theValue)            // ==>
+
+            // Timestamp.
             case K.term.dataTypeTimestamp:
+                break
+
+            // GeoJSON.
+            case K.term.dataTypeGeoJson:
                 break
         }
 
@@ -415,6 +421,35 @@ function validateString(theBlock, theReport, theValue)
     return true                                                                 // ==>
 
 } // validateString()
+
+/**
+ * Validate record value
+ * The function will return true if the reported value is a record handle.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The handle to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateRecord(theBlock, theReport, theValue)
+{
+    if(!isString(theValue)) {
+        theReport.status = K.error.kMSG_NOT_STRING
+        return false                                                            // ==>
+    }
+
+    try {
+        if(db._exists(theValue)) {
+            return true                                                         // ==>
+        }
+
+    } catch (error) {
+        theReport["error"] = error
+    }
+
+    theReport.status = K.error.kMSG_NOT_FOUND
+    return false                                                            // ==>
+
+} // validateRecord()
 
 /**
  * Validate object value
