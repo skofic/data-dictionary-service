@@ -76,7 +76,7 @@ function validateDescriptor(name, value)
     // Validate data.
     //
     if(descriptor.hasOwnProperty(K.term.dataBlock)) {
-        validateDataBlock(descriptor[K.term.dataBlock], report)
+        validateDataBlock(descriptor[K.term.dataBlock], report, value)
     } else {
         report.status = K.error.kMSG_NO_DATA_BLOCK
         return report                                                           // ==>
@@ -94,15 +94,16 @@ function validateDescriptor(name, value)
  * are set in the data block and run the corresponding function.
  * @param theBlock {Object}: The data block.
  * @param theReport {ValidationReport}: The status report
+ * @param theValue {Any}: The descriptor's value.
  */
-function validateDataBlock(theBlock, theReport)
+function validateDataBlock(theBlock, theReport, theValue)
 {
     //
     // Parse scalar data block.
     //
     if(theBlock.hasOwnProperty(K.term.dataBlockScalar))
     {
-        validateScalar(theBlock[K.term.dataBlockScalar], theReport)
+        validateScalar(theBlock[K.term.dataBlockScalar], theReport, theValue)
     }
 
     //
@@ -110,7 +111,7 @@ function validateDataBlock(theBlock, theReport)
     //
     else if(theBlock.hasOwnProperty(K.term.dataBlockArray))
     {
-        validateArray(theBlock[K.term.dataBlockArray], theReport)
+        validateArray(theBlock[K.term.dataBlockArray], theReport, theValue)
     }
 
     //
@@ -118,7 +119,7 @@ function validateDataBlock(theBlock, theReport)
     //
     else if(theBlock.hasOwnProperty(K.term.dataBlockSet))
     {
-        validateSet(theBlock[K.term.dataBlockSet], theReport)
+        validateSet(theBlock[K.term.dataBlockSet], theReport, theValue)
     }
 
     //
@@ -126,7 +127,7 @@ function validateDataBlock(theBlock, theReport)
     //
     else if(theBlock.hasOwnProperty(K.term.dataBlockDict))
     {
-        validateDictionary(theBlock[K.term.dataBlockDict], theReport)
+        validateDictionary(theBlock[K.term.dataBlockDict], theReport, theValue)
     }
 
     //
@@ -157,13 +158,14 @@ function validateDataBlock(theBlock, theReport)
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The scalar data block.
  * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The scalar value.
  */
-function validateScalar(theBlock, theReport)
+function validateScalar(theBlock, theReport, theValue)
 {
     //
     // Check if value is scalar.
     //
-    if(isArray((theReport.value) || isObject(theReport.value))) {
+    if(isArray(theValue) || isObject(theValue)) {
         theReport.status = K.error.kMSG_NOT_SCALAR
         return                                                                  // ==>
     }
@@ -171,7 +173,7 @@ function validateScalar(theBlock, theReport)
     //
     // Parse data type.
     //
-    validateValue(theBlock,theReport, theReport.value)
+    validateValue(theBlock, theReport, theValue)
 
 } // validateScalar()
 
@@ -181,26 +183,27 @@ function validateScalar(theBlock, theReport)
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The array data block.
  * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The array value.
  */
-function validateArray(theBlock, theReport)
+function validateArray(theBlock, theReport, theValue)
 {
     //
     // Check if value is an array.
     //
-    if(isArray(theReport.value)) {
+    if(isArray(theValue)) {
 
         //
         // Handle array constraints.
         //
         if(theBlock.hasOwnProperty(K.term.dataRangeElements)) {
             if(theBlock.hasOwnProperty(K.term.dataRangeElementsMin)) {
-                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMin] > theReport.value.length) {
+                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMin] > theValue.length) {
                     theReport.status = K.error.kMSG_NOT_ENOUGH_ELEMENTS
                     return                                                      // ==>
                 }
             }
             if(theBlock.hasOwnProperty(K.term.dataRangeElementsMax)) {
-                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMax] < theReport.value.length) {
+                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMax] < theValue.length) {
                     theReport.status = K.error.kMSG_TOO_MANY_ELEMENTS
                     return                                                      // ==>
                 }
@@ -210,7 +213,7 @@ function validateArray(theBlock, theReport)
         //
         // Validate array values.
         //
-        for(let value of theReport.value) {
+        for(let value of theValue) {
             if(!validateValue(theBlock, theReport, value)) {
                 theReport.status["value"] = value
                 return                                                          // ==>
@@ -229,13 +232,14 @@ function validateArray(theBlock, theReport)
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The set data block.
  * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The set value.
  */
-function validateSet(theBlock, theReport)
+function validateSet(theBlock, theReport, theValue)
 {
     //
     // Perform array validation.
     //
-    validateArray(theBlock, theReport)
+    validateArray(theBlock, theReport, theValue)
     if(theReport.status.code !== 0) {
         return                                                                  // ==>
     }
@@ -243,7 +247,7 @@ function validateSet(theBlock, theReport)
     //
     // Check for duplicates.
     //
-    if(new Set(theReport.value).size !== theReport.value.length) {
+    if(new Set(theValue).size !== theValue.length) {
         theReport.status = K.error.kMSG_DUP_SET
     }
 
@@ -255,8 +259,9 @@ function validateSet(theBlock, theReport)
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The dictionary value.
  */
-function validateDictionary(theBlock, theReport)
+function validateDictionary(theBlock, theReport,theValue)
 {
     theReport.value = "IS DICTIONARY"
 
