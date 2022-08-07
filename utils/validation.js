@@ -452,14 +452,11 @@ function validateRecord(theBlock, theReport, theValue)
  * Validate enumeration value
  * The function will return true if the reported value is an enumeration.
  * The function will perform the following checks:
- * - Check if value starts with kind prefix.
- * - If that is the case:
- *   - Match edge with path and value.
- *   - If predicate is enum: succeed.
- *   - If not,look for enum predicate.
- * - If that is not the case:
- *   - Locate term with matching code and path.
- *   - Replace value in report with preferred enumeration _key.
+ * - Assert the value is a string.
+ * - Assert value has a corresponding type.
+ * - Check is the value is a term.
+ *     - If that is the case, locate the term in the graph.
+ *     - If that is not the case, locate the code in the graph.
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
@@ -467,23 +464,90 @@ function validateRecord(theBlock, theReport, theValue)
  */
 function validateEnum(theBlock, theReport, theValue)
 {
+    //
+    // Init local storage.
+    //
+    const terms = module.context.collection(K.collection.term.name);
+
     if(!isString(theValue)) {
         theReport.status = K.error.kMSG_NOT_STRING
         return false                                                            // ==>
     }
 
     if(theBlock.hasOwnProperty(K.term.dataKind)) {
-        if(_.startsWith(theValue, theBlock[K.term.dataKind])) {
 
+        if(terms.exists(theValue)) {
+            return validateEnumTerm(theBlock, theReport, theValue)              // ==>
+        } else {
+            return validateEnumCode(theBlock, theReport, theValue)              // ==>
         }
+
     } else {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
         return false                                                            // ==>
     }
 
-    return true                                                                 // ==>
-
 } // validateEnum()
+
+/**
+ * Validate enumeration key value
+ * The function will return true if the reported term key value is an enumeration
+ * belonging to the enumeration type.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateEnumTerm(theBlock, theReport, theValue)
+{
+    //
+    // Init local storage.
+    //
+    const terms = module.context.collection(K.collection.term.name);
+
+    //
+    // Iterate enumeration types.
+    //
+    for(let path of theBlock[K.term.dataKind]) {
+        let root = terms.name + '/' + path
+        let target = terms.name + '/' + theValue
+
+        theReport["ROOT"] = root
+        theReport["TARGET"] = target
+        return true
+    }
+
+} // validateEnumTerm()
+
+/**
+ * Validate enumeration key value
+ * The function will return true if the reported term key value is an enumeration
+ * belonging to the enumeration type.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateEnumCode(theBlock, theReport, theValue)
+{
+    //
+    // Init local storage.
+    //
+    const terms = module.context.collection(K.collection.term.name);
+
+    //
+    // Iterate enumeration types.
+    //
+    for(let path of theBlock[K.term.dataKind]) {
+        let root = terms.name + '/' + path
+        let target = terms.name + '/' + theValue
+
+        theReport["ROOT"] = root
+        theReport["TARGET"] = target
+        return true
+    }
+
+} // validateEnumCode()
 
 /**
  * Validate object value
