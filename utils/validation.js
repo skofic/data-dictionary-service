@@ -477,7 +477,8 @@ function validateEnum(theBlock, theReport, theValue)
 
         }
     } else {
-        // Need to develop function to match and parse enumeration target and preferred.
+        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+        return false                                                            // ==>
     }
 
     return true                                                                 // ==>
