@@ -15,12 +15,14 @@ WITH dict_terms
 FOR vertex, edge, path IN 1..10
     INBOUND @root
     GRAPH "schema"
-    PRUNE @pathId IN edge._path AND
-          edge._predicate != "@predicate
+    PRUNE @path IN edge._path AND
+          edge._predicate == @predicate AND
+          (edge._to == @target OR
+            edge._from == @target)
     OPTIONS {
         "uniqueVertices": "path"
     }
-    FILTER @pathId IN edge._path AND
+    FILTER @path IN edge._path AND
            edge._predicate == @predicate AND
            (edge._to == @target OR
             edge._from == @target)
