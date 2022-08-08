@@ -83,7 +83,11 @@ module.exports = Object.freeze({
         dataRangeValidMinInc: "_min-range-inclusive",
         dataRangeValidMinExc: "_min-range-exclusive",
         dataRangeValidMaxInc: "_max-range-inclusive",
-        dataRangeValidMaxExc: "_max-range-exclusive"
+        dataRangeValidMaxExc: "_max-range-exclusive",
+
+        anyTerm: "_any-term",
+
+        predicateEnum: "_predicate_enum-of"
     },
 
     //
@@ -128,8 +132,17 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "Correcto"
             }
         },
-        kMSG_DESCRIPTOR_NOT_FOUND: {
+        kMSG_VALUE_RESOLVED: {
             code: 1,
+            message: {
+                iso_639_3_eng: "Valid, resolved value is in report.",
+                iso_639_3_ita: "Corretto, il valore aggiornato si trova nel rapporto.",
+                iso_639_3_fra: "Correcte, la valeur résolue se trouve dans le rapport.",
+                iso_639_3_esp: "Correcto, el valor resuelto se encuentra en el reporte."
+            }
+        },
+        kMSG_DESCRIPTOR_NOT_FOUND: {
+            code: 2,
             message: {
                 iso_639_3_eng: "Descriptor not found.",
                 iso_639_3_ita: "Descrittore non trovato.",
@@ -138,7 +151,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_FOUND: {
-            code: 2,
+            code: 3,
             message: {
                 iso_639_3_eng: "Not found.",
                 iso_639_3_ita: "Non trovato.",
@@ -147,7 +160,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_DESCRIPTOR: {
-            code: 3,
+            code: 4,
             message: {
                 iso_639_3_eng: "Not a descriptor.",
                 iso_639_3_ita: "Non è un descrittore.",
@@ -156,7 +169,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_ARRAY: {
-            code: 4,
+            code: 5,
             message: {
                 iso_639_3_eng: "Not an array value.",
                 iso_639_3_ita: "Il valore deve essere una lista.",
@@ -165,7 +178,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_DUP_SET: {
-            code: 5,
+            code: 6,
             message: {
                 iso_639_3_eng: "The set contains duplicate values.",
                 iso_639_3_ita: "Il set contiene valori duplicati.",
@@ -174,7 +187,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_SCALAR: {
-            code: 6,
+            code: 7,
             message: {
                 iso_639_3_eng: "Not a scalar value.",
                 iso_639_3_ita: "Non è un valore scalare.",
@@ -183,7 +196,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_BOOL: {
-            code: 7,
+            code: 8,
             message: {
                 iso_639_3_eng: "Not a boolean value.",
                 iso_639_3_ita: "Non è un valore booleano.",
@@ -192,7 +205,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_OBJECT: {
-            code: 8,
+            code: 9,
             message: {
                 iso_639_3_eng: "Not a structured value.",
                 iso_639_3_ita: "Il valore non è una struttura.",
@@ -201,7 +214,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_INT: {
-            code: 9,
+            code: 10,
             message: {
                 iso_639_3_eng: "Not an integer value.",
                 iso_639_3_ita: "Il valore non è un intero.",
@@ -210,7 +223,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_NUMBER: {
-            code: 10,
+            code: 11,
             message: {
                 iso_639_3_eng: "Not a numeric value.",
                 iso_639_3_ita: "Il valore non è numerico.",
@@ -219,7 +232,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_STRING: {
-            code: 11,
+            code: 12,
             message: {
                 iso_639_3_eng: "Not a text string value.",
                 iso_639_3_ita: "Il valore non è una strings di testo.",
@@ -228,7 +241,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_NOT_ENOUGH_ELEMENTS: {
-            code: 12,
+            code: 13,
             message: {
                 iso_639_3_eng: "Not enough elements.",
                 iso_639_3_ita: "Numero di elementi insufficiente.",
@@ -237,7 +250,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_TOO_MANY_ELEMENTS: {
-            code: 13,
+            code: 14,
             message: {
                 iso_639_3_eng: "Too many elements.",
                 iso_639_3_ita: "Numero di elementi troppo elevato.",
@@ -246,7 +259,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_BELOW_RANGE: {
-            code: 14,
+            code: 15,
             message: {
                 iso_639_3_eng: "Below minimum range.",
                 iso_639_3_ita: "Al di sotto dell'intervallo minimo.",
@@ -255,7 +268,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_OVER_RANGE: {
-            code: 15,
+            code: 16,
             message: {
                 iso_639_3_eng: "Over maximum range.",
                 iso_639_3_ita: "Al di sopra della soglia minima.",

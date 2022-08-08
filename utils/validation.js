@@ -503,19 +503,55 @@ function validateEnumTerm(theBlock, theReport, theValue)
     //
     // Init local storage.
     //
-    const terms = module.context.collection(K.collection.term.name);
+    const collection = module.context.collection(K.collection.term.name);
 
     //
     // Iterate enumeration types.
     //
-    for(let path of theBlock[K.term.dataKind]) {
-        let root = terms.name + '/' + path
-        let target = terms.name + '/' + theValue
+    for(const path of theBlock[K.term.dataKind]) {
 
-        theReport["ROOT"] = root
-        theReport["TARGET"] = target
-        return true
+        //
+        // Handle term wildcard.
+        // Should succeed, since we already asserted value is a term.
+        //
+        if(path == K.term.anyTerm) {
+            return true                                                         // ==>
+        }
+
+        //
+        // Traverse graph.
+        //
+        let root = collection.name() + '/' + path
+        let target = collection.name() + '/' + theValue
+
+        const result = db._query( aql`
+            WITH ${collection}
+            FOR vertex, edge, path IN 1..10
+                INBOUND ${root}
+                GRAPH "schema"
+                PRUNE ${path} IN edge._path AND
+                      edge._predicate == ${K.term.predicateEnum} AND
+                      (edge._to == ${target} OR
+                        edge._from == ${target})
+                OPTIONS {
+                    "uniqueVertices": "path"
+                }
+                FILTER ${path} IN edge._path AND
+                       edge._predicate == ${K.term.predicateEnum} AND
+                       (edge._to == ${target} OR
+                        edge._from == ${target})
+            RETURN vertex._key
+        `).toArray()
+
+        if(result.length > 0) {
+            theReport.value = result[0]
+            theReport.status = K.error.kMSG_VALUE_RESOLVED
+            return true                                                         // ==>
+        }
     }
+
+    theReport.status = K.error.kMSG_NOT_FOUND
+    return false                                                                // ==>
 
 } // validateEnumTerm()
 
@@ -533,19 +569,52 @@ function validateEnumCode(theBlock, theReport, theValue)
     //
     // Init local storage.
     //
-    const terms = module.context.collection(K.collection.term.name);
+    const collection = module.context.collection(K.collection.term.name);
 
     //
     // Iterate enumeration types.
     //
-    for(let path of theBlock[K.term.dataKind]) {
-        let root = terms.name + '/' + path
-        let target = terms.name + '/' + theValue
+    for(const path of theBlock[K.term.dataKind]) {
 
-        theReport["ROOT"] = root
-        theReport["TARGET"] = target
-        return true
+        //
+        // Skip term wildcard.
+        // We know value is not a term.
+        //
+        if(path == K.term.anyTerm) {
+            continue                                                    // =>
+        }
+
+        //
+        // Traverse graph.
+        //
+        const root = collection.name() + '/' + path
+
+        const result = db._query( aql`
+            WITH ${collection}
+            FOR vertex, edge, path IN 1..10
+                INBOUND ${root}
+                GRAPH "schema"
+                PRUNE ${path} IN edge._path AND
+                      edge._predicate == ${K.term.predicateEnum} AND
+                      ${theValue} IN vertex._code._aid
+                OPTIONS {
+                    "uniqueVertices": "path"
+                }
+                FILTER ${path} IN edge._path AND
+                       edge._predicate == ${K.term.predicateEnum} AND
+                      ${theValue} IN vertex._code._aid
+            RETURN vertex._key
+        `).toArray()
+
+        if(result.length > 0) {
+            theReport.value = result[0]
+            theReport.status = K.error.kMSG_VALUE_RESOLVED
+            return true                                                         // ==>
+        }
     }
+
+    theReport.status = K.error.kMSG_NOT_FOUND
+    return false                                                                // ==>
 
 } // validateEnumCode()
 
