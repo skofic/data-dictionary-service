@@ -415,6 +415,14 @@ function validateString(theBlock, theReport, theValue)
         return false                                                            // ==>
     }
 
+    if(theBlock.hasOwnProperty(K.term.regexp)) {
+        const regexp = new RegExp(theBlock[K.term.regexp])
+        if(!theValue.match(regexp)) {
+            theReport.status = K.error.kMSG_NO_REGEXP
+            return false                                                        // ==>
+        }
+    }
+
     return true                                                                 // ==>
 
 } // validateString()
@@ -429,11 +437,16 @@ function validateString(theBlock, theReport, theValue)
  */
 function validateRecord(theBlock, theReport, theValue)
 {
-    if(!isString(theValue)) {
-        theReport.status = K.error.kMSG_NOT_STRING
+    //
+    // Assert string.
+    //
+    if(!validateString(theBlock, theReport, theValue)) {
         return false                                                            // ==>
     }
 
+    //
+    // Assert record handle.
+    //
     try {
         if(db._exists(theValue)) {
             return true                                                         // ==>
@@ -444,7 +457,7 @@ function validateRecord(theBlock, theReport, theValue)
     }
 
     theReport.status = K.error.kMSG_NOT_FOUND
-    return false                                                            // ==>
+    return false                                                                // ==>
 
 } // validateRecord()
 
@@ -465,21 +478,34 @@ function validateRecord(theBlock, theReport, theValue)
 function validateEnum(theBlock, theReport, theValue)
 {
     //
-    // Init local storage.
+    // Assert string.
     //
-    const terms = module.context.collection(K.collection.term.name);
-
-    if(!isString(theValue)) {
-        theReport.status = K.error.kMSG_NOT_STRING
+    if(!validateString(theBlock, theReport, theValue)) {
         return false                                                            // ==>
     }
 
+    //
+    // Assert it has enumeration type.
+    //
     if(theBlock.hasOwnProperty(K.term.dataKind)) {
 
-        if(terms.exists(theValue)) {
-            return validateEnumTerm(theBlock, theReport, theValue)              // ==>
-        } else {
-            return validateEnumCode(theBlock, theReport, theValue)              // ==>
+        //
+        // Init local storage.
+        //
+        const collection = module.context.collection(K.collection.term.name);
+
+        //
+        // The value is a term.
+        //
+        if(collection.exists(theValue)) {
+            return validateEnumTerm(theBlock, theReport, theValue,collection)   // ==>
+        }
+
+        //
+        // The value is an enumeration code.
+        //
+        else {
+            return validateEnumCode(theBlock, theReport, theValue, collection)  // ==>
         }
 
     } else {
@@ -496,15 +522,11 @@ function validateEnum(theBlock, theReport, theValue)
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theCollection {Collection}: Terms collection.
  * @returns {boolean}: true means valid.
  */
-function validateEnumTerm(theBlock, theReport, theValue)
+function validateEnumTerm(theBlock, theReport, theValue, theCollection)
 {
-    //
-    // Init local storage.
-    //
-    const collection = module.context.collection(K.collection.term.name);
-
     //
     // Iterate enumeration types.
     //
@@ -521,11 +543,11 @@ function validateEnumTerm(theBlock, theReport, theValue)
         //
         // Traverse graph.
         //
-        let root = collection.name() + '/' + path
-        let target = collection.name() + '/' + theValue
+        let root = theCollection.name() + '/' + path
+        let target = theCollection.name() + '/' + theValue
 
         const result = db._query( aql`
-            WITH ${collection}
+            WITH ${theCollection}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}
                 GRAPH "schema"
@@ -544,8 +566,10 @@ function validateEnumTerm(theBlock, theReport, theValue)
         `).toArray()
 
         if(result.length > 0) {
-            theReport.value = result[0]
-            theReport.status = K.error.kMSG_VALUE_RESOLVED
+            if(theValue !== result[0]) {
+                theReport.value = result[0]
+                theReport.status = K.error.kMSG_VALUE_RESOLVED
+            }
             return true                                                         // ==>
         }
     }
@@ -562,15 +586,11 @@ function validateEnumTerm(theBlock, theReport, theValue)
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theCollection {Collection}: Terms collection.
  * @returns {boolean}: true means valid.
  */
-function validateEnumCode(theBlock, theReport, theValue)
+function validateEnumCode(theBlock, theReport, theValue, theCollection)
 {
-    //
-    // Init local storage.
-    //
-    const collection = module.context.collection(K.collection.term.name);
-
     //
     // Iterate enumeration types.
     //
@@ -587,10 +607,10 @@ function validateEnumCode(theBlock, theReport, theValue)
         //
         // Traverse graph.
         //
-        const root = collection.name() + '/' + path
+        const root = theCollection.name() + '/' + path
 
         const result = db._query( aql`
-            WITH ${collection}
+            WITH ${theCollection}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}
                 GRAPH "schema"

@@ -87,7 +87,8 @@ module.exports = Object.freeze({
 
         anyTerm: "_any-term",
 
-        predicateEnum: "_predicate_enum-of"
+        predicateEnum: "_predicate_enum-of",
+        regexp: "_regexp"
     },
 
     //
@@ -274,6 +275,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Al di sopra della soglia minima.",
                 iso_639_3_fra: "Au-dessus de la plage maximale.",
                 iso_639_3_esp: "Por arriba del rango maximo."
+            }
+        },
+        kMSG_NO_REGEXP: {
+            code: 17,
+            message: {
+                iso_639_3_eng: "The value does not match regular expression.",
+                iso_639_3_ita: "Il valore non corrisponde all'espressione regolare.",
+                iso_639_3_fra: "La valeur ne correspond pas à l'expression régulière.",
+                iso_639_3_esp: "El valor no coincide con la expresión regular."
             }
         }
     }
