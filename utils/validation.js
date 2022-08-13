@@ -498,7 +498,7 @@ function validateEnum(theBlock, theReport, theValue)
         // The value is a term.
         //
         if(collection.exists(theValue)) {
-            return validateEnumTerm(theBlock, theReport, theValue,collection)   // ==>
+            return validateEnumTerm(theBlock, theReport, theValue, collection)  // ==>
         }
 
         //
@@ -653,9 +653,87 @@ function validateObject(theBlock, theReport, theValue)
         return false                                                            // ==>
     }
 
+    //
+    // Assert it has object type.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataKind)) {
+
+        //
+        // Init local storage.
+        //
+        const collection = module.context.collection(K.collection.term.name);
+
+    } else {
+        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+        return false                                                            // ==>
+    }
+
     return true                                                                 // ==>
 
 } // validateObject()
+
+/**
+ * Validate object value
+ * The function will return true if the value is compatible with any of the bloc's data kinds.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @param theCollection {Collection}: Terms collection.
+ * @returns {boolean}: true means valid.
+ */
+function validateObjectTerm(theBlock, theReport, theValue, theCollection)
+{
+    //
+    // Iterate enumeration types.
+    //
+    for(const path of theBlock[K.term.dataKind]) {
+
+        //
+        // Handle term wildcard.
+        // Should succeed, since we already asserted value is a term.
+        //
+        if(path == K.term.anyTerm) {
+            return true                                                         // ==>
+        }
+
+        //
+        // Traverse graph.
+        //
+        let root = theCollection.name() + '/' + path
+        let target = theCollection.name() + '/' + theValue
+
+        const result = db._query( aql`
+            WITH ${theCollection}
+            FOR vertex, edge, path IN 1..10
+                INBOUND ${root}
+                GRAPH "schema"
+                PRUNE ${path} IN edge._path AND
+                      edge._predicate == ${K.term.predicateEnum} AND
+                      (edge._to == ${target} OR
+                        edge._from == ${target})
+                OPTIONS {
+                    "uniqueVertices": "path"
+                }
+                FILTER ${path} IN edge._path AND
+                       edge._predicate == ${K.term.predicateEnum} AND
+                       (edge._to == ${target} OR
+                        edge._from == ${target})
+            RETURN vertex._key
+        `).toArray()
+
+        if(result.length > 0) {
+            if(theValue !== result[0]) {
+                theReport.value = result[0]
+                theReport.status = K.error.kMSG_VALUE_RESOLVED
+            }
+            return true                                                         // ==>
+        }
+    }
+
+    theReport.status = K.error.kMSG_NOT_FOUND
+    return false                                                                // ==>
+
+} // validateObjectTerm()
 
 /**
  * Validate range

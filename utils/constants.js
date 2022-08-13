@@ -86,6 +86,7 @@ module.exports = Object.freeze({
         dataRangeValidMaxExc: "_max-range-exclusive",
 
         anyTerm: "_any-term",
+        anyObject: "_any-object",
 
         predicateEnum: "_predicate_enum-of",
         regexp: "_regexp"
