@@ -14,6 +14,7 @@ const httpError = require('http-errors');               // HTTP errors.
 // Import resources.
 //
 const K = require( './constants' );					    // Application constants.
+const utils = require('./utils');                       // Utility functions.
 
 //
 // Set constants.
@@ -41,12 +42,6 @@ const ValidationReport = require('../models/ValidationReport')
 function validateDescriptor(name, value)
 {
     //
-    // Init local storage.
-    //
-    const terms = module.context.collection(K.collection.term.name);
-    let descriptor = {}
-
-    //
     // Instantiate report and set value.
     //
     let report = new ValidationReport(name, value)
@@ -54,21 +49,9 @@ function validateDescriptor(name, value)
     //
     // Load descriptor.
     //
-    try {
-        descriptor = terms.document(name)
-        report.found = (
-            (Object.keys(descriptor).length !== 0) &&
-            (descriptor.constructor === Object)
-        )
-    } catch (error) {
-        if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
-            report.status = K.error.kMSG_DESCRIPTOR_NOT_FOUND
-        } else {
-            report.status = K.error.kMSG_ERROR
-        }
-
-        report["error"] = error
-
+    const descriptor = utils.getTerm(name)
+    if(descriptor === false) {
+        report.status = K.error.kMSG_DESCRIPTOR_NOT_FOUND
         return report                                                           // ==>
     }
 
@@ -165,7 +148,7 @@ function validateScalar(theBlock, theReport, theValue)
     //
     // Check if value is scalar.
     //
-    if(isArray(theValue) || isObject(theValue)) {
+    if(utils.isArray(theValue) || utils.isObject(theValue)) {
         theReport.status = K.error.kMSG_NOT_SCALAR
         return                                                                  // ==>
     }
@@ -190,7 +173,7 @@ function validateArray(theBlock, theReport, theValue)
     //
     // Check if value is an array.
     //
-    if(isArray(theValue)) {
+    if(utils.isArray(theValue)) {
 
         //
         // Handle array constraints.
@@ -342,7 +325,7 @@ function validateValue(theBlock, theReport, theValue)
  */
 function validateBoolean(theBlock, theReport, theValue)
 {
-    if(!isBoolean(theValue)) {
+    if(!utils.isBoolean(theValue)) {
         theReport.status = K.error.kMSG_NOT_BOOL
         return false                                                            // ==>
     }
@@ -362,7 +345,7 @@ function validateBoolean(theBlock, theReport, theValue)
  */
 function validateInteger(theBlock, theReport, theValue)
 {
-    if(!isInteger(theValue)) {
+    if(!utils.isInteger(theValue)) {
         theReport.status = K.error.kMSG_NOT_INT
         return false                                                            // ==>
     }
@@ -386,7 +369,7 @@ function validateInteger(theBlock, theReport, theValue)
  */
 function validateNumber(theBlock, theReport, theValue)
 {
-    if(!isNumber(theValue)) {
+    if(!utils.isNumber(theValue)) {
         theReport.status = K.error.kMSG_NOT_NUMBER
         return false                                                            // ==>
     }
@@ -410,7 +393,7 @@ function validateNumber(theBlock, theReport, theValue)
  */
 function validateString(theBlock, theReport, theValue)
 {
-    if(!isString(theValue)) {
+    if(!utils.isString(theValue)) {
         theReport.status = K.error.kMSG_NOT_STRING
         return false                                                            // ==>
     }
@@ -447,16 +430,15 @@ function validateRecord(theBlock, theReport, theValue)
     //
     // Assert record handle.
     //
-    try {
-        if(db._exists(theValue)) {
-            return true                                                         // ==>
-        }
-
-    } catch (error) {
-        theReport["error"] = error
+    if(utils.checkDocument(theValue, theReport)) {
+        return true                                                             // ==>
     }
 
-    theReport.status = K.error.kMSG_NOT_FOUND
+    //
+    // Set error.
+    //
+    theReport.status = K.error.kMSG_DOCUMENT_NOT_FOUND
+
     return false                                                                // ==>
 
 } // validateRecord()
@@ -490,23 +472,16 @@ function validateEnum(theBlock, theReport, theValue)
     if(theBlock.hasOwnProperty(K.term.dataKind)) {
 
         //
-        // Init local storage.
-        //
-        const collection = module.context.collection(K.collection.term.name);
-
-        //
         // The value is a term.
         //
-        if(collection.exists(theValue)) {
-            return validateEnumTerm(theBlock, theReport, theValue, collection)  // ==>
+        if(utils.checkTerm(theValue)) {
+            return validateEnumTerm(theBlock, theReport, theValue)              // ==>
         }
 
         //
         // The value is an enumeration code.
         //
-        else {
-            return validateEnumCode(theBlock, theReport, theValue, collection)  // ==>
-        }
+        return validateEnumCode(theBlock, theReport, theValue)                  // ==>
 
     } else {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
@@ -522,32 +497,53 @@ function validateEnum(theBlock, theReport, theValue)
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
- * @param theCollection {Collection}: Terms collection.
  * @returns {boolean}: true means valid.
  */
-function validateEnumTerm(theBlock, theReport, theValue, theCollection)
+function validateEnumTerm(theBlock, theReport, theValue)
 {
+    //
+    // Handle term wildcard.
+    // We already know that the value is a term...
+    //
+    if(theBlock[K.term.dataKind].includes(K.term.anyTerm)) {
+        return true                                                             // ==>
+    }
+
+    //
+    // Init local storage.
+    //
+    const collection = module.context.collection(K.collection.term.name)
+
     //
     // Iterate enumeration types.
     //
     for(const path of theBlock[K.term.dataKind]) {
 
         //
-        // Handle term wildcard.
-        // Should succeed, since we already asserted value is a term.
+        // Skip term wildcard.
         //
         if(path == K.term.anyTerm) {
-            return true                                                         // ==>
+            continue                                                    // =>
+        }
+
+        //
+        // Assert data kind exists.
+        //
+        if(!utils.checkTerm(path, theReport)) {
+            theReport.value = path
+            theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
+
+            return false                                                        // ==>
         }
 
         //
         // Traverse graph.
         //
-        let root = theCollection.name() + '/' + path
-        let target = theCollection.name() + '/' + theValue
+        let root = collection.name() + '/' + path
+        let target = collection.name() + '/' + theValue
 
         const result = db._query( aql`
-            WITH ${theCollection}
+            WITH ${collection}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}
                 GRAPH "schema"
@@ -574,7 +570,7 @@ function validateEnumTerm(theBlock, theReport, theValue, theCollection)
         }
     }
 
-    theReport.status = K.error.kMSG_NOT_FOUND
+    theReport.status = K.error.kMSG_ENUM_NOT_FOUND
     return false                                                                // ==>
 
 } // validateEnumTerm()
@@ -586,10 +582,9 @@ function validateEnumTerm(theBlock, theReport, theValue, theCollection)
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
- * @param theCollection {Collection}: Terms collection.
  * @returns {boolean}: true means valid.
  */
-function validateEnumCode(theBlock, theReport, theValue, theCollection)
+function validateEnumCode(theBlock, theReport, theValue)
 {
     //
     // Iterate enumeration types.
@@ -602,6 +597,21 @@ function validateEnumCode(theBlock, theReport, theValue, theCollection)
         //
         if(path == K.term.anyTerm) {
             continue                                                    // =>
+        }
+
+        //
+        // Init local storage.
+        //
+        const theCollection = module.context.collection(K.collection.term.name)
+
+        //
+        // Assert data kind exists.
+        //
+        if(!utils.checkTerm(path, theReport)) {
+            theReport.value = path
+            theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
+
+            return false                                                        // ==>
         }
 
         //
@@ -633,7 +643,7 @@ function validateEnumCode(theBlock, theReport, theValue, theCollection)
         }
     }
 
-    theReport.status = K.error.kMSG_NOT_FOUND
+    theReport.status = K.error.kMSG_TERM_NOT_FOUND
     return false                                                                // ==>
 
 } // validateEnumCode()
@@ -648,7 +658,10 @@ function validateEnumCode(theBlock, theReport, theValue, theCollection)
  */
 function validateObject(theBlock, theReport, theValue)
 {
-    if(!isObject(theValue)) {
+    //
+    // Assert value is structure.
+    //
+    if(!utils.isObject(theValue)) {
         theReport.status = K.error.kMSG_NOT_OBJECT
         return false                                                            // ==>
     }
@@ -661,7 +674,15 @@ function validateObject(theBlock, theReport, theValue)
         //
         // Init local storage.
         //
-        const collection = module.context.collection(K.collection.term.name);
+        const collection = module.context.collection(K.collection.term.name)
+
+        //
+        // Validate object type.
+        // We bail out if at least one type succeeds.
+        //
+        if(validateObjectType(theBlock, theReport,theValue, collection)) {
+            return true                                                         // ==>
+        }
 
     } else {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
@@ -681,59 +702,49 @@ function validateObject(theBlock, theReport, theValue)
  * @param theCollection {Collection}: Terms collection.
  * @returns {boolean}: true means valid.
  */
-function validateObjectTerm(theBlock, theReport, theValue, theCollection)
+function validateObjectType(theBlock, theReport, theValue, theCollection)
 {
+    //
+    // Handle object type wildcard.
+    //
+    if(theBlock[K.term.dataKind].includes(K.term.anyObject)) {
+        return true                                                             // ==>
+    }
+
     //
     // Iterate enumeration types.
     //
-    for(const path of theBlock[K.term.dataKind]) {
+    for(const kind of theBlock[K.term.dataKind]) {
 
         //
-        // Handle term wildcard.
+        // Handle object type wildcard.
         // Should succeed, since we already asserted value is a term.
         //
-        if(path == K.term.anyTerm) {
+        if(kind == K.term.anyObject) {
             return true                                                         // ==>
         }
 
         //
-        // Traverse graph.
+        // Assert data kind exists.
         //
-        let root = theCollection.name() + '/' + path
-        let target = theCollection.name() + '/' + theValue
+        const dataKind = utils.getTerm(kind, theReport)
+        if(dataKind === false) {
+            theReport.value = kind
+            theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
 
-        const result = db._query( aql`
-            WITH ${theCollection}
-            FOR vertex, edge, path IN 1..10
-                INBOUND ${root}
-                GRAPH "schema"
-                PRUNE ${path} IN edge._path AND
-                      edge._predicate == ${K.term.predicateEnum} AND
-                      (edge._to == ${target} OR
-                        edge._from == ${target})
-                OPTIONS {
-                    "uniqueVertices": "path"
-                }
-                FILTER ${path} IN edge._path AND
-                       edge._predicate == ${K.term.predicateEnum} AND
-                       (edge._to == ${target} OR
-                        edge._from == ${target})
-            RETURN vertex._key
-        `).toArray()
-
-        if(result.length > 0) {
-            if(theValue !== result[0]) {
-                theReport.value = result[0]
-                theReport.status = K.error.kMSG_VALUE_RESOLVED
-            }
-            return true                                                         // ==>
+            return false                                                        // ==>
         }
+
+        //
+        // Add default values.
+        //
+
     }
 
-    theReport.status = K.error.kMSG_NOT_FOUND
+    theReport.status = K.error.kMSG_TERM_NOT_FOUND
     return false                                                                // ==>
 
-} // validateObjectTerm()
+} // validateObjectType()
 
 /**
  * Validate range
@@ -777,82 +788,6 @@ function validateRange(theBlock, theReport, theValue)
     return true                                                                 // ==>
 
 } // validateRange()
-
-/******************************************************************************/
-/* UTILITY FUNCTIONS                                                          /*
-/******************************************************************************/
-
-/**
- * Check if boolean.
- * The function will return true if the provided value is a boolean.
- * @param item {Any}: The value to test.
- * @returns {boolean}: True if boolean.
- */
-function isBoolean(item)
-{
-    return _.isBoolean(item)                                                    // ==>
-
-} // isBoolean()
-
-/**
- * Check if integer.
- * The function will return true if the provided value is an integer.
- * @param item {Any}: The value to test.
- * @returns {boolean}: True if integer.
- */
-function isInteger(item)
-{
-    return _.isInteger(item)                                                    // ==>
-
-} // isInteger()
-
-/**
- * Check if numeric.
- * The function will return true if the provided value is a numeric.
- * @param item {Any}: The value to test.
- * @returns {boolean}: True if numeric.
- */
-function isNumber(item)
-{
-    return _.isNumber(item)                                                     // ==>
-
-} // isNumber()
-
-/**
- * Check if string.
- * The function will return true if the provided value is a string.
- * @param item {Any}: The value to test.
- * @returns {boolean}: True if string.
- */
-function isString(item)
-{
-    return _.isString(item)                                                     // ==>
-
-} // isString()
-
-/**
- * Check if object.
- * The function will return true if the provided value is an object.
- * @param item {Any}: The value to test.
- * @returns {boolean}: True for objects, false for other types.
- */
-function isObject(item)
-{
-    return _.isPlainObject(item)                                                // ==>
-
-} // isObject()
-
-/**
- * Check if array.
- * The function will return true if the provided value is an array.
- * @param item {Any}: The value to test.
- * @returns {boolean}: True for arrays, false for other types.
- */
-function isArray(item)
-{
-    return _.isArray(item)                                                      //==>
-
-} // isArray()
 
 
 module.exports = {

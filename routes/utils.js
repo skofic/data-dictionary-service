@@ -9,6 +9,7 @@
 //
 // Import frameworks.
 //
+const _ = require('lodash');                            // Lodash library.
 const dd = require('dedent');							// For multiline text.
 const fs = require('fs');								// File system utilities.
 const db = require('@arangodb').db;						// Database object.
@@ -21,6 +22,11 @@ const createAuth = require('@arangodb/foxx/auth');		// Authentication framework.
 const createRouter = require('@arangodb/foxx/router');  // Router class.
 
 //
+// Error constants.
+//
+const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
+
+//
 //* Import models.
 //
 const Term = require('../models/term');                 // Term model.
@@ -31,6 +37,8 @@ const Term = require('../models/term');                 // Term model.
 const reader = require('../utils/JsonLReader')
 const dictionary = require('../utils/dictionary')
 const validation = require('../utils/validation')
+const K = require("../utils/constants");
+const utils = require('../utils/utils');                // Utility functions.
 
 
 //
@@ -57,9 +65,12 @@ router.tag( 'test' );
 router.get(
     '/test/current/:test',
     (request, response) => {
-        const root = request.pathParams.test;
-        const result = validation.validateDescriptor(root)
-        response.send(result);
+
+        const target = request.pathParams.test;
+
+        response.send({
+            "found": utils.getTerm(target)
+        })
     },
 )
     .response([Term], 'A list of terms.')
