@@ -64,6 +64,7 @@ module.exports = Object.freeze({
 
         dataType: "_type",
         dataKind: "_kind",
+        dataRule: "_rule",
 
         dataTypeBool: "_type_boolean",
         dataTypeInteger: "_type_integer",
@@ -84,6 +85,8 @@ module.exports = Object.freeze({
         dataRangeValidMinExc: "_min-range-exclusive",
         dataRangeValidMaxInc: "_max-range-inclusive",
         dataRangeValidMaxExc: "_max-range-exclusive",
+
+        dataRuleDefault: "_default-value",
 
         anyTerm: "_any-term",
         anyObject: "_any-object",
@@ -314,13 +317,22 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "El valor no coincide con la expresión regular."
             }
         },
-        kMSG_BAD_OBJECT: {
+        kMSG_NOT_OBJECT_TYPE: {
             code: 20,
             message: {
-                iso_639_3_eng: "Value does not conform to object type requirements.",
-                iso_639_3_ita: "Il valore non è conforme ai requisiti del tipo di oggetto.",
-                iso_639_3_fra: "La valeur n'est pas conforme aux exigences du type d'objet.",
-                iso_639_3_esp: "El valor no se ajusta a los requisitos del tipo de objeto."
+                iso_639_3_eng: "The data kind is not an object type definition.",
+                iso_639_3_ita: "Il tipo di dati non è una definizione del tipo di oggetto.",
+                iso_639_3_fra: "Le type de données n'est pas une définition de type d'objet.",
+                iso_639_3_esp: "El tipo de datos no es una definición de tipo de objeto."
+            }
+        },
+        kMSG_INVALID_OBJECT: {
+            code: 21,
+            message: {
+                iso_639_3_eng: "The value does not conform to the object definition.",
+                iso_639_3_ita: "Il valore non è conforme alla definizione dell'oggetto.",
+                iso_639_3_fra: "La valeur n'est pas conforme à la définition de l'objet.",
+                iso_639_3_esp: "El valor no se ajusta a la definición del objeto."
             }
         }
     }

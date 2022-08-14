@@ -148,7 +148,7 @@ function validateScalar(theBlock, theReport, theValue)
     //
     // Check if value is scalar.
     //
-    if(utils.isArray(theValue) || utils.isObject(theValue)) {
+    if(utils.isArray(theValue)) {
         theReport.status = K.error.kMSG_NOT_SCALAR
         return                                                                  // ==>
     }
@@ -672,37 +672,26 @@ function validateObject(theBlock, theReport, theValue)
     if(theBlock.hasOwnProperty(K.term.dataKind)) {
 
         //
-        // Init local storage.
-        //
-        const collection = module.context.collection(K.collection.term.name)
-
-        //
         // Validate object type.
         // We bail out if at least one type succeeds.
         //
-        if(validateObjectType(theBlock, theReport,theValue, collection)) {
-            return true                                                         // ==>
-        }
-
-    } else {
-        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
-        return false                                                            // ==>
+        return validateObjectTypes(theBlock, theReport,theValue)                // ==>
     }
 
-    return true                                                                 // ==>
+    theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+    return false                                                                // ==>
 
 } // validateObject()
 
 /**
- * Validate object value
+ * Validate descriptor object data types
  * The function will return true if the value is compatible with any of the bloc's data kinds.
  * @param theBlock {Object}: The dictionary data block.
  * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
- * @param theCollection {Collection}: Terms collection.
  * @returns {boolean}: true means valid.
  */
-function validateObjectType(theBlock, theReport, theValue, theCollection)
+function validateObjectTypes(theBlock, theReport, theValue)
 {
     //
     // Handle object type wildcard.
@@ -736,13 +725,60 @@ function validateObjectType(theBlock, theReport, theValue, theCollection)
         }
 
         //
-        // Add default values.
+        // Assert kind is object definition.
         //
+        if(!dataKind.hasOwnProperty(K.term.dataRule)) {
+            theReport.value = kind
+            theReport.status = K.error.kMSG_NOT_OBJECT_TYPE
 
+            return false                                                        // ==>
+        }
+
+        //
+        // Validate data kind value.
+        //
+        if(validateObjectType(dataKind[K.term.dataRule], theReport, theValue)) {
+            return true                                                         // ==>
+        }
     }
 
-    theReport.status = K.error.kMSG_TERM_NOT_FOUND
+    theReport.status = K.error.kMSG_INVALID_OBJECT
     return false                                                                // ==>
+
+} // validateObjectTypes()
+
+/**
+ * Validate object given data kind
+ * The function will return true if the value is compatible with any of the bloc's data kinds.
+ * @param theRule {Object}: The object definition rule.
+ * @param theReport {ValidationReport}: The status report.
+ * @param theValue {Any}: The value to test.
+ * @returns {boolean}: true means valid.
+ */
+function validateObjectType(theRule, theReport, theValue)
+{
+    //
+    // Deep copy value - to add default values.
+    //
+    let value = JSON.parse(JSON.stringify(theValue))
+
+    //
+    // Add default values.
+    //
+    if(theRule.hasOwnProperty(K.term.dataRuleDefault)) {
+
+        // const defaults = theRule[K.term.dataRuleDefault]
+        // for(const key in defaults) {
+        //     if(!value.hasOwnProperty(key)) {
+        //         value[key] = defaults[key]
+        //     }
+        // }
+
+        value = {
+            ...theRule[K.term.dataRuleDefault],
+            ...value
+        }
+    }
 
 } // validateObjectType()
 
