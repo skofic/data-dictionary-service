@@ -41,7 +41,7 @@ const ValidationReport = require('../models/ValidationReport')
  * @param theReport {ValidationReport}: If provided and error, the error will be set.
  * @returns {boolean}: true if found, or false if not found.
  */
-function checkDocument(theHandle,theReport = null)
+function checkDocument(theHandle,theReport = false)
 {
     //
     // Check if document handle is valid.
@@ -72,7 +72,7 @@ function checkDocument(theHandle,theReport = null)
  * @param theReport {ValidationReport}: If provided and error, the error will be set.
  * @returns {boolean}: The object if found, or false if not found.
  */
-function checkTerm(theKey, theReport)
+function checkTerm(theKey, theReport = false)
 {
     //
     // Check if term exists.
@@ -103,7 +103,7 @@ function checkTerm(theKey, theReport)
  * @param theReport {ValidationReport}: If provided and error, the error will be set.
  * @returns {Object/false}: The object if found, or false if not found.
  */
-function getDocument(theHandle, theReport)
+function getDocument(theHandle, theReport = false)
 {
     //
     // Read database.
@@ -132,9 +132,10 @@ function getDocument(theHandle, theReport)
  * Check if boolean.
  * The function will return true if the provided value is a boolean.
  * @param theKey {String}: The term key.
+ * @param theReport {ValidationReport}: If provided and error, the error will be set.
  * @returns {Object/false}: The object if found, or false if not found.
  */
-function getTerm(theKey)
+function getTerm(theKey, theReport = false)
 {
     //
     // Read database.

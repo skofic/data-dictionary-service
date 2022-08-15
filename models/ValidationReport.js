@@ -11,31 +11,35 @@ const K = require( '../utils/constants' );              // Application constants
  *
  * This class implements the report generated after validating a descriptor.
  * The report is comprised of:
- * - An enumeration that defines the state: M: Message; W: Warning; E: Error
- * - A numeric code identifying the status.
- * - A Message explaining the status.
- * - The descriptor name.
- * - The reported value.
+ * - Descriptor name
+ * - Descriptor value.
+ * - Descriptor type,if relevant.
+ * - Validation status.
+ * - Eventual resolved enumeration.
+ * - Array of eventual nested errors, used for nested types.
  */
 class ValidationReport
 {
     /**
      * Constructor
      * @param theDescriptor {String}: The descriptor or type name.
-     * @param theValue {Any}: The descriptor value,defaults to null.
-     * @param theStatusCode {String}: The status object code, defaults to kMSG_OK.
+     * @param theValue {Any}: The descriptor value.
+     * @param theType {String}: The descriptor type,if relevant
+     * @param theStatus {String}: The status object code, defaults to kMSG_OK.
+     * @param theError {Error}: The eventual error object.
      */
     constructor(
         theDescriptor,
-        theValue = null,
-        theStatus = "kMSG_OK"
+        theValue,
+        theType = null,
+        theStatus = "kMSG_OK",
+        theError= null
     ){
         //
-        // Set data members.
+        // Set data parameters.
         //
         this.descriptor = theDescriptor
         this.value = theValue
-        this.found = false
         this.status = K.error[theStatus]
     }
 

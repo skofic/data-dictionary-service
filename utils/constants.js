@@ -87,6 +87,8 @@ module.exports = Object.freeze({
         dataRangeValidMaxExc: "_max-range-exclusive",
 
         dataRuleDefault: "_default-value",
+        dataRuleRequired: "_required",
+        dataRuleSelDescrOne: "_selection-descriptors_one",
 
         anyTerm: "_any-term",
         anyObject: "_any-object",
@@ -135,6 +137,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Riferimento del tipo di dati non trovato",
                 iso_639_3_fra: "Référence de type de données introuvable",
                 iso_639_3_esp: "Referencia de tipo de datos no encontrada"
+            }
+        },
+        kMSG_UNSUPPORTED_DATA_TYPE: {
+            code: -5,
+            message: {
+                iso_639_3_eng: "Unsupported data type",
+                iso_639_3_ita: "Tipo di dati non supportato",
+                iso_639_3_fra: "Type de données non pris en charge",
+                iso_639_3_esp: "Tipo de datos no admitido"
             }
         },
         kMSG_OK: {
@@ -317,13 +328,13 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "El valor no coincide con la expresión regular."
             }
         },
-        kMSG_NOT_OBJECT_TYPE: {
+        kMSG_NO_RULE_SECTION: {
             code: 20,
             message: {
-                iso_639_3_eng: "The data kind is not an object type definition.",
-                iso_639_3_ita: "Il tipo di dati non è una definizione del tipo di oggetto.",
-                iso_639_3_fra: "Le type de données n'est pas une définition de type d'objet.",
-                iso_639_3_esp: "El tipo de datos no es una definición de tipo de objeto."
+                iso_639_3_eng: "The type does not have a rule section: it is not an object definition.",
+                iso_639_3_ita: "Il tipo non ha una sezione di regole: non è una definizione di oggetto.",
+                iso_639_3_fra: "Le type n'a pas de section de règle : ce n'est pas une définition d'objet.",
+                iso_639_3_esp: "El tipo no tiene una sección de reglas: no es una definición de objeto."
             }
         },
         kMSG_INVALID_OBJECT: {
@@ -333,6 +344,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Il valore non è conforme alla definizione dell'oggetto.",
                 iso_639_3_fra: "La valeur n'est pas conforme à la définition de l'objet.",
                 iso_639_3_esp: "El valor no se ajusta a la definición del objeto."
+            }
+        },
+        kMSG_REQUIRED_ONE_PROPERTY: {
+            code: 22,
+            message: {
+                iso_639_3_eng: "The value does not conform to the object definition.",
+                iso_639_3_ita: "La selezione deve contenere un descrittore dall'insieme.",
+                iso_639_3_fra: "La sélection doit contenir un descripteur de l'ensemble.",
+                iso_639_3_esp: "La selección debe contener un descriptor del conjunto."
             }
         }
     }

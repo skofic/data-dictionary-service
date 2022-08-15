@@ -22,9 +22,9 @@ const ValidateDescriptor = require(('../models/validateDescriptor'))
 const validation = require("../utils/validation");
 
 //
-// Constants.
+// Types.
 //
-const collection_terms = module.context.collection('terms');
+const ValidationReport = require('../models/ValidationReport')
 
 //
 // Error constants.
@@ -74,10 +74,15 @@ function checkDescriptor(request, response)
     const req = request.body
 
     //
+    // Init local storage.
+    //
+    let report = new ValidationReport(req.descriptor, req.value)
+
+    //
     // Query database.
     //
-    const result = validation.validateDescriptor(req.descriptor, req.value)
+    validation.validateDescriptor(req.descriptor, req.value, report)
 
-    response.send(result);                                              // ==>
+    response.send(report);                                                      // ==>
 
 } // getAllEnumerations()
