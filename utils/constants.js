@@ -89,6 +89,10 @@ module.exports = Object.freeze({
         dataRuleDefault: "_default-value",
         dataRuleRequired: "_required",
         dataRuleSelDescrOne: "_selection-descriptors_one",
+        dataRuleSelDescrOneNone: "_selection-descriptors_one-none",
+        dataRuleSelDescrAny: "_selection-descriptors_any",
+        dataRuleSelDescrAnyOne: "_selection-descriptors_any-one",
+        dataRuleSelDescrAll: "_selection-descriptors_all",
 
         anyTerm: "_any-term",
         anyObject: "_any-object",
@@ -349,10 +353,55 @@ module.exports = Object.freeze({
         kMSG_REQUIRED_ONE_PROPERTY: {
             code: 22,
             message: {
-                iso_639_3_eng: "The value does not conform to the object definition.",
-                iso_639_3_ita: "La selezione deve contenere un descrittore dall'insieme.",
-                iso_639_3_fra: "La sélection doit contenir un descripteur de l'ensemble.",
-                iso_639_3_esp: "La selección debe contener un descriptor del conjunto."
+                iso_639_3_eng: "The object value should include exactly one property from the selection.",
+                iso_639_3_ita: "Il valore dell'oggetto dovrebbe includere esattamente una proprietà dalla selezione.",
+                iso_639_3_fra: "La valeur de l'objet doit inclure exactement une propriété de la sélection.",
+                iso_639_3_esp: "El valor del objeto debe incluir exactamente una propiedad de la selección."
+            }
+        },
+        kMSG_REQUIRED_ONE_NONE_PROPERTY: {
+            code: 23,
+            message: {
+                iso_639_3_eng: "The object value should include one or no properties from the selection.",
+                iso_639_3_ita: "Il valore dell'oggetto deve includere una o nessuna proprietà dalla selezione.",
+                iso_639_3_fra: "La valeur de l'objet doit inclure une ou aucune propriété de la sélection.",
+                iso_639_3_esp: "El valor del objeto debe incluir una o ninguna propiedad de la selección.."
+            }
+        },
+        kMSG_REQUIRED_ANY_PROPERTY: {
+            code: 24,
+            message: {
+                iso_639_3_eng: "The object value should include one or more properties from the selection.",
+                iso_639_3_ita: "Il valore dell'oggetto deve includere una o più proprietà dalla selezione.",
+                iso_639_3_fra: "La valeur de l'objet doit inclure une ou plusieurs propriétés de la sélection.",
+                iso_639_3_esp: "El valor del objeto debe incluir una o más propiedades de la selección."
+            }
+        },
+        kMSG_REQUIRED_MORE_ONE_SELECTION: {
+            code: 25,
+            message: {
+                iso_639_3_eng: "More than one property selected from set.",
+                iso_639_3_ita: "Più di una proprietà selezionata dal set.",
+                iso_639_3_fra: "Plusieurs propriétés sélectionnées dans l'ensemble.",
+                iso_639_3_esp: "Más de una propiedad seleccionada del conjunto."
+            }
+        },
+        kMSG_REQUIRED_ONE_SELECTION: {
+            code: 26,
+            message: {
+                iso_639_3_eng: "At least one property is required.",
+                iso_639_3_ita: "È richiesta almeno una proprietà.",
+                iso_639_3_fra: "Au moins une propriété est requise.",
+                iso_639_3_esp: "Se requiere al menos una propiedad."
+            }
+        },
+        kMSG_REQUIRED_ALL_SELECTION: {
+            code: 26,
+            message: {
+                iso_639_3_eng: "All properties in set are required.",
+                iso_639_3_ita: "Tutte le proprietà nel set sono obbligatorie.",
+                iso_639_3_fra: "Toutes les propriétés de l'ensemble sont obligatoires.",
+                iso_639_3_esp: "Todas las propiedades del conjunto son obligatorias."
             }
         }
     }

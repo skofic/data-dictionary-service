@@ -886,9 +886,67 @@ function validateObjectRequired(theRule, theReport, theValue)
         // Check should contain one descriptor from the set.
         //
         if(theRule[K.term.dataRuleRequired].hasOwnProperty(K.term.dataRuleSelDescrOne)) {
-            if(_.intersection(theValue.keys(), theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrOne]) !== 1) {
+             if(_.intersection(theValue.keys(), theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrOne]) !== 1) {
                 theReport["set"] = theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrOne]
                 theReport.status = K.error.kMSG_REQUIRED_ONE_PROPERTY
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Check should contain one descriptor from the set or none.
+        //
+        if(theRule[K.term.dataRuleRequired].hasOwnProperty(K.term.dataRuleSelDescrOneNone)) {
+            if(_.intersection(theValue.keys(), theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrOneNone]) > 1) {
+                theReport["set"] = theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrOneNone]
+                theReport.status = K.error.kMSG_REQUIRED_ONE_NONE_PROPERTY
+
+                return false                                                    // ==>
+            }
+        }
+    }
+
+    //
+    // Check should contain one or more descriptors from the set.
+    //
+    if(theRule[K.term.dataRuleRequired].hasOwnProperty(K.term.dataRuleSelDescrAny)) {
+        if(_.intersection(theValue.keys(), theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrAny]) === 0) {
+            theReport["set"] = theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrAny]
+            theReport.status = K.error.kMSG_REQUIRED_ANY_PROPERTY
+
+            return false                                                        // ==>
+        }
+    }
+
+    //
+    // Check should contain one or no descriptors from each set in the list and at least one entry in the result.
+    //
+    if(theRule[K.term.dataRuleRequired].hasOwnProperty(K.term.dataRuleSelDescrAnyOne)) {
+
+        if(value.keys().length === 0) {
+            theReport.status = K.error.kMSG_REQUIRED_ONE_SELECTION
+
+            return false                                                        // ==>
+        }
+
+        const rule = theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrAnyOne]
+        for(const set in rule) {
+            if(_.intersection(theValue.keys(), set) > 1) {
+                theReport["set"] = set
+                theReport.status = K.error.kMSG_REQUIRED_MORE_ONE_SELECTION
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Check should contain all descriptors from the set.
+        //
+        if(theRule[K.term.dataRuleRequired].hasOwnProperty(K.term.dataRuleSelDescrAll)) {
+            if(_.intersection(theValue.keys(), theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrAll]) !== theValue.keys().length) {
+                theReport["set"] = theRule[K.term.dataRuleRequired][K.term.dataRuleSelDescrAll]
+                theReport.status = K.error.kMSG_REQUIRED_ALL_SELECTION
 
                 return false                                                    // ==>
             }
