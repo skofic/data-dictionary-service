@@ -81,7 +81,7 @@ function checkDescriptor(request, response)
     //
     // Query database.
     //
-    validation.validateDescriptor(req.descriptor, req.value, report)
+    const valid = validation.validateDescriptor(req.descriptor, req.value, report)
 
     response.send(report);                                                      // ==>
 

@@ -170,22 +170,22 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "Correcto, el valor resuelto se encuentra en el reporte."
             }
         },
-        kMSG_DESCRIPTOR_NOT_FOUND: {
-            code: 2,
-            message: {
-                iso_639_3_eng: "Descriptor not found.",
-                iso_639_3_ita: "Descrittore non trovato.",
-                iso_639_3_fra: "Descripteur pas trouvé.",
-                iso_639_3_esp: "No encontré el descriptor."
-            }
-        },
         kMSG_TERM_NOT_FOUND: {
-            code: 3,
+            code: 2,
             message: {
                 iso_639_3_eng: "Term not found.",
                 iso_639_3_ita: "Termine non trovato.",
                 iso_639_3_fra: "Terme inconnu.",
                 iso_639_3_esp: "No encontré el termino."
+            }
+        },
+        kMSG_DESCRIPTOR_NOT_FOUND: {
+            code: 3,
+            message: {
+                iso_639_3_eng: "Descriptor not found.",
+                iso_639_3_ita: "Descrittore non trovato.",
+                iso_639_3_fra: "Descripteur pas trouvé.",
+                iso_639_3_esp: "No encontré el descriptor."
             }
         },
         kMSG_ENUM_NOT_FOUND: {

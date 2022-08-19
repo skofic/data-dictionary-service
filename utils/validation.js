@@ -38,40 +38,22 @@ const ValidationReport = require('../models/ValidationReport')
  * @param theDescriptor {String}: Descriptor name.
  * @param theValue {Any}: Descriptor value.
  * @param theReport {ValidationReport}: Status report.
-  */
+ * @returns {boolean}: true means valid.
+ */
 function validateDescriptor(theDescriptor, theValue, theReport)
 {
     //
     // Load descriptor.
     //
-    const descriptor = utils.getTerm(theDescriptor)
-    if(descriptor !== false) {
-
-        //
-        // Check data block.
-        //
-        if(descriptor.hasOwnProperty(K.term.dataBlock)) {
-
-            //
-            // Validate data.
-            //
-            validateDataBlock(descriptor[K.term.dataBlock], theValue, theReport)
-        }
-
-        //
-        // Missing data block.
-        //
-        else {
-            theReport.status = K.error.kMSG_NO_DATA_BLOCK
-        }
+    const descriptor = utils.getDescriptor(theDescriptor, theReport)
+    if(descriptor === false) {
+        return false                                                            // ==>
     }
 
     //
-    // Unknown descriptor.
+    // Validate data block.
     //
-    else {
-        theReport.status = K.error.kMSG_DESCRIPTOR_NOT_FOUND
-    }
+    return validateDataBlock(descriptor[K.term.dataBlock], theValue, theReport)
 
 } // validateDescriptor()
 
@@ -84,15 +66,24 @@ function validateDescriptor(theDescriptor, theValue, theReport)
  * @param theBlock {Object}: The data block.
  * @param theValue {Any}: The descriptor's value.
  * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
  */
 function validateDataBlock(theBlock, theValue, theReport)
 {
+    //
+    // Check if it has an empty data block.
+    //
+    if(_.isEmpty(theBlock)) {
+        return true                                                             // ==>
+    }
+
     //
     // Parse scalar data block.
     //
     if(theBlock.hasOwnProperty(K.term.dataBlockScalar))
     {
-        validateScalar(theBlock[K.term.dataBlockScalar], theReport, theValue)
+        return validateScalar(
+            theBlock[K.term.dataBlockScalar], theReport, theValue)              // ==>
     }
 
     //
@@ -100,7 +91,8 @@ function validateDataBlock(theBlock, theValue, theReport)
     //
     else if(theBlock.hasOwnProperty(K.term.dataBlockArray))
     {
-        validateArray(theBlock[K.term.dataBlockArray], theReport, theValue)
+        return validateArray(
+            theBlock[K.term.dataBlockArray], theReport, theValue)               // ==>
     }
 
     //
@@ -108,7 +100,8 @@ function validateDataBlock(theBlock, theValue, theReport)
     //
     else if(theBlock.hasOwnProperty(K.term.dataBlockSet))
     {
-        validateSet(theBlock[K.term.dataBlockSet], theReport, theValue)
+        return validateSet(
+            theBlock[K.term.dataBlockSet], theReport, theValue)                 // ==>
     }
 
     //
@@ -116,24 +109,15 @@ function validateDataBlock(theBlock, theValue, theReport)
     //
     else if(theBlock.hasOwnProperty(K.term.dataBlockDict))
     {
-        validateDictionary(theBlock[K.term.dataBlockDict], theReport, theValue)
-    }
-
-    //
-    // Parse empty data block.
-    //
-    else if((Object.keys(theBlock).length === 0) && (theBlock.constructor === Object))
-    {
-        return                                                                  // ==>
+        return validateDictionary(
+            theBlock[K.term.dataBlockDict], theReport, theValue)                // ==>
     }
 
     //
     // Invalid data block.
     //
-    else
-    {
-        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
-    }
+    theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+    return false                                                                // ==>
 
 } // validateDataBlock()
 
@@ -156,15 +140,11 @@ function validateScalar(theBlock, theReport, theValue)
     // We assume anything except an array is a scalar.
     //
     if(!utils.isArray(theValue)) {
-        validateValue(theBlock, theReport, theValue)
+       return  validateValue(theBlock, theReport, theValue)                     // ==>
     }
 
-    //
-    // Set error.
-    //
-    else {
-        theReport.status = K.error.kMSG_NOT_SCALAR
-    }
+    theReport.status = K.error.kMSG_NOT_SCALAR
+    return false                                                                // ==>
 
 } // validateScalar()
 
@@ -187,16 +167,24 @@ function validateArray(theBlock, theReport, theValue)
         // Handle array constraints.
         //
         if(theBlock.hasOwnProperty(K.term.dataRangeElements)) {
+
+            //
+            // Minimum elements.
+            //
             if(theBlock.hasOwnProperty(K.term.dataRangeElementsMin)) {
                 if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMin] > theValue.length) {
                     theReport.status = K.error.kMSG_NOT_ENOUGH_ELEMENTS
-                    return                                                      // ==>
+                    return false                                                // ==>
                 }
             }
+
+            //
+            // Maximum elements.
+            //
             if(theBlock.hasOwnProperty(K.term.dataRangeElementsMax)) {
                 if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMax] < theValue.length) {
                     theReport.status = K.error.kMSG_TOO_MANY_ELEMENTS
-                    return                                                      // ==>
+                    return false                                                // ==>
                 }
             }
         }
@@ -204,16 +192,36 @@ function validateArray(theBlock, theReport, theValue)
         //
         // Validate array values.
         //
+        let errors = 0
+        let currentValue = null
         for(let value of theValue) {
-            if(!validateValue(theBlock, theReport, value)) {
-                theReport.status["value"] = value
-                return                                                          // ==>
+
+            //
+            // Validate array element type.
+            //
+            if(!validateDataBlock(theBlock, value, theReport)) {
+                currentValue = value
+                errors++
             }
         }
 
-    } else {
-        theReport.status = K.error.kMSG_NOT_ARRAY
-    }
+        //
+        // No errors.
+        //
+        if(errors === 0) {
+            return true                                                         // ==>
+        }
+
+        //
+        // Handle all errors.
+        //
+        theReport.status["value"] = currentValue
+        return false                                                            // ==>
+
+    } // Value is array.
+
+    theReport.status = K.error.kMSG_NOT_ARRAY
+    return false                                                                // ==>
 
 } // validateArray()
 
@@ -230,17 +238,20 @@ function validateSet(theBlock, theReport, theValue)
     //
     // Perform array validation.
     //
-    validateArray(theBlock, theReport, theValue)
-    if(theReport.status.code !== 0) {
-        return                                                                  // ==>
+    if(!validateArray(theBlock, theReport, theValue)) {
+        return false                                                            // ==>
     }
 
     //
     // Check for duplicates.
     //
-    if(new Set(theValue).size !== theValue.length) {
+    const test = new Set(theValue)
+    if(test.size !== theValue.length) {
         theReport.status = K.error.kMSG_DUP_SET
+        return false                                                            // =>
     }
+
+    return true                                                                 // ==>
 
 } // validateSet()
 
@@ -255,6 +266,7 @@ function validateSet(theBlock, theReport, theValue)
 function validateDictionary(theBlock, theReport,theValue)
 {
     theReport.value = "IS DICTIONARY"
+    return true                                                                 // ==>
 
 } // validateDictionary()
 
@@ -323,9 +335,10 @@ function validateValue(theBlock, theReport, theValue)
                 theReport.status["type"] = theBlock[K.term.dataType]
 
                 return false                                                    // ==>
-        }
 
-    }
+        } // Parse type.
+
+    } // Has no type.
 
     //
     // Missing data type means any value will do.

@@ -67,7 +67,7 @@ function checkDocument(theHandle,theReport = false)
 
 /**
  * Check if term exists.
- * The function will return true if the provided value is a boolean.
+ * The function will return true if the provided value is a term.
  * @param theKey {String}: The term key.
  * @param theReport {ValidationReport}: If provided and error, the error will be set.
  * @returns {boolean}: The object if found, or false if not found.
@@ -88,6 +88,7 @@ function checkTerm(theKey, theReport = false)
     //
     catch (error) {
         if(theReport !== false) {
+            theReport.status = K.error.kMSG_TERM_NOT_FOUND
             theReport["error"] = error
         }
     }
@@ -129,8 +130,8 @@ function getDocument(theHandle, theReport = false)
 } // getDocument()
 
 /**
- * Check if boolean.
- * The function will return true if the provided value is a boolean.
+ * Get term.
+ * The function will return the term corresponding to the provided key, or false.
  * @param theKey {String}: The term key.
  * @param theReport {ValidationReport}: If provided and error, the error will be set.
  * @returns {Object/false}: The object if found, or false if not found.
@@ -147,11 +148,12 @@ function getTerm(theKey, theReport = false)
 
     }
 
-    //
-    // Handle errors.
-    //
+        //
+        // Handle errors.
+        //
     catch (error) {
         if(theReport !== false) {
+            theReport.status = K.error.kMSG_TERM_NOT_FOUND
             theReport["error"] = error
         }
     }
@@ -159,6 +161,42 @@ function getTerm(theKey, theReport = false)
     return false                                                                // ==>
 
 } // getTerm()
+
+/**
+ * Get descriptor term.
+ * The function will return the descriptor corresponding to the provided key, or false.
+ * Note that the data block is required, but can be empty.
+ * @param theKey {String}: The term key.
+ * @param theReport {ValidationReport}: If provided and error, the error will be set.
+ * @returns {Object/false}: The object if found, or false if not found.
+ */
+function getDescriptor(theKey, theReport = false)
+{
+    //
+    // Get term.
+    //
+    const term = getTerm(theKey, theReport)
+    if(term === false) {
+        return false                                                            // ==>
+    }
+
+    //
+    // Check data block.
+    //
+    if(term.hasOwnProperty(K.term.dataBlock)) {
+        return term                                                             // ==>
+    }
+
+    //
+    // Signal not a descriptor.
+    //
+    if(theReport !== false) {
+        theReport.status = K.error.kMSG_NOT_DESCRIPTOR
+    }
+
+    return false                                                                // ==>
+
+} // getDescriptor()
 
 
 /******************************************************************************/
@@ -244,6 +282,7 @@ module.exports = {
 
     getDocument,
     getTerm,
+    getDescriptor,
 
     isBoolean,
     isInteger,
