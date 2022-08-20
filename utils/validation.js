@@ -47,6 +47,7 @@ function validateDescriptor(theDescriptor, theValue, theReport)
     //
     const descriptor = utils.getDescriptor(theDescriptor, theReport)
     if(descriptor === false) {
+        theReport["passed"] = theDescriptor
         return false                                                            // ==>
     }
 
@@ -163,6 +164,12 @@ function validateArray(theBlock, theReport, theValue)
     // Check if value is an array.
     //
     if(utils.isArray(theValue)) {
+
+        //
+        // Use array block.
+        //
+        let block = theBlock[K.term.dataBlockArray]
+        theReport.stack.push(block)
 
         //
         // Handle array constraints.
