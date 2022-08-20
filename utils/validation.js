@@ -152,6 +152,7 @@ function validateScalar(theBlock, theReport, theValue)
  * Validate array value
  * The function expects the descriptor's array definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
+ * Note that the leaf element of this data block can only be a scalar value.
  * @param theBlock {Object}: The array data block.
  * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The array value.
@@ -190,33 +191,16 @@ function validateArray(theBlock, theReport, theValue)
         }
 
         //
-        // Validate array values.
+        // Validate array data block.
         //
-        let errors = 0
-        let currentValue = null
-        for(let value of theValue) {
-
-            //
-            // Validate array element type.
-            //
+        for(const value of theValue) {
             if(!validateDataBlock(theBlock, value, theReport)) {
-                currentValue = value
-                errors++
+                theReport.status["value"] = value
+                return false                                                    // ==>
             }
         }
 
-        //
-        // No errors.
-        //
-        if(errors === 0) {
-            return true                                                         // ==>
-        }
-
-        //
-        // Handle all errors.
-        //
-        theReport.status["value"] = currentValue
-        return false                                                            // ==>
+        return true                                                             // ==>
 
     } // Value is array.
 
@@ -248,7 +232,7 @@ function validateSet(theBlock, theReport, theValue)
     const test = new Set(theValue)
     if(test.size !== theValue.length) {
         theReport.status = K.error.kMSG_DUP_SET
-        return false                                                            // =>
+        return false                                                            // ==>
     }
 
     return true                                                                 // ==>
@@ -469,16 +453,12 @@ function validateRecord(theBlock, theReport, theValue)
     //
     // Assert record handle.
     //
-    if(utils.checkDocument(theValue, theReport)) {
-        return true                                                             // ==>
+    if(!utils.checkDocument(theValue, theReport)) {
+        theReport.status = K.error.kMSG_DOCUMENT_NOT_FOUND
+        return false                                                            // ==>
     }
 
-    //
-    // Set error.
-    //
-    theReport.status = K.error.kMSG_DOCUMENT_NOT_FOUND
-
-    return false                                                                // ==>
+    return true                                                                 // ==>
 
 } // validateRecord()
 
@@ -527,7 +507,7 @@ function validateEnum(theBlock, theReport, theValue)
         }
 
         //
-        // Validate enumeration graphs.
+        // Traverse enumeration graph.
         //
         return validateEnumTerm(theBlock, theReport, theValue)                  // ==>
     }
