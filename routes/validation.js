@@ -77,7 +77,6 @@ function checkDescriptor(request, response)
     // Init local storage.
     //
     let report = new ValidationReport(req.descriptor, req.value)
-    report["stack"] = []    // MILKO - Utility stack.
 
     //
     // Query database.

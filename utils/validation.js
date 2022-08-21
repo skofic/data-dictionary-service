@@ -166,21 +166,17 @@ function validateArray(theBlock, theReport, theValue)
     if(utils.isArray(theValue)) {
 
         //
-        // Use array block.
-        //
-        let block = theBlock[K.term.dataBlockArray]
-        theReport.stack.push(block)
-
-        //
         // Handle array constraints.
         //
         if(theBlock.hasOwnProperty(K.term.dataRangeElements)) {
+            const elements = theValue.length
+            const block = theBlock[K.term.dataRangeElements]
 
             //
             // Minimum elements.
             //
-            if(theBlock.hasOwnProperty(K.term.dataRangeElementsMin)) {
-                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMin] > theValue.length) {
+            if(block.hasOwnProperty(K.term.dataRangeElementsMin)) {
+                if(block[K.term.dataRangeElementsMin] > elements) {
                     theReport.status = K.error.kMSG_NOT_ENOUGH_ELEMENTS
                     return false                                                // ==>
                 }
@@ -189,8 +185,8 @@ function validateArray(theBlock, theReport, theValue)
             //
             // Maximum elements.
             //
-            if(theBlock.hasOwnProperty(K.term.dataRangeElementsMax)) {
-                if(theBlock[K.term.dataRangeElements][K.term.dataRangeElementsMax] < theValue.length) {
+            if(block.hasOwnProperty(K.term.dataRangeElementsMax)) {
+                if(block[K.term.dataRangeElementsMax] < elements) {
                     theReport.status = K.error.kMSG_TOO_MANY_ELEMENTS
                     return false                                                // ==>
                 }
@@ -202,7 +198,6 @@ function validateArray(theBlock, theReport, theValue)
         //
         for(const value of theValue) {
             if(!validateDataBlock(theBlock, value, theReport)) {
-                theReport.status["value"] = value
                 return false                                                    // ==>
             }
         }
@@ -606,7 +601,8 @@ function validateEnumTerm(theBlock, theReport, theValue)
 
     } // Iterating enumeration types.
 
-    theReport.status = K.error.kMSG_ENUM_NOT_FOUND
+    theReport.status = K.error.kMSG_TERM_NOT_FOUND
+    theReport.status["value"] = theValue
     return false                                                                // ==>
 
 } // validateEnumTerm()
@@ -695,7 +691,8 @@ function validateEnumCode(theBlock, theReport, theValue)
 
     } // Iterating enumeration types.
 
-    theReport.status = K.error.kMSG_TERM_NOT_FOUND
+    theReport.status = K.error.kMSG_ENUM_NOT_FOUND
+    theReport.status["value"] = theValue
     return false                                                                // ==>
 
 } // validateEnumCode()
