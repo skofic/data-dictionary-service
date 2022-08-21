@@ -45,10 +45,15 @@ function validateDescriptor(theDescriptor, theValue, theReport)
     //
     // Load descriptor.
     //
-    const descriptor = utils.getDescriptor(theDescriptor, theReport)
+    const descriptor = utils.getDescriptor(theDescriptor)
     if(descriptor === false) {
-        theReport["passed"] = theDescriptor
-        return false                                                            // ==>
+        if(!theReport.hasOwnProperty("ignored")) {
+            theReport["ignored"] = [theDescriptor]
+        } else {
+            theReport.ignored.push(theDescriptor)
+        }
+
+        return true                                                            // ==>
     }
 
     //
@@ -555,6 +560,15 @@ function validateEnumTerm(theBlock, theReport, theValue)
         }
 
         //
+        // Handle root is same as target.
+        // In this case we would bet the first level of rootìs elements,
+        // for that reason we force the value as a code, instead.
+        //
+        if(enumType == theValue) {
+            return validateEnumCode(theBlock, theReport, theValue)              // ==>
+        }
+
+        //
         // Init query parameters.
         //
         let root = collection.name() + '/' + enumType
@@ -621,7 +635,7 @@ function validateEnumCode(theBlock, theReport, theValue)
     //
     // Init local storage.
     //
-    const theCollection = module.context.collection(K.collection.term.name)
+    const collection = module.context.collection(K.collection.term.name)
 
     //
     // Iterate enumeration types.
@@ -652,13 +666,13 @@ function validateEnumCode(theBlock, theReport, theValue)
         //
         // Init query parameters.
         //
-        const root = theCollection.name() + '/' + enumType
+        const root = collection.name() + '/' + enumType
 
         //
         // Traverse graph.
         //
         const result = db._query( aql`
-            WITH ${theCollection}
+            WITH ${collection}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}
                 GRAPH "schema"
@@ -750,15 +764,6 @@ function validateObject(theBlock, theReport, theValue)
  */
 function validateObjectTypes(theBlock, theReport, theValue)
 {
-    //
-    // Handle object type wildcard.
-    // We know the block has the data kind...
-    // Note that the object type wildcard should be the only element in the data kinds.
-    //
-    if(theBlock[K.term.dataKind].includes(K.term.anyObject)) {
-        return true                                                             // ==>
-    }
-
     //
     // Iterate enumeration types.
     //
@@ -852,6 +857,15 @@ function validateObjectStructure(theRule, theReport, theValue)
     //
     if(!validateObjectRequired(theRule, theReport, theValue)) {
         return false                                                            // ==>
+    }
+
+    //
+    // Traverse object.
+    //
+    for(const [descriptor, value] of Object.entries(theValue)) {
+        if(!validateDescriptor(descriptor,value,theReport)) {
+            return false
+        }
     }
 
     return true                                                                 // ==>

@@ -61,7 +61,6 @@ FOR vertex, edge, path IN 1..10
            edge._predicate == @predicate AND
            @code IN vertex._code._aid
     RETURN vertex
-
 ```
 
 | Parameter | Value                |
