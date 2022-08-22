@@ -43,9 +43,18 @@ const ValidationReport = require('../models/ValidationReport')
 function validateDescriptor(theDescriptor, theValue, theReport)
 {
     //
+    // Save current descriptor.
+    //
+    theReport["current"] = theDescriptor
+
+    //
     // Load descriptor.
     //
     const descriptor = utils.getDescriptor(theDescriptor)
+
+    //
+    // Ignore unknown descriptors.
+    //
     if(descriptor === false) {
         if(!theReport.hasOwnProperty("ignored")) {
             theReport["ignored"] = [theDescriptor]
@@ -53,13 +62,13 @@ function validateDescriptor(theDescriptor, theValue, theReport)
             theReport.ignored.push(theDescriptor)
         }
 
-        return true                                                            // ==>
+        return true                                                             // ==>
     }
 
     //
     // Validate data block.
     //
-    return validateDataBlock(descriptor[K.term.dataBlock], theValue, theReport)
+    return validateDataBlock(descriptor[K.term.dataBlock], theValue, theReport) // ==>
 
 } // validateDescriptor()
 
@@ -89,7 +98,7 @@ function validateDataBlock(theBlock, theValue, theReport)
     if(theBlock.hasOwnProperty(K.term.dataBlockScalar))
     {
         return validateScalar(
-            theBlock[K.term.dataBlockScalar], theReport, theValue)              // ==>
+            theBlock[K.term.dataBlockScalar], theValue, theReport)              // ==>
     }
 
     //
@@ -98,7 +107,7 @@ function validateDataBlock(theBlock, theValue, theReport)
     else if(theBlock.hasOwnProperty(K.term.dataBlockArray))
     {
         return validateArray(
-            theBlock[K.term.dataBlockArray], theReport, theValue)               // ==>
+            theBlock[K.term.dataBlockArray], theValue, theReport)               // ==>
     }
 
     //
@@ -107,7 +116,7 @@ function validateDataBlock(theBlock, theValue, theReport)
     else if(theBlock.hasOwnProperty(K.term.dataBlockSet))
     {
         return validateSet(
-            theBlock[K.term.dataBlockSet], theReport, theValue)                 // ==>
+            theBlock[K.term.dataBlockSet], theValue, theReport)                 // ==>
     }
 
     //
@@ -116,7 +125,7 @@ function validateDataBlock(theBlock, theValue, theReport)
     else if(theBlock.hasOwnProperty(K.term.dataBlockDict))
     {
         return validateDictionary(
-            theBlock[K.term.dataBlockDict], theReport, theValue)                // ==>
+            theBlock[K.term.dataBlockDict], theValue, theReport)                // ==>
     }
 
     //
@@ -136,20 +145,33 @@ function validateDataBlock(theBlock, theValue, theReport)
  * The function expects the descriptor's scalar definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The scalar data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The scalar value.
+ * @param theReport {ValidationReport}: The status report.
  */
-function validateScalar(theBlock, theReport, theValue)
+function validateScalar(theBlock, theValue, theReport)
 {
     //
     // Validate scalar value.
     // We assume anything except an array is a scalar.
     //
     if(!utils.isArray(theValue)) {
-       return  validateValue(theBlock, theReport, theValue)                     // ==>
+
+        //
+        // Empty scalar block means all is fair in love.
+        //
+        if(_.isEmpty(theBlock)) {
+            return true                                                         // ==>
+        }
+
+        //
+        // Parse scalar block.
+        //
+        return  validateValue(theBlock, theValue, theReport)                    // ==>
     }
 
     theReport.status = K.error.kMSG_NOT_SCALAR
+    theReport.status["value"] = theValue
+
     return false                                                                // ==>
 
 } // validateScalar()
@@ -160,10 +182,10 @@ function validateScalar(theBlock, theReport, theValue)
  * it should ensure the value is valid and return the converted value if successful.
  * Note that the leaf element of this data block can only be a scalar value.
  * @param theBlock {Object}: The array data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The array value.
+ * @param theReport {ValidationReport}: The status report.
  */
-function validateArray(theBlock, theReport, theValue)
+function validateArray(theBlock, theValue, theReport)
 {
     //
     // Check if value is an array.
@@ -183,6 +205,9 @@ function validateArray(theBlock, theReport, theValue)
             if(block.hasOwnProperty(K.term.dataRangeElementsMin)) {
                 if(block[K.term.dataRangeElementsMin] > elements) {
                     theReport.status = K.error.kMSG_NOT_ENOUGH_ELEMENTS
+                    theReport.status["elements"] = block
+                    theReport.status["value"] = theValue
+
                     return false                                                // ==>
                 }
             }
@@ -193,6 +218,9 @@ function validateArray(theBlock, theReport, theValue)
             if(block.hasOwnProperty(K.term.dataRangeElementsMax)) {
                 if(block[K.term.dataRangeElementsMax] < elements) {
                     theReport.status = K.error.kMSG_TOO_MANY_ELEMENTS
+                    theReport.status["elements"] = block
+                    theReport.status["value"] = theValue
+
                     return false                                                // ==>
                 }
             }
@@ -212,6 +240,8 @@ function validateArray(theBlock, theReport, theValue)
     } // Value is array.
 
     theReport.status = K.error.kMSG_NOT_ARRAY
+    theReport.status["value"] = theValue
+
     return false                                                                // ==>
 
 } // validateArray()
@@ -221,15 +251,15 @@ function validateArray(theBlock, theReport, theValue)
  * The function expects the descriptor's set definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The set data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The set value.
+ * @param theReport {ValidationReport}: The status report.
  */
-function validateSet(theBlock, theReport, theValue)
+function validateSet(theBlock, theValue, theReport)
 {
     //
     // Perform array validation.
     //
-    if(!validateArray(theBlock, theReport, theValue)) {
+    if(!validateArray(theBlock, theValue, theReport)) {
         return false                                                            // ==>
     }
 
@@ -239,6 +269,8 @@ function validateSet(theBlock, theReport, theValue)
     const test = new Set(theValue)
     if(test.size !== theValue.length) {
         theReport.status = K.error.kMSG_DUP_SET
+        theReport.status["value"] = theValue
+
         return false                                                            // ==>
     }
 
@@ -251,10 +283,10 @@ function validateSet(theBlock, theReport, theValue)
  * The function expects the descriptor's dictionary definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The dictionary value.
+ * @param theReport {ValidationReport}: The status report.
  */
-function validateDictionary(theBlock, theReport,theValue)
+function validateDictionary(theBlock, theValue, theReport)
 {
     theReport.value = "IS DICTIONARY"
     return true                                                                 // ==>
@@ -267,11 +299,11 @@ function validateDictionary(theBlock, theReport,theValue)
  * to the data type defined in the provided descriptor data block.
  * The value is expected to be .
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateValue(theBlock, theReport, theValue)
+function validateValue(theBlock, theValue, theReport)
 {
     //
     // Check for data type.
@@ -285,32 +317,32 @@ function validateValue(theBlock, theReport, theValue)
 
             // Boolean.
             case K.term.dataTypeBool:
-                return validateBoolean(theBlock, theReport, theValue)           // ==>
+                return validateBoolean(theBlock, theValue, theReport)           // ==>
 
             // Integer.
             case K.term.dataTypeInteger:
-                return validateInteger(theBlock, theReport, theValue)           // ==>
+                return validateInteger(theBlock, theValue, theReport)           // ==>
 
             // Float.
             case K.term.dataTypeNumber:
-                return validateNumber(theBlock, theReport, theValue)            // ==>
+                return validateNumber(theBlock, theValue, theReport)            // ==>
 
             // String.
             case K.term.dataTypeString:
-                return validateString(theBlock, theReport, theValue)            // ==>
+                return validateString(theBlock, theValue, theReport)            // ==>
 
             // Object.
             case K.term.dataTypeObject:
-                return validateObject(theBlock, theReport, theValue)            // ==>
+                return validateObject(theBlock, theValue, theReport)            // ==>
 
             // Enumeration.
             case K.term.dataTypeEnum:
-                return validateEnum(theBlock, theReport, theValue)              // ==>
+                return validateEnum(theBlock, theValue, theReport)              // ==>
                 break
 
             // Record reference.
             case K.term.dataTypeRecord:
-                return validateRecord(theBlock, theReport, theValue)            // ==>
+                return validateRecord(theBlock, theValue, theReport)            // ==>
 
             // Timestamp.
             case K.term.dataTypeTimestamp:
@@ -343,17 +375,19 @@ function validateValue(theBlock, theReport, theValue)
  * The function will return true if the reported value is a boolean.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateBoolean(theBlock, theReport, theValue)
+function validateBoolean(theBlock, theValue, theReport)
 {
     //
     // Assert boolean value.
     //
     if(!utils.isBoolean(theValue)) {
         theReport.status = K.error.kMSG_NOT_BOOL
+        theReport.status["value"] = theValue
+
         return false                                                            // ==>
     }
 
@@ -366,24 +400,26 @@ function validateBoolean(theBlock, theReport, theValue)
  * The function will return true if the reported value is an integer.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateInteger(theBlock, theReport, theValue)
+function validateInteger(theBlock, theValue, theReport)
 {
     //
     // Assert integer value.
     //
     if(!utils.isInteger(theValue)) {
         theReport.status = K.error.kMSG_NOT_INT
+        theReport.status["value"] = theValue
+
         return false                                                            // ==>
     }
 
     //
     // Validate value range.
     //
-    return validateRange(theBlock, theReport, theValue)                         // ==>
+    return validateRange(theBlock, theValue, theReport)                         // ==>
 
 } // validateInteger()
 
@@ -392,24 +428,26 @@ function validateInteger(theBlock, theReport, theValue)
  * The function will return true if the reported value is a float or integer.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateNumber(theBlock, theReport, theValue)
+function validateNumber(theBlock, theValue, theReport)
 {
     //
     // Assert numeric value.
     //
     if(!utils.isNumber(theValue)) {
         theReport.status = K.error.kMSG_NOT_NUMBER
+        theReport.status["value"] = theValue
+
         return false                                                            // ==>
     }
 
     //
     // Validate value range.
     //
-    return validateRange(theBlock, theReport, theValue)                         // ==>
+    return validateRange(theBlock, theValue, theReport)                         // ==>
 
 } // validateNumber()
 
@@ -418,24 +456,26 @@ function validateNumber(theBlock, theReport, theValue)
  * The function will return true if the reported value is a string.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateString(theBlock, theReport, theValue)
+function validateString(theBlock, theValue, theReport)
 {
     //
     // Assert string value.
     //
     if(!utils.isString(theValue)) {
         theReport.status = K.error.kMSG_NOT_STRING
+        theReport.status["value"] = theValue
+
         return false                                                            // ==>
     }
 
     //
     // Validate regular expression.
     //
-    return validateRegexp(theBlock, theReport, theValue)                        // ==>
+    return validateRegexp(theBlock, theValue, theReport)                        // ==>
 
 } // validateString()
 
@@ -444,16 +484,16 @@ function validateString(theBlock, theReport, theValue)
  * The function will return true if the reported value is a record handle.
  * Note that we assume the reference document to exist.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The handle to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateRecord(theBlock, theReport, theValue)
+function validateRecord(theBlock, theValue, theReport)
 {
     //
     // Assert string.
     //
-    if(!validateString(theBlock, theReport, theValue)) {
+    if(!validateString(theBlock, theValue, theReport)) {
         return false                                                            // ==>
     }
 
@@ -462,6 +502,8 @@ function validateRecord(theBlock, theReport, theValue)
     //
     if(!utils.checkDocument(theValue, theReport)) {
         theReport.status = K.error.kMSG_DOCUMENT_NOT_FOUND
+        theReport.status["value"] = theValue
+
         return false                                                            // ==>
     }
 
@@ -479,16 +521,16 @@ function validateRecord(theBlock, theReport, theValue)
  *     - If that is the case, locate the term in the graph.
  *     - If that is not the case, locate the code in the graph.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateEnum(theBlock, theReport, theValue)
+function validateEnum(theBlock, theValue, theReport)
 {
     //
     // Assert string.
     //
-    if(!validateString(theBlock, theReport, theValue)) {
+    if(!validateString(theBlock, theValue, theReport)) {
         return false                                                            // ==>
     }
 
@@ -497,6 +539,8 @@ function validateEnum(theBlock, theReport, theValue)
     //
     if(!theBlock.hasOwnProperty(K.term.dataKind)) {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+        theReport.status["block"] = theBlock
+
         return false                                                            // ==>
     }
 
@@ -516,13 +560,13 @@ function validateEnum(theBlock, theReport, theValue)
         //
         // Traverse enumeration graph.
         //
-        return validateEnumTerm(theBlock, theReport, theValue)                  // ==>
+        return validateEnumTerm(theBlock, theValue, theReport)                  // ==>
     }
 
     //
     // Value is an enumeration code.
     //
-    return validateEnumCode(theBlock, theReport, theValue)                      // ==>
+    return validateEnumCode(theBlock, theValue, theReport)                      // ==>
 
 } // validateEnum()
 
@@ -531,11 +575,11 @@ function validateEnum(theBlock, theReport, theValue)
  * The function will return true if the reported term key value is an enumeration
  * belonging to the enumeration type.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateEnumTerm(theBlock, theReport, theValue)
+function validateEnumTerm(theBlock, theValue, theReport)
 {
     //
     // Init local storage.
@@ -553,8 +597,8 @@ function validateEnumTerm(theBlock, theReport, theValue)
         // Assert enumeration type exists.
         //
         if(!utils.checkTerm(enumType, theReport)) {
-            theReport.value = enumType
             theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
+            theReport.status["type"] = enumType
 
             return false                                                        // ==>
         }
@@ -564,8 +608,8 @@ function validateEnumTerm(theBlock, theReport, theValue)
         // In this case we would bet the first level of rootìs elements,
         // for that reason we force the value as a code, instead.
         //
-        if(enumType == theValue) {
-            return validateEnumCode(theBlock, theReport, theValue)              // ==>
+        if(enumType === theValue) {
+            return validateEnumCode(theBlock, theValue, theReport)              // ==>
         }
 
         //
@@ -617,6 +661,7 @@ function validateEnumTerm(theBlock, theReport, theValue)
 
     theReport.status = K.error.kMSG_TERM_NOT_FOUND
     theReport.status["value"] = theValue
+
     return false                                                                // ==>
 
 } // validateEnumTerm()
@@ -626,11 +671,11 @@ function validateEnumTerm(theBlock, theReport, theValue)
  * The function will return true if the reported term key value is an enumeration
  * belonging to the enumeration type.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateEnumCode(theBlock, theReport, theValue)
+function validateEnumCode(theBlock, theValue, theReport)
 {
     //
     // Init local storage.
@@ -657,8 +702,8 @@ function validateEnumCode(theBlock, theReport, theValue)
         // Assert data kind exists.
         //
         if(!utils.checkTerm(enumType, theReport)) {
-            theReport.value = enumType
             theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
+            theReport.status["type"] = enumType
 
             return false                                                        // ==>
         }
@@ -715,17 +760,19 @@ function validateEnumCode(theBlock, theReport, theValue)
  * Validate object value
  * The function will return true if the reported value is an object.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateObject(theBlock, theReport, theValue)
+function validateObject(theBlock, theValue, theReport)
 {
     //
     // Assert value is structure.
     //
     if(!utils.isObject(theValue)) {
         theReport.status = K.error.kMSG_NOT_OBJECT
+        theReport.status["value"] = theValue
+
         return false                                                            // ==>
     }
 
@@ -746,10 +793,12 @@ function validateObject(theBlock, theReport, theValue)
         // Validate object type.
         // We bail out if at least one type succeeds.
         //
-        return validateObjectTypes(theBlock, theReport, theValue)               // ==>
+        return validateObjectTypes(theBlock, theValue, theReport)               // ==>
     }
 
     theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+    theReport.status["block"] = theBlock
+
     return false                                                                // ==>
 
 } // validateObject()
@@ -758,11 +807,11 @@ function validateObject(theBlock, theReport, theValue)
  * Validate descriptor object data types
  * The function will return true if the value is compatible with any of the bloc's data kinds.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateObjectTypes(theBlock, theReport, theValue)
+function validateObjectTypes(theBlock, theValue, theReport)
 {
     //
     // Iterate enumeration types.
@@ -774,8 +823,8 @@ function validateObjectTypes(theBlock, theReport, theValue)
         //
         const dataKind = utils.getTerm(objectType, theReport)
         if(dataKind === false) {
-            theReport.value = objectType
             theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
+            theReport.status["type"] = objectType
 
             return false                                                        // ==>
         }
@@ -784,8 +833,8 @@ function validateObjectTypes(theBlock, theReport, theValue)
         // Assert kind is object definition.
         //
         if(!dataKind.hasOwnProperty(K.term.dataRule)) {
-            theReport.value = objectType
             theReport.status = K.error.kMSG_NO_RULE_SECTION
+            theReport.status["type"] = objectType
 
             return false                                                        // ==>
         }
@@ -793,7 +842,7 @@ function validateObjectTypes(theBlock, theReport, theValue)
         //
         // Validate data kind value.
         //
-        if(validateObjectType(dataKind[K.term.dataRule], theReport, theValue)) {
+        if(validateObjectType(dataKind[K.term.dataRule], theValue, theReport)) {
             return true                                                         // ==>
         }
     }
@@ -805,12 +854,12 @@ function validateObjectTypes(theBlock, theReport, theValue)
 /**
  * Validate object given data kind
  * The function will return true if the value is compatible with any of the bloc's data kinds.
- * @param theRule {Object}: The object definition rule.
- * @param theReport {ValidationReport}: The status report.
+ * @param theBlock {Object}: The object definition rule.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateObjectType(theRule, theReport, theValue)
+function validateObjectType(theBlock, theValue, theReport)
 {
     //
     // Deep copy value - to add default values.
@@ -820,13 +869,13 @@ function validateObjectType(theRule, theReport, theValue)
     //
     // Add default values.
     //
-    if(theRule.hasOwnProperty(K.term.dataRuleDefault)) {
+    if(theBlock.hasOwnProperty(K.term.dataRuleDefault)) {
 
         //
         // Add missing default values.
         //
         value = {
-            ...theRule[K.term.dataRuleDefault],
+            ...theBlock[K.term.dataRuleDefault],
             ...value
         }
     }
@@ -834,7 +883,7 @@ function validateObjectType(theRule, theReport, theValue)
     //
     // Validate object structure.
     //
-    if(!validateObjectStructure(theRule, theReport, value)) {
+    if(!validateObjectStructure(theBlock, value, theReport)) {
         return false                                                            // ==>
     }
 
@@ -845,17 +894,17 @@ function validateObjectType(theRule, theReport, theValue)
 /**
  * Validate object structure.
  * The function will return true if the structure is valid.
- * @param theRule {Object}: The object definition rule.
- * @param theReport {ValidationReport}: The status report.
+ * @param theBlock {Object}: The object definition rule.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateObjectStructure(theRule, theReport, theValue)
+function validateObjectStructure(theBlock, theValue, theReport)
 {
     //
     // Handle required.
     //
-    if(!validateObjectRequired(theRule, theReport, theValue)) {
+    if(!validateObjectRequired(theBlock, theValue, theReport)) {
         return false                                                            // ==>
     }
 
@@ -863,7 +912,7 @@ function validateObjectStructure(theRule, theReport, theValue)
     // Traverse object.
     //
     for(const [descriptor, value] of Object.entries(theValue)) {
-        if(!validateDescriptor(descriptor,value,theReport)) {
+        if(!validateDescriptor(descriptor, value, theReport)) {
             return false
         }
     }
@@ -875,22 +924,22 @@ function validateObjectStructure(theRule, theReport, theValue)
 /**
  * Validate object required properties.
  * The function will return true if the structure contains all required properties.
- * @param theRule {Object}: The object definition rule.
- * @param theReport {ValidationReport}: The status report.
+ * @param theBlock {Object}: The object definition rule.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateObjectRequired(theRule, theReport, theValue)
+function validateObjectRequired(theBlock, theValue, theReport)
 {
     //
     // Check required.
     //
-    if(theRule.hasOwnProperty(K.term.dataRuleRequired)) {
+    if(theBlock.hasOwnProperty(K.term.dataRuleRequired)) {
 
         //
         // Init local storage.
         //
-        const rule = theRule[K.term.dataRuleRequired]
+        const rule = theBlock[K.term.dataRuleRequired]
         const keys = Object.keys(theValue)
 
         //
@@ -899,8 +948,8 @@ function validateObjectRequired(theRule, theReport, theValue)
         if(rule.hasOwnProperty(K.term.dataRuleSelDescrOne)) {
             const set = rule[K.term.dataRuleSelDescrOne]
              if(_.intersection(keys, set) !== 1) {
-                theReport["set"] = set
                 theReport.status = K.error.kMSG_REQUIRED_ONE_PROPERTY
+                theReport.status["set"] = set
 
                 return false                                                    // ==>
             }
@@ -912,8 +961,8 @@ function validateObjectRequired(theRule, theReport, theValue)
         if(rule.hasOwnProperty(K.term.dataRuleSelDescrOneNone)) {
             const set = rule[K.term.dataRuleSelDescrOneNone]
             if(_.intersection(keys, set) > 1) {
-                theReport["set"] = set
                 theReport.status = K.error.kMSG_REQUIRED_ONE_NONE_PROPERTY
+                theReport.status["set"] = set
 
                 return false                                                    // ==>
             }
@@ -925,15 +974,16 @@ function validateObjectRequired(theRule, theReport, theValue)
         if(rule.hasOwnProperty(K.term.dataRuleSelDescrAny)) {
             const set = rule[K.term.dataRuleSelDescrAny]
             if(_.intersection(keys, set) === 0) {
-                theReport["set"] = set
                 theReport.status = K.error.kMSG_REQUIRED_ANY_PROPERTY
+                theReport.status["set"] = set
 
                 return false                                                    // ==>
             }
         }
 
         //
-        // Check should contain one or no descriptors from each set in the list and at least one entry in the result.
+        // Check should contain one or no descriptors from each set in the list
+        // and at least one entry in the result.
         //
         if(rule.hasOwnProperty(K.term.dataRuleSelDescrAnyOne)) {
 
@@ -945,8 +995,8 @@ function validateObjectRequired(theRule, theReport, theValue)
 
             for(const element in rule[K.term.dataRuleSelDescrAnyOne]) {
                 if(_.intersection(keys, element) > 1) {
-                    theReport["set"] = element
                     theReport.status = K.error.kMSG_REQUIRED_MORE_ONE_SELECTION
+                    theReport.status["set"] = element
 
                     return false                                                // ==>
                 }
@@ -959,8 +1009,8 @@ function validateObjectRequired(theRule, theReport, theValue)
         if(rule.hasOwnProperty(K.term.dataRuleSelDescrAll)) {
             const set = rule[K.term.dataRuleSelDescrAll]
             if(_.intersection(keys, set).length !== set.length) {
-                theReport["set"] = set
                 theReport.status = K.error.kMSG_REQUIRED_ALL_SELECTION
+                theReport.status["set"] = set
 
                 return false                                                    // ==>
             }
@@ -976,23 +1026,27 @@ function validateObjectRequired(theRule, theReport, theValue)
  * The function will return true if the value is within the valid range.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateRange(theBlock, theReport, theValue)
+function validateRange(theBlock, theValue, theReport)
 {
     //
     // Check if we have a range.
     //
     if(theBlock.hasOwnProperty(K.term.dataRangeValid)) {
+        const range = theBlock[K.term.dataRangeValid]
 
         //
         // Minimum inclusive.
         //
-        if(theBlock[K.term.dataRangeValid].hasOwnProperty(K.term.dataRangeValidMinInc)) {
-            if(theValue < theBlock[K.term.dataRangeValid][K.term.dataRangeValidMinInc]) {
+        if(range.hasOwnProperty(K.term.dataRangeValidMinInc)) {
+            if(theValue < range[K.term.dataRangeValidMinInc]) {
                 theReport.status = K.error.kMSG_BELOW_RANGE
+                theReport.status["value"] = theValue
+                theReport.status["range"] = range
+
                 return false                                                    // ==>
             }
         }
@@ -1000,9 +1054,12 @@ function validateRange(theBlock, theReport, theValue)
         //
         // Minimum exclusive.
         //
-        if(theBlock[K.term.dataRangeValid].hasOwnProperty(K.term.dataRangeValidMinExc)) {
-            if(theValue <= theBlock[K.term.dataRangeValid][K.term.dataRangeValidMinExc]) {
+        if(range.hasOwnProperty(K.term.dataRangeValidMinExc)) {
+            if(theValue <= range[K.term.dataRangeValidMinExc]) {
                 theReport.status = K.error.kMSG_BELOW_RANGE
+                theReport.status["value"] = theValue
+                theReport.status["range"] = range
+
                 return false                                                    // ==>
             }
         }
@@ -1010,9 +1067,12 @@ function validateRange(theBlock, theReport, theValue)
         //
         // Maximum inclusive.
         //
-        if(theBlock[K.term.dataRangeValid].hasOwnProperty(K.term.dataRangeValidMaxInc)) {
-            if(theValue > theBlock[K.term.dataRangeValid][K.term.dataRangeValidMaxInc]) {
+        if(range.hasOwnProperty(K.term.dataRangeValidMaxInc)) {
+            if(theValue > range[K.term.dataRangeValidMaxInc]) {
                 theReport.status = K.error.kMSG_OVER_RANGE
+                theReport.status["value"] = theValue
+                theReport.status["range"] = range
+
                 return false                                                    // ==>
             }
         }
@@ -1020,9 +1080,12 @@ function validateRange(theBlock, theReport, theValue)
         //
         // Maximum exclusive.
         //
-        if(theBlock[K.term.dataRangeValid].hasOwnProperty(K.term.dataRangeValidMaxExc)) {
-            if(theValue >= theBlock[K.term.dataRangeValid][K.term.dataRangeValidMaxExc]) {
+        if(range.hasOwnProperty(K.term.dataRangeValidMaxExc)) {
+            if(theValue >= range[K.term.dataRangeValidMaxExc]) {
                 theReport.status = K.error.kMSG_OVER_RANGE
+                theReport.status["value"] = theValue
+                theReport.status["range"] = range
+
                 return false                                                    // ==>
             }
         }
@@ -1037,11 +1100,11 @@ function validateRange(theBlock, theReport, theValue)
  * The function will return true if the string value matches the regular expression.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theReport {ValidationReport}: The status report.
  * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateRegexp(theBlock, theReport, theValue)
+function validateRegexp(theBlock, theValue, theReport)
 {
     //
     // Check if we have a regular expression.
@@ -1058,6 +1121,7 @@ function validateRegexp(theBlock, theReport, theValue)
         //
         if (!theValue.match(regexp)) {
             theReport.status = K.error.kMSG_NO_REGEXP
+            theReport.status["value"] = theValue
             theReport.status["regexp"] = theBlock[K.term.regexp]
             return false                                                        // ==>
         }

@@ -83,6 +83,20 @@ function checkDescriptor(request, response)
     //
     const valid = validation.validateDescriptor(req.descriptor, req.value, report)
 
+    //
+    // Move leaf descriptor in status on error.
+    //
+    if(!valid) {
+        if(report.hasOwnProperty("status")) {
+            report.status["descriptor"] = report.current
+        }
+    }
+
+    //
+    // Delete leaf descriptor from report.
+    //
+    delete report.current
+
     response.send(report);                                                      // ==>
 
 } // getAllEnumerations()
