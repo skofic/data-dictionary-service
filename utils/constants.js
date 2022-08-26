@@ -86,6 +86,10 @@ module.exports = Object.freeze({
         dataRangeValidMaxInc: "_max-range-inclusive",
         dataRangeValidMaxExc: "_max-range-exclusive",
 
+        dataDictKeyType: "_type_key",
+        dataDictionaryKey: "_dict_key",
+        dataDictionaryValue: "_dict_value",
+
         dataRuleDefault: "_default-value",
         dataRuleRequired: "_required",
         dataRuleSelDescrOne: "_selection-descriptors_one",

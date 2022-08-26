@@ -132,6 +132,7 @@ function validateDataBlock(theBlock, theValue, theReport)
     // Invalid data block.
     //
     theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+    theReport.status["block"] = theBlock
     return false                                                                // ==>
 
 } // validateDataBlock()
@@ -288,7 +289,48 @@ function validateSet(theBlock, theValue, theReport)
  */
 function validateDictionary(theBlock, theValue, theReport)
 {
-    theReport.value = "IS DICTIONARY"
+    //
+    // Check data dictionary key block.
+    //
+    if(! theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
+        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+        theReport.status["property"] = K.term.dataDictionaryKey
+        theReport.status["block"] = theBlock
+
+        return false                                                            // ==>
+    }
+
+    //
+    // Check data dictionary value block.
+    //
+    if(!theBlock.hasOwnProperty(K.term.dataDictionaryValue)) {
+        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+        theReport.status["property"] = K.term.dataDictionaryValue
+        theReport.status["block"] = theBlock
+
+        return false                                                            // ==>
+    }
+
+    //
+    // Iterate dictionary by key.
+    //
+    for(const key of Object.keys(theValue)) {
+
+        //
+        // Validate key.
+        //
+        if(!validateValue(theBlock[K.term.dataDictionaryKey], key, theReport)) {
+            return false                                                        // ==>
+        }
+
+        //
+        // Validate value.
+        //
+        if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], theValue[key], theReport)) {
+            return false                                                        // ==>
+        }
+    }
+
     return true                                                                 // ==>
 
 } // validateDictionary()
@@ -306,67 +348,71 @@ function validateDictionary(theBlock, theValue, theReport)
 function validateValue(theBlock, theValue, theReport)
 {
     //
-    // Check for data type.
+    // Get type definition.
     //
+    let type = null
     if(theBlock.hasOwnProperty(K.term.dataType)) {
+        type = K.term.dataType
+    }
+    else if(theBlock.hasOwnProperty(K.term.dataDictKeyType)) {
+        type = K.term.dataDictKeyType
+    } else {
 
         //
-        // Parse by type.
+        // Missing data type means any value will do.
         //
-        switch(theBlock[K.term.dataType]) {
-
-            // Boolean.
-            case K.term.dataTypeBool:
-                return validateBoolean(theBlock, theValue, theReport)           // ==>
-
-            // Integer.
-            case K.term.dataTypeInteger:
-                return validateInteger(theBlock, theValue, theReport)           // ==>
-
-            // Float.
-            case K.term.dataTypeNumber:
-                return validateNumber(theBlock, theValue, theReport)            // ==>
-
-            // String.
-            case K.term.dataTypeString:
-                return validateString(theBlock, theValue, theReport)            // ==>
-
-            // Object.
-            case K.term.dataTypeObject:
-                return validateObject(theBlock, theValue, theReport)            // ==>
-
-            // Enumeration.
-            case K.term.dataTypeEnum:
-                return validateEnum(theBlock, theValue, theReport)              // ==>
-                break
-
-            // Record reference.
-            case K.term.dataTypeRecord:
-                return validateRecord(theBlock, theValue, theReport)            // ==>
-
-            // Timestamp.
-            case K.term.dataTypeTimestamp:
-                return true                                                     // ==>
-
-            // GeoJSON.
-            case K.term.dataTypeGeoJson:
-                return true                                                     // ==>
-
-            // Unsupported.
-            default:
-                theReport.status = K.error.kMSG_UNSUPPORTED_DATA_TYPE
-                theReport.status["type"] = theBlock[K.term.dataType]
-
-                return false                                                    // ==>
-
-        } // Parse type.
-
-    } // Has no type.
+        return true                                                             // ==>
+    }
 
     //
-    // Missing data type means any value will do.
+    // Parse by type.
     //
-    return true                                                                 // ==>
+    switch(theBlock[type]) {
+
+        // Boolean.
+        case K.term.dataTypeBool:
+            return validateBoolean(theBlock, theValue, theReport)               // ==>
+
+        // Integer.
+        case K.term.dataTypeInteger:
+            return validateInteger(theBlock, theValue, theReport)               // ==>
+
+        // Float.
+        case K.term.dataTypeNumber:
+            return validateNumber(theBlock, theValue, theReport)                // ==>
+
+        // String.
+        case K.term.dataTypeString:
+            return validateString(theBlock, theValue, theReport)                // ==>
+
+        // Object.
+        case K.term.dataTypeObject:
+            return validateObject(theBlock, theValue, theReport)                // ==>
+
+        // Enumeration.
+        case K.term.dataTypeEnum:
+            return validateEnum(theBlock, theValue, theReport)                  // ==>
+
+        // Record reference.
+        case K.term.dataTypeRecord:
+            return validateRecord(theBlock, theValue, theReport)                // ==>
+
+        // Timestamp.
+        case K.term.dataTypeTimestamp:
+            return true                                                         // ==>
+
+        // GeoJSON.
+        case K.term.dataTypeGeoJson:
+            return true                                                         // ==>
+
+        // Unsupported.
+        default:
+            theReport.status = K.error.kMSG_UNSUPPORTED_DATA_TYPE
+            theReport.status["type"] = theBlock[type]
+
+            return false                                                        // ==>
+
+    } // Parse type.
 
 } // validateValue()
 
@@ -949,7 +995,8 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrOne]
              if(_.intersection(keys, set) !== 1) {
                 theReport.status = K.error.kMSG_REQUIRED_ONE_PROPERTY
-                theReport.status["set"] = set
+                 theReport.status["value"] = theValue
+                 theReport.status["set"] = set
 
                 return false                                                    // ==>
             }
@@ -962,6 +1009,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrOneNone]
             if(_.intersection(keys, set) > 1) {
                 theReport.status = K.error.kMSG_REQUIRED_ONE_NONE_PROPERTY
+                theReport.status["value"] = theValue
                 theReport.status["set"] = set
 
                 return false                                                    // ==>
@@ -975,6 +1023,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrAny]
             if(_.intersection(keys, set) === 0) {
                 theReport.status = K.error.kMSG_REQUIRED_ANY_PROPERTY
+                theReport.status["value"] = theValue
                 theReport.status["set"] = set
 
                 return false                                                    // ==>
@@ -996,6 +1045,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             for(const element in rule[K.term.dataRuleSelDescrAnyOne]) {
                 if(_.intersection(keys, element) > 1) {
                     theReport.status = K.error.kMSG_REQUIRED_MORE_ONE_SELECTION
+                    theReport.status["value"] = theValue
                     theReport.status["set"] = element
 
                     return false                                                // ==>
@@ -1010,6 +1060,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrAll]
             if(_.intersection(keys, set).length !== set.length) {
                 theReport.status = K.error.kMSG_REQUIRED_ALL_SELECTION
+                theReport.status["value"] = theValue
                 theReport.status["set"] = set
 
                 return false                                                    // ==>
