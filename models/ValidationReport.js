@@ -11,12 +11,11 @@ const K = require( '../utils/constants' );              // Application constants
  *
  * This class implements the report generated after validating a descriptor.
  * The report is comprised of:
- * - Descriptor name
- * - Descriptor value.
- * - Descriptor type,if relevant.
- * - Validation status.
- * - Eventual resolved enumeration.
- * - Array of eventual nested errors, used for nested types.
+ * - descriptor: Top level descriptor name.
+ * - type: Eventual
+ * - value: Top level descriptor's value.
+ * - status: Validation status object.
+ * - Other properties used to describe the validation status.
  */
 class ValidationReport
 {
