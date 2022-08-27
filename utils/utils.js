@@ -155,7 +155,7 @@ function getTerm(theKey, theReport = false)
         if(theReport !== false) {
             theReport["error"] = error
             theReport.status = K.error.kMSG_TERM_NOT_FOUND
-            theReport.status["value"] = error
+            theReport.status["value"] = theKey
         }
     }
 

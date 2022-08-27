@@ -74,14 +74,15 @@ function checkDescriptor(request, response)
     const req = request.body
 
     //
-    // Init local storage.
+    // Init report.
     //
     let report = new ValidationReport(req.descriptor, req.value)
+    report["ignored"] = []
 
     //
     // Query database.
     //
-    const valid = validation.validateDescriptor(req.descriptor, req.value, report)
+    const valid = validation.validateDescriptor(req.descriptor, report.value, report)
 
     //
     // Move leaf descriptor in status on error.
@@ -96,6 +97,15 @@ function checkDescriptor(request, response)
     // Delete leaf descriptor from report.
     //
     delete report.current
+
+    //
+    // Convert ignored to set.
+    //
+    if(report.ignored.length > 0) {
+        report.ignored = [...new Set(report.ignored)]
+    } else {
+        delete report.ignored
+    }
 
     response.send(report);                                                      // ==>
 

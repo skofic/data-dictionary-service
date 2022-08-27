@@ -15,6 +15,7 @@ const K = require( '../utils/constants' );              // Application constants
  * - type: Eventual
  * - value: Top level descriptor's value.
  * - status: Validation status object.
+ * - current: The last property name that triggered an error.
  * - Other properties used to describe the validation status.
  */
 class ValidationReport

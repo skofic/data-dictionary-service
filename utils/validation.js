@@ -56,13 +56,7 @@ function validateDescriptor(theDescriptor, theValue, theReport)
     // Ignore unknown descriptors.
     //
     if(descriptor === false) {
-
-        if(!theReport.hasOwnProperty("ignored")) {
-            theReport["ignored"] = new Set([theDescriptor])
-        } else {
-            theReport.ignored.add(theDescriptor)
-        }
-
+        theReport["ignored"].push(theDescriptor)
         return true                                                             // ==>
     }
 
