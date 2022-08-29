@@ -82,7 +82,8 @@ function checkDescriptor(request, response)
     //
     // Query database.
     //
-    const valid = validation.validateDescriptor(req.descriptor, report.value, report)
+    // const valid = validation.validateDescriptor(req.descriptor, req.value, report)
+    const valid = validation.validateDescriptor(req.descriptor, req.value, report)
 
     //
     // Move leaf descriptor in status on error.
