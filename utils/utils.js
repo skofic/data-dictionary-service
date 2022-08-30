@@ -199,6 +199,29 @@ function getDescriptor(theKey, theReport = false)
 
 } // getDescriptor()
 
+/**
+ * Report resolved enumeration.
+ * The function will add the provided descriptor/value pair
+ * to the resolved section of the provided report.
+ * @param theKey {String}: The descriptor.
+ * @param theValue {String}: The original value.
+ * @param theReport {ValidationReport}: Host of resolved enums log.
+  */
+function reportResolved(theKey, theValue, theReport = false)
+{
+    //
+    // Handle existing descriptor.
+    //
+    if(theReport.resolved.hasOwnProperty(theKey)) {
+        if(theReport.resolved[theKey].filter(target => target === theValue).length === 0) {
+            theReport.resolved[theKey].push(theValue)
+        }
+    } else {
+        theReport.resolved[theKey] = [theValue]
+    }
+
+} // reportResolved()
+
 
 /******************************************************************************/
 /* UTILITY ASSERTIONS                                                          /*
@@ -284,6 +307,8 @@ module.exports = {
     getDocument,
     getTerm,
     getDescriptor,
+
+    reportResolved,
 
     isBoolean,
     isInteger,

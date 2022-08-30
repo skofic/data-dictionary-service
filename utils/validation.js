@@ -36,7 +36,7 @@ const ValidationReport = require('../models/ValidationReport')
  * The function expects a descriptor name and its value: it will check whether
  * the value corresponds to the descriptor definition.
  * @param theDescriptor {String}: Descriptor name.
- * @param theValue {Any}: Descriptor value.
+ * @param theValue {Array}: Tuple: the parent value and the key to the value.
  * @param theReport {ValidationReport}: Status report.
  * @returns {boolean}: true means valid.
  */
@@ -74,7 +74,7 @@ function validateDescriptor(theDescriptor, theValue, theReport)
  * The function will check if any of scalar, array, set or dictionary blocks
  * are set in the data block and run the corresponding function.
  * @param theBlock {Object}: The data block.
- * @param theValue {Any}: The descriptor's value.
+ * @param theValue {Array}: Tuple: the parent value and the key to the value.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -150,7 +150,7 @@ function validateScalar(theBlock, theValue, theReport)
     // Validate scalar value.
     // We assume anything except an array is a scalar.
     //
-    if(!utils.isArray(theValue)) {
+    if(!utils.isArray(theValue[0][theValue[1]])) {
 
         //
         // Empty scalar block means all is fair in love.
@@ -166,7 +166,7 @@ function validateScalar(theBlock, theValue, theReport)
     }
 
     theReport.status = K.error.kMSG_NOT_SCALAR
-    theReport.status["value"] = theValue
+    theReport.status["value"] = theValue[0][theValue[1]]
 
     return false                                                                // ==>
 
@@ -186,13 +186,13 @@ function validateArray(theBlock, theValue, theReport)
     //
     // Check if value is an array.
     //
-    if(utils.isArray(theValue)) {
+    if(utils.isArray(theValue[0][theValue[1]])) {
 
         //
         // Handle array constraints.
         //
         if(theBlock.hasOwnProperty(K.term.dataRangeElements)) {
-            const elements = theValue.length
+            const elements = theValue[0][theValue[1]].length
             const block = theBlock[K.term.dataRangeElements]
 
             //
@@ -202,7 +202,7 @@ function validateArray(theBlock, theValue, theReport)
                 if(block[K.term.dataRangeElementsMin] > elements) {
                     theReport.status = K.error.kMSG_NOT_ENOUGH_ELEMENTS
                     theReport.status["elements"] = block
-                    theReport.status["value"] = theValue
+                    theReport.status["value"] = theValue[0][theValue[1]]
 
                     return false                                                // ==>
                 }
@@ -215,7 +215,7 @@ function validateArray(theBlock, theValue, theReport)
                 if(block[K.term.dataRangeElementsMax] < elements) {
                     theReport.status = K.error.kMSG_TOO_MANY_ELEMENTS
                     theReport.status["elements"] = block
-                    theReport.status["value"] = theValue
+                    theReport.status["value"] = theValue[0][theValue[1]]
 
                     return false                                                // ==>
                 }
@@ -225,18 +225,23 @@ function validateArray(theBlock, theValue, theReport)
         //
         // Validate array data block.
         //
-        for(const value of theValue) {
-            if(!validateDataBlock(theBlock, value, theReport)) {
+        for(let i = 0; i < theValue[0][1].length; i++) {
+            if(!validateDataBlock(theBlock, [theValue[0][theValue[1]], i], theReport)) {
                 return false                                                    // ==>
             }
         }
+        // for(const value of theValue[0][1]) {
+        //     if(!validateDataBlock(theBlock, value, theReport)) {
+        //         return false                                                    // ==>
+        //     }
+        // }
 
         return true                                                             // ==>
 
     } // Value is array.
 
     theReport.status = K.error.kMSG_NOT_ARRAY
-    theReport.status["value"] = theValue
+    theReport.status["value"] = theValue[0][theValue[1]]
 
     return false                                                                // ==>
 
@@ -262,10 +267,10 @@ function validateSet(theBlock, theValue, theReport)
     //
     // Check for duplicates.
     //
-    const test = new Set(theValue)
-    if(test.size !== theValue.length) {
+    const test = new Set(theValue[0][theValue[1]])
+    if(test.size !== theValue[0][theValue[1]].length) {
         theReport.status = K.error.kMSG_DUP_SET
-        theReport.status["value"] = theValue
+        theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
     }
@@ -309,19 +314,19 @@ function validateDictionary(theBlock, theValue, theReport)
     //
     // Iterate dictionary by key.
     //
-    for(const key of Object.keys(theValue)) {
+    for(const key of Object.keys(theValue[0][theValue[1]])) {
 
         //
         // Validate key.
         //
-        if(!validateValue(theBlock[K.term.dataDictionaryKey], key, theReport)) {
+        if(!validateValue(theBlock[K.term.dataDictionaryKey], theValue, theReport)) {
             return false                                                        // ==>
         }
 
         //
         // Validate value.
         //
-        if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], theValue[key], theReport)) {
+        if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], [theValue[0][theValue[1]], key], theReport)) {
             return false                                                        // ==>
         }
     }
@@ -425,9 +430,9 @@ function validateBoolean(theBlock, theValue, theReport)
     //
     // Assert boolean value.
     //
-    if(!utils.isBoolean(theValue)) {
+    if(!utils.isBoolean(theValue[0][theValue[1]])) {
         theReport.status = K.error.kMSG_NOT_BOOL
-        theReport.status["value"] = theValue
+        theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
     }
@@ -450,9 +455,9 @@ function validateInteger(theBlock, theValue, theReport)
     //
     // Assert integer value.
     //
-    if(!utils.isInteger(theValue)) {
+    if(!utils.isInteger(theValue[0][theValue[1]])) {
         theReport.status = K.error.kMSG_NOT_INT
-        theReport.status["value"] = theValue
+        theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
     }
@@ -478,9 +483,9 @@ function validateNumber(theBlock, theValue, theReport)
     //
     // Assert numeric value.
     //
-    if(!utils.isNumber(theValue)) {
+    if(!utils.isNumber(theValue[0][theValue[1]])) {
         theReport.status = K.error.kMSG_NOT_NUMBER
-        theReport.status["value"] = theValue
+        theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
     }
@@ -506,9 +511,9 @@ function validateString(theBlock, theValue, theReport)
     //
     // Assert string value.
     //
-    if(!utils.isString(theValue)) {
+    if(!utils.isString(theValue[0][theValue[1]])) {
         theReport.status = K.error.kMSG_NOT_STRING
-        theReport.status["value"] = theValue
+        theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
     }
@@ -541,9 +546,9 @@ function validateRecord(theBlock, theValue, theReport)
     //
     // Assert record handle.
     //
-    if(!utils.checkDocument(theValue, theReport)) {
+    if(!utils.checkDocument(theValue[0][theValue[1]], theReport)) {
         theReport.status = K.error.kMSG_DOCUMENT_NOT_FOUND
-        theReport.status["value"] = theValue
+        theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
     }
@@ -588,7 +593,7 @@ function validateEnum(theBlock, theValue, theReport)
     //
     // Value is a term key.
     //
-    if(utils.checkTerm(theValue, theReport)) {
+    if(utils.checkTerm(theValue[0][theValue[1]], theReport)) {
 
         //
         // Assume valid if term wildcard in among data kinds.
@@ -649,7 +654,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
         // In this case we would bet the first level of rootìs elements,
         // for that reason we force the value as a code, instead.
         //
-        if(enumType === theValue) {
+        if(enumType === theValue[0][theValue[1]]) {
             return validateEnumCode(theBlock, theValue, theReport)              // ==>
         }
 
@@ -657,7 +662,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
         // Init query parameters.
         //
         let root = collection.name() + '/' + enumType
-        let target = collection.name() + '/' + theValue
+        let target = collection.name() + '/' + theValue[0][theValue[1]]
 
         //
         // Traverse graph.
@@ -689,8 +694,9 @@ function validateEnumTerm(theBlock, theValue, theReport)
             //
             // Handle resolved value.
             //
-            if(theValue !== result[0]) {
-                theReport["resolved"] = result[0]
+            if(theValue[0][theValue[1]] !== result[0]) {
+                utils.reportResolved(theValue[1], theValue[0][theValue[1]], theReport)
+                theValue[0][theValue[1]] = result[0]
                 theReport.status = K.error.kMSG_VALUE_RESOLVED
             }
 
@@ -701,7 +707,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
     } // Iterating enumeration types.
 
     theReport.status = K.error.kMSG_TERM_NOT_FOUND
-    theReport.status["value"] = theValue
+    theReport.status["value"] = theValue[0][theValue[1]]
 
     return false                                                                // ==>
 
@@ -764,13 +770,13 @@ function validateEnumCode(theBlock, theValue, theReport)
                 GRAPH "schema"
                 PRUNE ${enumType} IN edge._path AND
                       edge._predicate == ${K.term.predicateEnum} AND
-                      ${theValue} IN vertex._code._aid
+                      ${theValue[0][theValue[1]]} IN vertex._code._aid
                 OPTIONS {
                     "uniqueVertices": "path"
                 }
                 FILTER ${enumType} IN edge._path AND
                        edge._predicate == ${K.term.predicateEnum} AND
-                      ${theValue} IN vertex._code._aid
+                      ${theValue[0][theValue[1]]} IN vertex._code._aid
             RETURN vertex._key
         `).toArray()
 
@@ -782,7 +788,8 @@ function validateEnumCode(theBlock, theValue, theReport)
             //
             // Handle resolved value.
             //
-            theReport["resolved"] = result[0]
+            utils.reportResolved(theValue[1], theValue[0][theValue[1]], theReport)
+            theValue[0][theValue[1]] = result[0]
             theReport.status = K.error.kMSG_VALUE_RESOLVED
 
             return true                                                         // ==>
@@ -792,7 +799,7 @@ function validateEnumCode(theBlock, theValue, theReport)
     } // Iterating enumeration types.
 
     theReport.status = K.error.kMSG_ENUM_NOT_FOUND
-    theReport.status["value"] = theValue
+    theReport.status["value"] = theValue[0][theValue[1]]
     return false                                                                // ==>
 
 } // validateEnumCode()
@@ -810,9 +817,9 @@ function validateObject(theBlock, theValue, theReport)
     //
     // Assert value is structure.
     //
-    if(!utils.isObject(theValue)) {
+    if(!utils.isObject(theValue[0][theValue[1]])) {
         theReport.status = K.error.kMSG_NOT_OBJECT
-        theReport.status["value"] = theValue
+        theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
     }
@@ -903,11 +910,6 @@ function validateObjectTypes(theBlock, theValue, theReport)
 function validateObjectType(theBlock, theValue, theReport)
 {
     //
-    // Deep copy value - to add default values.
-    //
-    let value = JSON.parse(JSON.stringify(theValue))
-
-    //
     // Add default values.
     //
     if(theBlock.hasOwnProperty(K.term.dataRuleDefault)) {
@@ -915,16 +917,16 @@ function validateObjectType(theBlock, theValue, theReport)
         //
         // Add missing default values.
         //
-        value = {
+        theValue[0][theValue[1]] = {
             ...theBlock[K.term.dataRuleDefault],
-            ...value
+            ...theValue[0][theValue[1]]
         }
     }
 
     //
     // Validate object structure.
     //
-    if(!validateObjectStructure(theBlock, value, theReport)) {
+    if(!validateObjectStructure(theBlock, theValue, theReport)) {
         return false                                                            // ==>
     }
 
@@ -952,8 +954,8 @@ function validateObjectStructure(theBlock, theValue, theReport)
     //
     // Traverse object.
     //
-    for(const [descriptor, value] of Object.entries(theValue)) {
-        if(!validateDescriptor(descriptor, value, theReport)) {
+    for(const [descriptor, value] of Object.entries(theValue[0][theValue[1]])) {
+        if(!validateDescriptor(descriptor, [theValue[0][theValue[1]], descriptor], theReport)) {
             return false
         }
     }
@@ -981,7 +983,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
         // Init local storage.
         //
         const rule = theBlock[K.term.dataRuleRequired]
-        const keys = Object.keys(theValue)
+        const keys = Object.keys(theValue[0][theValue[1]])
 
         //
         // Check should contain one descriptor from the set.
@@ -990,7 +992,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrOne]
              if(_.intersection(keys, set) !== 1) {
                 theReport.status = K.error.kMSG_REQUIRED_ONE_PROPERTY
-                 theReport.status["value"] = theValue
+                 theReport.status["value"] = theValue[0][theValue[1]]
                  theReport.status["set"] = set
 
                 return false                                                    // ==>
@@ -1004,7 +1006,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrOneNone]
             if(_.intersection(keys, set) > 1) {
                 theReport.status = K.error.kMSG_REQUIRED_ONE_NONE_PROPERTY
-                theReport.status["value"] = theValue
+                theReport.status["value"] = theValue[0][theValue[1]]
                 theReport.status["set"] = set
 
                 return false                                                    // ==>
@@ -1018,7 +1020,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrAny]
             if(_.intersection(keys, set) === 0) {
                 theReport.status = K.error.kMSG_REQUIRED_ANY_PROPERTY
-                theReport.status["value"] = theValue
+                theReport.status["value"] = theValue[0][theValue[1]]
                 theReport.status["set"] = set
 
                 return false                                                    // ==>
@@ -1040,7 +1042,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             for(const element in rule[K.term.dataRuleSelDescrAnyOne]) {
                 if(_.intersection(keys, element) > 1) {
                     theReport.status = K.error.kMSG_REQUIRED_MORE_ONE_SELECTION
-                    theReport.status["value"] = theValue
+                    theReport.status["value"] = theValue[0][theValue[1]]
                     theReport.status["set"] = element
 
                     return false                                                // ==>
@@ -1055,7 +1057,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             const set = rule[K.term.dataRuleSelDescrAll]
             if(_.intersection(keys, set).length !== set.length) {
                 theReport.status = K.error.kMSG_REQUIRED_ALL_SELECTION
-                theReport.status["value"] = theValue
+                theReport.status["value"] = theValue[0][theValue[1]]
                 theReport.status["set"] = set
 
                 return false                                                    // ==>
@@ -1088,9 +1090,9 @@ function validateRange(theBlock, theValue, theReport)
         // Minimum inclusive.
         //
         if(range.hasOwnProperty(K.term.dataRangeValidMinInc)) {
-            if(theValue < range[K.term.dataRangeValidMinInc]) {
+            if(theValue[0][1] < range[K.term.dataRangeValidMinInc]) {
                 theReport.status = K.error.kMSG_BELOW_RANGE
-                theReport.status["value"] = theValue
+                theReport.status["value"] = theValue[0][theValue[1]]
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1101,9 +1103,9 @@ function validateRange(theBlock, theValue, theReport)
         // Minimum exclusive.
         //
         if(range.hasOwnProperty(K.term.dataRangeValidMinExc)) {
-            if(theValue <= range[K.term.dataRangeValidMinExc]) {
+            if(theValue[0][1] <= range[K.term.dataRangeValidMinExc]) {
                 theReport.status = K.error.kMSG_BELOW_RANGE
-                theReport.status["value"] = theValue
+                theReport.status["value"] = theValue[0][theValue[1]]
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1114,9 +1116,9 @@ function validateRange(theBlock, theValue, theReport)
         // Maximum inclusive.
         //
         if(range.hasOwnProperty(K.term.dataRangeValidMaxInc)) {
-            if(theValue > range[K.term.dataRangeValidMaxInc]) {
+            if(theValue[0][1] > range[K.term.dataRangeValidMaxInc]) {
                 theReport.status = K.error.kMSG_OVER_RANGE
-                theReport.status["value"] = theValue
+                theReport.status["value"] = theValue[0][theValue[1]]
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1127,9 +1129,9 @@ function validateRange(theBlock, theValue, theReport)
         // Maximum exclusive.
         //
         if(range.hasOwnProperty(K.term.dataRangeValidMaxExc)) {
-            if(theValue >= range[K.term.dataRangeValidMaxExc]) {
+            if(theValue[0][1] >= range[K.term.dataRangeValidMaxExc]) {
                 theReport.status = K.error.kMSG_OVER_RANGE
-                theReport.status["value"] = theValue
+                theReport.status["value"] = theValue[0][theValue[1]]
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1165,9 +1167,9 @@ function validateRegexp(theBlock, theValue, theReport)
         //
         // Match value.
         //
-        if (!theValue.match(regexp)) {
+        if (!theValue[0][1].match(regexp)) {
             theReport.status = K.error.kMSG_NO_REGEXP
-            theReport.status["value"] = theValue
+            theReport.status["value"] = theValue[0][theValue[1]]
             theReport.status["regexp"] = theBlock[K.term.regexp]
             return false                                                        // ==>
         }

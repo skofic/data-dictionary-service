@@ -77,13 +77,15 @@ function checkDescriptor(request, response)
     // Init report.
     //
     let report = new ValidationReport(req.descriptor, req.value)
-    report["ignored"] = []
+    report["ignored"] = []          // Holds list of ignored descriptors.
+    report["resolved"] = {}         // Holds list of resolved descriptors.
+    // MILKO
+    report["stack"] = []
 
     //
     // Query database.
     //
-    // const valid = validation.validateDescriptor(req.descriptor, req.value, report)
-    const valid = validation.validateDescriptor(req.descriptor, req.value, report)
+    const valid = validation.validateDescriptor(req.descriptor, [req, "value"], report)
 
     //
     // Move leaf descriptor in status on error.
@@ -108,6 +110,13 @@ function checkDescriptor(request, response)
         delete report.ignored
     }
 
-    response.send(report);                                                      // ==>
+    //
+    // Remove resolved if empty.
+    //
+    if(Object.keys(report.resolved).length === 0) {
+        delete report.resolved
+    }
+
+    response.send(report)                                                       // ==>
 
 } // getAllEnumerations()
