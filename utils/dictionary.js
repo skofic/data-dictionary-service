@@ -33,17 +33,17 @@ function getAllEnumerations(theRoot)
     //
     // Query schema.
     //
-    const edge = db._collection(module.context.collectionName(K.collection.schema.name))
-    const term = db._collection(module.context.collectionName(K.collection.term.name))
+    const edges = db._collection(module.context.collectionName(K.collection.schema.name))
+    const terms = db._collection(module.context.collectionName(K.collection.term.name))
     const result =
         db._query( aql`
-            FOR edge IN ${edge}
+            FOR edge IN ${edges}
                 FILTER ${theRoot} IN edge._path
                 FILTER edge._predicate == "_predicate_enum-of"
-                RETURN DOCUMENT(${term}, edge._from)
+                RETURN DOCUMENT(${terms}, edge._from)
         `).toArray();
 
-    return term.document(result);
+    return terms.document(result);
     // return result;
 
 } // getAllEnumerations()

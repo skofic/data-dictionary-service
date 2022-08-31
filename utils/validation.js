@@ -162,7 +162,7 @@ function validateScalar(theBlock, theValue, theReport)
         //
         // Parse scalar block.
         //
-        return  validateValue(theBlock, theValue, theReport)                    // ==>
+        return validateValue(theBlock, theValue, theReport)                     // ==>
     }
 
     theReport.status = K.error.kMSG_NOT_SCALAR
@@ -312,24 +312,33 @@ function validateDictionary(theBlock, theValue, theReport)
     }
 
     //
+    // Validate dictionary keys.
+    //
+    const keys = Object.keys(theValue[0][theValue[1]])
+    for(const key of keys) {
+        let value = [theValue[0][theValue[1]], key]
+        if(!validateDictionaryKey())
+    }
+
+    //
     // Iterate dictionary by key.
     //
-    for(const key of Object.keys(theValue[0][theValue[1]])) {
-
-        //
-        // Validate key.
-        //
-        if(!validateValue(theBlock[K.term.dataDictionaryKey], theValue, theReport)) {
-            return false                                                        // ==>
-        }
-
-        //
-        // Validate value.
-        //
-        if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], [theValue[0][theValue[1]], key], theReport)) {
-            return false                                                        // ==>
-        }
-    }
+    // for(const key of Object.keys(theValue[0][theValue[1]])) {
+    //
+    //     //
+    //     // Validate key.
+    //     //
+    //     if(!validateValue(theBlock[K.term.dataDictionaryKey], theValue, theReport)) {
+    //         return false                                                        // ==>
+    //     }
+    //
+    //     //
+    //     // Validate value.
+    //     //
+    //     if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], [theValue[0][theValue[1]], key], theReport)) {
+    //         return false                                                        // ==>
+    //     }
+    // }
 
     return true                                                                 // ==>
 
