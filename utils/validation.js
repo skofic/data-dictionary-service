@@ -225,7 +225,7 @@ function validateArray(theBlock, theValue, theReport)
         //
         // Validate array data block.
         //
-        for(let i = 0; i < theValue[0][1].length; i++) {
+        for(let i = 0; i < theValue[0][theValue[1]].length; i++) {
             if(!validateDataBlock(theBlock, [theValue[0][theValue[1]], i], theReport)) {
                 return false                                                    // ==>
             }
@@ -280,19 +280,20 @@ function validateSet(theBlock, theValue, theReport)
 } // validateSet()
 
 /**
- * Validate dictionary value
+ * Validate dictionary
  * The function expects the descriptor's dictionary definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The dictionary data block.
  * @param theValue {Any}: The dictionary value.
  * @param theReport {ValidationReport}: The status report.
+ * @returns {Boolean}: True means valid.
  */
 function validateDictionary(theBlock, theValue, theReport)
 {
     //
     // Check data dictionary key block.
     //
-    if(! theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
+    if(!theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
         theReport.status["property"] = K.term.dataDictionaryKey
         theReport.status["block"] = theBlock
@@ -312,33 +313,55 @@ function validateDictionary(theBlock, theValue, theReport)
     }
 
     //
-    // Validate dictionary keys.
+    // Load dictionary keys.
     //
-    const keys = Object.keys(theValue[0][theValue[1]])
-    for(const key of keys) {
-        let value = [theValue[0][theValue[1]], key]
-        if(!validateDictionaryKey())
+    let keys = {}
+    const props = Object.keys(theValue[0][theValue[1]])
+    for(const key of props) {
+        keys[key] = key
     }
 
     //
     // Iterate dictionary by key.
     //
-    // for(const key of Object.keys(theValue[0][theValue[1]])) {
+    for(const key of props) {
+
+        //
+        // Validate key.
+        //
+        if(!validateValue(theBlock[K.term.dataDictionaryKey], [keys, key], theReport)) {
+            return false                                                        // ==>
+        }
+
+        //
+        // Validate value.
+        //
+        if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], [theValue[0][theValue[1]], key], theReport)) {
+            return false                                                        // ==>
+        }
+    }
+
     //
-    //     //
-    //     // Validate key.
-    //     //
-    //     if(!validateValue(theBlock[K.term.dataDictionaryKey], theValue, theReport)) {
-    //         return false                                                        // ==>
-    //     }
+    // Handle resolved enumeration keys.
     //
-    //     //
-    //     // Validate value.
-    //     //
-    //     if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], [theValue[0][theValue[1]], key], theReport)) {
-    //         return false                                                        // ==>
-    //     }
-    // }
+    for(const key of Object.keys(keys)) {
+
+        //
+        // Key changed.
+        //
+        if(keys[key] !== key) {
+
+            //
+            // Clone old key value in new key.
+            //
+            theValue[0][theValue[1]][keys[key]] = JSON.parse(JSON.stringify(theValue[0][theValue[1]][key]))
+
+            //
+            // Delete old key value.
+            //
+            delete theValue[0][theValue[1]][key]
+        }
+    }
 
     return true                                                                 // ==>
 
@@ -360,16 +383,16 @@ function validateValue(theBlock, theValue, theReport)
     // Get type definition.
     //
     let type = null
+    // Classic scalar data block.
     if(theBlock.hasOwnProperty(K.term.dataType)) {
         type = K.term.dataType
     }
+    // Dictionary key data block.
     else if(theBlock.hasOwnProperty(K.term.dataDictKeyType)) {
         type = K.term.dataDictKeyType
-    } else {
-
-        //
-        // Missing data type means any value will do.
-        //
+    }
+    // Missing type means any type.
+    else {
         return true                                                             // ==>
     }
 
@@ -1176,7 +1199,7 @@ function validateRegexp(theBlock, theValue, theReport)
         //
         // Match value.
         //
-        if (!theValue[0][1].match(regexp)) {
+        if (!theValue[0][theValue[1]].match(regexp)) {
             theReport.status = K.error.kMSG_NO_REGEXP
             theReport.status["value"] = theValue[0][theValue[1]]
             theReport.status["regexp"] = theBlock[K.term.regexp]

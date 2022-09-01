@@ -79,8 +79,6 @@ function checkDescriptor(request, response)
     let report = new ValidationReport(req.descriptor, req.value)
     report["ignored"] = []          // Holds list of ignored descriptors.
     report["resolved"] = {}         // Holds list of resolved descriptors.
-    // MILKO
-    report["stack"] = []
 
     //
     // Query database.
