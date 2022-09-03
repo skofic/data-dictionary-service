@@ -14,6 +14,7 @@ const createRouter = require('@arangodb/foxx/router');
 // Models.
 //
 const Term = require('../models/term');
+const List = require('../models/KeyList')
 
 //
 // Functions.
@@ -57,13 +58,35 @@ router.get('enum/all/:root', getAllEnumerations, 'all')
     .summary('Return flattened list of all enumerations')
     .description(dd
         `
-            Provided the root to an enumeration, will return the flattened òlist of all enumeration's elements.
+            Provided the root to an enumeration, will return the flattened òlist of all enumeration's terms.
         `
-);
+    );
+
+/**
+ * Return all enumeration keys.
+ * The service will return all the enumeration keys of an enumeration type:
+ * provide the enumeration type root and the service will return the array of term keys.
+ * No hierarchy is maintained and only valid enumeration elements are selected.
+ */
+router.get('enum/keys/:root', getAllEnumerationKeys, 'keys')
+    .pathParam('root', enumSchema)
+    .response(List, 'Flat list of all enumeration term keys.')
+    .summary('Return flattened list of all enumeration keys')
+    .description(dd
+        `
+            Provided the root to an enumeration, will return the flattened list of all enumeration keys.
+        `
+    );
 
 //
 // Functions.
 //
+
+/**
+ * Get all enumerations belonging to provided term.
+ * @param request: API request.
+ * @param response: API response.
+ */
 function getAllEnumerations(request, response)
 {
     //
@@ -75,6 +98,27 @@ function getAllEnumerations(request, response)
     // Query database.
     //
     const result = dictionary.getAllEnumerations(root);
+
+    response.send(result);                                              // ==>
+
+} // getAllEnumerations()
+
+/**
+ * Get all enumeration keys belonging to provided term.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function getAllEnumerationKeys(request, response)
+{
+    //
+    // Get enumeration root.
+    //
+    const root = request.pathParams.root;
+
+    //
+    // Query database.
+    //
+    const result = dictionary.getAllEnumerationKeys(root);
 
     response.send(result);                                              // ==>
 
