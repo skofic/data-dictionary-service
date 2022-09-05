@@ -143,6 +143,36 @@ function checkEnum(theKey, theReport = false)
 } // checkEnum()
 
 /**
+ * Check if descriptor exists.
+ * The function will return true if the provided value is an descriptor term.
+ * @param theKey {String}: The term key.
+ * @param theReport {ValidationReport}: If provided and error, the error will be set.
+ * @returns {boolean}: The object if found, or false if not found.
+ */
+function checkDescriptor(theKey, theReport = false)
+{
+    //
+    // Load term.
+    //
+    const term = getTerm(theKey, theReport)
+    if(term === false) {
+        return false                                                            // ==>
+    }
+
+    //
+    // Check if term has data block.
+    //
+    if(term.hasOwnProperty(K.term.dataBlock)) {
+        return true                                                             // ==>
+    }
+
+    theReport.status = K.error.kMSG_DESCRIPTOR_NOT_FOUND
+
+    return false                                                                // ==>
+
+} // checkDescriptor()
+
+/**
  * Get document.
  * The function will return the provided handleìs document or false if not found.
  * @param theHandle {String}: The term handle.
@@ -349,6 +379,7 @@ module.exports = {
     checkDocument,
     checkTerm,
     checkEnum,
+    checkDescriptor,
 
     getDocument,
     getTerm,

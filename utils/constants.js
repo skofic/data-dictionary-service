@@ -99,6 +99,8 @@ module.exports = Object.freeze({
         dataRuleSelDescrAll: "_selection-descriptors_all",
 
         anyTerm: "_any-term",
+        anyEnum: "_any-enum",
+        anyDescriptor: "_any-descriptor",
         anyObject: "_any-object",
 
         predicateEnum: "_predicate_enum-of",

@@ -630,9 +630,28 @@ function validateEnum(theBlock, theValue, theReport)
         //
         // Assume valid if term wildcard in among data kinds.
         // Note that the enumeration type wildcard should be the only element in the data kinds.
+        // In any case, we check for correct values and exit with success, if not we continue.
         //
         if(theBlock[K.term.dataKind].includes(K.term.anyTerm)) {
             return true                                                         // ==>
+        }
+
+        //
+        // Handle any enumeration.
+        //
+        if(theBlock[K.term.dataKind].includes(K.term.anyEnum)) {
+            if(utils.checkEnum(theValue[0][theValue[1]], theReport)) {
+                return true                                                     // ==>
+            }
+        }
+
+        //
+        // Handle any descriptor.
+        //
+        if(theBlock[K.term.dataKind].includes(K.term.anyDescriptor)) {
+            if(utils.checkDescriptor(theValue[0][theValue[1]], theReport)) {
+                return true                                                     // ==>
+            }
         }
 
         //
@@ -857,6 +876,22 @@ function validateObject(theBlock, theValue, theReport)
     }
 
     //
+    // Assert object type.
+    //
+    if(!theBlock.hasOwnProperty(K.term.dataKind)) {
+        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+        theReport.status["block"] = theBlock
+
+        return false                                                            // ==>
+    }
+
+    return validateObjectTypes(theBlock, theValue, theReport)                   // ==>
+
+    // -- // ==> // -- == -- // -- // -- //
+    // -- // ==> // -- == -- // -- // -- //
+    // -- // ==> // -- == -- // -- // -- //
+
+    //
     // Assert it has object type.
     //
     if(theBlock.hasOwnProperty(K.term.dataKind)) {
@@ -899,37 +934,85 @@ function validateObjectTypes(theBlock, theValue, theReport)
     for(const objectType of theBlock[K.term.dataKind]) {
 
         //
-        // Assert and get object type.
+        // Skip wildcard for object constraints.
         //
-        const dataKind = utils.getTerm(objectType, theReport)
-        if(dataKind === false) {
-            theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
-            theReport.status["type"] = objectType
+        if(objectType !== K.term.anyObject) {
 
-            return false                                                        // ==>
+            //
+            // Get data kind term.
+            //
+            const dataKind = utils.getTerm(objectType, theReport)
+            if(dataKind === false) {
+                theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
+                theReport.status["type"] = objectType
+
+                return false                                                    // ==>
+            }
+
+            //
+            // Assert kind is object definition.
+            //
+            if(!dataKind.hasOwnProperty(K.term.dataRule)) {
+                theReport.status = K.error.kMSG_NO_RULE_SECTION
+                theReport.status["type"] = objectType
+
+                return false                                                    // ==>
+            }
+
+            //
+            // Validate object rules.
+            //
+            if(!validateObjectRules(dataKind[K.term.dataRule], theValue, theReport)) {
+                return false                                                    // ==>
+            }
         }
 
         //
-        // Assert kind is object definition.
+        // Traverse object.
         //
-        if(!dataKind.hasOwnProperty(K.term.dataRule)) {
-            theReport.status = K.error.kMSG_NO_RULE_SECTION
-            theReport.status["type"] = objectType
-
-            return false                                                        // ==>
-        }
-
-        //
-        // Validate data kind value.
-        //
-        if(validateObjectType(dataKind[K.term.dataRule], theValue, theReport)) {
-            return true                                                         // ==>
+        for(const [descriptor, value] of Object.entries(theValue[0][theValue[1]])) {
+            if(!validateDescriptor(descriptor, [theValue[0][theValue[1]], descriptor], theReport)) {
+                return false
+            }
         }
     }
 
     return false                                                                // ==>
 
 } // validateObjectTypes()
+
+/**
+ * Validate object rules
+ * The function will return true if the value is compatible with the provided rule constraints.
+ * @param theBlock {Object}: The object definition rule.
+ * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
+function validateObjectRules(theBlock, theValue, theReport)
+{
+    //
+    // Add default values.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataRuleDefault)) {
+
+        //
+        // Add missing default values.
+        //
+        theValue[0][theValue[1]] = {
+            ...theBlock[K.term.dataRuleDefault],
+            ...theValue[0][theValue[1]]
+        }
+    }
+
+    //
+    // Validate object structure.
+    //
+    if(!validateObjectStructure(theBlock, theValue, theReport)) {
+        return false                                                            // ==>
+    }
+
+} // validateObjectRules()
 
 /**
  * Validate object given data kind
@@ -1099,7 +1182,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
 
     return true                                                                 // ==>
 
-} // validateObjectStructure()
+} // validateObjectRequired()
 
 /**
  * Validate range
