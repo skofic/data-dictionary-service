@@ -83,9 +83,9 @@ function checkTerm(theKey, theReport = false)
         }
     }
 
-    //
-    // Handle errors.
-    //
+        //
+        // Handle errors.
+        //
     catch (error) {
         if(theReport !== false) {
             theReport.status = K.error.kMSG_TERM_NOT_FOUND
@@ -98,9 +98,54 @@ function checkTerm(theKey, theReport = false)
 } // checkTerm()
 
 /**
+ * Check if enumeration exists.
+ * The function will return true if the provided value is an enumeration term.
+ * @param theKey {String}: The term key.
+ * @param theReport {ValidationReport}: If provided and error, the error will be set.
+ * @returns {boolean}: The object if found, or false if not found.
+ */
+function checkEnum(theKey, theReport = false)
+{
+    //
+    // Init local storage.
+    //
+    const edges = db._collection(module.context.collectionName(K.collection.schema.name))
+    const terms = db._collection(module.context.collectionName(K.collection.term.name)).name()
+    const id = terms + '/' + theKey
+
+    //
+    // Query schema.
+    //
+    const result =
+        db._query( aql`
+            FOR edge IN ${edges}
+                FILTER edge._from == ${id}
+                FILTER edge._predicate == "_predicate_enum-of"
+            RETURN DOCUMENT(${terms}, edge._from)
+        `).toArray()
+
+    //
+    // Handle found.
+    //
+    if(result.length > 0) {
+        return true                                                             // ==>
+    }
+
+    //
+    // Handle errors.
+    //
+    if(theReport !== false) {
+        theReport.status = K.error.kMSG_ENUM_NOT_FOUND
+    }
+
+    return false                                                                // ==>
+
+} // checkEnum()
+
+/**
  * Get document.
  * The function will return the provided handleìs document or false if not found.
- * @param theHandle {String}: The term key.
+ * @param theHandle {String}: The term handle.
  * @param theReport {ValidationReport}: If provided and error, the error will be set.
  * @returns {Object/false}: The object if found, or false if not found.
  */
@@ -303,6 +348,7 @@ function isObject(item)
 module.exports = {
     checkDocument,
     checkTerm,
+    checkEnum,
 
     getDocument,
     getTerm,

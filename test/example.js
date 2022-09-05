@@ -9,7 +9,12 @@ const expect = require('chai').expect
 //
 // Functions.
 //
-const dictionary = require("../utils/dictionary")
+const utils = require('../utils/utils')
+
+//
+// Types.
+//
+const ValidationReport = require('../models/ValidationReport')
 
 /**
  * Test test.
