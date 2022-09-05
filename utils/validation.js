@@ -867,6 +867,7 @@ function validateObject(theBlock, theValue, theReport)
 {
     //
     // Assert value is structure.
+    // Global error: not an object.
     //
     if(!utils.isObject(theValue[0][theValue[1]])) {
         theReport.status = K.error.kMSG_NOT_OBJECT
@@ -877,6 +878,7 @@ function validateObject(theBlock, theValue, theReport)
 
     //
     // Assert object type.
+    // Object type requires data kind.
     //
     if(!theBlock.hasOwnProperty(K.term.dataKind)) {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
@@ -886,35 +888,6 @@ function validateObject(theBlock, theValue, theReport)
     }
 
     return validateObjectTypes(theBlock, theValue, theReport)                   // ==>
-
-    // -- // ==> // -- == -- // -- // -- //
-    // -- // ==> // -- == -- // -- // -- //
-    // -- // ==> // -- == -- // -- // -- //
-
-    //
-    // Assert it has object type.
-    //
-    if(theBlock.hasOwnProperty(K.term.dataKind)) {
-
-        //
-        // Assume valid if object wildcard in among data kinds.
-        // Note that the object type wildcard should be the only element in the data kinds.
-        //
-        if(theBlock[K.term.dataKind].includes(K.term.anyObject)) {
-            return true                                                         // ==>
-        }
-
-        //
-        // Validate object type.
-        // We bail out if at least one type succeeds.
-        //
-        return validateObjectTypes(theBlock, theValue, theReport)               // ==>
-    }
-
-    theReport.status = K.error.kMSG_BAD_DATA_BLOCK
-    theReport.status["block"] = theBlock
-
-    return false                                                                // ==>
 
 } // validateObject()
 
@@ -941,7 +914,7 @@ function validateObjectTypes(theBlock, theValue, theReport)
             //
             // Get data kind term.
             //
-            const dataKind = utils.getTerm(objectType, theReport)
+            const dataKind = utils.getTerm(objectType)
             if(dataKind === false) {
                 theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
                 theReport.status["type"] = objectType
@@ -975,9 +948,10 @@ function validateObjectTypes(theBlock, theValue, theReport)
                 return false
             }
         }
-    }
 
-    return false                                                                // ==>
+    } // Iterating object kinds.
+
+    return true                                                                 // ==>
 
 } // validateObjectTypes()
 
@@ -1006,78 +980,15 @@ function validateObjectRules(theBlock, theValue, theReport)
     }
 
     //
-    // Validate object structure.
-    //
-    if(!validateObjectStructure(theBlock, theValue, theReport)) {
-        return false                                                            // ==>
-    }
-
-} // validateObjectRules()
-
-/**
- * Validate object given data kind
- * The function will return true if the value is compatible with any of the bloc's data kinds.
- * @param theBlock {Object}: The object definition rule.
- * @param theValue {Any}: The value to test.
- * @param theReport {ValidationReport}: The status report.
- * @returns {boolean}: true means valid.
- */
-function validateObjectType(theBlock, theValue, theReport)
-{
-    //
-    // Add default values.
-    //
-    if(theBlock.hasOwnProperty(K.term.dataRuleDefault)) {
-
-        //
-        // Add missing default values.
-        //
-        theValue[0][theValue[1]] = {
-            ...theBlock[K.term.dataRuleDefault],
-            ...theValue[0][theValue[1]]
-        }
-    }
-
-    //
-    // Validate object structure.
-    //
-    if(!validateObjectStructure(theBlock, theValue, theReport)) {
-        return false                                                            // ==>
-    }
-
-    return true                                                                 // ==>
-
-} // validateObjectType()
-
-/**
- * Validate object structure.
- * The function will return true if the structure is valid.
- * @param theBlock {Object}: The object definition rule.
- * @param theValue {Any}: The value to test.
- * @param theReport {ValidationReport}: The status report.
- * @returns {boolean}: true means valid.
- */
-function validateObjectStructure(theBlock, theValue, theReport)
-{
-    //
-    // Handle required.
+    // Validate required.
     //
     if(!validateObjectRequired(theBlock, theValue, theReport)) {
         return false                                                            // ==>
     }
 
-    //
-    // Traverse object.
-    //
-    for(const [descriptor, value] of Object.entries(theValue[0][theValue[1]])) {
-        if(!validateDescriptor(descriptor, [theValue[0][theValue[1]], descriptor], theReport)) {
-            return false
-        }
-    }
-
     return true                                                                 // ==>
 
-} // validateObjectStructure()
+} // validateObjectRules()
 
 /**
  * Validate object required properties.
