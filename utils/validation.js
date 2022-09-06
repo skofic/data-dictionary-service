@@ -748,7 +748,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
             if(theValue[0][theValue[1]] !== result[0]) {
                 utils.reportResolved(theValue[1], theValue[0][theValue[1]], theReport)
                 theValue[0][theValue[1]] = result[0]
-                theReport.status = K.error.kMSG_VALUE_RESOLVED
+                // theReport.status = K.error.kMSG_VALUE_RESOLVED
             }
 
             return true                                                         // ==>
@@ -841,7 +841,7 @@ function validateEnumCode(theBlock, theValue, theReport)
             //
             utils.reportResolved(theValue[1], theValue[0][theValue[1]], theReport)
             theValue[0][theValue[1]] = result[0]
-            theReport.status = K.error.kMSG_VALUE_RESOLVED
+            // theReport.status = K.error.kMSG_VALUE_RESOLVED
 
             return true                                                         // ==>
 
@@ -887,13 +887,36 @@ function validateObject(theBlock, theValue, theReport)
         return false                                                            // ==>
     }
 
-    return validateObjectTypes(theBlock, theValue, theReport)                   // ==>
+    //
+    // Supports any object type.
+    //
+    if(!theBlock[K.term.dataKind].includes(K.term.anyObject)) {
+        return validateObjectTypes(theBlock, theValue, theReport)               // ==>
+    }
+
+    //
+    // Requires specific object types.
+    //
+    else {
+
+        //
+        // Iterate object properties.
+        //
+        for(const [descriptor, value] of Object.entries(theValue[0][theValue[1]])) {
+            if(!validateDescriptor(descriptor, [theValue[0][theValue[1]], descriptor], theReport)) {
+                return false                                                    // ==>
+            }
+        }
+    }
+
+    return true                                                                 // ==>
 
 } // validateObject()
 
 /**
  * Validate descriptor object data types
  * The function will return true if the value is compatible with any of the bloc's data kinds.
+ * !!! Note that we assume the data block has data kinds. !!!
  * @param theBlock {Object}: The dictionary data block.
  * @param theValue {Any}: The value to test.
  * @param theReport {ValidationReport}: The status report.
@@ -907,88 +930,123 @@ function validateObjectTypes(theBlock, theValue, theReport)
     for(const objectType of theBlock[K.term.dataKind]) {
 
         //
-        // Skip wildcard for object constraints.
+        // Get data kind term.
         //
-        if(objectType !== K.term.anyObject) {
+        const dataKind = utils.getTerm(objectType)
+        if(dataKind === false) {
+            theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
+            theReport.status["type"] = objectType
 
             //
-            // Get data kind term.
+            // Fatal error.
             //
-            const dataKind = utils.getTerm(objectType)
-            if(dataKind === false) {
-                theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
-                theReport.status["type"] = objectType
+            return false                                                        // ==>
+        }
 
-                return false                                                    // ==>
+        //
+        // Assert kind is object definition.
+        // Fatal error.
+        //
+        if(!dataKind.hasOwnProperty(K.term.dataRule)) {
+            theReport.status = K.error.kMSG_NO_RULE_SECTION
+            theReport.status["type"] = objectType
+
+            //
+            // Fatal error.
+            //
+            return false                                                        // ==>
+        }
+
+        //
+        // Add default values.
+        //
+        let defaults = []
+        if(dataKind[K.term.dataRule].hasOwnProperty(K.term.dataRuleDefault)) {
+
+            //
+            // Add missing default values.
+            //
+            // theValue[0][theValue[1]] = {
+            //     ...dataKind[K.term.dataRule][K.term.dataRuleDefault],
+            //     ...theValue[0][theValue[1]]
+            // }
+
+            //
+            // Iterate default values.
+            //
+            for(const [key, value] of Object.entries(dataKind[K.term.dataRule][K.term.dataRuleDefault])) {
+
+                //
+                // Handle missing default.
+                //
+                if(!theValue[0][theValue[1]].hasOwnProperty(key)) {
+
+                    //
+                    // Save property name for later.
+                    //
+                    defaults.push(key)
+
+                    //
+                    // Set default value.
+                    //
+                    theValue[0][theValue[1]][key] = value
+
+                } // Value is missing default.
+
+            } // Iterating default values.
+
+        } // Has default values.
+
+        //
+        // Validate required.
+        //
+        if(!validateObjectRequired(dataKind[K.term.dataRule], theValue, theReport)) {
+
+            //
+            // Remove defaults.
+            //
+            for(const key of defaults) {
+                delete theValue[0][theValue[1]][key]
             }
 
-            //
-            // Assert kind is object definition.
-            //
-            if(!dataKind.hasOwnProperty(K.term.dataRule)) {
-                theReport.status = K.error.kMSG_NO_RULE_SECTION
-                theReport.status["type"] = objectType
-
-                return false                                                    // ==>
-            }
-
-            //
-            // Validate object rules.
-            //
-            if(!validateObjectRules(dataKind[K.term.dataRule], theValue, theReport)) {
-                return false                                                    // ==>
-            }
+            continue                                                    // =>
         }
 
         //
         // Traverse object.
         //
-        for(const [descriptor, value] of Object.entries(theValue[0][theValue[1]])) {
+        let status = true
+        for(const [descriptor, _] of Object.entries(theValue[0][theValue[1]])) {
+
+            //
+            // Validate descriptor.
+            //
             if(!validateDescriptor(descriptor, [theValue[0][theValue[1]], descriptor], theReport)) {
-                return false
+                status = false
+                break                                                   // =>
             }
+
+        } // Iterating object properties.
+
+        //
+        // Handle all properties valid.
+        //
+        if(status) {
+            return true                                                         // ==>
+        }
+
+        //
+        // Remove eventual defaults.
+        //
+        for(const key of defaults) {
+            delete theValue[0][theValue[1]][key]
         }
 
     } // Iterating object kinds.
 
-    return true                                                                 // ==>
+    return false                                                                // ==>
 
 } // validateObjectTypes()
-
-/**
- * Validate object rules
- * The function will return true if the value is compatible with the provided rule constraints.
- * @param theBlock {Object}: The object definition rule.
- * @param theValue {Any}: The value to test.
- * @param theReport {ValidationReport}: The status report.
- * @returns {boolean}: true means valid.
- */
-function validateObjectRules(theBlock, theValue, theReport)
-{
-    //
-    // Add default values.
-    //
-    if(theBlock.hasOwnProperty(K.term.dataRuleDefault)) {
-
-        //
-        // Add missing default values.
-        //
-        theValue[0][theValue[1]] = {
-            ...theBlock[K.term.dataRuleDefault],
-            ...theValue[0][theValue[1]]
-        }
-    }
-
-    //
-    // Validate required.
-    //
-    if(!validateObjectRequired(theBlock, theValue, theReport)) {
-        return false                                                            // ==>
-    }
-
-    return true                                                                 // ==>
-
-} // validateObjectRules()
 
 /**
  * Validate object required properties.
