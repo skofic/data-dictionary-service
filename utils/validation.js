@@ -1276,5 +1276,6 @@ function validateRegexp(theBlock, theValue, theReport)
 module.exports = {
     validateDescriptor,
 
-    validateDataBlock
+    validateDataBlock,
+    validateScalar
 }
