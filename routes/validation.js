@@ -77,8 +77,6 @@ function checkDescriptor(request, response)
     // Init report.
     //
     let report = new ValidationReport(req.descriptor, req.value)
-    report["ignored"] = []          // Holds list of ignored descriptors.
-    report["resolved"] = {}         // Holds list of resolved descriptors.
 
     //
     // Query database.

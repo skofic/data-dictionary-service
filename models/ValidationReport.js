@@ -38,9 +38,15 @@ class ValidationReport
         //
         // Set data parameters.
         //
-        this.descriptor = theDescriptor
-        this.value = theValue
-        this.status = K.error[theStatus]
+        this.descriptor = theDescriptor     // Set descriptor.
+        this.value = theValue               // Set value.
+        this.status = K.error[theStatus]    // Set default status.
+
+        //
+        // Init stacks.
+        //
+        this.ignored = []                   // Holds list of ignored descriptors.
+        this.resolved = {}                  // Holds list of resolved descriptors.
     }
 
 } // ValidationReport

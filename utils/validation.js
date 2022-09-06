@@ -31,6 +31,10 @@ const HTTP_CONFLICT = status('conflict');
 const ValidationReport = require('../models/ValidationReport')
 
 
+/******************************************************************************
+ * Public functions
+ ******************************************************************************/
+
 /**
  * Validate descriptor.
  * The function expects a descriptor name and its value: it will check whether
@@ -66,6 +70,11 @@ function validateDescriptor(theDescriptor, theValue, theReport)
     return validateDataBlock(descriptor[K.term.dataBlock], theValue, theReport) // ==>
 
 } // validateDescriptor()
+
+
+/******************************************************************************
+ * Local functions
+ ******************************************************************************/
 
 /**
  * Validate data block
@@ -1265,5 +1274,7 @@ function validateRegexp(theBlock, theValue, theReport)
 
 
 module.exports = {
-    validateDescriptor
+    validateDescriptor,
+
+    validateDataBlock
 }
