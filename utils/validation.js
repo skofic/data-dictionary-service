@@ -232,6 +232,13 @@ function validateArray(theBlock, theValue, theReport)
         }
 
         //
+        // Skip validation if block is empty or only has elements.
+        //
+        if(theBlock.hasOwnProperty(K.term.dataRangeElements) || _.isEmpty(theBlock)) {
+            return true                                                         // ==>
+        }
+
+        //
         // Validate array data block.
         //
         for(let i = 0; i < theValue[0][theValue[1]].length; i++) {
@@ -322,6 +329,17 @@ function validateDictionary(theBlock, theValue, theReport)
     }
 
     //
+    // Prevent scalar data type in dictionary blocks.
+    //
+    if(theBlock[K.term.dataDictionaryKey].hasOwnProperty(K.term.dataType)) {
+        theReport.status = K.error.kMSG_UNSUPPORTED_DATA_TYPE
+        theReport.status["property"] = K.term.dataType
+        theReport.status["block"] = theBlock
+
+        return false                                                            // ==>
+    }
+
+    //
     // Load dictionary keys.
     //
     let keys = {}
@@ -389,18 +407,24 @@ function validateDictionary(theBlock, theValue, theReport)
 function validateValue(theBlock, theValue, theReport)
 {
     //
-    // Get type definition.
+    // Determine data type.
     //
     let type = null
-    // Classic scalar data block.
-    if(theBlock.hasOwnProperty(K.term.dataType)) {
-        type = K.term.dataType
-    }
-    // Dictionary key data block.
-    else if(theBlock.hasOwnProperty(K.term.dataDictKeyType)) {
+    //
+    // First intercept dictionary key type.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataDictKeyType)) {
         type = K.term.dataDictKeyType
     }
-    // Missing type means any type.
+    //
+    // Second intercept scalar value type.
+    //
+    else if(theBlock.hasOwnProperty(K.term.dataType)) {
+        type = K.term.dataType
+    }
+    //
+    // If both are missing, any data type is good.
+    //
     else {
         return true                                                             // ==>
     }
@@ -1275,7 +1299,14 @@ function validateRegexp(theBlock, theValue, theReport)
 
 module.exports = {
     validateDescriptor,
-
     validateDataBlock,
-    validateScalar
+
+    validateScalar,
+    validateArray,
+    validateSet,
+    validateDictionary,
+
+    validateValue,
+
+    validateBoolean
 }

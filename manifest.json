@@ -12,5 +12,17 @@
         "setup": "scripts/setup.js",
         "teardown": "scripts/teardown.js"
     },
-    "tests": "test/**/*.js"
+    "tests": [
+        "test/functions/test_validateDescriptor.js",
+        "test/functions/test_validateDataBlock.js",
+
+        "test/functions/test_validateScalar.js",
+        "test/functions/test_validateArray.js",
+        "test/functions/test_validateSet.js",
+        "test/functions/test_validateDictionary.js",
+
+        "test/functions/test_validateValue.js",
+
+        "test/functions/test_validateBoolean.js"
+    ]
 }

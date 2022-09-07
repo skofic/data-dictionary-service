@@ -358,7 +358,7 @@ function isString(item)
  */
 function isArray(item)
 {
-    return _.isArray(item)                                                      //==>
+    return Array.isArray(item)                                                  // ==>
 
 } // isArray()
 
