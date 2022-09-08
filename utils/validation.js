@@ -29,6 +29,7 @@ const HTTP_CONFLICT = status('conflict');
 // Import classes.
 //
 const ValidationReport = require('../models/ValidationReport')
+const {isNumber, isString} = require("./utils");
 
 
 /******************************************************************************
@@ -464,7 +465,7 @@ function validateValue(theBlock, theValue, theReport)
 
         // Timestamp.
         case K.term.dataTypeTimestamp:
-            return true                                                         // ==>
+            return validateTimestamp(theBlock, theValue, theReport)             // ==>
 
         // GeoJSON.
         case K.term.dataTypeGeoJson:
@@ -621,6 +622,43 @@ function validateRecord(theBlock, theValue, theReport)
     return true                                                                 // ==>
 
 } // validateRecord()
+
+/**
+ * Validate timestamp value
+ * If the value is a number, the function will assume it is a unix time,
+ * if the value is a string, the function will try to interpret it as a date:
+ * if the operation succeeds, the function will return true.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theValue {Any}: The value to test.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
+function validateTimestamp(theBlock, theValue, theReport)
+{
+    //
+    // Handle numbers.
+    //
+    if(isNumber(theValue[0][theValue[1]])) {
+        return true                                                             // ==>
+    }
+
+    //
+    // Handle string.
+    //
+    if(isString(theValue[0][theValue[1]])) {
+        const timestamp = new Date(theValue[0][theValue[1]])
+        if(!isNaN(timestamp.valueOf())) {
+            theValue[0][theValue[1]] = timestamp.valueOf()
+
+            return true                                                         // ==>
+        }
+    }
+    theReport.status = K.error.kMSG_NOT_TIMESTAMP
+    theReport.status["value"] = theValue[0][theValue[1]]
+
+    return false                                                                // ==>
+
+} // validateTimestamp()
 
 /**
  * Validate enumeration value

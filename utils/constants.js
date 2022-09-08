@@ -402,12 +402,21 @@ module.exports = Object.freeze({
             }
         },
         kMSG_REQUIRED_ALL_SELECTION: {
-            code: 26,
+            code: 27,
             message: {
                 iso_639_3_eng: "All properties in set are required.",
                 iso_639_3_ita: "Tutte le proprietà nel set sono obbligatorie.",
                 iso_639_3_fra: "Toutes les propriétés de l'ensemble sont obligatoires.",
                 iso_639_3_esp: "Todas las propiedades del conjunto son obligatorias."
+            }
+        },
+        kMSG_NOT_TIMESTAMP: {
+            code: 28,
+            message: {
+                iso_639_3_eng: "Not a timestamp.",
+                iso_639_3_ita: "Non è una data.",
+                iso_639_3_fra: "Ce n'est pas une date.",
+                iso_639_3_esp: "No es una fecha."
             }
         }
     }
