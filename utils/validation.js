@@ -25,12 +25,6 @@ const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
 const HTTP_NOT_FOUND = status('not found');
 const HTTP_CONFLICT = status('conflict');
 
-//
-// Import classes.
-//
-const ValidationReport = require('../models/ValidationReport')
-const {isNumber, isString} = require("./utils");
-
 
 /******************************************************************************
  * Public functions
@@ -752,7 +746,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
     //
     // Init local storage.
     //
-    const collection = module.context.collection(K.collection.term.name)
+    const collection = db._collection(K.collection.term.name)
 
     //
     // Iterate enumeration types.
@@ -849,7 +843,7 @@ function validateEnumCode(theBlock, theValue, theReport)
     //
     // Init local storage.
     //
-    const collection = module.context.collection(K.collection.term.name)
+    const collection = db._collection(K.collection.term.name)
 
     //
     // Iterate enumeration types.

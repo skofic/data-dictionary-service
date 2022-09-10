@@ -78,7 +78,7 @@ function checkTerm(theKey, theReport = false)
     // Check if term exists.
     //
     try {
-        if(module.context.collection(K.collection.term.name).exists(theKey)) {
+        if(db._collection(K.collection.term.name).exists(theKey)) {
             return true                                                         // ==>
         }
     }
@@ -109,8 +109,8 @@ function checkEnum(theKey, theReport = false)
     //
     // Init local storage.
     //
-    const edges = db._collection(module.context.collectionName(K.collection.schema.name))
-    const terms = db._collection(module.context.collectionName(K.collection.term.name)).name()
+    const edges = db._collection(K.collection.schema.name)
+    const terms = db._collection(K.collection.term.name).name()
     const id = terms + '/' + theKey
 
     //
@@ -217,7 +217,7 @@ function getTerm(theKey, theReport = false)
     // Read database.
     //
     try {
-        const result = module.context.collection(K.collection.term.name).document(theKey)
+        const result = db._collection(K.collection.term.name).document(theKey)
 
         return result                                                           // ==>
 

@@ -37,7 +37,7 @@ module.exports = Object.freeze({
             type: 'D'
         },
         schema: {
-            name: 'schemas',
+            name: 'edges',
             type: 'E'
         },
         topo: {
@@ -70,10 +70,10 @@ module.exports = Object.freeze({
         dataTypeInteger: "_type_integer",
         dataTypeNumber: "_type_number",
         dataTypeString: "_type_string",
-        dataTypeEnum: "_type_enum",
-        dataTypeRecord: "_type_record",
-        dataTypeTimestamp: "_type_timestamp",
-        dataTypeGeoJson: "_type_geo-json",
+        dataTypeEnum: "_type_string_enum",
+        dataTypeRecord: "_type_string_handle",
+        dataTypeTimestamp: "_type_number_timestamp",
+        dataTypeGeoJson: "_type_object_geo-json",
         dataTypeObject: "_type_object",
 
         dataRangeElements: "_elements",

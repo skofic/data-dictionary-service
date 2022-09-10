@@ -28,6 +28,11 @@ const collection_terms = module.context.collection('terms');
 const enumSchema = joi.string().required()
     .description('The global identifier of the root element of the controlled vocabulary');
 
+//
+// Application.
+//
+const K = require( '../utils/constants' )
+
 const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
 const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code;
 const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
@@ -92,7 +97,7 @@ function getAllEnumerations(request, response)
     //
     // Get enumeration root.
     //
-    const root = request.pathParams.root;
+    const root = K.collection.term.name + '/' + request.pathParams.root;
 
     //
     // Query database.
@@ -113,7 +118,7 @@ function getAllEnumerationKeys(request, response)
     //
     // Get enumeration root.
     //
-    const root = request.pathParams.root;
+    const root = K.collection.term.name + '/' + request.pathParams.root;
 
     //
     // Query database.
