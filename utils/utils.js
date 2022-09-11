@@ -121,7 +121,8 @@ function checkEnum(theKey, theReport = false)
             FOR edge IN ${edges}
                 FILTER edge._from == ${id}
                 FILTER edge._predicate == "_predicate_enum-of"
-            RETURN DOCUMENT(${terms}, edge._from)
+            LIMIT 1
+            RETURN edge._from
         `).toArray()
 
     //
@@ -136,6 +137,7 @@ function checkEnum(theKey, theReport = false)
     //
     if(theReport !== false) {
         theReport.status = K.error.kMSG_ENUM_NOT_FOUND
+        theReport.status["value"] = theKey
     }
 
     return false                                                                // ==>

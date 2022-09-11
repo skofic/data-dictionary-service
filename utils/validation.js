@@ -11,7 +11,8 @@ const aql = require('@arangodb').aql;					// AQL queries.
 // Import resources.
 //
 const K = require( './constants' );					    // Application constants.
-const utils = require('./utils');                       // Utility functions.
+const utils = require('./utils');
+const {checkEnum} = require("./utils");                       // Utility functions.
 
 
 /******************************************************************************
@@ -552,6 +553,43 @@ function validateNumber(theBlock, theValue, theReport)
 } // validateNumber()
 
 /**
+ * Validate timestamp value
+ * If the value is a number, the function will assume it is a unix time,
+ * if the value is a string, the function will try to interpret it as a date:
+ * if the operation succeeds, the function will return true.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theValue: The value to test.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
+function validateTimestamp(theBlock, theValue, theReport)
+{
+    //
+    // Handle numbers.
+    //
+    if(utils.isNumber(theValue[0][theValue[1]])) {
+        return validateRange(theBlock, theValue, theReport)                     // ==>
+    }
+
+    //
+    // Handle string.
+    //
+    if(utils.isString(theValue[0][theValue[1]])) {
+        const timestamp = new Date(theValue[0][theValue[1]])
+        if(!isNaN(timestamp.valueOf())) {
+            theValue[0][theValue[1]] = timestamp.valueOf()
+
+            return validateRange(theBlock, theValue, theReport)                 // ==>
+        }
+    }
+    theReport.status = K.error.kMSG_NOT_TIMESTAMP
+    theReport.status["value"] = theValue[0][theValue[1]]
+
+    return false                                                                // ==>
+
+} // validateTimestamp()
+
+/**
  * Validate string value
  * The function will return true if the reported value is a string.
  * Array values are passed to this function individually.
@@ -600,11 +638,44 @@ function validateKey(theBlock, theValue, theReport)
     //
     // Assert terms record key.
     //
-    if(!utils.checkTerm(theValue[0][theValue[1]], theReport)) {
-        theReport.status = K.error.kMSG_DOCUMENT_NOT_FOUND
+    const term = utils.getTerm(theValue[0][theValue[1]], theReport)
+    if(term === false) {
+        theReport.status = K.error.kMSG_TERM_NOT_FOUND
         theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
+    }
+
+    //
+    // Handle data kind.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataKind)) {
+        for(const enumType of theBlock[K.term.dataKind]) {
+            switch(enumType) {
+
+                case K.term.anyTerm:
+                    return true                                                 // ==>
+
+                case K.term.anyEnum:
+                    return checkEnum(term._key, theReport)                      // ==>
+
+                case K.term.anyObject:
+                    if(term.hasOwnProperty(K.term.ruleBlock)) {
+                        return true                                             // ==>
+                    }
+                    theReport.status = K.error.kMSG_NO_RULE_SECTION
+                    theReport.status["value"] = term._key
+                    return false                                                // ==>
+
+                case K.term.anyDescriptor:
+                    if(term.hasOwnProperty(K.term.dataBlock)) {
+                        return true                                             // ==>
+                    }
+                    theReport.status = K.error.kMSG_DESCRIPTOR_NOT_FOUND
+                    theReport.status["value"] = term._key
+                    return false                                                // ==>
+            }
+        }
     }
 
     return true                                                                 // ==>
@@ -642,43 +713,6 @@ function validateHandle(theBlock, theValue, theReport)
     return true                                                                 // ==>
 
 } // validateHandle()
-
-/**
- * Validate timestamp value
- * If the value is a number, the function will assume it is a unix time,
- * if the value is a string, the function will try to interpret it as a date:
- * if the operation succeeds, the function will return true.
- * @param theBlock {Object}: The dictionary data block.
- * @param theValue: The value to test.
- * @param theReport {ValidationReport}: The status report.
- * @returns {boolean}: true means valid.
- */
-function validateTimestamp(theBlock, theValue, theReport)
-{
-    //
-    // Handle numbers.
-    //
-    if(utils.isNumber(theValue[0][theValue[1]])) {
-        return true                                                             // ==>
-    }
-
-    //
-    // Handle string.
-    //
-    if(utils.isString(theValue[0][theValue[1]])) {
-        const timestamp = new Date(theValue[0][theValue[1]])
-        if(!isNaN(timestamp.valueOf())) {
-            theValue[0][theValue[1]] = timestamp.valueOf()
-
-            return true                                                         // ==>
-        }
-    }
-    theReport.status = K.error.kMSG_NOT_TIMESTAMP
-    theReport.status["value"] = theValue[0][theValue[1]]
-
-    return false                                                                // ==>
-
-} // validateTimestamp()
 
 /**
  * Validate enumeration value
@@ -993,14 +1027,15 @@ function validateObject(theBlock, theValue, theReport)
         //
         // Iterate object properties.
         //
-        for(const [descriptor, _] of Object.entries(theValue[0][theValue[1]])) {
-            if(!validateDescriptor(descriptor, [theValue[0][theValue[1]], descriptor], theReport)) {
-                return false                                                    // ==>
+        for(const [type, _] of Object.entries(theValue[0][theValue[1]])) {
+
+            if(validateDescriptor(type, [theValue[0][theValue[1]], type], theReport)) {
+                return true                                                     // ==>
             }
         }
     }
 
-    return true                                                                 // ==>
+    return false                                                                // ==>
 
 } // validateObject()
 
@@ -1038,7 +1073,7 @@ function validateObjectTypes(theBlock, theValue, theReport)
         // Assert kind is object definition.
         // Fatal error.
         //
-        if(!dataKind.hasOwnProperty(K.term.dataRule)) {
+        if(!dataKind.hasOwnProperty(K.term.ruleBlock)) {
             theReport.status = K.error.kMSG_NO_RULE_SECTION
             theReport.status["type"] = objectType
 
@@ -1052,20 +1087,20 @@ function validateObjectTypes(theBlock, theValue, theReport)
         // Add default values.
         //
         let defaults = []
-        if(dataKind[K.term.dataRule].hasOwnProperty(K.term.dataRuleDefault)) {
+        if(dataKind[K.term.ruleBlock].hasOwnProperty(K.term.dataRuleDefault)) {
 
             //
             // Add missing default values.
             //
             // theValue[0][theValue[1]] = {
-            //     ...dataKind[K.term.dataRule][K.term.dataRuleDefault],
+            //     ...dataKind[K.term.ruleBlock][K.term.dataRuleDefault],
             //     ...theValue[0][theValue[1]]
             // }
 
             //
             // Iterate default values.
             //
-            for(const [key, value] of Object.entries(dataKind[K.term.dataRule][K.term.dataRuleDefault])) {
+            for(const [key, value] of Object.entries(dataKind[K.term.ruleBlock][K.term.dataRuleDefault])) {
 
                 //
                 // Handle missing default.
@@ -1091,7 +1126,7 @@ function validateObjectTypes(theBlock, theValue, theReport)
         //
         // Validate required.
         //
-        if(!validateObjectRequired(dataKind[K.term.dataRule], theValue, theReport)) {
+        if(!validateObjectRequired(dataKind[K.term.ruleBlock], theValue, theReport)) {
 
             //
             // Remove defaults.

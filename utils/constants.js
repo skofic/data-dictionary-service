@@ -56,6 +56,7 @@ module.exports = Object.freeze({
     term : {
         codeBlock: "_code",
         dataBlock: "_data",
+        ruleBlock: "_rule",
 
         dataBlockScalar: "_scalar",
         dataBlockArray: "_array",
@@ -64,7 +65,6 @@ module.exports = Object.freeze({
 
         dataType: "_type",
         dataKind: "_kind",
-        dataRule: "_rule",
 
         dataTypeBool: "_type_boolean",
         dataTypeInteger: "_type_integer",
