@@ -76,6 +76,16 @@ describe('validateValue()', function () {
             expect(result).to.equal(true)
         })
 
+        it('Timestamp: "August 19, 1975 23:15:30".', function () {
+            let type = { "_type": "_type_number_timestamp" }
+            let value = [{"value": "August 19, 1975 23:15:30"}, "value"]
+
+            report = new ValidationReport(descriptor, value)
+            result = validation.validateValue(type, value, report)
+
+            expect(result).to.equal(true)
+        })
+
         it('String: "A string".', function () {
             let type = { "_type": "_type_string" }
             let value = [{"value": "A string"}, "value"]
@@ -87,7 +97,7 @@ describe('validateValue()', function () {
         })
 
         it('Enumeration: "_unit".', function () {
-            let type = { "_type": "_type_enum", "_kind": "_any-term" }
+            let type = { "_type": "_type_string_enum", "_kind": "_any-term" }
             let value = [{"value": "_unit"}, "value"]
 
             report = new ValidationReport(descriptor, value)
@@ -96,19 +106,9 @@ describe('validateValue()', function () {
             expect(result).to.equal(true)
         })
 
-        it('Record: "dict_terms/_unit".', function () {
-            let type = { "_type": "_type_record" }
-            let value = [{"value": "dict_terms/_unit"}, "value"]
-
-            report = new ValidationReport(descriptor, value)
-            result = validation.validateValue(type, value, report)
-
-            expect(result).to.equal(true)
-        })
-
-        it('Timestamp: "August 19, 1975 23:15:30".', function () {
-            let type = { "_type": "_type_timestamp" }
-            let value = [{"value": "August 19, 1975 23:15:30"}, "value"]
+        it('Document handle: "terms/_unit".', function () {
+            let type = { "_type": "_type_string_handle" }
+            let value = [{"value": "terms/_unit"}, "value"]
 
             report = new ValidationReport(descriptor, value)
             result = validation.validateValue(type, value, report)

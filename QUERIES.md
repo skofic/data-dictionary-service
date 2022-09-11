@@ -32,7 +32,7 @@ FOR vertex, edge, path IN 1..10
 | Parameter | Value                   |
 | --------- | ----------------------- |
 | root      | dict_terms/iso_639_1    |
-| path      | iso_639_1               |
+| path      | dict_terms/iso_639_1    |
 | target    | dict_terms/iso_639_1_fr |
 | predicate | _predicate_enum-of      |
 
@@ -66,7 +66,7 @@ FOR vertex, edge, path IN 1..10
 | Parameter | Value                |
 | --------- | -------------------- |
 | root      | dict_terms/iso_639_1 |
-| path      | iso_639_1            |
+| path      | dict_terms/iso_639_1 |
 | code      | fr                   |
 | predicate | _predicate_enum-of   |
 

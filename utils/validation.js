@@ -6,24 +6,12 @@
 const _ = require('lodash');                            // Lodash library.
 const db = require('@arangodb').db;						// Database object.
 const aql = require('@arangodb').aql;					// AQL queries.
-const errors = require('@arangodb').errors;             // ArangoDB errors.
-const status = require('statuses');                     // Status codes.
-const httpError = require('http-errors');               // HTTP errors.
 
 //
 // Import resources.
 //
 const K = require( './constants' );					    // Application constants.
 const utils = require('./utils');                       // Utility functions.
-
-//
-// Set constants.
-//
-const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
-const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code;
-const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
-const HTTP_NOT_FOUND = status('not found');
-const HTTP_CONFLICT = status('conflict');
 
 
 /******************************************************************************
@@ -145,7 +133,7 @@ function validateDataBlock(theBlock, theValue, theReport)
  * The function expects the descriptor's scalar definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The scalar data block.
- * @param theValue {Any}: The scalar value.
+ * @param theValue: The scalar value.
  * @param theReport {ValidationReport}: The status report.
  */
 function validateScalar(theBlock, theValue, theReport)
@@ -182,7 +170,7 @@ function validateScalar(theBlock, theValue, theReport)
  * it should ensure the value is valid and return the converted value if successful.
  * Note that the leaf element of this data block can only be a scalar value.
  * @param theBlock {Object}: The array data block.
- * @param theValue {Any}: The array value.
+ * @param theValue: The array value.
  * @param theReport {ValidationReport}: The status report.
  */
 function validateArray(theBlock, theValue, theReport)
@@ -263,7 +251,7 @@ function validateArray(theBlock, theValue, theReport)
  * The function expects the descriptor's set definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The set data block.
- * @param theValue {Any}: The set value.
+ * @param theValue: The set value.
  * @param theReport {ValidationReport}: The status report.
  */
 function validateSet(theBlock, theValue, theReport)
@@ -295,7 +283,7 @@ function validateSet(theBlock, theValue, theReport)
  * The function expects the descriptor's dictionary definition and the value,
  * it should ensure the value is valid and return the converted value if successful.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The dictionary value.
+ * @param theValue: The dictionary value.
  * @param theReport {ValidationReport}: The status report.
  * @returns {Boolean}: True means valid.
  */
@@ -391,11 +379,11 @@ function validateDictionary(theBlock, theValue, theReport)
 
 /**
  * Validate data value
- * The function will validate the value provided in the report structure according
+ * The function will validate the scalar value provided in the report structure according
  * to the data type defined in the provided descriptor data block.
  * The value is expected to be .
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -441,29 +429,35 @@ function validateValue(theBlock, theValue, theReport)
         case K.term.dataTypeNumber:
             return validateNumber(theBlock, theValue, theReport)                // ==>
 
+        // Timestamp.
+        case K.term.dataTypeTimestamp:
+            return validateTimestamp(theBlock, theValue, theReport)             // ==>
+
         // String.
         case K.term.dataTypeString:
             return validateString(theBlock, theValue, theReport)                // ==>
 
-        // Object.
-        case K.term.dataTypeObject:
-            return validateObject(theBlock, theValue, theReport)                // ==>
+        // Document key.
+        case K.term.dataTypeKey:
+            return validateKey(theBlock, theValue, theReport)                   // ==>
+
+        // Document handle.
+        case K.term.dataTypeHandle:
+            return validateHandle(theBlock, theValue, theReport)                // ==>
 
         // Enumeration.
         case K.term.dataTypeEnum:
             return validateEnum(theBlock, theValue, theReport)                  // ==>
 
-        // Record reference.
-        case K.term.dataTypeRecord:
-            return validateRecord(theBlock, theValue, theReport)                // ==>
-
-        // Timestamp.
-        case K.term.dataTypeTimestamp:
-            return validateTimestamp(theBlock, theValue, theReport)             // ==>
+        // Object.
+        case K.term.dataTypeObject:
+            return validateObject(theBlock, theValue, theReport)                // ==>
 
         // GeoJSON.
         case K.term.dataTypeGeoJson:
-            return true                                                         // ==>
+            theReport.status = K.error.kMSG_UNIMPLEMENTED_DATA_TYPE
+            theReport.status["type"] = theBlock[type]
+            return false                                                        // ==>
 
         // Unsupported.
         default:
@@ -481,7 +475,7 @@ function validateValue(theBlock, theValue, theReport)
  * The function will return true if the reported value is a boolean.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -506,7 +500,7 @@ function validateBoolean(theBlock, theValue, theReport)
  * The function will return true if the reported value is an integer.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -534,7 +528,7 @@ function validateInteger(theBlock, theValue, theReport)
  * The function will return true if the reported value is a float or integer.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -562,7 +556,7 @@ function validateNumber(theBlock, theValue, theReport)
  * The function will return true if the reported value is a string.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -586,15 +580,47 @@ function validateString(theBlock, theValue, theReport)
 } // validateString()
 
 /**
- * Validate record value
- * The function will return true if the reported value is a record handle.
+ * Validate document term key
+ * The function will return true if the reported value is a terms document _key.
  * Note that we assume the reference document to exist.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The handle to test.
+ * @param theValue: The handle to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
-function validateRecord(theBlock, theValue, theReport)
+function validateKey(theBlock, theValue, theReport)
+{
+    //
+    // Assert string.
+    //
+    if(!validateString(theBlock, theValue, theReport)) {
+        return false                                                            // ==>
+    }
+
+    //
+    // Assert terms record key.
+    //
+    if(!utils.checkTerm(theValue[0][theValue[1]], theReport)) {
+        theReport.status = K.error.kMSG_DOCUMENT_NOT_FOUND
+        theReport.status["value"] = theValue[0][theValue[1]]
+
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateKey()
+
+/**
+ * Validate document handle
+ * The function will return true if the reported value is a document handle.
+ * Note that we assume the reference document to exist.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theValue: The handle to test.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
+function validateHandle(theBlock, theValue, theReport)
 {
     //
     // Assert string.
@@ -615,7 +641,7 @@ function validateRecord(theBlock, theValue, theReport)
 
     return true                                                                 // ==>
 
-} // validateRecord()
+} // validateHandle()
 
 /**
  * Validate timestamp value
@@ -623,7 +649,7 @@ function validateRecord(theBlock, theValue, theReport)
  * if the value is a string, the function will try to interpret it as a date:
  * if the operation succeeds, the function will return true.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -632,14 +658,14 @@ function validateTimestamp(theBlock, theValue, theReport)
     //
     // Handle numbers.
     //
-    if(isNumber(theValue[0][theValue[1]])) {
+    if(utils.isNumber(theValue[0][theValue[1]])) {
         return true                                                             // ==>
     }
 
     //
     // Handle string.
     //
-    if(isString(theValue[0][theValue[1]])) {
+    if(utils.isString(theValue[0][theValue[1]])) {
         const timestamp = new Date(theValue[0][theValue[1]])
         if(!isNaN(timestamp.valueOf())) {
             theValue[0][theValue[1]] = timestamp.valueOf()
@@ -664,7 +690,7 @@ function validateTimestamp(theBlock, theValue, theReport)
  *     - If that is the case, locate the term in the graph.
  *     - If that is not the case, locate the code in the graph.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -737,7 +763,7 @@ function validateEnum(theBlock, theValue, theReport)
  * The function will return true if the reported term key value is an enumeration
  * belonging to the enumeration type.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -767,7 +793,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
 
         //
         // Handle root is same as target.
-        // In this case we would bet the first level of rootìs elements,
+        // In this case we would bet the first level of root elements,
         // for that reason we force the value as a code, instead.
         //
         if(enumType === theValue[0][theValue[1]]) {
@@ -788,14 +814,14 @@ function validateEnumTerm(theBlock, theValue, theReport)
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}
                 GRAPH "schema"
-                PRUNE ${enumType} IN edge._path AND
+                PRUNE ${root} IN edge._path AND
                       edge._predicate == ${K.term.predicateEnum} AND
                       (edge._to == ${target} OR
                         edge._from == ${target})
                 OPTIONS {
                     "uniqueVertices": "path"
                 }
-                FILTER ${enumType} IN edge._path AND
+                FILTER ${root} IN edge._path AND
                        edge._predicate == ${K.term.predicateEnum} AND
                        (edge._to == ${target} OR
                         edge._from == ${target})
@@ -834,7 +860,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
  * The function will return true if the reported term key value is an enumeration
  * belonging to the enumeration type.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -884,13 +910,13 @@ function validateEnumCode(theBlock, theValue, theReport)
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}
                 GRAPH "schema"
-                PRUNE ${enumType} IN edge._path AND
+                PRUNE ${root} IN edge._path AND
                       edge._predicate == ${K.term.predicateEnum} AND
                       ${theValue[0][theValue[1]]} IN vertex._code._aid
                 OPTIONS {
                     "uniqueVertices": "path"
                 }
-                FILTER ${enumType} IN edge._path AND
+                FILTER ${root} IN edge._path AND
                        edge._predicate == ${K.term.predicateEnum} AND
                       ${theValue[0][theValue[1]]} IN vertex._code._aid
             RETURN vertex._key
@@ -924,7 +950,7 @@ function validateEnumCode(theBlock, theValue, theReport)
  * Validate object value
  * The function will return true if the reported value is an object.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -967,7 +993,7 @@ function validateObject(theBlock, theValue, theReport)
         //
         // Iterate object properties.
         //
-        for(const [descriptor, value] of Object.entries(theValue[0][theValue[1]])) {
+        for(const [descriptor, _] of Object.entries(theValue[0][theValue[1]])) {
             if(!validateDescriptor(descriptor, [theValue[0][theValue[1]], descriptor], theReport)) {
                 return false                                                    // ==>
             }
@@ -983,7 +1009,7 @@ function validateObject(theBlock, theValue, theReport)
  * The function will return true if the value is compatible with any of the bloc's data kinds.
  * !!! Note that we assume the data block has data kinds. !!!
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -1117,7 +1143,7 @@ function validateObjectTypes(theBlock, theValue, theReport)
  * Validate object required properties.
  * The function will return true if the structure contains all required properties.
  * @param theBlock {Object}: The object definition rule.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -1223,7 +1249,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
  * The function will return true if the value is within the valid range.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -1297,7 +1323,7 @@ function validateRange(theBlock, theValue, theReport)
  * The function will return true if the string value matches the regular expression.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue {Any}: The value to test.
+ * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */

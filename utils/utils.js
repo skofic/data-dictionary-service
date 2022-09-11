@@ -83,9 +83,9 @@ function checkTerm(theKey, theReport = false)
         }
     }
 
-        //
-        // Handle errors.
-        //
+    //
+    // Handle errors.
+    //
     catch (error) {
         if(theReport !== false) {
             theReport.status = K.error.kMSG_TERM_NOT_FOUND

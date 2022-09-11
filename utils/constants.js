@@ -69,12 +69,13 @@ module.exports = Object.freeze({
         dataTypeBool: "_type_boolean",
         dataTypeInteger: "_type_integer",
         dataTypeNumber: "_type_number",
-        dataTypeString: "_type_string",
-        dataTypeEnum: "_type_string_enum",
-        dataTypeRecord: "_type_string_handle",
         dataTypeTimestamp: "_type_number_timestamp",
-        dataTypeGeoJson: "_type_object_geo-json",
+        dataTypeString: "_type_string",
+        dataTypeKey: "_type_string_key",
+        dataTypeHandle: "_type_string_handle",
+        dataTypeEnum: "_type_string_enum",
         dataTypeObject: "_type_object",
+        dataTypeGeoJson: "_type_object_geo-json",
 
         dataRangeElements: "_elements",
         dataRangeElementsMin: "_min-items",
@@ -156,6 +157,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Tipo di dati non supportato",
                 iso_639_3_fra: "Type de données non pris en charge",
                 iso_639_3_esp: "Tipo de datos no admitido"
+            }
+        },
+        kMSG_UNIMPLEMENTED_DATA_TYPE: {
+            code: -6,
+            message: {
+                iso_639_3_eng: "Data type not implemented yet",
+                iso_639_3_ita: "Tipo di dati non implementato",
+                iso_639_3_fra: "Type de données pas encore pris en charge",
+                iso_639_3_esp: "Tipo de datos todavía no utilizado"
             }
         },
         kMSG_OK: {
