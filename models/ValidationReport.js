@@ -23,7 +23,7 @@ class ValidationReport
     /**
      * Constructor
      * @param theDescriptor {String}: The descriptor or type name.
-     * @param theValue {Any}: The descriptor value.
+     * @param theValue: The descriptor value.
      * @param theType {String}: The descriptor type,if relevant
      * @param theStatus {String}: The status object code, defaults to kMSG_OK.
      * @param theError {Error}: The eventual error object.

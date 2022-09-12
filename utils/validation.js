@@ -1178,7 +1178,7 @@ function validateObjectTypes(theBlock, theValue, theReport)
  * Validate object required properties.
  * The function will return true if the structure contains all required properties.
  * @param theBlock {Object}: The object definition rule.
- * @param theValue: The value to test.
+ * @param theValue {Array}: The value to test: [0] parent value, [1] index to value.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -1284,7 +1284,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
  * The function will return true if the value is within the valid range.
  * Array values are passed to this function individually.
  * @param theBlock {Object}: The dictionary data block.
- * @param theValue: The value to test.
+ * @param theValue {Array}: The value to test: [0] parent value, [1] index to value.
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
@@ -1294,15 +1294,16 @@ function validateRange(theBlock, theValue, theReport)
     // Check if we have a range.
     //
     if(theBlock.hasOwnProperty(K.term.dataRangeValid)) {
+        const value = theValue[0][theValue[1]]
         const range = theBlock[K.term.dataRangeValid]
 
         //
         // Minimum inclusive.
         //
         if(range.hasOwnProperty(K.term.dataRangeValidMinInc)) {
-            if(theValue[0][1] < range[K.term.dataRangeValidMinInc]) {
+            if(value < range[K.term.dataRangeValidMinInc]) {
                 theReport.status = K.error.kMSG_BELOW_RANGE
-                theReport.status["value"] = theValue[0][theValue[1]]
+                theReport.status["value"] = value
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1313,9 +1314,9 @@ function validateRange(theBlock, theValue, theReport)
         // Minimum exclusive.
         //
         if(range.hasOwnProperty(K.term.dataRangeValidMinExc)) {
-            if(theValue[0][1] <= range[K.term.dataRangeValidMinExc]) {
+            if(value <= range[K.term.dataRangeValidMinExc]) {
                 theReport.status = K.error.kMSG_BELOW_RANGE
-                theReport.status["value"] = theValue[0][theValue[1]]
+                theReport.status["value"] = value
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1326,9 +1327,9 @@ function validateRange(theBlock, theValue, theReport)
         // Maximum inclusive.
         //
         if(range.hasOwnProperty(K.term.dataRangeValidMaxInc)) {
-            if(theValue[0][1] > range[K.term.dataRangeValidMaxInc]) {
+            if(value > range[K.term.dataRangeValidMaxInc]) {
                 theReport.status = K.error.kMSG_OVER_RANGE
-                theReport.status["value"] = theValue[0][theValue[1]]
+                theReport.status["value"] = value
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1337,11 +1338,10 @@ function validateRange(theBlock, theValue, theReport)
 
         //
         // Maximum exclusive.
-        //
         if(range.hasOwnProperty(K.term.dataRangeValidMaxExc)) {
-            if(theValue[0][1] >= range[K.term.dataRangeValidMaxExc]) {
+            if(value >= range[K.term.dataRangeValidMaxExc]) {
                 theReport.status = K.error.kMSG_OVER_RANGE
-                theReport.status["value"] = theValue[0][theValue[1]]
+                theReport.status["value"] = value
                 theReport.status["range"] = range
 
                 return false                                                    // ==>
@@ -1401,5 +1401,7 @@ module.exports = {
 
     validateValue,
 
-    validateBoolean
+    validateBoolean,
+    validateInteger,
+    validateNumber
 }

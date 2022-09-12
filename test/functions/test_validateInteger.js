@@ -26,79 +26,83 @@ let descriptor = "not used"
 //
 // Validate boolean.
 //
-describe('validateBoolean()', function () {
+describe('validateInteger()', function () {
 
-    describe('Boolean works: true.', function () {
-        let type = { "_type": "_type_boolean" }
+    describe('Integer fails: true.', function () {
+        let type = { "_type": "_type_integer, " }
         let value = [ { "value": true }, "value" ]
 
         it('Should succeed.', function () {
 
             report = new ValidationReport(descriptor, value)
-            result = validation.validateBoolean(type, value, report)
+            result = validation.validateInteger(type, value, report)
 
-            expect(result).to.equal(true)
+            expect(result).to.equal(false)
         })
 
         it('Ensure report has status.', function () {
             expect(report.hasOwnProperty("status")).to.equal(true)
         })
-
         it('Ensure status code is correct.', function () {
-            expect(report.status.code).to.equal(0)
+            expect(report.status.code).to.equal(12)
         })
     })
 
-    describe('Boolean works: false.', function () {
-        let type = { "_type": "_type_boolean" }
+    describe('Integer fails: false.', function () {
+        let type = { "_type": "_type_integer" }
         let value = [ { "value": false }, "value" ]
 
         it('Should succeed.', function () {
 
             report = new ValidationReport(descriptor, value)
-            result = validation.validateBoolean(type, value, report)
+            result = validation.validateInteger(type, value, report)
 
-            expect(result).to.equal(true)
+            expect(result).to.equal(false)
         })
 
         it('Ensure report has status.', function () {
             expect(report.hasOwnProperty("status")).to.equal(true)
+        })
+
+        it('Ensure status code is correct.', function () {
+            expect(report.status.code).to.equal(12)
+        })
+    })
+
+    describe('Integer works with integer: 3.', function () {
+        let type = { "_type": "_type_integer", "_valid-range": {"_min-range-inclusive": 2, "_max-range-inclusive": 4 } }
+        let value = [ { "value": 3 }, "value" ]
+
+        it('Should succeed.', function () {
+
+            report = new ValidationReport(descriptor, value)
+            result = validation.validateInteger(type, value, report)
+
+            expect(result).to.equal(true)
         })
 
         it('Ensure status code is correct.', function () {
             expect(report.status.code).to.equal(0)
         })
-    })
 
-    describe('Boolean fails with integer: 12.', function () {
-        let type = { "_type": "_type_boolean" }
-        let value = [ { "value": 12 }, "value" ]
-
-        it('Should fail.', function () {
-
+        it('Ensure value is within range: 12 should fail.', function () {
+            value = [ { "value": 12 }, "value" ]
             report = new ValidationReport(descriptor, value)
-            result = validation.validateBoolean(type, value, report)
+
+            result = validation.validateInteger(type, value, report)
 
             expect(result).to.equal(false)
         })
-
-        it('Ensure report has status.', function () {
-            expect(report.hasOwnProperty("status")).to.equal(true)
-        })
-
-        it('Ensure status code is correct.', function () {
-            expect(report.status.code).to.equal(10)
-        })
     })
 
-    describe('Boolean fails with number: 1.2.', function () {
-        let type = { "_type": "_type_boolean" }
+    describe('Integer fails with number: 1.2.', function () {
+        let type = { "_type": "_type_integer" }
         let value = [ { "value": 1.2 }, "value" ]
 
         it('Should fail.', function () {
 
             report = new ValidationReport(descriptor, value)
-            result = validation.validateBoolean(type, value, report)
+            result = validation.validateInteger(type, value, report)
 
             expect(result).to.equal(false)
         })
@@ -108,18 +112,18 @@ describe('validateBoolean()', function () {
         })
 
         it('Ensure status code is correct.', function () {
-            expect(report.status.code).to.equal(10)
+            expect(report.status.code).to.equal(12)
         })
     })
 
-    describe('Boolean fails with string: "true".', function () {
-        let type = { "_type": "_type_boolean" }
+    describe('Integer fails with string: "true".', function () {
+        let type = { "_type": "_type_integer" }
         let value = [ { "value": "true" }, "value" ]
 
         it('Should fail.', function () {
 
             report = new ValidationReport(descriptor, value)
-            result = validation.validateBoolean(type, value, report)
+            result = validation.validateInteger(type, value, report)
 
             expect(result).to.equal(false)
         })
@@ -129,18 +133,18 @@ describe('validateBoolean()', function () {
         })
 
         it('Ensure status code is correct.', function () {
-            expect(report.status.code).to.equal(10)
+            expect(report.status.code).to.equal(12)
         })
     })
 
-    describe('Boolean fails with object: {"key": "value"}.', function () {
-        let type = { "_type": "_type_boolean" }
+    describe('Integer fails with object: {"key": "value"}.', function () {
+        let type = { "_type": "_type_integer" }
         let value = [ { "value": {"key": "value"} }, "value" ]
 
         it('Should fail.', function () {
 
             report = new ValidationReport(descriptor, value)
-            result = validation.validateBoolean(type, value, report)
+            result = validation.validateInteger(type, value, report)
 
             expect(result).to.equal(false)
         })
@@ -150,8 +154,8 @@ describe('validateBoolean()', function () {
         })
 
         it('Ensure status code is correct.', function () {
-            expect(report.status.code).to.equal(10)
+            expect(report.status.code).to.equal(12)
         })
     })
 
-}) // validateBoolean()
+}) // validateInteger()

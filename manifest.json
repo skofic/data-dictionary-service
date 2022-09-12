@@ -21,6 +21,10 @@
         "test/functions/test_validateSet.js",
         "test/functions/test_validateDictionary.js",
 
-        "test/functions/test_validateValue.js"
+        "test/functions/test_validateValue.js",
+
+        "test/functions/test_validateBoolean.js",
+        "test/functions/test_validateInteger.js",
+        "test/functions/test_validateNumber.js"
     ]
 }
