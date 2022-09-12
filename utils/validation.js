@@ -4,7 +4,6 @@
 // Import frameworks.
 //
 const _ = require('lodash');                            // Lodash library.
-const db = require('@arangodb').db;						// Database object.
 const aql = require('@arangodb').aql;					// AQL queries.
 
 //
@@ -806,7 +805,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
     //
     // Init local storage.
     //
-    const collection = db._collection(K.collection.term.name)
+    const collection = K.db._collection(K.collection.term.name)
 
     //
     // Iterate enumeration types.
@@ -843,7 +842,7 @@ function validateEnumTerm(theBlock, theValue, theReport)
         //
         // Traverse graph.
         //
-        const result = db._query( aql`
+        const result = K.db._query( aql`
             WITH ${collection}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}
@@ -903,7 +902,7 @@ function validateEnumCode(theBlock, theValue, theReport)
     //
     // Init local storage.
     //
-    const collection = db._collection(K.collection.term.name)
+    const collection = K.db._collection(K.collection.term.name)
 
     //
     // Iterate enumeration types.
@@ -939,7 +938,7 @@ function validateEnumCode(theBlock, theValue, theReport)
         //
         // Traverse graph.
         //
-        const result = db._query( aql`
+        const result = K.db._query( aql`
             WITH ${collection}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${root}

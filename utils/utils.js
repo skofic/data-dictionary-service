@@ -4,30 +4,14 @@
 // Import frameworks.
 //
 const _ = require('lodash');                            // Lodash library.
-const db = require('@arangodb').db;						// Database object.
 const aql = require('@arangodb').aql;					// AQL queries.
 const errors = require('@arangodb').errors;             // ArangoDB errors.
 const status = require('statuses');                     // Status codes.
-const httpError = require('http-errors');               // HTTP errors.
 
 //
 // Import resources.
 //
 const K = require( './constants' );					    // Application constants.
-
-//
-// Set constants.
-//
-const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
-const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code;
-const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
-const HTTP_NOT_FOUND = status('not found');
-const HTTP_CONFLICT = status('conflict');
-
-//
-// Import classes.
-//
-const ValidationReport = require('../models/ValidationReport')
 
 
 /******************************************************************************/
@@ -47,7 +31,7 @@ function checkDocument(theHandle,theReport = false)
     // Check if document handle is valid.
     //
     try {
-        if(db._exists(theHandle)) {
+        if(K.db._exists(theHandle)) {
             return true                                                         // ==>
         }
     }
@@ -78,7 +62,7 @@ function checkTerm(theKey, theReport = false)
     // Check if term exists.
     //
     try {
-        if(db._collection(K.collection.term.name).exists(theKey)) {
+        if(K.db._collection(K.collection.term.name).exists(theKey)) {
             return true                                                         // ==>
         }
     }
@@ -109,15 +93,15 @@ function checkEnum(theKey, theReport = false)
     //
     // Init local storage.
     //
-    const edges = db._collection(K.collection.schema.name)
-    const terms = db._collection(K.collection.term.name).name()
+    const edges = K.db._collection(K.collection.schema.name)
+    const terms = K.db._collection(K.collection.term.name).name()
     const id = terms + '/' + theKey
 
     //
     // Query schema.
     //
     const result =
-        db._query( aql`
+        K.db._query( aql`
             FOR edge IN ${edges}
                 FILTER edge._from == ${id}
                 FILTER edge._predicate == "_predicate_enum-of"
@@ -187,7 +171,7 @@ function getDocument(theHandle, theReport = false)
     // Read database.
     //
     try {
-        const result = db._document(theHandle)
+        const result = K.db._document(theHandle)
 
         return result                                                           // ==>
 
@@ -219,7 +203,7 @@ function getTerm(theKey, theReport = false)
     // Read database.
     //
     try {
-        const result = db._collection(K.collection.term.name).document(theKey)
+        const result = K.db._collection(K.collection.term.name).document(theKey)
 
         return result                                                           // ==>
 

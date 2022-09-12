@@ -6,8 +6,9 @@ const status = require('statuses');
 const errors = require('@arangodb').errors;
 const createRouter = require('@arangodb/foxx/router');
 const Topo = require('../models/topo');
+const K = require("../utils/constants");
 
-const topos = module.context.collection('topos');
+const topos = K.db._collection(K.collection.topo.name)
 const keySchema = joi.string().required()
 .description('The key of the topo');
 

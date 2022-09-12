@@ -9,22 +9,10 @@
 //
 // Import frameworks.
 //
-const _ = require('lodash');                            // Lodash library.
 const dd = require('dedent');							// For multiline text.
 const fs = require('fs');								// File system utilities.
-const db = require('@arangodb').db;						// Database object.
-const Joi = require('joi');								// Validation framework.
-const crypto = require('@arangodb/crypto');				// Cryptographic functions.
-const httpError = require('http-errors');				// HTTP errors.
-const status = require('statuses');						// Don't know what it is.
 const errors = require('@arangodb').errors;				// ArangoDB errors.
-const createAuth = require('@arangodb/foxx/auth');		// Authentication framework.
 const createRouter = require('@arangodb/foxx/router');  // Router class.
-
-//
-// Error constants.
-//
-const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
 
 //
 //* Import models.
@@ -35,9 +23,6 @@ const Term = require('../models/term');                 // Term model.
 // Application.
 //
 const reader = require('../utils/JsonLReader')
-const dictionary = require('../utils/dictionary')
-const validation = require('../utils/validation')
-const K = require("../utils/constants");
 const utils = require('../utils/utils');                // Utility functions.
 
 

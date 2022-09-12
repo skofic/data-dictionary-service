@@ -1,5 +1,6 @@
 'use strict';
 
+
 /**
  * Constants
  *
@@ -23,6 +24,11 @@ module.exports = Object.freeze({
         buffer			 : 819200,
         msg_sep			 : ' '
     },
+
+    //
+    // Database connection.
+    //
+    db: require('@arangodb').db,
 
     //
     // Collections.

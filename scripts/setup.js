@@ -1,11 +1,6 @@
 'use strict';
 
 //
-// Imports.
-//
-const db = require('@arangodb').db;
-
-//
 // Application.
 //
 const K = require( '../utils/constants' )    // Application constants.
@@ -19,12 +14,12 @@ let created = []
 // Iterate collections.
 //
 for(const info of Object.keys(K.collection)) {
-  if(!db._collection(info.name)) {
+  if(!K.db._collection(info.name)) {
     if(info.type === 'D') {
-      db._createDocumentCollection(info.name)
+      K.db._createDocumentCollection(info.name)
       created.push(info.name)
     } else if(info.type === 'E') {
-      db._createEdgeCollection(info.name)
+      K.db._createEdgeCollection(info.name)
       created.push(info.name)
     }
   } else {

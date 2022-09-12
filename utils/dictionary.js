@@ -3,12 +3,7 @@
 //
 // Import frameworks.
 //
-const db = require('@arangodb').db;						// Database object.
 const aql = require('@arangodb').aql;					// AQL queries.
-const crypto = require('@arangodb/crypto');				// Cryptographic functions.
-const httpError = require('http-errors');				// HTTP errors.
-const status = require('statuses');						// Don't know what it is.
-const errors = require('@arangodb').errors;				// ArangoDB errors.
 
 //
 // Application.
@@ -33,10 +28,10 @@ function getAllEnumerations(theRoot)
     //
     // Query schema.
     //
-    const edges = db._collection(K.collection.schema.name)
-    const terms = db._collection(K.collection.term.name)
+    const edges = K.db._collection(K.collection.schema.name)
+    const terms = K.db._collection(K.collection.term.name)
     const result =
-        db._query( aql`
+        K.db._query( aql`
             FOR edge IN ${edges}
                 FILTER ${theRoot} IN edge._path
                 FILTER edge._predicate == "_predicate_enum-of"
@@ -59,10 +54,10 @@ function getAllEnumerationKeys(theRoot)
     //
     // Query schema.
     //
-    const edges = db._collection(K.collection.schema.name)
-    const terms = db._collection(K.collection.term.name)
+    const edges = K.db._collection(K.collection.schema.name)
+    const terms = K.db._collection(K.collection.term.name)
     const result =
-        db._query( aql`
+        K.db._query( aql`
             FOR edge IN ${edges}
                 FILTER ${theRoot} IN edge._path
                 FILTER edge._predicate == "_predicate_enum-of"

@@ -6,8 +6,9 @@ const status = require('statuses');
 const errors = require('@arangodb').errors;
 const createRouter = require('@arangodb/foxx/router');
 const Schema = require('../models/schema');
+const K = require("../utils/constants");
 
-const schemas = module.context.collection('schemas');
+const schemas = K.db._collection(K.collection.schema.name)
 const keySchema = joi.string().required()
 .description('The key of the schema');
 

@@ -6,8 +6,9 @@ const status = require('statuses');
 const errors = require('@arangodb').errors;
 const createRouter = require('@arangodb/foxx/router');
 const Term = require('../models/term');
+const K = require("../utils/constants");
 
-const terms = module.context.collection('terms');
+const terms = K.db._collection(K.collection.term.name)
 const keySchema = joi.string().required()
 .description('The key of the term');
 
