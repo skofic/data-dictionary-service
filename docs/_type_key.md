@@ -1,8 +1,14 @@
 ### _type_key
 
+------
+
 #### Key data type
 
+------
+
 The data type of the dictionary key.
+
+------
 
 This field defines the data type of the dictionary key, it is an enumerated choice that can take the following values:
 

@@ -13,6 +13,10 @@
         "teardown": "scripts/teardown.js"
     },
     "tests": [
+        "test/functions/test_ItWorks.js",
+
+        "test/functions/test_ItWorks.js",
+
         "test/functions/test_validateDescriptor.js",
         "test/functions/test_validateDataBlock.js",
 
@@ -25,6 +29,7 @@
 
         "test/functions/test_validateBoolean.js",
         "test/functions/test_validateInteger.js",
-        "test/functions/test_validateNumber.js"
+        "test/functions/test_validateNumber.js",
+        "test/functions/test_validateTimestamp.js"
     ]
 }

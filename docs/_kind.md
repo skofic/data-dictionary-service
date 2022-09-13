@@ -1,8 +1,14 @@
 ### _kind
 
+------
+
 #### Data type references
 
+------
+
 Set of data type references to which the property value must belong. The reference must be in the form of a term global identifier.
+
+------
 
 This field is a [set](_set) of [global identifiers](_gid) which reference terms that represent *root elements* of *controlled vocabularies*, *object data structures* and other kind of *graphs*. The field is relevant to the [data type](_type) of the current descriptor and is *required* and *restricted* to the [data type](_type) values:
 

@@ -1,5 +1,6 @@
 'use strict';
 
+const database = require('@arangodb').db
 
 /**
  * Constants
@@ -28,7 +29,7 @@ module.exports = Object.freeze({
     //
     // Database connection.
     //
-    db: require('@arangodb').db,
+    db: database,
 
     //
     // Collections.

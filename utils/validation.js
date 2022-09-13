@@ -1402,5 +1402,6 @@ module.exports = {
 
     validateBoolean,
     validateInteger,
-    validateNumber
+    validateNumber,
+    validateTimestamp
 }

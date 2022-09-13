@@ -1,8 +1,14 @@
 ### _class
 
+------
+
 #### Data classification
 
+------
+
 This enumerated value indicates to which class or category the descriptor's value belongs.
+
+------
 
 The class can be selected from the following choices:
 

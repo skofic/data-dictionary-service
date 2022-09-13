@@ -5,7 +5,6 @@
 //
 const dd = require('dedent');
 const joi = require('joi');
-const httpError = require('http-errors');
 const status = require('statuses');
 const errors = require('@arangodb').errors;
 const createRouter = require('@arangodb/foxx/router');
@@ -32,12 +31,6 @@ const enumSchema = joi.string().required()
 // Application.
 //
 const K = require( '../utils/constants' )
-
-const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
-const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code;
-const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
-const HTTP_NOT_FOUND = status('not found');
-const HTTP_CONFLICT = status('conflict');
 
 //
 // Instantiate router.

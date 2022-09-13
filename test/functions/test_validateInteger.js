@@ -32,7 +32,7 @@ describe('validateInteger()', function () {
         let type = { "_type": "_type_integer, " }
         let value = [ { "value": true }, "value" ]
 
-        it('Should succeed.', function () {
+        it('Should fail.', function () {
 
             report = new ValidationReport(descriptor, value)
             result = validation.validateInteger(type, value, report)
@@ -40,9 +40,6 @@ describe('validateInteger()', function () {
             expect(result).to.equal(false)
         })
 
-        it('Ensure report has status.', function () {
-            expect(report.hasOwnProperty("status")).to.equal(true)
-        })
         it('Ensure status code is correct.', function () {
             expect(report.status.code).to.equal(12)
         })
@@ -52,16 +49,12 @@ describe('validateInteger()', function () {
         let type = { "_type": "_type_integer" }
         let value = [ { "value": false }, "value" ]
 
-        it('Should succeed.', function () {
+        it('Should fail.', function () {
 
             report = new ValidationReport(descriptor, value)
             result = validation.validateInteger(type, value, report)
 
             expect(result).to.equal(false)
-        })
-
-        it('Ensure report has status.', function () {
-            expect(report.hasOwnProperty("status")).to.equal(true)
         })
 
         it('Ensure status code is correct.', function () {
@@ -107,10 +100,6 @@ describe('validateInteger()', function () {
             expect(result).to.equal(false)
         })
 
-        it('Ensure report has status.', function () {
-            expect(report.hasOwnProperty("status")).to.equal(true)
-        })
-
         it('Ensure status code is correct.', function () {
             expect(report.status.code).to.equal(12)
         })
@@ -128,10 +117,6 @@ describe('validateInteger()', function () {
             expect(result).to.equal(false)
         })
 
-        it('Ensure report has status.', function () {
-            expect(report.hasOwnProperty("status")).to.equal(true)
-        })
-
         it('Ensure status code is correct.', function () {
             expect(report.status.code).to.equal(12)
         })
@@ -147,10 +132,6 @@ describe('validateInteger()', function () {
             result = validation.validateInteger(type, value, report)
 
             expect(result).to.equal(false)
-        })
-
-        it('Ensure report has status.', function () {
-            expect(report.hasOwnProperty("status")).to.equal(true)
         })
 
         it('Ensure status code is correct.', function () {
