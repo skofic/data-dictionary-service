@@ -4,8 +4,8 @@ const joi = require('joi');
 
 module.exports = {
     schema: {
-        type: joi.string().required(),
-        value: joi.any().required()
+        language: joi.string(),
+        value: joi.object().required()
     },
     forClient(obj) {
         // Implement outgoing transformations here

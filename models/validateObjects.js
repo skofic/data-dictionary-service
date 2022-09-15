@@ -3,11 +3,7 @@
 const joi = require('joi');
 
 module.exports = {
-    schema: {
-        descriptor: joi.string().required(),
-        language: joi.string(),
-        value: joi.any().required()
-    },
+    schema: joi.array().items(joi.object()),
     forClient(obj) {
         // Implement outgoing transformations here
         return obj;

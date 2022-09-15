@@ -30,6 +30,7 @@
         "test/functions/test_validateBoolean.js",
         "test/functions/test_validateInteger.js",
         "test/functions/test_validateNumber.js",
-        "test/functions/test_validateTimestamp.js"
+        "test/functions/test_validateTimestamp.js",
+        "test/functions/test_validateString.js"
     ]
 }

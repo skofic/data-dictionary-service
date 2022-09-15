@@ -31,7 +31,7 @@ let result = true
 let descriptor = "not used"
 
 //
-// Validate boolean.
+// Validate timestamp.
 //
 describe('validateTimestamp()', function () {
 

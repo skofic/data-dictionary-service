@@ -290,6 +290,16 @@ function validateSet(theBlock, theValue, theReport)
 function validateDictionary(theBlock, theValue, theReport)
 {
     //
+    // Assert value is structure.
+    //
+    if(!utils.isObject(theValue[0][theValue[1]])) {
+        theReport.status = K.error.kMSG_NOT_OBJECT
+        theReport.status["value"] = theValue[0][theValue[1]]
+
+        return false                                                            // ==>
+    }
+
+    //
     // Check data dictionary key block.
     //
     if(!theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
@@ -581,6 +591,7 @@ function validateTimestamp(theBlock, theValue, theReport)
             return validateRange(theBlock, theValue, theReport)                 // ==>
         }
     }
+
     theReport.status = K.error.kMSG_NOT_TIMESTAMP
     theReport.status["value"] = theValue[0][theValue[1]]
 
@@ -632,6 +643,13 @@ function validateKey(theBlock, theValue, theReport)
     //
     if(!validateString(theBlock, theValue, theReport)) {
         return false                                                            // ==>
+    }
+
+    //
+    // Skip empty namespace.
+    //
+    if(theValue[0][theValue[1]].length === 0) {
+        return true                                                             // =>
     }
 
     //
@@ -1403,5 +1421,6 @@ module.exports = {
     validateBoolean,
     validateInteger,
     validateNumber,
-    validateTimestamp
+    validateTimestamp,
+    validateString
 }

@@ -5,8 +5,6 @@
 //
 const dd = require('dedent');
 const joi = require('joi');
-const status = require('statuses');
-const errors = require('@arangodb').errors;
 const createRouter = require('@arangodb/foxx/router');
 
 //
@@ -23,7 +21,6 @@ const dictionary = require("../utils/dictionary");
 //
 // Constants.
 //
-const collection_terms = module.context.collection('terms');
 const enumSchema = joi.string().required()
     .description('The global identifier of the root element of the controlled vocabulary');
 

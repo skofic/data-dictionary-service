@@ -1,0 +1,36 @@
+{
+  "name": "Data-Dictionary",
+  "version": "0.0.0",
+  "description": "Data dictionary service.",
+  "engines": {
+    "arangodb": "^3.0.0"
+  },
+  "author": "Milko Škofič",
+  "license": "Apache 2",
+  "main": "main.js",
+  "scripts": {
+    "setup": "scripts/setup.js",
+    "teardown": "scripts/teardown.js"
+  },
+  "tests": [
+    "test/functions/test_ItWorks.js",
+
+    "test/functions/test_ItWorks.js",
+
+    "test/functions/test_validateDescriptor.js",
+    "test/functions/test_validateDataBlock.js",
+
+    "test/functions/test_validateScalar.js",
+    "test/functions/test_validateArray.js",
+    "test/functions/test_validateSet.js",
+    "test/functions/test_validateDictionary.js",
+
+    "test/functions/test_validateValue.js",
+
+    "test/functions/test_validateBoolean.js",
+    "test/functions/test_validateInteger.js",
+    "test/functions/test_validateNumber.js",
+    "test/functions/test_validateTimestamp.js",
+    "test/functions/test_validateString.js"
+  ]
+}
