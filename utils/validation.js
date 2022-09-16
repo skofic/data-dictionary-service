@@ -11,7 +11,7 @@ const aql = require('@arangodb').aql;					// AQL queries.
 //
 const K = require( './constants' );					    // Application constants.
 const utils = require('./utils');
-const {checkEnum} = require("./utils");                       // Utility functions.
+const {checkEnum} = require("./utils");                 // Utility functions.
 
 
 /******************************************************************************
@@ -23,7 +23,7 @@ const {checkEnum} = require("./utils");                       // Utility functio
  * The function expects a descriptor name and its value: it will check whether
  * the value corresponds to the descriptor definition.
  * @param theDescriptor {String}: Descriptor name.
- * @param theValue {Array}: Tuple: the parent value and the key to the value.
+ * @param theValue {Array}: Tuple: the value parent and the key to the value.
  * @param theReport {ValidationReport}: Status report.
  * @returns {boolean}: true means valid.
  */

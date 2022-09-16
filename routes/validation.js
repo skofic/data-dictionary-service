@@ -67,10 +67,10 @@ router.post('descriptor', doCheckDescriptor, 'descriptor')
  * It will return a dictionary whose keys correspond to the validated object's
  * properties, and the values are the validation status report.
  */
-router.post('object', checkObject, 'object')
+router.post('object', doCheckObject, 'object')
     .body(ValidateObject, "Object value to validate.")
     .response(200, objectSchema, "Validation status by property.")
-    .summary('Validate list of objects')
+    .summary('Validate an object')
     .description(dd
         `
             The service will iterate the provided object's properties validating them.
@@ -112,16 +112,30 @@ router.post('objects', checkObjects, 'objects')
 function doCheckDescriptor(theRequest, theResponse)
 {
     //
-    // Maybe check language and request parameters here?
-    // MILKO -
+    // Init local storage.
     //
+    let descriptor = theRequest.body.descriptor
+    let value = theRequest.body
+    let index = "value"
+    const language = theRequest.body.hasOwnProperty("language")
+                   ? theRequest.body.language
+                   : 'all'
 
     //
     // Perform validation.
     //
-    const report = checkDescriptor(theRequest.body)
+    let report
+    if(theRequest.body.hasOwnProperty("language")) {
+        report = checkDescriptor(descriptor, value, index, language)
+    } else {
+        report = checkDescriptor(descriptor, value, index)
+    }
 
-    theResponse.send(report)                                                    // ==>
+    theResponse.send({
+        "descriptor": descriptor,
+        "value": value.value,
+        "status": report
+    })
 
 } // doCheckDescriptor()
 
@@ -133,35 +147,26 @@ function doCheckDescriptor(theRequest, theResponse)
 function doCheckObject(theRequest, theResponse)
 {
     //
-    // Maybe check language and request parameters here?
-    // MILKO -
-    //
-
-    //
     // Init local storage.
     //
+    let value = theRequest.body
+    let index = "value"
     let result = {}
+    let report = {}
 
     //
     // Iterate object properties.
     //
-    for(const property in theRequest.body) {
+    for(const property in value[index]) {
 
         //
-        // Init loop storage.
+        // Validate current descriptor.
         //
-        let body = {
-            "descriptor": property,
-            "value": theRequest.body[property]
-        }
         if(theRequest.body.hasOwnProperty("language")) {
-            body["language"] = theRequest.body.language
+            report = checkDescriptor(property, value[index], property, theRequest.body.language)
+        } else {
+            report = checkDescriptor(property, value[index], property)
         }
-
-        //
-        // Validate descriptor.
-        //
-        let report = checkDescriptor(body)
 
         //
         // Remove top level descriptor.
@@ -169,19 +174,17 @@ function doCheckObject(theRequest, theResponse)
         delete report.descriptor
 
         //
-        // Delete value.
-        //
-        if(!report.hasOwnProperty("resolved")) {
-            delete report.value
-        }
-
-        //
         // Add to result.
         //
-        result[property] = report
+        if((report.status.code !== 0) || (report.hasOwnProperty("resolved"))) {
+            result[property] = report.status
+        }
     }
 
-    theResponse.send(result)                                                    // ==>
+    theResponse.send({
+        "value": value.value,
+        "status": result
+    })                                                                          // ==>
 
 } // doCheckObject()
 
@@ -192,25 +195,25 @@ function doCheckObject(theRequest, theResponse)
 
 /**
  * Validate descriptor.
- * @param theRequestBody: 'descriptor' and 'value' in object.
- * @return {Object}: The validation report.
+ * @param theDescriptor {String}: Descriptor.
+ * @param theValue: Descriptor value parent.
+ * @param theIndex {String}: Value property name.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
  */
-function checkDescriptor(theRequestBody)
+function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_639_3_eng')
 {
     //
     // Init report.
     //
-    let report = new ValidationReport(
-        theRequestBody.descriptor,
-        theRequestBody.value
-    )
+    let report = new ValidationReport(theDescriptor)
 
     //
     // Validate descriptor.
     //
     const valid = validation.validateDescriptor(
-        theRequestBody.descriptor,
-        [report, "value"],
+        theDescriptor,
+        [theValue, theIndex],
         report
     )
 
@@ -251,9 +254,13 @@ function checkDescriptor(theRequestBody)
     //
     // Set language.
     //
-    if(theRequestBody.hasOwnProperty("language")) {
-        if(report.status.message.hasOwnProperty(theRequestBody.language)) {
-            report.status.message = report.status.message[theRequestBody.language]
+    if(theLanguage !== "all") {
+        if(utils.isObject(report.status.message)) {
+            if(report.status.message.hasOwnProperty(theLanguage)) {
+                report.status.message = report.status.message[theLanguage]
+            } else {
+                report.status.message = report.status.message['iso_639_3_eng']
+            }
         }
     }
 
@@ -328,7 +335,7 @@ function checkObject(request, response)
         delete report.descriptor
 
         //
-        // Delete value.
+        // Delete value if nothing resolved.
         //
         if(!report.hasOwnProperty("resolved")) {
             delete report.value
