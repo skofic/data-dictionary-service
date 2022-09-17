@@ -3,6 +3,7 @@
 //
 // Imports.
 //
+const _ = require('lodash');
 const dd = require('dedent');
 const joi = require('joi');
 const createRouter = require('@arangodb/foxx/router');
@@ -22,6 +23,11 @@ const objectSchema = joi.object()
     .description('List of report statuses indexed by the validated object properties.');
 const objectsSchema = joi.array()
     .description('List of report statuses indexed by the array index of the validated list.');
+
+//
+// Import resources.
+//
+const K = require( '../utils/constants' );
 
 //
 // Functions.
@@ -86,7 +92,7 @@ router.post('object', doCheckObject, 'object')
  * will be dictionaries whose keys correspond to the validated object's
  * properties, and the values are the validation status report.
  */
-router.post('objects', checkObjects, 'objects')
+router.post('objects', doCheckObjects, 'objects')
     .body(ValidateObjects, "List of objects to validate.")
     .response(200, objectsSchema, "List of validation status dictionaries.")
     .summary('Validate list of objects')
@@ -106,6 +112,12 @@ router.post('objects', checkObjects, 'objects')
 
 /**
  * Perform validation of provided descriptor and value.
+ *
+ * The service will return an object with the following properties:
+ * - descriptor: The descriptor name.
+ * - value: The tested value, may be updated with resolved enumerations.
+ * - result: The status of the validation.
+ *
  * @param theRequest {Object}: Service request.
  * @param theResponse {Object}: Service response.
  */
@@ -124,23 +136,25 @@ function doCheckDescriptor(theRequest, theResponse)
     //
     // Perform validation.
     //
-    let report
-    if(theRequest.body.hasOwnProperty("language")) {
-        report = checkDescriptor(descriptor, value, index, language)
-    } else {
-        report = checkDescriptor(descriptor, value, index)
-    }
+    let report = checkDescriptor(descriptor, value, index, language)
 
     theResponse.send({
         "descriptor": descriptor,
-        "value": value.value,
-        "status": report
+        "value": value[index],
+        "result": report
     })
 
 } // doCheckDescriptor()
 
 /**
  * Perform validation of provided object.
+ *
+ * The service will return an object with the following properties:
+ * - value: The tested object, may be updated with resolved enumerations.
+ * - result: Validation status, may have the following formats:
+ * an object with the same properties as the provided value and with the validation
+ * status as values. Correct values with no warnings will be omitted. If that is the case
+ * of all properties, the result will be a single succesful status.
  * @param theRequest {Object}: Service request.
  * @param theResponse {Object}: Service response.
  */
@@ -149,44 +163,42 @@ function doCheckObject(theRequest, theResponse)
     //
     // Init local storage.
     //
-    let value = theRequest.body
-    let index = "value"
-    let result = {}
-    let report = {}
+    const language = theRequest.body.hasOwnProperty("language")
+        ? theRequest.body.language
+        : 'all'
 
     //
     // Iterate object properties.
     //
-    for(const property in value[index]) {
+    let report = checkObject(theRequest.body.value, language)
 
-        //
-        // Validate current descriptor.
-        //
-        if(theRequest.body.hasOwnProperty("language")) {
-            report = checkDescriptor(property, value[index], property, theRequest.body.language)
-        } else {
-            report = checkDescriptor(property, value[index], property)
-        }
-
-        //
-        // Remove top level descriptor.
-        //
-        delete report.descriptor
-
-        //
-        // Add to result.
-        //
-        if((report.status.code !== 0) || (report.hasOwnProperty("resolved"))) {
-            result[property] = report.status
-        }
+    //
+    // Handle all OK.
+    //
+    if(_.isEmpty(report)) {
+        report = K.error.kMSG_OK
     }
 
     theResponse.send({
-        "value": value.value,
-        "status": result
+        "value": theRequest.body.value,
+        "result": report
     })                                                                          // ==>
 
 } // doCheckObject()
+
+/**
+ * Perform validation of provided list of objects.
+ * @param theRequest {Object}: Service request.
+ * @param theResponse {Object}: Service response.
+ */
+function doCheckObjects(theRequest, theResponse)
+{
+    theResponse.send({
+        "value": "NOTHING",
+        "status": "TO BE DEVELOPED"
+    })                                                                          // ==>
+
+} // doCheckObjects()
 
 
 //
@@ -247,8 +259,10 @@ function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_6
     //
     // Remove resolved if empty.
     //
-    if(Object.keys(report.resolved).length === 0) {
-        delete report.resolved
+    if(report.hasOwnProperty("resolved")) {
+        if(Object.keys(report.resolved).length === 0) {
+            delete report.resolved
+        }
     }
 
     //
@@ -270,10 +284,11 @@ function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_6
 
 /**
  * Validate object.
- * @param request: Object to validate.
- * @param response: Object with status report for each property.
- * */
-function checkObject(request, response)
+ * @param theValue: Object value.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
+ */
+function checkObject(theValue, theLanguage = 'iso_639_3_eng')
 {
     //
     // Init local storage.
@@ -283,51 +298,12 @@ function checkObject(request, response)
     //
     // Iterate object properties.
     //
-    for(const property in request.body.value) {
+    for(const property in theValue) {
 
         //
-        // Init report.
+        // Validate current descriptor.
         //
-        let report = new ValidationReport(property, request.body.value[property])
-
-        //
-        // Validate descriptor.
-        //
-        const valid = validation.validateDescriptor(property, [report, "value"], report)
-
-        //
-        // Move leaf descriptor in status on error.
-        //
-        if(!valid) {
-            if(report.hasOwnProperty("status")) {
-                if(report.hasOwnProperty("current")) {
-                    report.status["descriptor"] = report["current"]
-                }
-            }
-        }
-
-        //
-        // Delete leaf descriptor from report.
-        //
-        if(report.hasOwnProperty("current")) {
-            delete report["current"]
-        }
-
-        //
-        // Convert ignored to set.
-        //
-        if(report.ignored.length > 0) {
-            report.ignored = [...new Set(report.ignored)]
-        } else {
-            delete report.ignored
-        }
-
-        //
-        // Remove resolved if empty.
-        //
-        if(Object.keys(report.resolved).length === 0) {
-            delete report.resolved
-        }
+        let report = checkDescriptor(property, theValue, property, theLanguage)
 
         //
         // Remove top level descriptor.
@@ -335,37 +311,15 @@ function checkObject(request, response)
         delete report.descriptor
 
         //
-        // Delete value if nothing resolved.
-        //
-        if(!report.hasOwnProperty("resolved")) {
-            delete report.value
-        }
-
-        //
-        // Handle language.
-        //
-        if(request.body.hasOwnProperty("language")) {
-            if(report.status.message.hasOwnProperty(request.body.language)) {
-                report.status.message = report.status.message[request.body.language]
-            }
-        }
-
-        //
         // Add to result.
         //
-        result[property] = report
+        if( (report.status.code !== 0) ||
+            report.hasOwnProperty("resolved") ||
+            report.hasOwnProperty("ignored")) {
+            result[property] = report
+        }
     }
 
-    response.send(result)                                                       // ==>
+    return result                                                               // ==>
 
 } // checkObject()
-
-/**
- * Validate objects list.
- * @param request: List of objects to validate.
- * @param response: List of object validation statuses.
- * */
-function checkObjects(request, response)
-{
-
-} // checkObjects()
