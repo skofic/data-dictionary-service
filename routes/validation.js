@@ -126,9 +126,6 @@ function doCheckDescriptor(theRequest, theResponse)
     //
     // Init local storage.
     //
-    let descriptor = theRequest.body.descriptor
-    let value = theRequest.body
-    let index = "value"
     const language = theRequest.body.hasOwnProperty("language")
                    ? theRequest.body.language
                    : 'all'
@@ -136,11 +133,11 @@ function doCheckDescriptor(theRequest, theResponse)
     //
     // Perform validation.
     //
-    let report = checkDescriptor(descriptor, value, index, language)
+    let report = checkDescriptor(theRequest.body.descriptor, theRequest.body, "value", language)
 
     theResponse.send({
-        "descriptor": descriptor,
-        "value": value[index],
+        "descriptor": theRequest.body.descriptor,
+        "value": theRequest.body["value"],
         "result": report
     })
 
@@ -193,9 +190,40 @@ function doCheckObject(theRequest, theResponse)
  */
 function doCheckObjects(theRequest, theResponse)
 {
+    //
+    // Init local storage.
+    //
+    let report = []
+    const language = theRequest.body.hasOwnProperty("language")
+        ? theRequest.body.language
+        : 'all'
+
+    //
+    // Iterate array.
+    //
+    for(let i = 0; i < theRequest.body.value.length; i++) {
+
+        //
+        // Iterate object properties.
+        //
+        let status = checkObject(theRequest.body.value[i], language)
+
+        //
+        // Handle all OK.
+        //
+        if(_.isEmpty(status)) {
+            status = K.error.kMSG_OK
+        }
+
+        //
+        // Add status.
+        //
+        report.push(status)
+    }
+
     theResponse.send({
-        "value": "NOTHING",
-        "status": "TO BE DEVELOPED"
+        "value": theRequest.body.value,
+        "result": report
     })                                                                          // ==>
 
 } // doCheckObjects()

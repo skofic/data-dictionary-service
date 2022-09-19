@@ -1260,7 +1260,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
         //
         if(rule.hasOwnProperty(K.term.dataRuleSelDescrAnyOne)) {
 
-            if(value.keys().length === 0) {
+            if(Object.keys(theValue[0][theValue[1]]).length === 0) {
                 theReport.status = K.error.kMSG_REQUIRED_ONE_SELECTION
 
                 return false                                                    // ==>
