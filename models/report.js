@@ -6,9 +6,8 @@ const joi = require('joi');
 module.exports = {
     schema: {
         descriptor: joi.string().required(),
-        value: joi.any(),
-        status: joi.object(),
-        error: joi.object()
+        value: joi.any().required(),
+        result: joi.object().required()
     },
     forClient(obj) {
         // Implement outgoing transformations here
