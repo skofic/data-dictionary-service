@@ -8,12 +8,6 @@ const joi = require('joi');
 const createRouter = require('@arangodb/foxx/router');
 
 //
-// Models.
-//
-const Term = require('../models/term');
-const List = require('../models/KeyList')
-
-//
 // Functions.
 //
 const dictionary = require("../utils/dictionary");
@@ -21,8 +15,10 @@ const dictionary = require("../utils/dictionary");
 //
 // Constants.
 //
+const enumKeyList = joi.array().items(joi.string())
+const enumTermList = joi.array().items(joi.object())
 const enumSchema = joi.string().required()
-    .description('The global identifier of the root element of the controlled vocabulary');
+    .description('Term global identifier');
 
 //
 // Application.
@@ -42,34 +38,35 @@ router.tag('dictionary');
 
 
 /**
+ * Return all enumeration keys by path.
+ * The service will return all the enumeration keys corresponding to the provided path
+ * provided as a term global identifier.
+ * No hierarchy is maintained and only valid enumeration elements are selected.
+ */
+router.get('enum/keys/:path', getAllEnumerationKeys, 'keys')
+    .pathParam('path', enumSchema)
+    .response(enumKeyList, 'Flat list of all enumeration term keys.')
+    .summary('Return flattened list of all enumeration keys')
+    .description(dd
+        `
+            Provided the root to an enumeration, will return the flattened list of all enumeration keys.
+        `
+    );
+
+/**
  * Return all enumerations.
  * The service will return all the enumeration elements of an enumeration type:
  * provide the enumeration type root and the service will return the array of terms.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('enum/all/:root', getAllEnumerations, 'all')
-    .pathParam('root', enumSchema)
-    .response([Term], 'Flat list of all enumeration terms.')
+router.get('enum/term/:path', getAllEnumerations, 'terms')
+    .pathParam('path', enumSchema)
+    .response(enumTermList, 'Flat list of all enumeration terms.')
     .summary('Return flattened list of all enumerations')
     .description(dd
         `
+            **Get all enumeration elements given 
             Provided the root to an enumeration, will return the flattened òlist of all enumeration's terms.
-        `
-    );
-
-/**
- * Return all enumeration keys.
- * The service will return all the enumeration keys of an enumeration type:
- * provide the enumeration type root and the service will return the array of term keys.
- * No hierarchy is maintained and only valid enumeration elements are selected.
- */
-router.get('enum/keys/:root', getAllEnumerationKeys, 'keys')
-    .pathParam('root', enumSchema)
-    .response(List, 'Flat list of all enumeration term keys.')
-    .summary('Return flattened list of all enumeration keys')
-    .description(dd
-        `
-            Provided the root to an enumeration, will return the flattened list of all enumeration keys.
         `
     );
 
@@ -87,12 +84,12 @@ function getAllEnumerations(request, response)
     //
     // Get enumeration root.
     //
-    const root = K.collection.term.name + '/' + request.pathParams.root;
+    const path = K.collection.term.name + '/' + request.pathParams.path;
 
     //
     // Query database.
     //
-    const result = dictionary.getAllEnumerations(root);
+    const result = dictionary.getAllEnumerations(path);
 
     response.send(result);                                              // ==>
 
@@ -108,12 +105,12 @@ function getAllEnumerationKeys(request, response)
     //
     // Get enumeration root.
     //
-    const root = K.collection.term.name + '/' + request.pathParams.root;
+    const path = K.collection.term.name + '/' + request.pathParams.path;
 
     //
     // Query database.
     //
-    const result = dictionary.getAllEnumerationKeys(root);
+    const result = dictionary.getAllEnumerationKeys(path);
 
     response.send(result);                                              // ==>
 
