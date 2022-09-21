@@ -5,6 +5,7 @@
 //
 const dd = require('dedent');
 const joi = require('joi');
+const aql = require('@arangodb').aql;					// AQL queries.
 const createRouter = require('@arangodb/foxx/router');
 
 //
@@ -21,6 +22,10 @@ const enumTermList = joi.array().items(joi.object({
     _key: joi.string(),
     _code: joi.object(),
     _info: joi.object()
+}))
+const enumPath = joi.array().items(joi.object({
+    edges: joi.array().items(joi.object()),
+    vertices: joi.array().items(joi.object())
 }))
 
 //
@@ -40,13 +45,17 @@ module.exports = router;
 router.tag('dictionary');
 
 
+//
+// LIST SERVICES
+//
+
 /**
  * Return all enumeration keys by path.
  * The service will return all the enumeration keys corresponding to the provided path
  * provided as a term global identifier.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('enum/keys/:path', getAllEnumerationKeys, 'keys')
+router.get('enum/all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
     .pathParam('path', enumSchema, "Enumeration root global identifier")
     .response(enumKeyList, dd
         `
@@ -83,7 +92,7 @@ router.get('enum/keys/:path', getAllEnumerationKeys, 'keys')
  * provide the enumeration type root and the service will return the array of terms.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('enum/term/:path', getAllEnumerations, 'terms')
+router.get('enum/all/terms/:path', getAllEnumerations, 'all-enum-terms')
     .pathParam('path', enumSchema, "Enumeration root global identifier")
     .response(enumTermList, dd
         `
@@ -114,30 +123,226 @@ router.get('enum/term/:path', getAllEnumerations, 'terms')
         `
     )
 
+
 //
-// Functions.
+// MATCH SERVICES
 //
 
 /**
- * Get all enumerations belonging to provided term.
- * @param request: API request.
- * @param response: API response.
+ * Return first term matching the provided code in provided path.
+ * The service will return the first term that matches the provided code in the enumeration
+ * corresponding to the provided path.
  */
-function getAllEnumerations(request, response)
-{
-    //
-    // Get enumeration root.
-    //
-    const path = K.collection.term.name + '/' + request.pathParams.path;
+router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('code', enumSchema, "Target enumeration identifier or code")
+    .response(enumTermList, dd
+        `
+            **List of matched terms**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the identifier provided in the \`code\` parameter, \
+            the service will return the term objects in the array result.
+            
+            If no term matches the identifier provided in the \`code\` parameter, \
+            the service will return an empty array.
+        `
+    )
+    .summary('Return enumeration term by code')
+    .description(dd
+        `
+            **Get enumeration term by identifier**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            This service can be used to retrieve the terms matching a specific identifier \
+            in a specific enumeration graph. Provided the \`path\` parameter, which represents \
+            the enumeration root element or enumeration type, and the \`code\` parameter, which \
+            represents a term identifier you are trying to match, the service will traverse \
+            the enumeration graph until it finds a term whose identifiers list (\`_aid\` property) \
+            contains the provided identifier. The result will be the array of terms matching the \
+            provided code.
+            
+            You can try providing \`_type\` as the \`path\` and \`string\` as the code: this should \
+            return the string data type term belonging to the data types controlled vocabulary.
+            
+            Note that this service will honour preferred enumerations, this means that if a term \
+            is matched that has a preferred alternative, the latter will be returned, regardless \
+            if the preferred term does not belong to the provided path.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and \`en\` as the code: this should \
+            return the preferred term for the English language which is \`iso_639_3_eng\`, this term \
+            is the preferred choice for the actual match, which is \`iso_639_1_en\`.
+        `
+    )
 
-    //
-    // Query database.
-    //
-    const result = dictionary.getAllEnumerations(path);
+/**
+ * Return first term matching the provided local identifier in provided path.
+ * The service will return the first term that matches the provided local identifier in the enumeration
+ * corresponding to the provided path.
+ */
+router.get('enum/lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum-lid')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('code', enumSchema, "Target enumeration local identifier")
+    .response(enumTermList, dd
+        `
+            **List of matched terms**
+            
+            If there is a term, in the enumeration defined by the \`path\` parameter, \
+            that matches the local identifier provided in the \`code\` parameter, \
+            the service will return the term object in the array result.
+            
+            If no term matches the local identifier provided in the \`code\` parameter, \
+            the service will return an empty array.
+            
+            Note that controlled vocabularies represent a unique set of identifiers, so \
+            the result of the service should contain at most one match.
+        `
+    )
+    .summary('Return enumeration term by local identifier')
+    .description(dd
+        `
+            **Get enumeration term by local identifier**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            This service can be used to retrieve the term matching a specific local identifier \
+            in a specific enumeration graph. Provided the \`path\` parameter, which represents \
+            the enumeration root element or enumeration type, and the \`code\` parameter, which \
+            represents a term local identifier you are trying to match, the service will traverse \
+            the enumeration graph until it finds a term whose local identifier (\`_lid\` property) \
+            matches the provided code. The result will be the array of terms matching the \
+            provided code; this should be at most one element.
+            
+            You can try providing \`_type\` as the \`path\` and \`string\` as the code: this should \
+            return the string data type term belonging to the data types controlled vocabulary.
+            
+            Note that this service will honour preferred enumerations, this means that if a term \
+            has a preferred alternative, the provided code should match the preferred term.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and \`eng\` as the code: this should \
+            return the preferred term for the English language which is \`iso_639_3_eng\`. Note that \
+            the actual match is \`iso_639_1_en\`, but this term points to a preferred alternative \
+            which is the returned result: this means that the \`en\` local identifier will not be \
+            matched, this service expects only preferred local identifiers.
+        `
+    )
 
-    response.send(result);                                              // ==>
+/**
+ * Return first term matching the provided local identifier in provided path.
+ * The service will return the first term that matches the provided local identifier in the enumeration
+ * corresponding to the provided path.
+ */
+router.get('enum/gid/terms/:path/:code', matchEnumerationGlobalIdentifier, 'match-enum-gid-terms')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('code', enumSchema, "Target enumeration global identifier")
+    .response(enumTermList, dd
+        `
+            **List of matched terms**
+            
+            If there is a term, in the enumeration defined by the \`path\` parameter, \
+            that matches the global identifier provided in the \`code\` parameter, \
+            the service will return the term object in the array result.
+            
+            If no term matches the global identifier provided in the \`code\` parameter, \
+            the service will return an empty array.
+            
+            Note that controlled vocabularies represent a unique set of identifiers, so \
+            the result of the service should contain at most one match.
+        `
+    )
+    .summary('Return enumeration term by global identifier')
+    .description(dd
+        `
+            **Get enumeration term by global identifier**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            This service can be used to retrieve the term matching a specific global identifier \
+            in a specific enumeration graph. Provided the \`path\` parameter, which represents \
+            the enumeration root element or enumeration type, and the \`code\` parameter, which \
+            represents a term global identifier you are trying to match, the service will traverse \
+            the enumeration graph until it finds a term whose global identifier (\`_gid\` property) \
+            matches the provided code. The result will be the array of terms matching the \
+            provided code; this should be at most one element.
+            
+            You can try providing \`_type\` as the \`path\` and \`_type_string\` as the code: this should \
+            return the string data type term belonging to the data types controlled vocabulary.
+            
+            Note that this service will honour preferred enumerations, this means that if a term \
+            is matched that has a preferred alternative, the latter will be returned, regardless \
+            if the preferred term does not belong to the provided path.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and \`iso_639_1_en\` as the code: this should \
+            return the preferred term for the English language which is \`iso_639_3_eng\`, this term \
+            is the preferred choice for the actual match, which is \`iso_639_1_en\`.
+        `
+    )
 
-} // getAllEnumerations()
+
+//
+// PATH SERVICES
+//
+
+/**
+ * Return path from enumeration root element to target node.
+ * The service will return the path from the enumeration root element, expressed by its global identifier,
+ * to the first term element matching the provided code.
+ */
+router.get('enum/code/path/:path/:code', matchEnumerationCodePath, 'match-enum-code-path')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('code', enumSchema, "Target enumeration identifier or code")
+    .response(enumPath, dd
+        `
+            **Path to matched term**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the identifier provided in the \`code\` parameter, \
+            the service will return the term objects in the array result.
+            
+            If no term matches the identifier provided in the \`code\` parameter, \
+            the service will return an empty array.
+        `
+    )
+    .summary('Return enumeration term by code')
+    .description(dd
+        `
+            **Get enumeration term by identifier**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            This service can be used to retrieve the terms matching a specific identifier \
+            in a specific enumeration graph. Provided the \`path\` parameter, which represents \
+            the enumeration root element or enumeration type, and the \`code\` parameter, which \
+            represents a term identifier you are trying to match, the service will traverse \
+            the enumeration graph until it finds a term whose identifiers list (\`_aid\` property) \
+            contains the provided identifier. The result will be the array of terms matching the \
+            provided code.
+            
+            You can try providing \`_type\` as the \`path\` and \`string\` as the code: this should \
+            return the string data type term belonging to the data types controlled vocabulary.
+            
+            Note that this service will honour preferred enumerations, this means that if a term \
+            is matched that has a preferred alternative, the latter will be returned, regardless \
+            if the preferred term does not belong to the provided path.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and \`en\` as the code: this should \
+            return the preferred term for the English language which is \`iso_639_3_eng\`, this term \
+            is the preferred choice for the actual match, which is \`iso_639_1_en\`.
+        `
+    )
+
+//
+// Functions.
+//
 
 /**
  * Get all enumeration keys belonging to provided term.
@@ -147,150 +352,102 @@ function getAllEnumerations(request, response)
 function getAllEnumerationKeys(request, response)
 {
     //
-    // Get enumeration root.
-    //
-    const path = K.collection.term.name + '/' + request.pathParams.path;
-
-    //
     // Query database.
     //
-    const result = dictionary.getAllEnumerationKeys(path);
+    const result = dictionary.getAllEnumerationKeys(request.pathParams.path);
 
-    response.send(result);                                              // ==>
+    response.send(result);                                                      // ==>
 
 } // getAllEnumerations()
 
-/*
-router.get(function (req, res) {
-  res.send(terms.all());
-}, 'list')
-.response([Term], 'A list of terms.')
-.summary('List all terms')
-.description(dd`
-  Retrieves a list of all terms.
-`);
+/**
+ * Get all enumerations belonging to provided term.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function getAllEnumerations(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.getAllEnumerations(request.pathParams.path);
 
+    response.send(result);                                                      // ==>
 
-router.post(function (req, res) {
-    const term = req.body;
-    let meta;
-    try {
-        meta = terms.save(term);
-    } catch (e) {
-        if (e.isArangoError && e.errorNum === ARANGO_DUPLICATE) {
-            throw httpError(HTTP_CONFLICT, e.message);
-        }
-        throw e;
-    }
-    Object.assign(term, meta);
-    res.status(201);
-    res.set('location', req.makeAbsolute(
-        req.reverse('detail', {key: term._key})
-    ));
-    res.send(term);
-}, 'create')
-    .body(Term, 'The term to create.')
-    .response(201, Term, 'The created term.')
-    .error(HTTP_CONFLICT, 'The term already exists.')
-    .summary('Create a new term')
-    .description(dd`
-  Creates a new term from the request body and
-  returns the saved document.
-`);
+} // getAllEnumerations()
 
+/**
+ * Get terms matching provided code in provided enumeration.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchEnumerationCode(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.matchEnumerationCodeTerm(
+        request.pathParams.path,
+        request.pathParams.code
+    )
 
-router.get(':key', function (req, res) {
-    const key = req.pathParams.key;
-    let term
-    try {
-        term = terms.document(key);
-    } catch (e) {
-        if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-            throw httpError(HTTP_NOT_FOUND, e.message);
-        }
-        throw e;
-    }
-    res.send(term);
-}, 'detail')
-    .pathParam('key', keySchema)
-    .response(Term, 'The term.')
-    .summary('Fetch a term')
-    .description(dd`
-  Retrieves a term by its key.
-`);
+    response.send(result);                                                      // ==>
 
+} // matchEnumerationCode()
 
-router.put(':key', function (req, res) {
-    const key = req.pathParams.key;
-    const term = req.body;
-    let meta;
-    try {
-        meta = terms.replace(key, term);
-    } catch (e) {
-        if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-            throw httpError(HTTP_NOT_FOUND, e.message);
-        }
-        if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
-            throw httpError(HTTP_CONFLICT, e.message);
-        }
-        throw e;
-    }
-    Object.assign(term, meta);
-    res.send(term);
-}, 'replace')
-    .pathParam('key', keySchema)
-    .body(Term, 'The data to replace the term with.')
-    .response(Term, 'The new term.')
-    .summary('Replace a term')
-    .description(dd`
-  Replaces an existing term with the request body and
-  returns the new document.
-`);
+/**
+ * Get terms matching provided local identifier in provided enumeration.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchEnumerationIdentifier(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.matchEnumerationIdentifierTerm(
+        request.pathParams.path,
+        request.pathParams.code
+    )
 
+    response.send(result);                                                      // ==>
 
-router.patch(':key', function (req, res) {
-    const key = req.pathParams.key;
-    const patchData = req.body;
-    let term;
-    try {
-        terms.update(key, patchData);
-        term = terms.document(key);
-    } catch (e) {
-        if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-            throw httpError(HTTP_NOT_FOUND, e.message);
-        }
-        if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
-            throw httpError(HTTP_CONFLICT, e.message);
-        }
-        throw e;
-    }
-    res.send(term);
-}, 'update')
-    .pathParam('key', keySchema)
-    .body(joi.object().description('The data to update the term with.'))
-    .response(Term, 'The updated term.')
-    .summary('Update a term')
-    .description(dd`
-  Patches a term with the request body and
-  returns the updated document.
-`);
+} // matchEnumerationIdentifier()
 
+/**
+ * Get terms matching provided global identifier in provided enumeration.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchEnumerationGlobalIdentifier(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.matchEnumerationTerm(
+        request.pathParams.path,
+        request.pathParams.code
+    )
 
-router.delete(':key', function (req, res) {
-    const key = req.pathParams.key;
-    try {
-        terms.remove(key);
-    } catch (e) {
-        if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-            throw httpError(HTTP_NOT_FOUND, e.message);
-        }
-        throw e;
-    }
-}, 'delete')
-    .pathParam('key', keySchema)
-    .response(null)
-    .summary('Remove a term')
-    .description(dd`
-  Deletes a term from the database.
-`);
-*/
+    response.send(result);                                                      // ==>
+
+} // matchEnumerationGlobalIdentifier()
+
+/**
+ * Get path from enumeration root to target node by code.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchEnumerationCodePath(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.matchEnumerationCodePath(
+        request.pathParams.path,
+        request.pathParams.code
+    )
+
+    response.send(result);                                                      // ==>
+
+} // matchEnumerationCodePath()

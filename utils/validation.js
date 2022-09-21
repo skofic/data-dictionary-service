@@ -11,6 +11,7 @@ const aql = require('@arangodb').aql;					// AQL queries.
 //
 const K = require( './constants' );					    // Application constants.
 const utils = require('./utils');
+const dictionary = require('./dictionary');             // Dictionary functions.
 const {checkEnum} = require("./utils");                 // Utility functions.
 
 
@@ -821,11 +822,6 @@ function validateEnum(theBlock, theValue, theReport)
 function validateEnumTerm(theBlock, theValue, theReport)
 {
     //
-    // Init local storage.
-    //
-    const collection = K.db._collection(K.collection.term.name)
-
-    //
     // Iterate enumeration types.
     // We already know that the block contains the data kinds...
     // We bail out if at least one type succeeds or fails.
@@ -852,32 +848,9 @@ function validateEnumTerm(theBlock, theValue, theReport)
         }
 
         //
-        // Init query parameters.
-        //
-        let root = collection.name() + '/' + enumType
-        let target = collection.name() + '/' + theValue[0][theValue[1]]
-
-        //
         // Traverse graph.
         //
-        const result = K.db._query( aql`
-            WITH ${collection}
-            FOR vertex, edge, path IN 1..10
-                INBOUND ${root}
-                GRAPH "schema"
-                PRUNE ${root} IN edge._path AND
-                      edge._predicate == ${K.term.predicateEnum} AND
-                      (edge._to == ${target} OR
-                        edge._from == ${target})
-                OPTIONS {
-                    "uniqueVertices": "path"
-                }
-                FILTER ${root} IN edge._path AND
-                       edge._predicate == ${K.term.predicateEnum} AND
-                       (edge._to == ${target} OR
-                        edge._from == ${target})
-            RETURN vertex._key
-        `).toArray()
+        const result = dictionary.matchEnumerationTermKey(enumType, theValue[0][theValue[1]])
 
         //
         // Found at least one element.
@@ -949,29 +922,9 @@ function validateEnumCode(theBlock, theValue, theReport)
         }
 
         //
-        // Init query parameters.
-        //
-        const root = collection.name() + '/' + enumType
-
-        //
         // Traverse graph.
         //
-        const result = K.db._query( aql`
-            WITH ${collection}
-            FOR vertex, edge, path IN 1..10
-                INBOUND ${root}
-                GRAPH "schema"
-                PRUNE ${root} IN edge._path AND
-                      edge._predicate == ${K.term.predicateEnum} AND
-                      ${theValue[0][theValue[1]]} IN vertex._code._aid
-                OPTIONS {
-                    "uniqueVertices": "path"
-                }
-                FILTER ${root} IN edge._path AND
-                       edge._predicate == ${K.term.predicateEnum} AND
-                      ${theValue[0][theValue[1]]} IN vertex._code._aid
-            RETURN vertex._key
-        `).toArray()
+        const result = dictionary.matchEnumerationCodeKey(enumType, theValue[0][theValue[1]])
 
         //
         // Found at least one element.
