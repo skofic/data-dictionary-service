@@ -15,10 +15,13 @@ const dictionary = require("../utils/dictionary");
 //
 // Constants.
 //
-const enumKeyList = joi.array().items(joi.string())
-const enumTermList = joi.array().items(joi.object())
 const enumSchema = joi.string().required()
-    .description('Term global identifier');
+const enumKeyList = joi.array().items(joi.string())
+const enumTermList = joi.array().items(joi.object({
+    _key: joi.string(),
+    _code: joi.object(),
+    _info: joi.object()
+}))
 
 //
 // Application.
@@ -44,14 +47,35 @@ router.tag('dictionary');
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get('enum/keys/:path', getAllEnumerationKeys, 'keys')
-    .pathParam('path', enumSchema)
-    .response(enumKeyList, 'Flat list of all enumeration term keys.')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .response(enumKeyList, dd
+        `
+            **List of enumeration global identifiers**
+            
+            The service will return the list of all the enumeration elements belonging to the \
+            indicated path. The elements are represented by their global identifiers.
+            
+            Note that no hierarchy or order is maintained, it is a flat list of term global identifiers. \
+            Also, only items representing active elements of the enumeration will be selected: this means \
+            that terms used as sections or bridges will not be considered.
+        `
+    )
     .summary('Return flattened list of all enumeration keys')
     .description(dd
         `
-            Provided the root to an enumeration, will return the flattened list of all enumeration keys.
+            **Get all enumeration element global identifiers**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            The service expects the global identifier of that term as a path parameter, and will \
+            return the flattened list of all enumeration elements belonging to that controlled \
+            vocabulary. These elements will be returned as the global identifiers of the terms.
+            
+            You can try providing \`_type\`: this will return the list of data type identifiers.
         `
-    );
+    )
 
 /**
  * Return all enumerations.
@@ -60,15 +84,35 @@ router.get('enum/keys/:path', getAllEnumerationKeys, 'keys')
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get('enum/term/:path', getAllEnumerations, 'terms')
-    .pathParam('path', enumSchema)
-    .response(enumTermList, 'Flat list of all enumeration terms.')
-    .summary('Return flattened list of all enumerations')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .response(enumTermList, dd
+        `
+            **List of enumeration terms**
+            
+            The service will return the list of all the enumeration elements belonging to the \
+            indicated path. The elements are represented by their term objects.
+            
+            Note that no hierarchy or order is maintained, it is a flat list of terms. \
+            Also, only items representing active elements of the enumeration will be selected: this means \
+            that terms used as sections or bridges will not be considered.
+        `
+    )
+    .summary('Return flattened list of all enumeration terms')
     .description(dd
         `
-            **Get all enumeration elements given 
-            Provided the root to an enumeration, will return the flattened òlist of all enumeration's terms.
+            **Get all enumeration terms**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            The service expects the global identifier of that term as a path parameter, and will \
+            return the flattened list of all enumeration elements belonging to that controlled \
+            vocabulary. These elements will be returned as term objects.
+            
+            You can try providing \`_type\`: this will return the list of data type terms.
         `
-    );
+    )
 
 //
 // Functions.
