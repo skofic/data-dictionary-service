@@ -133,7 +133,7 @@ router.get('enum/all/terms/:path', getAllEnumerations, 'all-enum-terms')
  * The service will return the first term that matches the provided code in the enumeration
  * corresponding to the provided path.
  */
-router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code')
+router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code-terms')
     .pathParam('path', enumSchema, "Enumeration root global identifier")
     .pathParam('code', enumSchema, "Target enumeration identifier or code")
     .response(enumTermList, dd
@@ -183,7 +183,7 @@ router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code
  * The service will return the first term that matches the provided local identifier in the enumeration
  * corresponding to the provided path.
  */
-router.get('enum/lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum-lid')
+router.get('enum/lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum-lid-terms')
     .pathParam('path', enumSchema, "Enumeration root global identifier")
     .pathParam('code', enumSchema, "Target enumeration local identifier")
     .response(enumTermList, dd
@@ -304,28 +304,30 @@ router.get('enum/code/path/:path/:code', matchEnumerationCodePath, 'match-enum-c
             
             If there are terms, in the enumeration defined by the \`path\` parameter, \
             that match the identifier provided in the \`code\` parameter, \
-            the service will return the term objects in the array result.
+            the service will return the path starting from the enumeration root element \
+            to the terms whose \`_aid\` property contains a match for the identifier \
+            provided in the \`code\` parameter; if there is no match, the service will \
+            return an empty array.
             
-            If no term matches the identifier provided in the \`code\` parameter, \
-            the service will return an empty array.
+            The result is an array in which each element is an object representing a path \
+            constituted by a list of edges and a list of vertices.
         `
     )
-    .summary('Return enumeration term by code')
+    .summary('Return path from enumeration root to target by code')
     .description(dd
         `
-            **Get enumeration term by identifier**
+            **Get path from enumeration root to term matching code**
             
             Enumerations are graphs used as controlled vocabularies whose elements are terms. \
             At the root of the graph is a term that represents the type or definition of this \
             controlled vocabulary, this term represents the enumeration graph.
             
-            This service can be used to retrieve the terms matching a specific identifier \
-            in a specific enumeration graph. Provided the \`path\` parameter, which represents \
-            the enumeration root element or enumeration type, and the \`code\` parameter, which \
-            represents a term identifier you are trying to match, the service will traverse \
-            the enumeration graph until it finds a term whose identifiers list (\`_aid\` property) \
-            contains the provided identifier. The result will be the array of terms matching the \
-            provided code.
+            This service can be used to retrieve the path between the enumeration root term \
+            and a term that matches the provided code. The \`path\` parameter represents the \
+            global identifier of the enumeration root or type, the \`code\` parameter is the code \
+            of a term among the enumeration elements that you want to match: if matched, the service \
+            will return the path from the root of the enumeration to the first term whose (\`_aid\`) \
+            codes match the provided code. If no match is found, the service will return an empty array.
             
             You can try providing \`_type\` as the \`path\` and \`string\` as the code: this should \
             return the string data type term belonging to the data types controlled vocabulary.
@@ -339,6 +341,114 @@ router.get('enum/code/path/:path/:code', matchEnumerationCodePath, 'match-enum-c
             is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
+
+/**
+ * Return path from enumeration root to first term matching provided local identifier.
+ * The service will return the path from the root pf the enumeration to the first term
+ * that matches the provided local identifier in the enumeration corresponding to the provided path.
+ */
+router.get('enum/lid/path/:path/:code', matchEnumerationIdentifierPath, 'match-enum-lid-path')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('code', enumSchema, "Target enumeration local identifier")
+    .response(enumPath, dd
+        `
+            **Path to matched term**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the local identifier provided in the \`code\` parameter, \
+            the service will return the path starting from the enumeration root element \
+            to the term whose \`_lid\` local identifier property matches the code \
+            provided in the \`code\` parameter; if there is no match, the service will \
+            return an empty array.
+            
+            The result is an array in which each element is an object representing a path \
+            constituted by a list of edges and a list of vertices.
+        `
+    )
+    .summary('Return path from enumeration root to target by local identifier')
+    .description(dd
+        `
+            **Get path from enumeration root to term matching local identifier**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            This service can be used to retrieve the path between the enumeration root term \
+            and a term that matches the provided local identifier. The \`path\` parameter represents the \
+            global identifier of the enumeration root or type, the \`code\` parameter is the local identifier \
+            of a term among the enumeration elements that you want to match: if matched, the service \
+            will return the path from the root of the enumeration to the first term whose (\`_lid\`) \
+            matches the provided code. If no match is found, the service will return an empty array.
+            
+            You can try providing \`_type\` as the \`path\` and \`string\` as the code: this should \
+            return the string data type term belonging to the data types controlled vocabulary.
+            
+            Note that this service will honour preferred enumerations, this means that if a term \
+            is matched that has a preferred alternative, the latter will be returned, regardless \
+            if the preferred term does not belong to the provided path.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and \`eng\` as the code: this should \
+            return the preferred term for the English language which is \`iso_639_3_eng\`. Note that \
+            the actual match is \`iso_639_1_en\`, but this term points to a preferred alternative \
+            which is the returned result: this means that the \`en\` local identifier will not be \
+            matched, this service expects only preferred local identifiers.
+        `
+    )
+
+/**
+ * Return path from enumeration root to first term matching provided local identifier.
+ * The service will return the path from the root pf the enumeration to the first term
+ * that matches the provided local identifier in the enumeration corresponding to the provided path.
+ */
+router.get('enum/gid/path/:path/:code', matchEnumerationTermPath, 'match-enum-gid-path')
+    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('code', enumSchema, "Target enumeration global identifier")
+    .response(enumPath, dd
+        `
+            **Path to matched term**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the global identifier provided in the \`code\` parameter, \
+            the service will return the path starting from the enumeration root element \
+            to the term whose \`_gid\` global identifier property matches the code \
+            provided in the \`code\` parameter; if there is no match, the service will \
+            return an empty array.
+            
+            The result is an array in which each element is an object representing a path \
+            constituted by a list of edges and a list of vertices.
+        `
+    )
+    .summary('Return path from enumeration root to target by global identifier')
+    .description(dd
+        `
+            **Get path from enumeration root to term matching global identifier**
+            
+            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
+            At the root of the graph is a term that represents the type or definition of this \
+            controlled vocabulary, this term represents the enumeration graph.
+            
+            This service can be used to retrieve the path between the enumeration root term \
+            and a term that matches the provided global identifier. The \`path\` parameter \
+            represents the global identifier of the enumeration root or type, the \`code\` \
+            parameter is the global identifier of a term among the enumeration elements \
+            that you want to match: if matched, the service will return the path from the root \
+            of the enumeration to the first term whose (\`_gid\`) matches the provided code. \
+            If no match is found, the service will return an empty array.
+            
+            You can try providing \`_type\` as the \`path\` and \`_type_string\` as the code: this should \
+            return the string data type term belonging to the data types controlled vocabulary.
+            
+            Note that this service will honour preferred enumerations, this means that if a term \
+            is matched that has a preferred alternative, the latter will be returned, regardless \
+            if the preferred term does not belong to the provided path.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and \`iso_639_1_en\` as the code: \
+            this should return the preferred term for the English language which is \`iso_639_3_eng\`, \
+            this term is the preferred choice for the actual match, which is \`iso_639_1_en\`.
+        `
+    )
+
 
 //
 // Functions.
@@ -451,3 +561,41 @@ function matchEnumerationCodePath(request, response)
     response.send(result);                                                      // ==>
 
 } // matchEnumerationCodePath()
+
+/**
+ * Get path from enumeration root to target node by local identifier.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchEnumerationIdentifierPath(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.matchEnumerationIdentifierPath(
+        request.pathParams.path,
+        request.pathParams.code
+    )
+
+    response.send(result);                                                      // ==>
+
+} // matchEnumerationIdentifierPath()
+
+/**
+ * Get path from enumeration root to target node by global identifier.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchEnumerationTermPath(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.matchEnumerationTermPath(
+        request.pathParams.path,
+        request.pathParams.code
+    )
+
+    response.send(result);                                                      // ==>
+
+} // matchEnumerationTermPath()

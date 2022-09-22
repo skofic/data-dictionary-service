@@ -165,8 +165,8 @@ function matchEnumerationTermKey(thePath, theTerm)
 } // matchEnumerationTermKey()
 
 /**
- * Return the path from enumeration root node to target node
- * by providing root and target global identifiers.
+ * Return the path from the emumeration root element to the target node
+ * matching the provided global identifier.
  * @param thePath {String}: Global identifier of enumeration root term.
  * @param theTerm {String}: Global identifier of term to match.
  * @return {Array}: Path from root to target.
@@ -411,6 +411,46 @@ function matchEnumerationIdentifierTerm(thePath, theCode)
 
 } // matchEnumerationIdentifierTerm()
 
+/**
+ * Get path from enumeration root to term matching provided local identifier.
+ * @param thePath {String}: Global identifier of enumeration root term.
+ * @param theCode {String}: Local identifier to match.
+ * @return {Array}: List of matched terms.
+ */
+function matchEnumerationIdentifierPath(thePath, theCode)
+{
+    //
+    // Init local storage.
+    //
+    const path = K.collection.term.name + '/' + thePath
+    const terms = K.db._collection(K.collection.term.name)
+    const edges = K.db._collection(K.collection.schema.name)
+    const predicate = K.term.predicateEnum
+
+    //
+    // Query database.
+    //
+    const result = K.db._query( aql`
+            WITH ${terms}
+            FOR vertex, edge, path IN 1..10
+                INBOUND ${path}
+                ${edges}
+                PRUNE ${path} IN edge._path AND
+                      edge._predicate == ${predicate} AND
+                      vertex._code._lid == ${theCode}
+                OPTIONS {
+                    "uniqueVertices": "path"
+                }
+                FILTER ${path} IN edge._path AND
+                       edge._predicate == ${predicate} AND
+                       vertex._code._lid == ${theCode}
+            RETURN path
+        `).toArray()
+
+    return result;                                                              // ==>
+
+} // matchEnumerationIdentifierPath()
+
 
 module.exports = {
     getAllEnumerations,
@@ -418,11 +458,13 @@ module.exports = {
 
     matchEnumerationTerm,
     matchEnumerationTermKey,
+    matchEnumerationTermPath,
 
     matchEnumerationCodeKey,
     matchEnumerationCodeTerm,
     matchEnumerationCodePath,
 
     matchEnumerationIdentifierKey,
-    matchEnumerationIdentifierTerm
+    matchEnumerationIdentifierTerm,
+    matchEnumerationIdentifierPath
 }
