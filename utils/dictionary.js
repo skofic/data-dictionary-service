@@ -47,6 +47,36 @@ function getAllEnumerationKeys(theRoot)
 } // getAllEnumerations()
 
 /**
+ * Return the list of property names given their parent.
+ * This function expects a string representing a data structure descriptor global identifier,
+ * and will return the list of all property names that follow the path of the provided descriptor.
+ * @param theRoot {String}: The global identifier of the structure root.
+ * @return {Array}: The list of property names that comprise the provided structure.
+ */
+function getAllPropertyNames(theRoot)
+{
+    //
+    // Init local storage.
+    //
+    const edges = K.db._collection(K.collection.schema.name)
+    const path = K.collection.term.name + '/' + theRoot;
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            FOR edge IN ${edges}
+                FILTER ${path} IN edge._path
+                FILTER edge._predicate == "_predicate_property-of"
+            RETURN DOCUMENT(edge._from)._key
+        `).toArray();
+
+    return result;                                                              // ==>
+
+} // getAllPropertyNames()
+
+/**
  * Return the list of enumeration elements given their root.
  * This function expects a string representing an enumeration root,
  * and will return the list of all term documents that comprise the controlled vocabulary.
@@ -455,6 +485,7 @@ function matchEnumerationIdentifierPath(thePath, theCode)
 module.exports = {
     getAllEnumerations,
     getAllEnumerationKeys,
+    getAllPropertyNames,
 
     matchEnumerationTerm,
     matchEnumerationTermKey,

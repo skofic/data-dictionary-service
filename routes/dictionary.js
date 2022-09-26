@@ -16,7 +16,7 @@ const dictionary = require("../utils/dictionary");
 //
 // Constants.
 //
-const enumSchema = joi.string().required()
+const enumIdent = joi.string().required()
 const enumKeyList = joi.array().items(joi.string())
 const enumTermList = joi.array().items(joi.object({
     _key: joi.string(),
@@ -56,7 +56,7 @@ router.tag('dictionary');
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get('enum/all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
     .response(enumKeyList, dd
         `
             **List of enumeration global identifiers**
@@ -87,13 +87,52 @@ router.get('enum/all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
     )
 
 /**
+ * Return all enumeration keys by path.
+ * The service will return all the enumeration keys corresponding to the provided path
+ * provided as a term global identifier.
+ * No hierarchy is maintained and only valid enumeration elements are selected.
+ */
+router.get('struct/all/keys/:path', getAllPropertyNames, 'all-struct-keys')
+    .pathParam('path', enumIdent, "Structure root global identifier")
+    .response(enumKeyList, dd
+        `
+            **List of structure property identifiers**
+            
+            The service will return the list of all the properties belonging to the \
+            indicated path. The properties are represented by their global identifiers.
+            
+            Note that no hierarchy or order is maintained, it is a flat list of term global identifiers. \
+            Also, only items representing active elements of the structure will be selected: this means \
+            that terms used as sections or bridges will not be considered.
+        `
+    )
+    .summary('Return flattened list of all property names')
+    .description(dd
+        `
+            **Get all property names**
+            
+            Structures are graphs representing the structure of a data object. \
+            At the root of the graph is the term that represents the structure root property, \
+            the properties that belong to this root are connected through the graph, \
+            the service will return all property names connected to the provided root term.
+            
+            The service expects the global identifier of the root property as a path parameter, \
+            and will return the flattened list of all property names belonging to that structure. \
+            These elements will be returned as the global identifiers of the descriptor terms.
+            
+            You can try providing \`_code\`: this will return the list of properties of the \
+            data dictionary identification section.
+        `
+    )
+
+/**
  * Return all enumerations.
  * The service will return all the enumeration elements of an enumeration type:
  * provide the enumeration type root and the service will return the array of terms.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get('enum/all/terms/:path', getAllEnumerations, 'all-enum-terms')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
     .response(enumTermList, dd
         `
             **List of enumeration terms**
@@ -134,8 +173,8 @@ router.get('enum/all/terms/:path', getAllEnumerations, 'all-enum-terms')
  * corresponding to the provided path.
  */
 router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code-terms')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
-    .pathParam('code', enumSchema, "Target enumeration identifier or code")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
+    .pathParam('code', enumIdent, "Target enumeration identifier or code")
     .response(enumTermList, dd
         `
             **List of matched terms**
@@ -184,8 +223,8 @@ router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code
  * corresponding to the provided path.
  */
 router.get('enum/lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum-lid-terms')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
-    .pathParam('code', enumSchema, "Target enumeration local identifier")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
+    .pathParam('code', enumIdent, "Target enumeration local identifier")
     .response(enumTermList, dd
         `
             **List of matched terms**
@@ -238,8 +277,8 @@ router.get('enum/lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum
  * corresponding to the provided path.
  */
 router.get('enum/gid/terms/:path/:code', matchEnumerationGlobalIdentifier, 'match-enum-gid-terms')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
-    .pathParam('code', enumSchema, "Target enumeration global identifier")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
+    .pathParam('code', enumIdent, "Target enumeration global identifier")
     .response(enumTermList, dd
         `
             **List of matched terms**
@@ -296,8 +335,8 @@ router.get('enum/gid/terms/:path/:code', matchEnumerationGlobalIdentifier, 'matc
  * to the first term element matching the provided code.
  */
 router.get('enum/code/path/:path/:code', matchEnumerationCodePath, 'match-enum-code-path')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
-    .pathParam('code', enumSchema, "Target enumeration identifier or code")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
+    .pathParam('code', enumIdent, "Target enumeration identifier or code")
     .response(enumPath, dd
         `
             **Path to matched term**
@@ -348,8 +387,8 @@ router.get('enum/code/path/:path/:code', matchEnumerationCodePath, 'match-enum-c
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
 router.get('enum/lid/path/:path/:code', matchEnumerationIdentifierPath, 'match-enum-lid-path')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
-    .pathParam('code', enumSchema, "Target enumeration local identifier")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
+    .pathParam('code', enumIdent, "Target enumeration local identifier")
     .response(enumPath, dd
         `
             **Path to matched term**
@@ -402,8 +441,8 @@ router.get('enum/lid/path/:path/:code', matchEnumerationIdentifierPath, 'match-e
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
 router.get('enum/gid/path/:path/:code', matchEnumerationTermPath, 'match-enum-gid-path')
-    .pathParam('path', enumSchema, "Enumeration root global identifier")
-    .pathParam('code', enumSchema, "Target enumeration global identifier")
+    .pathParam('path', enumIdent, "Enumeration root global identifier")
+    .pathParam('code', enumIdent, "Target enumeration global identifier")
     .response(enumPath, dd
         `
             **Path to matched term**
@@ -469,6 +508,22 @@ function getAllEnumerationKeys(request, response)
     response.send(result);                                                      // ==>
 
 } // getAllEnumerations()
+
+/**
+ * Get all property names belonging to provided term.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function getAllPropertyNames(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = dictionary.getAllPropertyNames(request.pathParams.path);
+
+    response.send(result);                                                      // ==>
+
+} // getAllPropertyNames()
 
 /**
  * Get all enumerations belonging to provided term.
