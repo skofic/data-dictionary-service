@@ -53,7 +53,7 @@ function getAllEnumerationKeys(theRoot)
  * @param theRoot {String}: The global identifier of the structure root.
  * @return {Array}: The list of property names that comprise the provided structure.
  */
-function getAllPropertyNames(theRoot)
+function getPropertyNames(theRoot)
 {
     //
     // Init local storage.
@@ -74,7 +74,7 @@ function getAllPropertyNames(theRoot)
 
     return result;                                                              // ==>
 
-} // getAllPropertyNames()
+} // getPropertyNames()
 
 /**
  * Return the list of enumeration elements given their root.
@@ -105,6 +105,36 @@ function getAllEnumerations(theRoot)
     return result;                                                              // ==>
 
 } // getAllEnumerations()
+
+/**
+ * Return the list of properties belonging to the provided object descriptor.
+ * This function expects a string representing an object descriptor global identifier,
+ * and will return the list of all descriptor terms that are connected to the provided descriptor.
+ * @param theRoot {String}: The global identifier of the object descriptor.
+ * @return {Array}: The list of properties belonging to the provided descriptor.
+ */
+function getProperties(theRoot)
+{
+    //
+    // Init local storage.
+    //
+    const edges = K.db._collection(K.collection.schema.name)
+    const path = K.collection.term.name + '/' + theRoot;
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            FOR edge IN ${edges}
+                FILTER ${path} IN edge._path
+                FILTER edge._predicate == "_predicate_property-of"
+            RETURN DOCUMENT(edge._from)
+        `).toArray();
+
+    return result;                                                              // ==>
+
+} // getProperties()
 
 /**
  * Return the list of terms matching the provided global identifier code
@@ -485,7 +515,9 @@ function matchEnumerationIdentifierPath(thePath, theCode)
 module.exports = {
     getAllEnumerations,
     getAllEnumerationKeys,
-    getAllPropertyNames,
+
+    getProperties,
+    getPropertyNames,
 
     matchEnumerationTerm,
     matchEnumerationTermKey,
