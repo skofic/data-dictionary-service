@@ -27,7 +27,7 @@ class ValidationReport
      * @param theError {Error}: The eventual error object.
      */
     constructor(
-        theDescriptor,
+        theDescriptor= null,
         theType = null,
         theStatus = "kMSG_OK",
         theError= null
