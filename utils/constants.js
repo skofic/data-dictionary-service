@@ -175,6 +175,15 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "Tipo de datos todavía no utilizado"
             }
         },
+        kMSG_INVALID_DATA_KIND: {
+            code: -7,
+            message: {
+                iso_639_3_eng: "Invalid data kind",
+                iso_639_3_ita: "Riferimento tipo dati invalido",
+                iso_639_3_fra: "Reference type de données invalide",
+                iso_639_3_esp: "Referencia de tipo de datos invalidao"
+            }
+        },
         kMSG_OK: {
             code: 0,
             message: {

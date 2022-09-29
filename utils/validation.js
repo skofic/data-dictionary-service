@@ -50,6 +50,8 @@ function validateDescriptor(theDescriptor, theValue, theReport)
 
     //
     // Validate data block.
+    // Note that getDescriptor() returns a descriptor_
+    // we know it has the data block.
     //
     return validateDataBlock(descriptor[K.term.dataBlock], theValue, theReport) // ==>
 
@@ -78,6 +80,23 @@ function validateDataBlock(theBlock, theValue, theReport)
     //
     if(_.isEmpty(theBlock)) {
         return true                                                             // ==>
+    }
+
+    //
+    // Set constants.
+    //
+    const props = [
+        K.term.dataBlockScalar,     // Scalar.
+        K.term.dataBlockArray,      // Array.
+        K.term.dataBlockSet,        // Set.
+        K.term.dataBlockDict        // Dictionary.
+    ]
+
+    //
+    // Parse data block.
+    //
+    for(const size of props) {
+
     }
 
     //
@@ -120,6 +139,12 @@ function validateDataBlock(theBlock, theValue, theReport)
     // Invalid data block.
     //
     theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+    theReport.status["required"] = [
+        K.term.dataBlockScalar,
+        K.term.dataBlockArray,
+        K.term.dataBlockSet,
+        K.term.dataBlockDict
+    ]
     theReport.status["block"] = theBlock
     return false                                                                // ==>
 
@@ -668,6 +693,20 @@ function validateKey(theBlock, theValue, theReport)
     // Handle data kind.
     //
     if(theBlock.hasOwnProperty(K.term.dataKind)) {
+
+        //
+        // Ensure data kind is an array.
+        //
+        if(!utils.isArray(theBlock[K.term.dataKind])) {
+            theReport.status = K.error.kMSG_INVALID_DATA_KIND
+            theReport.status["kind"] = theBlock[K.term.dataKind]
+
+            return false                                                        // ==>
+        }
+
+        //
+        // Iterate data kinds.
+        //
         for(const enumType of theBlock[K.term.dataKind]) {
             switch(enumType) {
 
@@ -766,6 +805,16 @@ function validateEnum(theBlock, theValue, theReport)
     }
 
     //
+    // Assert data kind is an aray.
+    //
+    if(!utils.isArray(theBlock[K.term.dataKind])) {
+        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status["kind"] = theBlock[K.term.dataKind]
+
+        return false                                                            // ==>
+    }
+
+    //
     // Value is a term key.
     //
     if(utils.checkTerm(theValue[0][theValue[1]], theReport)) {
@@ -821,6 +870,16 @@ function validateEnum(theBlock, theValue, theReport)
  */
 function validateEnumTerm(theBlock, theValue, theReport)
 {
+    //
+    // Assert data kind is an aray.
+    //
+    if(!utils.isArray(theBlock[K.term.dataKind])) {
+        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status["kind"] = theBlock[K.term.dataKind]
+
+        return false                                                            // ==>
+    }
+
     //
     // Iterate enumeration types.
     // We already know that the block contains the data kinds...
@@ -891,9 +950,14 @@ function validateEnumTerm(theBlock, theValue, theReport)
 function validateEnumCode(theBlock, theValue, theReport)
 {
     //
-    // Init local storage.
+    // Assert data kind is an aray.
     //
-    const collection = K.db._collection(K.collection.term.name)
+    if(!utils.isArray(theBlock[K.term.dataKind])) {
+        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status["kind"] = theBlock[K.term.dataKind]
+
+        return false                                                            // ==>
+    }
 
     //
     // Iterate enumeration types.
@@ -983,6 +1047,16 @@ function validateObject(theBlock, theValue, theReport)
     }
 
     //
+    // Assert data kind is an aray.
+    //
+    if(!utils.isArray(theBlock[K.term.dataKind])) {
+        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status["kind"] = theBlock[K.term.dataKind]
+
+        return false                                                            // ==>
+    }
+
+    //
     // Supports any object type.
     //
     if(!theBlock[K.term.dataKind].includes(K.term.anyObject)) {
@@ -1020,6 +1094,16 @@ function validateObject(theBlock, theValue, theReport)
  */
 function validateObjectTypes(theBlock, theValue, theReport)
 {
+    //
+    // Assert data kind is an aray.
+    //
+    if(!utils.isArray(theBlock[K.term.dataKind])) {
+        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status["kind"] = theBlock[K.term.dataKind]
+
+        return false                                                            // ==>
+    }
+
     //
     // Iterate enumeration types.
     //
