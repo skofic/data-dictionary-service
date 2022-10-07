@@ -1000,7 +1000,8 @@ function validateEnumCode(theBlock, theValue, theReport)
             //
             utils.reportResolved(theValue[1], theValue[0][theValue[1]], theReport)
             theValue[0][theValue[1]] = result[0]
-            // theReport.status = K.error.kMSG_VALUE_RESOLVED
+            // MILKO - Disable to set zero status code.
+            theReport.status = K.error.kMSG_VALUE_RESOLVED
 
             return true                                                         // ==>
 
