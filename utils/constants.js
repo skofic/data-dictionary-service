@@ -175,13 +175,13 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "Tipo de datos todavía no utilizado"
             }
         },
-        kMSG_INVALID_DATA_KIND: {
+        kMSG_DATA_KIND_NOT_ARRAY: {
             code: -7,
             message: {
-                iso_639_3_eng: "Invalid data kind",
-                iso_639_3_ita: "Riferimento tipo dati invalido",
-                iso_639_3_fra: "Reference type de données invalide",
-                iso_639_3_esp: "Referencia de tipo de datos invalidao"
+                iso_639_3_eng: "Data kind not an array",
+                iso_639_3_ita: "Tipo dati non è una lista",
+                iso_639_3_fra: "Type de données n'est pas une liste",
+                iso_639_3_esp: "Referencia de tipo de datos no es una lista"
             }
         },
         kMSG_OK: {

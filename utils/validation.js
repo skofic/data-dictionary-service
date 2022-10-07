@@ -698,7 +698,7 @@ function validateKey(theBlock, theValue, theReport)
         // Ensure data kind is an array.
         //
         if(!utils.isArray(theBlock[K.term.dataKind])) {
-            theReport.status = K.error.kMSG_INVALID_DATA_KIND
+            theReport.status = K.error.kMSG_DATA_KIND_NOT_ARRAY
             theReport.status["kind"] = theBlock[K.term.dataKind]
 
             return false                                                        // ==>
@@ -805,10 +805,10 @@ function validateEnum(theBlock, theValue, theReport)
     }
 
     //
-    // Assert data kind is an aray.
+    // Assert data kind is an array.
     //
     if(!utils.isArray(theBlock[K.term.dataKind])) {
-        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status = K.error.kMSG_DATA_KIND_NOT_ARRAY
         theReport.status["kind"] = theBlock[K.term.dataKind]
 
         return false                                                            // ==>
@@ -871,10 +871,10 @@ function validateEnum(theBlock, theValue, theReport)
 function validateEnumTerm(theBlock, theValue, theReport)
 {
     //
-    // Assert data kind is an aray.
+    // Assert data kind is an array.
     //
     if(!utils.isArray(theBlock[K.term.dataKind])) {
-        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status = K.error.kMSG_DATA_KIND_NOT_ARRAY
         theReport.status["kind"] = theBlock[K.term.dataKind]
 
         return false                                                            // ==>
@@ -950,10 +950,10 @@ function validateEnumTerm(theBlock, theValue, theReport)
 function validateEnumCode(theBlock, theValue, theReport)
 {
     //
-    // Assert data kind is an aray.
+    // Assert data kind is an array.
     //
     if(!utils.isArray(theBlock[K.term.dataKind])) {
-        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status = K.error.kMSG_DATA_KIND_NOT_ARRAY
         theReport.status["kind"] = theBlock[K.term.dataKind]
 
         return false                                                            // ==>
@@ -1047,10 +1047,10 @@ function validateObject(theBlock, theValue, theReport)
     }
 
     //
-    // Assert data kind is an aray.
+    // Assert data kind is an array.
     //
     if(!utils.isArray(theBlock[K.term.dataKind])) {
-        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status = K.error.kMSG_DATA_KIND_NOT_ARRAY
         theReport.status["kind"] = theBlock[K.term.dataKind]
 
         return false                                                            // ==>
@@ -1095,10 +1095,10 @@ function validateObject(theBlock, theValue, theReport)
 function validateObjectTypes(theBlock, theValue, theReport)
 {
     //
-    // Assert data kind is an aray.
+    // Assert data kind is an array.
     //
     if(!utils.isArray(theBlock[K.term.dataKind])) {
-        theReport.status = K.error.kMSG_INVALID_DATA_KIND
+        theReport.status = K.error.kMSG_DATA_KIND_NOT_ARRAY
         theReport.status["kind"] = theBlock[K.term.dataKind]
 
         return false                                                            // ==>
