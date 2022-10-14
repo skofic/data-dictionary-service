@@ -12,6 +12,38 @@
         "setup": "scripts/setup.js",
         "teardown": "scripts/teardown.js"
     },
+    "configuration": {
+        "adminCode": {
+            "description": "Default administrator's user code.",
+            "type": "string",
+            "required": true,
+            "default": "admin"
+        },
+        "defaultLanguage": {
+            "description": "Default language ISO code.",
+            "type": "string",
+            "required": true,
+            "default": "ISO:639:3:eng"
+        },
+        "algorithm": {
+            "description": "Default encryption algorithm",
+            "type": "string",
+            "required": true,
+            "default": "HS384"
+        },
+        "page": {
+            "description": "Default page size",
+            "type": "integer",
+            "required": true,
+            "default": 4096
+        },
+        "buffer": {
+            "description": "Default buffer size",
+            "type": "integer",
+            "required": true,
+            "default": 819200
+        }
+    },
     "tests": [
         "test/functions/test_ItWorks.js",
 
