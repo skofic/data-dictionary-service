@@ -231,6 +231,7 @@ router.post('definition', doCheckDefinition, 'definition')
 /**
  * Validate data definition.
  * The service will check whether the provided value corresponds to the provided data section.
+ * MILKO - Need to check.
  */
 router.post('object', doCheckObject, 'object')
     .body(ValidateObject, dd
