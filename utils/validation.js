@@ -1434,6 +1434,7 @@ function validateRegexp(theBlock, theValue, theReport)
         //
         if (!theValue[0][theValue[1]].match(regexp)) {
             theReport.status = K.error.kMSG_NO_REGEXP
+            theReport.status["property"] = theValue[1]
             theReport.status["value"] = theValue[0][theValue[1]]
             theReport.status["regexp"] = theBlock[K.term.regexp]
             return false                                                        // ==>
