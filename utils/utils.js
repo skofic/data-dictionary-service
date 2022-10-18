@@ -200,13 +200,15 @@ function getDocument(theHandle, theReport = false)
 function getTerm(theKey, theReport = false)
 {
     //
+    // Set handle.
+    //
+    const handle = `${K.collection.term.name}/${theKey}`
+
+    //
     // Read database.
     //
     try {
-        const result = K.db._collection(K.collection.term.name).document(theKey)
-
-        return result                                                           // ==>
-
+        return K.db._document(handle)                                           // ==>
     }
 
     //

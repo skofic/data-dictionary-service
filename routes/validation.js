@@ -15,6 +15,7 @@ const DescriptorReport = require(('../models/descriptorReport'))
 const DefinitionReport = require(('../models/definitionReport'))
 const ValidateDescriptor = require(('../models/validateDescriptor'))
 const ValidateDefinition = require(('../models/validateDefinition'))
+const ValidateObject = require(('../models/validateObject'))
 const ValidateObjects = require(('../models/validateObjects'))
 
 //
@@ -155,7 +156,7 @@ router.post('definition', doCheckDefinition, 'definition')
             The \`definition\` parameter is an object that represents the \`_data\` section 
             of a descriptor term. You can use this to test data definitions against values. 
             The object contents are expected to be at the top level, so the first property 
-            will have to indicate whether the falue is a scalar, array, etc.
+            will have to indicate whether the value is a scalar, array, etc.
             
             The \`language\` code is used to select the *language* of the *status message*:
             - if the language code is \`all\`, the message will be returned in
@@ -222,6 +223,91 @@ router.post('definition', doCheckDefinition, 'definition')
             The value will be validated against the provided data definition \
             and the service will return an object describing the status of the validation and eventual \
             additional information describing the outcome.
+            
+            Optionally, it is possible to indicate in which language the status message should be returned.
+        `
+    )
+
+/**
+ * Validate data definition.
+ * The service will check whether the provided value corresponds to the provided data section.
+ */
+router.post('object', doCheckObject, 'object')
+    .body(ValidateObject, dd
+        `
+            **Service parameters**
+            
+            - \`value\`: The object to be validated.
+            - \`language\`: The \`iso_396_3\` language for status messages.
+            
+            The first parameter is *required*, the second parameter is *optional*.
+            
+            The \`value\` parameter is the object to be validated. The service will iterate
+            each property/value pair, considering the property as a descriptor and the value
+            as its value. Properties that do not correspond to known descriptors will be
+            ignored.
+            
+            The \`language\` code is used to select the *language* of the *status message*:
+            - if the language code is \`all\`, the message will be returned in
+            *all available languages*,
+            - if the language code is *wrong*, or there is *no message in that language*,
+            the message will be returned in *English*.
+            
+            Language codes are in the form: \`iso_639_3_\` followed by the *three letter ISO language code*.
+            Use \`iso_639_3_eng\` for English.
+        `
+    )
+    .response(200, joi.object(), dd
+        `
+            **Validation status**
+            
+            The service will return three information items:
+            - \`value\`: The descriptor value.
+            - \`result\`: The status of the validation operation.
+            
+            The returned value, \`value\`, may be *different* than the provided value, because enumerations
+            can be *resolved*: if the enumeration code is *not* a *term global identifier*, the full
+            enumeration graph will be traversed and the first element whose local identifier matches the
+            provided value will be considered the valid choice. Try entering \`_type\` as descriptor
+            and \`string\` as the value: you will see that the value will be resolved to the full code
+            value, \`_type_string\`.
+            
+            The \`result\` contains a \`status\` object which indicates the outcome of the validation.
+            This status has two default elements: a \`code\` that is a numeric code, \`0\` means success,
+            and a \`message\` string that describes the outcome. Depending on the eventual error, 
+            the status may include other properties such as:
+            - \`value\`: the value that caused the error.
+            - \`descriptor\`: the descriptor involved in the error.
+            - \`elements\`: in case an array has too little or too much elements.
+            - \`property\`: missing required property, in case of incorrect data definition.
+            - \`block\`: data definition section.
+            - \`type\`: unimplemented or invalid data type, or data definition section name.
+            - \`set\`: list of required properties, in case one is missing.
+            - \`range\`: valid range, in the case of out of range values.
+            - \`regexp\`: regular expression, in case a string does not match.
+            
+            Additional properties may be included in the result, depending on the eventual error, or in the event
+            that an enumeration was resolved:
+            - \`resolved\`: It is an object whose properties represent the enumeration descriptors whose values
+            have been resolved, the values contain the original provided codes, while the \`value\` will contain the
+            resolved values. Try entering \`_type\` as descriptor and \`string\` as the value.
+            - \`ignored\`: It is an object whose properties represent the descriptors that were not recognised.
+            Unknown descriptors will not be validated, this is not considered an error, but such descriptors will
+            be logged, so that it is possible to catch eventual errors. Try entering \`UNKNOWN\` as descriptor.
+            - \`error\`: In the event of unexpected database errors, this property will host the specific \
+            error message generated by the database engine.
+        `
+    )
+    .summary('Validate object properties')
+    .description(dd
+        `
+            **Validate object properties**
+            
+            *Use this service if you want to check if the properties of the provided object correct.*
+            
+            The service expects an object in the \`value\` parameter whose properties are expected
+            to be descriptor names. Properties that do not correspond to known descriptors will be
+            ignored - *considered valid*.
             
             Optionally, it is possible to indicate in which language the status message should be returned.
         `
@@ -371,6 +457,25 @@ function doCheckDefinition(theRequest, theResponse)
     })
 
 } // doCheckDefinition()
+
+/**
+ * Perform validation of provided list of objects.
+ * @param theRequest {Object}: Service request.
+ * @param theResponse {Object}: Service response.
+ */
+function doCheckObject(theRequest, theResponse)
+{
+    //
+    // Parse provided object.
+    //
+    let report = checkObject(theRequest.body.value, theRequest.body.language)
+
+    theResponse.send({
+        "value": theRequest.body.value,
+        "result": report
+    })                                                                          // ==>
+
+} // doCheckObject()
 
 /**
  * Perform validation of provided list of objects.

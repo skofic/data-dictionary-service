@@ -83,23 +83,6 @@ function validateDataBlock(theBlock, theValue, theReport)
     }
 
     //
-    // Set constants.
-    //
-    const props = [
-        K.term.dataBlockScalar,     // Scalar.
-        K.term.dataBlockArray,      // Array.
-        K.term.dataBlockSet,        // Set.
-        K.term.dataBlockDict        // Dictionary.
-    ]
-
-    //
-    // Parse data block.
-    //
-    for(const size of props) {
-
-    }
-
-    //
     // Parse scalar data block.
     //
     if(theBlock.hasOwnProperty(K.term.dataBlockScalar))
@@ -140,10 +123,10 @@ function validateDataBlock(theBlock, theValue, theReport)
     //
     theReport.status = K.error.kMSG_BAD_DATA_BLOCK
     theReport.status["required"] = [
-        K.term.dataBlockScalar,
-        K.term.dataBlockArray,
-        K.term.dataBlockSet,
-        K.term.dataBlockDict
+        K.term.dataBlockScalar,     // Scalar.
+        K.term.dataBlockArray,      // Array.
+        K.term.dataBlockSet,        // Set.
+        K.term.dataBlockDict        // Dictionary.
     ]
     theReport.status["block"] = theBlock
     return false                                                                // ==>
@@ -1113,7 +1096,7 @@ function validateObjectTypes(theBlock, theValue, theReport)
         //
         // Get data kind term.
         //
-        const dataKind = utils.getTerm(objectType)
+        const dataKind = utils.getTerm(objectType, theReport)
         if(dataKind === false) {
             theReport.status = K.error.kMSG_BAD_TERM_REFERENCE
             theReport.status["type"] = objectType
@@ -1437,6 +1420,7 @@ function validateRegexp(theBlock, theValue, theReport)
             theReport.status["property"] = theValue[1]
             theReport.status["value"] = theValue[0][theValue[1]]
             theReport.status["regexp"] = theBlock[K.term.regexp]
+
             return false                                                        // ==>
         }
     }
