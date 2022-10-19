@@ -92,6 +92,15 @@ function validateDataBlock(theBlock, theValue, theReport)
     }
 
     //
+    // Parse set scalar data block.
+    //
+    else if(theBlock.hasOwnProperty(K.term.dataBlockSetScalar))
+    {
+        return validateScalar(
+            theBlock[K.term.dataBlockSetScalar], theValue, theReport)           // ==>
+    }
+
+    //
     // Parse array data block.
     //
     else if(theBlock.hasOwnProperty(K.term.dataBlockArray))
@@ -417,6 +426,12 @@ function validateValue(theBlock, theValue, theReport)
     //
     if(theBlock.hasOwnProperty(K.term.dataDictKeyType)) {
         type = K.term.dataDictKeyType
+    }
+    //
+    // Second intercept scalar value type.
+    //
+    else if(theBlock.hasOwnProperty(K.term.dataSetType)) {
+        type = K.term.dataSetType
     }
     //
     // Second intercept scalar value type.

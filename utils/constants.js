@@ -66,12 +66,14 @@ module.exports = Object.freeze({
         ruleBlock: "_rule",
 
         dataBlockScalar: "_scalar",
+        dataBlockSetScalar: "_set_scalar",
         dataBlockArray: "_array",
         dataBlockSet: "_set",
         dataBlockDict: "_dict",
 
         dataType: "_type",
         dataKind: "_kind",
+        dataSetType: "_set_type",
 
         dataTypeBool: "_type_boolean",
         dataTypeInteger: "_type_integer",
