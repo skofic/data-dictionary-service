@@ -630,9 +630,10 @@ function validateTimestamp(theBlock, theValue, theReport)
  * @param theBlock {Object}: The dictionary data block.
  * @param theValue: The value to test.
  * @param theReport {ValidationReport}: The status report.
+ * @param doRegexp {Boolean}: If true it is a string (default), if false an enumeration.
  * @returns {boolean}: true means valid.
  */
-function validateString(theBlock, theValue, theReport)
+function validateString(theBlock, theValue, theReport, doRegexp = true)
 {
     //
     // Assert string value.
@@ -647,7 +648,11 @@ function validateString(theBlock, theValue, theReport)
     //
     // Validate regular expression.
     //
-    return validateRegexp(theBlock, theValue, theReport)                        // ==>
+    if(doRegexp) {
+        return validateRegexp(theBlock, theValue, theReport)                    // ==>
+    }
+
+    return true                                                                 // ==>
 
 } // validateString()
 
@@ -665,7 +670,12 @@ function validateKey(theBlock, theValue, theReport)
     //
     // Assert string.
     //
-    if(!validateString(theBlock, theValue, theReport)) {
+    if(!validateString(
+        theBlock,
+        theValue,
+        theReport,
+        (theBlock[K.term.dataTypeKey] !== K.term.dataTypeEnum))
+    ) {
         return false                                                            // ==>
     }
 
@@ -788,7 +798,7 @@ function validateEnum(theBlock, theValue, theReport)
     //
     // Assert string.
     //
-    if(!validateString(theBlock, theValue, theReport)) {
+    if(!validateString(theBlock, theValue, theReport, false)) {
         return false                                                            // ==>
     }
 
