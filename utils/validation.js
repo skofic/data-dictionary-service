@@ -351,10 +351,22 @@ function validateDictionary(theBlock, theValue, theReport)
     }
 
     //
+    // Get list of dictionary keys.
+    //
+    const props = Object.keys(theValue[0][theValue[1]])
+
+    //
+    // Preload enumerations and keys.
+    //
+    if(theBlock[K.term.dataDictionaryKey][K.term.dataDictKeyType] === K.term.dataTypeString
+    || theBlock[K.term.dataDictionaryKey][K.term.dataDictKeyType] === K.term._type_string_key) {
+        utils.loadCache(props)
+    }
+
+    //
     // Load dictionary keys.
     //
     let keys = {}
-    const props = Object.keys(theValue[0][theValue[1]])
     for(const key of props) {
         keys[key] = key
     }

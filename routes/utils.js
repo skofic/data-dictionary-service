@@ -65,8 +65,9 @@ router.get(
 
         response.send({
             list: list,
-            result: Cache.checkTerms(list),
-            cache: Cache.cache
+            test: K.db._collection(K.collection.term.name).exists("no")
+            // result: Cache.checkTerms(list),
+            // cache: Cache.cache
         })
     },
 )

@@ -34,6 +34,18 @@ const Cache = new TermCache()
 function checkDocument(theHandle,theReport = false)
 {
     //
+    // Init local storage.
+    //
+    const terms = `${K.collection.term.name}/`
+
+    //
+    // Handle terms.
+    //
+    if(theHandle.startsWith(terms)) {
+        return Cache.checkTerm(theHandle)                                       // ==>
+    }
+
+    //
     // Check if document handle is valid.
     //
     try {
@@ -191,6 +203,13 @@ function checkDescriptor(theKey, theReport = false)
 function getDocument(theHandle, theReport = false)
 {
     //
+    // Handle terms.
+    //
+    if(theHandle.startsWith(`${K.collection.term.name}/`)) {
+        return Cache.getTerm(theHandle)                                         // ==>
+    }
+
+    //
     // Read database.
     //
     try {
@@ -326,6 +345,20 @@ function reportResolved(theKey, theValue, theReport = false)
 
 } // reportResolved()
 
+/**
+ * Preload cache
+ * This function will load the cache with the provided list of keys.
+ * @param theKeys {Array<String>}: List of keys.
+ */
+function loadCache(theKeys)
+{
+    //
+    // Check list of keys.
+    //
+    Cache.checkTerms(theKeys)
+
+} // loadCache()
+
 
 /******************************************************************************/
 /* UTILITY ASSERTIONS                                                          /*
@@ -415,6 +448,8 @@ module.exports = {
     getDescriptor,
 
     reportResolved,
+
+    loadCache,
 
     isBoolean,
     isInteger,
