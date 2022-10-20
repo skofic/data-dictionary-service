@@ -13,6 +13,12 @@ const status = require('statuses');                     // Status codes.
 //
 const K = require( './constants' );					    // Application constants.
 
+//
+// Terms cache.
+//
+const TermCache = require('./TermCache')
+const Cache = new TermCache()
+
 
 /******************************************************************************/
 /* UTILITY FUNCTIONS                                                           /*
@@ -59,25 +65,42 @@ function checkDocument(theHandle,theReport = false)
 function checkTerm(theKey, theReport = false)
 {
     //
-    // Check if term exists.
+    // Check cache.
     //
-    try {
-        if(K.db._collection(K.collection.term.name).exists(theKey)) {
-            return true                                                         // ==>
-        }
+    const result = Cache.checkTerm(theKey)
+    if(result === true) {
+        return true                                                             // ==>
     }
 
     //
-    // Handle errors.
+    // Set status.
     //
-    catch (error) {
-        if(theReport !== false) {
-            theReport.status = K.error.kMSG_TERM_NOT_FOUND
-            theReport["error"] = error
-        }
+    if(theReport !== false) {
+        theReport.status = K.error.kMSG_TERM_NOT_FOUND
     }
 
     return false                                                                // ==>
+
+    // //
+    // // Check if term exists.
+    // //
+    // try {
+    //     if(K.db._collection(K.collection.term.name).exists(theKey)) {
+    //         return true                                                         // ==>
+    //     }
+    // }
+    //
+    // //
+    // // Handle errors.
+    // //
+    // catch (error) {
+    //     if(theReport !== false) {
+    //         theReport.status = K.error.kMSG_TERM_NOT_FOUND
+    //         theReport["error"] = error
+    //     }
+    // }
+    //
+    // return false                                                                // ==>
 
 } // checkTerm()
 
@@ -200,29 +223,47 @@ function getDocument(theHandle, theReport = false)
 function getTerm(theKey, theReport = false)
 {
     //
-    // Set handle.
+    // Use cache.
     //
-    const handle = `${K.collection.term.name}/${theKey}`
-
-    //
-    // Read database.
-    //
-    try {
-        return K.db._document(handle)                                           // ==>
+    const term = Cache.getTerm(theKey)
+    if(term !== false) {
+        return term                                                             // ==>
     }
 
     //
-    // Handle errors.
+    // Handle not found.
     //
-    catch (error) {
-        if(theReport !== false) {
-            theReport["error"] = error
-            theReport.status = K.error.kMSG_TERM_NOT_FOUND
-            theReport.status["value"] = theKey
-        }
+    if(theReport !== false) {
+        theReport.status = K.error.kMSG_TERM_NOT_FOUND
+        theReport.status["value"] = theKey
     }
 
     return false                                                                // ==>
+
+    // //
+    // // Set handle.
+    // //
+    // const handle = `${K.collection.term.name}/${theKey}`
+    //
+    // //
+    // // Read database.
+    // //
+    // try {
+    //     return K.db._document(handle)                                           // ==>
+    // }
+    //
+    // //
+    // // Handle errors.
+    // //
+    // catch (error) {
+    //     if(theReport !== false) {
+    //         theReport["error"] = error
+    //         theReport.status = K.error.kMSG_TERM_NOT_FOUND
+    //         theReport.status["value"] = theKey
+    //     }
+    // }
+    //
+    // return false                                                                // ==>
 
 } // getTerm()
 

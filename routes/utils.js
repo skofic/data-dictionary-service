@@ -11,6 +11,7 @@
 //
 const dd = require('dedent');							// For multiline text.
 const fs = require('fs');								// File system utilities.
+const joi = require('joi');
 const errors = require('@arangodb').errors;				// ArangoDB errors.
 const createRouter = require('@arangodb/foxx/router');  // Router class.
 
@@ -24,7 +25,13 @@ const Term = require('../models/term');                 // Term model.
 //
 const reader = require('../utils/JsonLReader')
 const utils = require('../utils/utils');                // Utility functions.
+const K = require( '../utils/constants' );              // Constants.
 
+//
+// Cache.
+//
+const TermCache = require('../utils/TermCache')
+const Cache = new TermCache()
 
 //
 // Instantiate router.
@@ -51,14 +58,23 @@ router.get(
     '/test/current/:test',
     (request, response) => {
 
-        const target = request.pathParams.test;
+        const stringList = request.pathParams.test;
+        const list = JSON.parse(stringList)
+
+        const result = Cache.checkTerms(list)
 
         response.send({
-            "found": utils.getTerm(target)
+            list: list,
+            result: Cache.checkTerms(list),
+            cache: Cache.cache
         })
     },
 )
-    .response([Term], 'A list of terms.')
+    .response(
+        200,
+        [ 'application/json' ],
+        "Result"
+    )
     .summary(
         "Check if database is on-line."
     )
