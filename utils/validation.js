@@ -358,10 +358,10 @@ function validateDictionary(theBlock, theValue, theReport)
     //
     // Preload enumerations and keys.
     //
-    if(theBlock[K.term.dataDictionaryKey][K.term.dataDictKeyType] === K.term.dataTypeString
-    || theBlock[K.term.dataDictionaryKey][K.term.dataDictKeyType] === K.term._type_string_key) {
-        utils.loadCache(props)
-    }
+    // if(theBlock[K.term.dataDictionaryKey][K.term.dataDictKeyType] === K.term.dataTypeString
+    // || theBlock[K.term.dataDictionaryKey][K.term.dataDictKeyType] === K.term._type_string_key) {
+    //     utils.loadCache(props)
+    // }
 
     //
     // Load dictionary keys.
