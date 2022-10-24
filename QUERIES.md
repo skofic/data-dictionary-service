@@ -11,14 +11,14 @@ Returns an array containing the valid enumeration given:
 - The leaf vertex which should correspond to the enumeration target vertex handle.
 
 ```
-WITH dict_terms
+WITH terms
 FOR vertex, edge, path IN 1..10
     INBOUND @root
-    GRAPH "schema"
+    edges
     PRUNE @path IN edge._path AND
           edge._predicate == @predicate AND
           (edge._to == @target OR
-            edge._from == @target)
+           edge._from == @target)
     OPTIONS {
         "uniqueVertices": "path"
     }
@@ -29,12 +29,12 @@ FOR vertex, edge, path IN 1..10
     RETURN vertex
 ```
 
-| Parameter | Value                   |
-| --------- | ----------------------- |
-| root      | dict_terms/iso_639_1    |
-| path      | dict_terms/iso_639_1    |
-| target    | dict_terms/iso_639_1_fr |
-| predicate | _predicate_enum-of      |
+| Parameter | Value              |
+| --------- | ------------------ |
+| root      | terms/iso_639_1    |
+| path      | terms/iso_639_1    |
+| target    | terms/iso_639_1_fr |
+| predicate | _predicate_enum-of |
 
 The query will traverse the graph stopping when 
 
