@@ -40,19 +40,27 @@ module.exports = Object.freeze({
     //
     collection : {
         term: {
-            name: 'terms',
+            name: module.context.configuration.collectionTerm,
             type: 'D'
         },
         schema: {
-            name: 'edges',
+            name: module.context.configuration.collectionEdge,
             type: 'E'
         },
         topo: {
-            name: 'topos',
+            name: module.context.configuration.collectionTopo,
             type: 'E'
         },
+        error: {
+            name: module.context.configuration.collectionError,
+            type: 'D'
+        },
         log: {
-            name: 'logs',
+            name: module.context.configuration.collectionLog,
+            type: 'D'
+        },
+        char: {
+            name: module.context.configuration.collectionCharacterisation,
             type: 'D'
         }
     },

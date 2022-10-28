@@ -67,6 +67,12 @@
             "required": true,
             "default": "errors"
         },
+        "collectionLog": {
+            "description": "Logs collection name",
+            "type": "string",
+            "required": true,
+            "default": "logs"
+        },
         "collectionCharacterisation": {
             "description": "Characterisation data collection name",
             "type": "string",
