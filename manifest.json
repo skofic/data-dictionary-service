@@ -60,6 +60,18 @@
             "type": "string",
             "required": true,
             "default": "topos"
+        },
+        "collectionError": {
+            "description": "Errors collection name",
+            "type": "string",
+            "required": true,
+            "default": "errors"
+        },
+        "collectionCharacterisation": {
+            "description": "Characterisation data collection name",
+            "type": "string",
+            "required": true,
+            "default": "characterisation"
         }
     },
     "tests": [
