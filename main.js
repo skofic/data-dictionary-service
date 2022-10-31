@@ -9,5 +9,6 @@ module.context.use('/terms', require('./routes/terms'), 'terms');
 module.context.use('/schemas', require('./routes/schemas'), 'schemas');
 module.context.use('/topos', require('./routes/topos'), 'topos');
 
-module.context.use('/dict', require('./routes/dictionary'), 'dict');
+module.context.use('/enum', require('./routes/enumerations'), 'enum');
+module.context.use('/struct', require('./routes/structures'), 'struct');
 module.context.use('/check', require('./routes/validation'), 'check');
