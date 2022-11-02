@@ -318,15 +318,37 @@ function validateDictionary(theBlock, theValue, theReport)
     }
 
     //
-    // Check data dictionary key block.
+    // Assert definition contains dictionary key.
     //
-    if(!theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
+    if(!theBlock[K.term.dataDictionaryKey].hasOwnProperty(K.term.dataDictionaryKey)) {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
         theReport.status["property"] = K.term.dataDictionaryKey
         theReport.status["block"] = theBlock
 
         return false                                                            // ==>
     }
+
+    //
+    // Assert definition contains dictionary key type.
+    //
+    if(!theBlock[K.term.dataDictionaryKey].hasOwnProperty(K.term.dataDictKeyType)) {
+        theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+        theReport.status["property"] = K.term.dataDictKeyType
+        theReport.status["block"] = theBlock
+
+        return false                                                            // ==>
+    }
+
+    //
+    // Check data dictionary key block.
+    //
+    // if(!theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
+    //     theReport.status = K.error.kMSG_BAD_DATA_BLOCK
+    //     theReport.status["property"] = K.term.dataDictionaryKey
+    //     theReport.status["block"] = theBlock
+    //
+    //     return false                                                            // ==>
+    // }
 
     //
     // Check data dictionary value block.
@@ -353,6 +375,7 @@ function validateDictionary(theBlock, theValue, theReport)
     //
     // Get list of dictionary keys.
     //
+    let keys = {}
     const props = Object.keys(theValue[0][theValue[1]])
 
     //
@@ -366,7 +389,6 @@ function validateDictionary(theBlock, theValue, theReport)
     //
     // Load dictionary keys.
     //
-    let keys = {}
     for(const key of props) {
         keys[key] = key
     }
@@ -379,14 +401,20 @@ function validateDictionary(theBlock, theValue, theReport)
         //
         // Validate key.
         //
-        if(!validateValue(theBlock[K.term.dataDictionaryKey], [keys, key], theReport)) {
+        if(!validateValue(
+            theBlock[K.term.dataDictionaryKey],
+            [keys, key],
+            theReport) ) {
             return false                                                        // ==>
         }
 
         //
         // Validate value.
         //
-        if(!validateDataBlock(theBlock[K.term.dataDictionaryValue], [theValue[0][theValue[1]], key], theReport)) {
+        if(!validateDataBlock(
+            theBlock[K.term.dataDictionaryValue],
+            [theValue[0][theValue[1]], key],
+            theReport) ) {
             return false                                                        // ==>
         }
     }

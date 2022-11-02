@@ -10,7 +10,6 @@ const createRouter = require('@arangodb/foxx/router');
 //
 // Functions.
 //
-const utils = require("../utils/utils");
 const dictionary = require("../utils/dictionary");
 
 //
@@ -702,7 +701,7 @@ function doCheckEnumsByKeys(request, response)
     //
     // Query database.
     //
-    const result = utils.checkEnumsByKeys(
+    const result = dictionary.checkEnumsByKeys(
         request.body,
         request.pathParams.path
     )
@@ -721,7 +720,7 @@ function doCheckEnumsByCodes(request, response)
     //
     // Query database.
     //
-    const result = utils.checkEnumsByCodes(
+    const result = dictionary.checkEnumsByCodes(
         request.body,
         request.pathParams.path
     )

@@ -346,115 +346,6 @@ function reportResolved(theKey, theValue, theReport = false)
 } // reportResolved()
 
 /**
- * Return valid enumeration keys from provided term keys list.
- * The function will return a dictionary whose keys correspond to the provided
- * term keys and whose values correspond to the preferred enumeration key,
- * or false if there is a mismatch.
- * @param theKeys {Array<String>}: List of term keys to check.
- * @param thePath {String}: Enumeration type key (path).
- * @return {Object}: Dictionary with provided keys as key and matched enumeration
- * as value, or false.
- */
-function checkEnumsByKeys(theKeys, thePath)
-{
-    //
-    // Init local storage.
-    //
-    const edges = K.db._collection(K.collection.schema.name)
-    const targets = theKeys.map(item => `${K.collection.term.name}/${item}`)
-    const path = `${K.collection.term.name}/${thePath}`
-    const prefix = K.collection.term.name.length + 1
-
-    //
-    // Query schema.
-    //
-    const result =
-        K.db._query( aql`
-            LET result = (
-                FOR term IN ${targets}
-                
-                    LET selection = (
-                        FOR edge IN ${edges}
-                            FILTER ( edge._to == term OR
-                                     edge._from == term )
-                            FILTER edge._predicate == "_predicate_enum-of"
-                            FILTER ${path} IN edge._path
-                        RETURN
-                            edge._from
-                    )
-                
-                RETURN
-                    selection[0]
-                )
-                
-            RETURN
-                ZIP(${targets}, result)
-        `).toArray()
-
-    //
-    // Parse handles.
-    //
-    let dict = {}
-    for(const [key, value] of Object.entries(result[0])) {
-        dict[key.substring(prefix)] = (value !== null)
-            ? value.substring(prefix)
-            : false
-    }
-
-    return dict                                                                 // ==>
-
-} // checkEnumsByKeys()
-
-/**
- * Return valid enumeration keys from provided local identifiers list.
- * The function will return a dictionary whose keys correspond to the provided
- * identifiers and whose values correspond to the preferred enumeration key,
- * or false if there is a mismatch.
- * @param theCodes {Array<String>}: List of local identifiers to check.
- * @param thePath {String}: Enumeration type key (path).
- * @return {Object}: Dictionary with provided codes as key and matched enumeration
- * as value, or false.
- */
-function checkEnumsByCodes(theCodes, thePath)
-{
-    //
-    // Init local storage.
-    //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
-    const path = `${K.collection.term.name}/${thePath}`
-
-    //
-    // Query schema.
-    //
-    const result =
-        K.db._query( aql`
-            LET result = (
-                FOR code IN ${theCodes}
-                
-                    LET selection = (
-                        FOR term IN ${terms}
-                            FILTER term._code._lid == code
-                
-                            FOR edge in ${edges}
-                                FILTER ( edge._to == term._id OR
-                                         edge._from == term._id )
-                                FILTER edge._predicate == "_predicate_enum-of"
-                                FILTER ${path} IN edge._path
-                            RETURN edge._from )
-                
-                RETURN
-                    selection[0] )
-            
-            RETURN
-                ZIP(${theCodes}, result)
-        `).toArray()
-
-    return result[0]                                                            // ==>
-
-} // checkEnumsByCodes()
-
-/**
  * Preload cache
  * This function will load the cache with the provided list of keys.
  * @param theKeys {Array<String>}: List of keys.
@@ -557,9 +448,6 @@ module.exports = {
     getDescriptor,
 
     reportResolved,
-
-    checkEnumsByKeys,
-    checkEnumsByCodes,
 
     loadCache,
 
