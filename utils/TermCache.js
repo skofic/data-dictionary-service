@@ -14,7 +14,7 @@ const K = require( '../utils/constants' );
  * cache. The class can be useful to prevent reading records that have already
  * been accessed.
  *
- * The cache is a key/value dictionary in which the key is the term `_key`
+ * The cache has a key/value dictionary in which the key is the term `_key`
  * and the value is either `false` for unknown terms, `true` for known terms
  * and a document for cached term objects.
  *
@@ -83,6 +83,17 @@ class TermCache
         return Object.keys(result).map(item => result[item] !== false)          // ==>
 
     } // checkTerms()
+
+    /**
+     * Return ma
+     * @param theKeys {Array<String>}: List of term keys or codes.
+     * @param theEnums {Array<String>}: List of enumeration type term global identifiers.
+     * @return {Object<String: String>}: Dictionary of matched elements or null.
+     */
+    checkEnums(theKeys, theEnums)
+    {
+
+    } // checkEnums()
 
     /**
      * Return term document

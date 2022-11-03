@@ -353,13 +353,13 @@ function validateDictionary(theBlock, theValue, theReport)
     //
     // Prevent scalar data type in dictionary blocks.
     //
-    if(theBlock[K.term.dataDictionaryKey].hasOwnProperty(K.term.dataType)) {
-        theReport.status = K.error.kMSG_UNSUPPORTED_DATA_TYPE
-        theReport.status["property"] = K.term.dataType
-        theReport.status["block"] = theBlock
-
-        return false                                                            // ==>
-    }
+    // if(theBlock[K.term.dataDictionaryKey].hasOwnProperty(K.term.dataType)) {
+    //     theReport.status = K.error.kMSG_UNSUPPORTED_DATA_TYPE
+    //     theReport.status["property"] = K.term.dataType
+    //     theReport.status["block"] = theBlock
+    //
+    //     return false                                                            // ==>
+    // }
 
     //
     // Get list of dictionary keys.
@@ -409,7 +409,7 @@ function validateDictionary(theBlock, theValue, theReport)
     }
 
     //
-    // Handle resolved enumeration keys.
+    // Resolve enumeration keys.
     //
     for(const key of Object.keys(keys)) {
 
