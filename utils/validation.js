@@ -320,7 +320,7 @@ function validateDictionary(theBlock, theValue, theReport)
     //
     // Assert definition contains dictionary key.
     //
-    if(!theBlock[K.term.dataDictionaryKey].hasOwnProperty(K.term.dataDictionaryKey)) {
+    if(!theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
         theReport.status = K.error.kMSG_BAD_DATA_BLOCK
         theReport.status["property"] = K.term.dataDictionaryKey
         theReport.status["block"] = theBlock
@@ -338,17 +338,6 @@ function validateDictionary(theBlock, theValue, theReport)
 
         return false                                                            // ==>
     }
-
-    //
-    // Check data dictionary key block.
-    //
-    // if(!theBlock.hasOwnProperty(K.term.dataDictionaryKey)) {
-    //     theReport.status = K.error.kMSG_BAD_DATA_BLOCK
-    //     theReport.status["property"] = K.term.dataDictionaryKey
-    //     theReport.status["block"] = theBlock
-    //
-    //     return false                                                            // ==>
-    // }
 
     //
     // Check data dictionary value block.
