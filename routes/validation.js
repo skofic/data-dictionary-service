@@ -21,11 +21,17 @@ const ValidateObjects = require(('../models/validateObjects'))
 //
 // Constants.
 //
-const objectsSchema = joi.object({
-    value: joi.array().items(joi.object()),
-    result: joi.array().items(joi.object())
+const validationStatus = joi.object({
+    valid: joi.array().items(joi.object()),
+    warnings: joi.array().items(joi.object({
+        value: joi.object(),
+        status: joi.array().items(joi.object())
+    })),
+    errors: joi.array().items(joi.object({
+        value: joi.object(),
+        status: joi.array().items(joi.object())
+    }))
 })
-    .description('List of report statuses indexed by the array index of the validated list.');
 
 //
 // Import resources.
@@ -86,9 +92,19 @@ router.post('descriptor', doCheckDescriptor, 'descriptor')
             **Validation status**
             
             The service will return three information items:
-            - \`descriptor\`: The provided descriptor global identifier.
-            - \`value\`: The descriptor value.
-            - \`result\`: The status of the validation operation.
+            - \`valid\`: List of valid data elements.
+            - \`warnings\`: List of warning reports.
+            - \`errors\`: List of error reports.
+            
+            Warning and error reports are objects with two elements:
+            - \`value\`: The data element value.
+            - \`status\`: The list of status messages one per property.
+            
+            Each data element is processed separately: if the data is valid, the data element will \
+            be stored in the \`valid\` report property; if there is at least one error, the data element \
+            and all the corresponding status reports will be stored in the \`errors\` report property; \
+            if there is at least one warning, the data element and all the corresponding status reports \
+            will be stored in the \`warnings\` report property.
             
             The returned value, \`value\`, may be *different* than the provided value, because enumerations
             can be *resolved*: if the enumeration code is *not* a *term global identifier*, the full
@@ -96,7 +112,7 @@ router.post('descriptor', doCheckDescriptor, 'descriptor')
             value will be considered the valid choice. Try entering \`_type\` as descriptor and \`string\` as the
             value: you will see that the value will be resolved to the full code value, \`_type_string\`.
             
-            The \`result\` contains a \`status\` object which indicates the outcome of the validation.
+            The \`status\` objects indicate the outcome of the validation, they record any warning or error.
             This status has two default elements: a \`code\` that is a numeric code, \`0\` means success,
             and a \`message\` string that describes the outcome. Depending on the eventual error, the status may
             include other properties such as:
@@ -317,9 +333,10 @@ router.post('object', doCheckObject, 'object')
 /**
  * Validate objects.
  * The service will iterate the provided array of objects and validate them.
- * It will return an array of same length as the provided array, whose elements
- * will be dictionaries whose keys correspond to the validated object's
- * properties, and the values are the validation status report.
+ * It will return an object with three arrays:
+ * - valid: The list of valid data elements.
+ * - warnings: The list of warnings.
+ * - errors: The list of errors
  */
 router.post('objects', doCheckObjects, 'objects')
     .body(ValidateObjects, dd
@@ -339,7 +356,7 @@ router.post('objects', doCheckObjects, 'objects')
             *Validate object* service.
         `
     )
-    .response(200, objectsSchema, dd
+    .response(200, validationStatus, dd
         `
             **Validation status**
             
@@ -488,12 +505,22 @@ function doCheckObjects(theRequest, theResponse)
     //
     // Init local storage.
     //
-    let report = []
+    let report = {
+        valid: [],
+        warnings: [],
+        errors: []
+    }
 
     //
     // Iterate array.
     //
     for(let i = 0; i < theRequest.body.value.length; i++) {
+
+        //
+        // Init local storage.
+        //
+        let issues = []
+        let error = false
 
         //
         // Iterate object properties.
@@ -508,15 +535,50 @@ function doCheckObjects(theRequest, theResponse)
         }
 
         //
-        // Add status.
+        // Parse status.
         //
-        report.push(status)
+        for(const item of Object.values(status)) {
+            if(item.status.code !== 0) {
+                issues.push(item.status)
+                if(item.status.code !== 1) {
+                    error = true
+                }
+            }
+        }
+
+        //
+        // Handle errors.
+        //
+        if(issues.length > 0) {
+            let notice = {
+                value: theRequest.body.value[i],
+                status: issues
+            }
+
+            if(error) {
+                report.errors.push(notice)
+            } else {
+                report.warnings.push(notice)
+            }
+        } else {
+            report.valid.push(theRequest.body.value[i])
+        }
     }
 
-    theResponse.send({
-        "value": theRequest.body.value,
-        "result": report
-    })                                                                          // ==>
+    //
+    // Cleanup report.
+    //
+    if(report.valid.length === 0) {
+        delete report.valid
+    }
+    if(report.warnings.length === 0) {
+        delete report.warnings
+    }
+    if(report.errors.length === 0) {
+        delete report.errors
+    }
+
+    theResponse.send(report)                                                    // ==>
 
 } // doCheckObjects()
 
