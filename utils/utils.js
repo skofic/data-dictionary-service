@@ -346,6 +346,41 @@ function reportResolved(theKey, theValue, theReport = false)
 } // reportResolved()
 
 /**
+ * Return term in provided language
+ * The function expects a term and a valid language code,
+ * it will return the _info properties in the provided language.
+ * If an _info element does not have the provided language,
+ * the function will return the element as-is.
+ * Note that the mordifications are performed on the original object.
+ * @param theTerm {Object}: The term.
+ * @param theLanguage {String}: A valid language code.
+ * @return {Object}: The term with info in the provided language.
+ */
+function termLanguage(theTerm, theLanguage)
+{
+    //
+    // Check if the term has info.
+    //
+    if(theTerm.hasOwnProperty(K.term.infoBlock)) {
+        for(const property of Object.keys(theTerm[K.term.infoBlock])) {
+            if(isObject(theTerm[K.term.infoBlock][property])) {
+                if(theTerm[K.term.infoBlock][property].hasOwnProperty(theLanguage)) {
+                    const element = theTerm[K.term.infoBlock][property][theLanguage]
+                    theTerm[K.term.infoBlock][property] = element
+
+                } // Has language element.
+
+            } // Info property is an object.
+
+        } // Iterating info properties.
+
+    } // Term has info block.
+
+    // return theTerm                                                              // ==>
+
+} // termLanguage()
+
+/**
  * Preload cache
  * This function will load the cache with the provided list of keys.
  * @param theKeys {Array<String>}: List of keys.
@@ -448,6 +483,8 @@ module.exports = {
     getDescriptor,
 
     reportResolved,
+
+    termLanguage,
 
     loadCache,
 

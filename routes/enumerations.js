@@ -15,6 +15,7 @@ const dictionary = require("../utils/dictionary");
 //
 // Constants.
 //
+const languageCode = joi.string().default("@")
 const identifierString = joi.string().required()
 const arrayString = joi.array().items(joi.string())
 const arrayTerms = joi.array().items(joi.object({
@@ -60,12 +61,12 @@ router.get('all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
         `
             **List of enumeration global identifiers**
             
-            The service will return the list of all the enumeration elements belonging to the \
-            indicated path. The elements are represented by their global identifiers.
+            The service will return the *list* of all the *enumeration elements* belonging to the \
+            provided \`path\` parameter. The elements are returned as the term *global identifiers*.
             
-            Note that no hierarchy or order is maintained, it is a flat list of term global identifiers. \
-            Also, only items representing active elements of the enumeration will be selected: this means \
-            that terms used as sections or bridges will not be considered.
+            Note that *no hierarchy* or *order* is maintained, it is a *flat list* of term *global identifiers*. \
+            Also, only items representing *active elements* of the enumeration will be *selected*: this means \
+            that terms used as *sections* or *bridges* will not be returned.
         `
     )
     .summary('Return flattened list of all enumeration keys')
@@ -73,36 +74,43 @@ router.get('all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
         `
             **Get all enumeration element global identifiers**
             
-            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
-            At the root of the graph is a term that represents the type or definition of this \
-            controlled vocabulary, this term represents the enumeration graph.
+            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
+            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
+            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
             
-            The service expects the global identifier of that term as a path parameter, and will \
-            return the flattened list of all enumeration elements belonging to that controlled \
-            vocabulary. These elements will be returned as the global identifiers of the terms.
+            The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
+            return the *flattened list* of *all enumeration elements* belonging to that *controlled vocabulary*.\
+            These elements will be returned as the *global identifiers* of the *terms*.
             
-            You can try providing \`_type\`: this will return the list of data type identifiers.
+            You can try providing \`_type\`: this will return the *list* of *data type identifiers*.
         `
     )
 
 /**
  * Return all enumeration terms by path.
  * The service will return all the enumeration elements of an enumeration type:
- * provide the enumeration type root and the service will return the array of terms.
+ * provide the enumeration type root, the language and the service will return the array of terms.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('all/terms/:path', getAllEnumerations, 'all-enum-terms')
+router.get('all/terms/:path/:lang', getAllEnumerations, 'all-enum-terms')
     .pathParam('path', identifierString, "Enumeration root global identifier")
+    .pathParam('lang', languageCode, "Language global identifier, @ for all")
     .response(arrayTerms, dd
         `
             **List of enumeration terms**
             
-            The service will return the list of all the enumeration elements belonging to the \
-            indicated path. The elements are represented by their term objects.
+            The service will return the *list* of all the *enumeration elements* belonging to the \
+            provided \`path\` parameter. The elements are returned as the term *objects*.
             
-            Note that no hierarchy or order is maintained, it is a flat list of terms. \
-            Also, only items representing active elements of the enumeration will be selected: this means \
-            that terms used as sections or bridges will not be considered.
+            The second path parameter, \`lang\`, indicates in which language you desire the properties \
+            of the *_info* block to be. If the provided language code matches an element of the \
+            *title*, *definition*, *description*, *examples* and *notes* properties, the property will \
+            contain the string corresponding to the provided language code; if no element matches the \
+            provided language code, the info property will be returned unchanged.
+            
+            Note that *no hierarchy* or *order* is maintained, it is a *flat list* of *terms*. \
+            Also, only items representing *active elements* of the enumeration will be *selected*: this means \
+            that terms used as *sections* or *bridges* will not be returned.
         `
     )
     .summary('Return flattened list of all enumeration terms')
@@ -110,15 +118,20 @@ router.get('all/terms/:path', getAllEnumerations, 'all-enum-terms')
         `
             **Get all enumeration terms**
             
-            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
-            At the root of the graph is a term that represents the type or definition of this \
-            controlled vocabulary, this term represents the enumeration graph.
+            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
+            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
+            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
             
-            The service expects the global identifier of that term as a path parameter, and will \
-            return the flattened list of all enumeration elements belonging to that controlled \
-            vocabulary. These elements will be returned as term objects.
+            The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
+            return the *flattened list* of *all enumeration terms* belonging to that *controlled vocabulary*.\
+            These elements will be returned as the *term objects*.
             
-            You can try providing \`_type\`: this will return the list of data type terms.
+            You can try providing \`_type\` in the *path* parameter and \`iso_639_3_eng\` \
+            in the *lang* parameter: this will return the *list* of *data types* with their descriptions \
+            in *English*.
+            You can try providing \`iso_639_1\` in the *path* parameter and \`@\` \
+            in the *lang* parameter: this will return the *list* of *major languages* with their descriptions \
+            in *all available languages*.
         `
     )
 
@@ -571,7 +584,11 @@ function getAllEnumerations(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getAllEnumerations(request.pathParams.path);
+    const result =
+        dictionary.getAllEnumerations(
+            request.pathParams.path,
+            request.pathParams.lang
+        )
 
     response.send(result);                                                      // ==>
 

@@ -70,6 +70,7 @@ module.exports = Object.freeze({
     //
     term : {
         codeBlock: "_code",
+        infoBlock: "_info",
         dataBlock: "_data",
         ruleBlock: "_rule",
 

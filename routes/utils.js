@@ -42,46 +42,7 @@ module.exports = router;
 //
 // Set router tags.
 //
-router.tag( 'test' );
-
-
-/**
- * Current test
- *
- * The service will return the result for the current test.
- *
- * @path		/test/current/:test
- * @verb		get
- * @response	{JSON}.
- */
-router.get(
-    '/test/current/:test',
-    (request, response) => {
-
-        const stringList = request.pathParams.test;
-        const list = JSON.parse(stringList)
-
-        const result = Cache.checkTerms(list)
-
-        response.send({
-            list: list,
-            test: K.db._collection(K.collection.term.name).exists("no")
-            // result: Cache.checkTerms(list),
-            // cache: Cache.cache
-        })
-    },
-)
-    .response(
-        200,
-        [ 'application/json' ],
-        "Result"
-    )
-    .summary(
-        "Check if database is on-line."
-    )
-    .description(dd`
-  Returns a "pong" response.
-`);
+router.tag( 'utils' );
 
 
 /**
@@ -246,34 +207,4 @@ router.get(
     )
     .description(dd`
   Returns the temp path.
-`);
-
-
-/**
- * Ping
- *
- * The service is used for ad-hoc tests.
- *
- * @path		/prova
- * @verb		get
- * @response	{String}.
- */
-router.get(
-    '/prova',
-    (request, response) => {
-        const rd = new reader('pippo');
-        response.send( 'pong' );
-    },
-    'ping'
-)
-    .response(
-        200,
-        [ 'application/text' ],
-        "The ping response"
-    )
-    .summary(
-        "Check if on-line"
-    )
-    .description(dd`
-  Returns a ping response
 `);

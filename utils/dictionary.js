@@ -9,6 +9,7 @@ const aql = require('@arangodb').aql;					// AQL queries.
 // Application.
 //
 const K = require( './constants' );					    // Application constants.
+const utils = require('../utils/utils');                // Utility functions.
 
 /**
  * dictionary.js
@@ -81,9 +82,10 @@ function getPropertyNames(theRoot)
  * This function expects a string representing an enumeration root,
  * and will return the list of all term documents that comprise the controlled vocabulary.
  * @param theRoot {String}: The global identifier of the enumeration root.
+ * @param theLanguage {String}: The language of the _info elements.
  * @return {Array}: The list of terms that comprise the controlled vocabulary.
  */
-function getAllEnumerations(theRoot)
+function getAllEnumerations(theRoot, theLanguage)
 {
     //
     // Init local storage.
@@ -101,6 +103,17 @@ function getAllEnumerations(theRoot)
                 FILTER edge._predicate == "_predicate_enum-of"
             RETURN DOCUMENT(edge._from)
         `).toArray();
+
+    //
+    // Filter language.
+    //
+    if(theLanguage !== "@") {
+        for(let i = 0; i < result.length; i++) {
+            utils.termLanguage(result[i], theLanguage)
+
+        } // Iterating result terms.
+
+    } // Provided language.
 
     return result;                                                              // ==>
 
