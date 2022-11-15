@@ -61,6 +61,18 @@
             "required": true,
             "default": "topos"
         },
+        "collectionUser": {
+            "description": "Users collection name",
+            "type": "string",
+            "required": true,
+            "default": "users"
+        },
+        "collectionSession": {
+            "description": "Sessions collection name",
+            "type": "string",
+            "required": true,
+            "default": "sessions"
+        },
         "collectionError": {
             "description": "Errors collection name",
             "type": "string",

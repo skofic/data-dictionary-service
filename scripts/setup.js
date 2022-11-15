@@ -1,5 +1,11 @@
 'use strict';
 
+/**
+ * Setup script
+ * This script will ensure all required collections are there.
+ * It will iterate the "collection" constants property and create any missing collection.
+ */
+
 //
 // Application.
 //
@@ -13,19 +19,29 @@ let created = []
 //
 // Iterate collections.
 //
-for(const info of Object.keys(K.collection)) {
-  if(!K.db._collection(info.name)) {
-    if(info.type === 'D') {
-      K.db._createDocumentCollection(info.name)
-      created.push(info.name)
-    } else if(info.type === 'E') {
-      K.db._createEdgeCollection(info.name)
-      created.push(info.name)
+for(const key of Object.keys(K.collection)) {
+
+  //
+  // Handle missing collection.
+  //
+  const name = K.collection[key].name
+  const type = K.collection[key].type
+
+  if(K.db._collection(name) === null) {
+    if(type === 'D') {
+      K.db._createDocumentCollection(name)
+    } else if(type === 'E') {
+      K.db._createEdgeCollection(name)
     }
-  } else {
-    console.debug(`collection ${collection} already exists. Leaving it untouched.`)
+    created.push(name)
+  }
+
+  //
+  // Handle existing collection.
+  //
+  else {
+    console.debug(`collection ${name} already exists. Leaving it untouched.`)
   }
 }
 
-module.exports = (created.length) ? `Created the following collections: ${created}.`
-                                  : `All collections already exist.`
+// module.exports = `Created ${created.length} collections.`

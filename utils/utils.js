@@ -376,8 +376,6 @@ function termLanguage(theTerm, theLanguage)
 
     } // Term has info block.
 
-    // return theTerm                                                              // ==>
-
 } // termLanguage()
 
 /**

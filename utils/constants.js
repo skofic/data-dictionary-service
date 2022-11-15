@@ -55,6 +55,14 @@ module.exports = Object.freeze({
             name: module.context.configuration.collectionError,
             type: 'D'
         },
+        user: {
+            name: module.context.configuration.collectionUser,
+            type: 'D'
+        },
+        session: {
+            name: module.context.configuration.collectionSession,
+            type: 'D'
+        },
         log: {
             name: module.context.configuration.collectionLog,
             type: 'D'
