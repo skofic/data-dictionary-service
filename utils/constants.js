@@ -16,14 +16,8 @@ module.exports = Object.freeze({
     // Environment.
     //
     environment: {
-        auth : {
-            // path		 : '/data/auth.json',
-            algo		 : 'HS384'
-        },
-        language		 : "iso_639_3_eng",
         page			 : 4096,
-        buffer			 : 819200,
-        msg_sep			 : ' '
+        buffer			 : 819200
     },
 
     //
@@ -72,6 +66,15 @@ module.exports = Object.freeze({
             type: 'D'
         }
     },
+
+    //
+    // Directories.
+    //
+    //	- name:		Directory name.
+    //
+    directory : [
+        module.context.configuration.dataDir
+    ],
 
     //
     // Terms.

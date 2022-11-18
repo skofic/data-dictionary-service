@@ -7,41 +7,35 @@
  */
 
 //
+// Frameworks.
+//
+const fs = require('fs')					// File system.
+
+//
 // Application.
 //
-const K = require( '../utils/constants' )    // Application constants.
+const K = require('../utils/constants')		// Application constants.
+const App = require('../utils/application')	// Application functions.
 
 //
-// Local storage.
+// Init local storage.
 //
-let created = []
+let messages = []
 
 //
-// Iterate collections.
+// Create collections.
 //
-for(const key of Object.keys(K.collection)) {
+messages = messages.concat(App.createCollections())
 
-  //
-  // Handle missing collection.
-  //
-  const name = K.collection[key].name
-  const type = K.collection[key].type
+//
+// Create data directories.
+//
+messages = messages.concat(App.createDirectories())
 
-  if(K.db._collection(name) === null) {
-    if(type === 'D') {
-      K.db._createDocumentCollection(name)
-    } else if(type === 'E') {
-      K.db._createEdgeCollection(name)
-    }
-    created.push(name)
-  }
+//
+// Create users.
+//
+messages = messages.concat(App.createUsers())
 
-  //
-  // Handle existing collection.
-  //
-  else {
-    console.debug(`collection ${name} already exists. Leaving it untouched.`)
-  }
-}
 
-// module.exports = `Created ${created.length} collections.`
+module.exports = messages

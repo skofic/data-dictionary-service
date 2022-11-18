@@ -14,10 +14,34 @@
     },
     "configuration": {
         "adminCode": {
-            "description": "Default administrator's user code.",
+            "description": "Default administrator user code.",
             "type": "string",
             "required": true,
             "default": "admin"
+        },
+        "adminPass": {
+            "description": "Default administrator user password.",
+            "type": "password",
+            "required": true,
+            "default": "secret"
+        },
+        "userCode": {
+            "description": "Default services user code.",
+            "type": "string",
+            "required": true,
+            "default": "user"
+        },
+        "userPass": {
+            "description": "Default services user password.",
+            "type": "password",
+            "required": true,
+            "default": "secret"
+        },
+        "dataDir": {
+            "description": "Data directory name",
+            "type": "string",
+            "required": true,
+            "default": "data"
         },
         "language": {
             "description": "Default language ISO code.",

@@ -1,48 +1,40 @@
-'use strict';
+'use strict'
 
 //
 // Imports.
 //
-const dd = require('dedent');
-const joi = require('joi');
-const aql = require('@arangodb').aql;					// AQL queries.
-const createRouter = require('@arangodb/foxx/router');
+const dd = require('dedent')                           // For multiline text.
+const joi = require('joi')                             // For data definition.
+const aql = require('@arangodb').aql					// AQL queries.
+const createRouter = require('@arangodb/foxx/router')  // Router.
 
 //
-// Functions.
+// Application includes.
 //
-const dictionary = require("../utils/dictionary");
+const K = require( '../utils/constants' )               // Constants.
+const dictionary = require("../utils/dictionary")      // Dictionary database queries.
 
 //
-// Constants.
+// Data types.
 //
-const enumIdent = joi.string().required()
-const enumKeyList = joi.array().items(joi.string())
-const enumTermList = joi.array().items(joi.object({
+const paramRequiredIdentifier = joi.string().required()
+const paramIdentifiersList = joi.array().items(joi.string())
+const paramTermsList = joi.array().items(joi.object({
     _key: joi.string(),
     _code: joi.object(),
     _info: joi.object()
 }))
-const enumPath = joi.array().items(joi.object({
+const paramGraphPath = joi.array().items(joi.object({
     edges: joi.array().items(joi.object()),
     vertices: joi.array().items(joi.object())
 }))
 
 //
-// Application.
-//
-const K = require( '../utils/constants' )
-
-//
 // Instantiate router.
 //
-const router = createRouter();
-module.exports = router;
-
-//
-// Set router tags.
-//
-router.tag('dictionary');
+const router = createRouter()
+module.exports = router
+router.tag('dictionary')
 
 
 //
@@ -56,8 +48,8 @@ router.tag('dictionary');
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get('enum/all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .response(enumKeyList, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .response(paramIdentifiersList, dd
         `
             **List of enumeration global identifiers**
             
@@ -93,8 +85,8 @@ router.get('enum/all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
  * No hierarchy is maintained and only valid properties are selected.
  */
 router.get('struct/all/keys/:path', getPropertyNames, 'all-struct-keys')
-    .pathParam('path', enumIdent, "Object descriptor global identifier")
-    .response(enumKeyList, dd
+    .pathParam('path', paramRequiredIdentifier, "Object descriptor global identifier")
+    .response(paramIdentifiersList, dd
         `
             **List of structure property names**
             
@@ -138,8 +130,8 @@ router.get('struct/all/keys/:path', getPropertyNames, 'all-struct-keys')
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get('enum/all/terms/:path', getAllEnumerations, 'all-enum-terms')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .response(enumTermList, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .response(paramTermsList, dd
         `
             **List of enumeration terms**
             
@@ -174,8 +166,8 @@ router.get('enum/all/terms/:path', getAllEnumerations, 'all-enum-terms')
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get('struct/all/terms/:path', getProperties, 'all-struct-terms')
-    .pathParam('path', enumIdent, "Object descriptor global identifier")
-    .response(enumTermList, dd
+    .pathParam('path', paramRequiredIdentifier, "Object descriptor global identifier")
+    .response(paramTermsList, dd
         `
             **List of structure properties**
             
@@ -222,9 +214,9 @@ router.get('struct/all/terms/:path', getProperties, 'all-struct-terms')
  * corresponding to the provided path.
  */
 router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code-terms')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .pathParam('code', enumIdent, "Target enumeration identifier or code")
-    .response(enumTermList, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .pathParam('code', paramRequiredIdentifier, "Target enumeration identifier or code")
+    .response(paramTermsList, dd
         `
             **List of matched terms**
             
@@ -272,9 +264,9 @@ router.get('enum/code/terms/:path/:code', matchEnumerationCode, 'match-enum-code
  * corresponding to the provided path.
  */
 router.get('enum/lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum-lid-terms')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .pathParam('code', enumIdent, "Target enumeration local identifier")
-    .response(enumTermList, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .pathParam('code', paramRequiredIdentifier, "Target enumeration local identifier")
+    .response(paramTermsList, dd
         `
             **List of matched terms**
             
@@ -326,9 +318,9 @@ router.get('enum/lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum
  * corresponding to the provided path.
  */
 router.get('enum/gid/terms/:path/:code', matchEnumerationGlobalIdentifier, 'match-enum-gid-terms')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .pathParam('code', enumIdent, "Target enumeration global identifier")
-    .response(enumTermList, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .pathParam('code', paramRequiredIdentifier, "Target enumeration global identifier")
+    .response(paramTermsList, dd
         `
             **List of matched terms**
             
@@ -384,9 +376,9 @@ router.get('enum/gid/terms/:path/:code', matchEnumerationGlobalIdentifier, 'matc
  * to the first term element matching the provided code.
  */
 router.get('enum/code/path/:path/:code', matchEnumerationCodePath, 'match-enum-code-path')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .pathParam('code', enumIdent, "Target enumeration identifier or code")
-    .response(enumPath, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .pathParam('code', paramRequiredIdentifier, "Target enumeration identifier or code")
+    .response(paramGraphPath, dd
         `
             **Path to matched term**
             
@@ -436,9 +428,9 @@ router.get('enum/code/path/:path/:code', matchEnumerationCodePath, 'match-enum-c
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
 router.get('enum/lid/path/:path/:code', matchEnumerationIdentifierPath, 'match-enum-lid-path')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .pathParam('code', enumIdent, "Target enumeration local identifier")
-    .response(enumPath, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .pathParam('code', paramRequiredIdentifier, "Target enumeration local identifier")
+    .response(paramGraphPath, dd
         `
             **Path to matched term**
             
@@ -490,9 +482,9 @@ router.get('enum/lid/path/:path/:code', matchEnumerationIdentifierPath, 'match-e
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
 router.get('enum/gid/path/:path/:code', matchEnumerationTermPath, 'match-enum-gid-path')
-    .pathParam('path', enumIdent, "Enumeration root global identifier")
-    .pathParam('code', enumIdent, "Target enumeration global identifier")
-    .response(enumPath, dd
+    .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
+    .pathParam('code', paramRequiredIdentifier, "Target enumeration global identifier")
+    .response(paramGraphPath, dd
         `
             **Path to matched term**
             
@@ -552,9 +544,9 @@ function getAllEnumerationKeys(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getAllEnumerationKeys(request.pathParams.path);
+    const result = dictionary.getAllEnumerationKeys(request.pathParams.path)
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // getAllEnumerations()
 
@@ -568,9 +560,9 @@ function getPropertyNames(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getPropertyNames(request.pathParams.path);
+    const result = dictionary.getPropertyNames(request.pathParams.path)
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // getPropertyNames()
 
@@ -584,9 +576,9 @@ function getAllEnumerations(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getAllEnumerations(request.pathParams.path);
+    const result = dictionary.getAllEnumerations(request.pathParams.path)
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // getAllEnumerations()
 
@@ -600,9 +592,9 @@ function getProperties(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getProperties(request.pathParams.path);
+    const result = dictionary.getProperties(request.pathParams.path)
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // getProperties()
 
@@ -621,7 +613,7 @@ function matchEnumerationCode(request, response)
         request.pathParams.code
     )
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // matchEnumerationCode()
 
@@ -640,7 +632,7 @@ function matchEnumerationIdentifier(request, response)
         request.pathParams.code
     )
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // matchEnumerationIdentifier()
 
@@ -659,7 +651,7 @@ function matchEnumerationGlobalIdentifier(request, response)
         request.pathParams.code
     )
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // matchEnumerationGlobalIdentifier()
 
@@ -678,7 +670,7 @@ function matchEnumerationCodePath(request, response)
         request.pathParams.code
     )
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // matchEnumerationCodePath()
 
@@ -697,7 +689,7 @@ function matchEnumerationIdentifierPath(request, response)
         request.pathParams.code
     )
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // matchEnumerationIdentifierPath()
 
@@ -716,6 +708,6 @@ function matchEnumerationTermPath(request, response)
         request.pathParams.code
     )
 
-    response.send(result);                                                      // ==>
+    response.send(result)                                                      // ==>
 
 } // matchEnumerationTermPath()

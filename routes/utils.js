@@ -34,7 +34,7 @@ const TermCache = require('../utils/TermCache')
 const Cache = new TermCache()
 
 //
-// Instantiate router.
+// Instantiate and export router.
 //
 const router = createRouter();
 module.exports = router;
@@ -42,7 +42,7 @@ module.exports = router;
 //
 // Set router tags.
 //
-router.tag( 'utils' );
+router.tag( 'Utils' );
 
 
 /**
