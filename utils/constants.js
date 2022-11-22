@@ -466,6 +466,15 @@ module.exports = Object.freeze({
                 iso_639_3_fra: "Ce n'est pas une date.",
                 iso_639_3_esp: "No es una fecha."
             }
+        },
+        kMSG_UNKNOWN_USER: {
+            code: 29,
+            message: {
+                iso_639_3_eng: "Unknown user.",
+                iso_639_3_ita: "Utente sconosciuto.",
+                iso_639_3_fra: "Utilisateur inconnu.",
+                iso_639_3_esp: "Usuario desconocido."
+            }
         }
     }
 

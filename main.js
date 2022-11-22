@@ -3,8 +3,8 @@
 //
 // Sessions.
 //
-// const sessions = require("./utils/sessions")
-// module.context.use(sessions)
+const sessions = require("./utils/sessions")
+module.context.use(sessions)
 
 //
 // Routes.
@@ -18,3 +18,5 @@ module.context.use('/topos', require('./routes/topos'), 'topos')
 module.context.use('/enum', require('./routes/enumerations'), 'enum')
 module.context.use('/struct', require('./routes/structures'), 'struct')
 module.context.use('/check', require('./routes/validation'), 'check')
+
+module.context.use('/auth', require('./routes/auth'), 'auth')

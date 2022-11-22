@@ -19,7 +19,7 @@ const crypto = require('@arangodb/crypto')  // Cryptographic functions.
 // Application.
 //
 const K = require( './constants' )          // Application constants.
-const Auth = require('../utils/auth')		// Authentication functions.
+const Auth = require('./auth')      		// Authentication functions.
 
 //
 // Database constants.
@@ -111,6 +111,11 @@ function createCollections()
  * The default password can be found in the manifest file
  * in the configurations section.
  *
+ * Users are composed as follows:
+ * - _key_: Username or code.
+ * - auth:  Authentication record containing method used to generate the hash,
+ * random salt used to generate the hash and the hash string.
+ *
  * @return {Array<String>}: List of users parsed.
  */
 function createUsers()
@@ -127,7 +132,7 @@ function createUsers()
     if(!users.exists(module.context.configuration.adminCode)) {
         users.save({
             _key: module.context.configuration.adminCode,
-            password: Auth.create(module.context.configuration.adminPass)
+            auth: Auth.create(module.context.configuration.adminPass)
         })
         messages.push(`Created administrator user.`)
     } else {
@@ -140,7 +145,7 @@ function createUsers()
     if(!users.exists(module.context.configuration.userCode)) {
         users.save({
             _key: module.context.configuration.userCode,
-            password: Auth.create(module.context.configuration.userPass)
+            auth: Auth.create(module.context.configuration.userPass)
         })
         messages.push(`Created services user.`)
     } else {

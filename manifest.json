@@ -49,23 +49,17 @@
             "required": true,
             "default": "iso_639_3_eng"
         },
-        "algorithm": {
-            "description": "Default encryption algorithm",
+        "method": {
+            "description": "Hashing algorithm for creating password hashes",
             "type": "string",
             "required": true,
-            "default": "HS384"
+            "default": "sha256"
         },
-        "page": {
-            "description": "Default page size",
+        "saltLength": {
+            "description": "Length of the salts that will be generated for password hashes",
             "type": "integer",
             "required": true,
-            "default": 4096
-        },
-        "buffer": {
-            "description": "Default buffer size",
-            "type": "integer",
-            "required": true,
-            "default": 819200
+            "default": 16
         },
         "collectionTerm": {
             "description": "Terms collection name",
