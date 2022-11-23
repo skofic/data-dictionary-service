@@ -208,3 +208,36 @@ router.get(
     .description(dd`
   Returns the temp path.
 `);
+
+/**
+ * Session
+ * Returns the currently active session.
+ */
+router.get(
+    '/session',
+    (request, response) => {
+        try {
+            response.send(request.session)
+        } catch (e) {
+            response.send({session: null})
+        }
+    }
+)
+    .summary("Returns session")
+    .description("Returns the current session record.")
+
+/**
+ * User
+ * Returns the currently active user.
+ */
+router.get('/user',
+    (request, response) => {
+        try {
+            response.send(request.user)
+        } catch (e) {
+            response.send({session: null})
+        }
+    }
+)
+    .summary("Returns session user")
+    .description("Returns the current session user record.")

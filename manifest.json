@@ -25,6 +25,18 @@
             "required": true,
             "default": "secret"
         },
+        "managerCode": {
+            "description": "Default services manager code.",
+            "type": "string",
+            "required": true,
+            "default": "manager"
+        },
+        "managerPass": {
+            "description": "Default services user password.",
+            "type": "password",
+            "required": true,
+            "default": "secret"
+        },
         "userCode": {
             "description": "Default services user code.",
             "type": "string",

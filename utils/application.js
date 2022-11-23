@@ -75,7 +75,7 @@ function createCollections()
     //
     // Iterate collections.
     //
-    for(const key of Object.keys(K.collection)) {
+    for (const key of Object.keys(K.collection)) {
 
         //
         // Handle missing collection.
@@ -84,11 +84,19 @@ function createCollections()
         const type = K.collection[key].type
 
         if (!K.db._collection(name)) {
+
             if (type === 'D') {
                 K.db._createDocumentCollection(name)
             } else if (type === 'E') {
                 K.db._createEdgeCollection(name)
             }
+
+            if(K.collection[key].hasOwnProperty('index')) {
+                K.collection[key].index.forEach(index => {
+                    K.db._collection(name).ensureIndex(index)
+                })
+            }
+
             messages.push(`Collection ${name} created.`)
         }
 
@@ -120,36 +128,58 @@ function createCollections()
  */
 function createUsers()
 {
-    //
-    // Init local storage.
-    //
     let messages = []
     const users = db._collection(K.collection.user.name)
 
     //
     // Create administrator user.
     //
-    if(!users.exists(module.context.configuration.adminCode)) {
+    if (!users.firstExample({username: module.context.configuration.adminCode})) {
         users.save({
-            _key: module.context.configuration.adminCode,
+            username: module.context.configuration.adminCode,
+            role: [
+                K.environment.role.admin,
+                K.environment.role.dict,
+                K.environment.role.read
+            ],
             auth: Auth.create(module.context.configuration.adminPass)
         })
-        messages.push(`Created administrator user.`)
+        messages.push(`Created ${module.context.configuration.adminCode} user.`)
     } else {
-        messages.push(`Administrator user exists.`)
+        messages.push(`User ${module.context.configuration.adminCode} exists.`)
     }
 
     //
-    // Create services user.
+    // Create manager user.
     //
-    if(!users.exists(module.context.configuration.userCode)) {
+    if (!users.firstExample({username: module.context.configuration.managerCode})) {
         users.save({
-            _key: module.context.configuration.userCode,
+            username: module.context.configuration.managerCode,
+            role: [
+                K.environment.role.dict,
+                K.environment.role.read
+            ],
+            auth: Auth.create(module.context.configuration.managerPass)
+        })
+        messages.push(`Created ${module.context.configuration.managerCode} user.`)
+    } else {
+        messages.push(`User ${module.context.configuration.managerCode} exists.`)
+    }
+
+    //
+    // Create reader user.
+    //
+    if (!users.firstExample({username: module.context.configuration.userCode})) {
+        users.save({
+            username: module.context.configuration.userCode,
+            role: [
+                K.environment.role.read
+            ],
             auth: Auth.create(module.context.configuration.userPass)
         })
-        messages.push(`Created services user.`)
+        messages.push(`Created ${module.context.configuration.userCode} user.`)
     } else {
-        messages.push(`Administrator services exists.`)
+        messages.push(`User ${module.context.configuration.userCode} exists.`)
     }
 
     return messages                                                             // ==>
