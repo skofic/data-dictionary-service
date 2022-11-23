@@ -1,6 +1,11 @@
 'use strict'
 
 //
+// Application constants.
+//
+const K = require("./utils/constants")
+
+//
 // Routes.
 //
 module.context.use('/terms', require('./routes/terms'), 'terms')
@@ -17,3 +22,22 @@ module.context.use('/util', require('./routes/utils'), 'utils')
 //
 const sessions = require("./utils/sessions")
 module.context.use(sessions)
+
+//
+// Ensure a user is logged in.
+//
+module.context.use(
+	(request, response, next) => {
+		if(request.session.uid) {
+			try {
+				request.user =
+					K.db._collection(K.collection.user.name)
+						.document(request.session.uid)
+			} catch (error) {
+				request.session.uid = null
+				request.sessionStorage.save()
+			}
+		}
+		next()
+	}
+)

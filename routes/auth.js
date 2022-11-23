@@ -21,16 +21,30 @@ const dictionary = require("../utils/dictionary");		// Authentication functions.
 // Collections.
 //
 const users = K.db._collection(K.collection.user.name)
-const sessions = K.db._collection(K.collection.session.name)
 
 //
-// Constants.
+// Models.
 //
-const loginRequest =
+const CredentialsModel =
 	joi
 		.object({
 			username: joi.string().required(),
 			password: joi.string().required()
+		})
+
+const UserModel =
+	joi
+		.object({
+			username: joi.string().required(),
+			role: joi.array().items(joi.string()).required()
+		})
+
+const SignupModel =
+	joi
+		.object({
+			username: joi.string().required(),
+			password: joi.string().required(),
+			role: joi.array().items(joi.string()).required()
 		})
 
 //
@@ -38,14 +52,15 @@ const loginRequest =
 //
 const router = createRouter();
 module.exports = router;
+router.tag('authentication')
 
 
 /**
  * Login service
- * This service expects username and password, and will
+ * This service will login a user given its code and password.
  */
 router.post('login', doLogin, 'login')
-	.body(loginRequest, dd
+	.body(CredentialsModel, dd
 		`
             **Service parameters**
             
@@ -53,14 +68,13 @@ router.post('login', doLogin, 'login')
             - \`password\`: The user password.
         `
 	)
-	.response(200, joi.string(), dd
+	.response(200, UserModel, dd
 		`
-            **Authentication token**
+            **User record**
             
-            The service will return:
-            - \`200\`: The authentication token to be used in subsequent services.
+            The service will return :
+            - \`200\`: The user record.
             - \`401\`: If no user was found, or if credentials failed.
-            - \`500\`: For all other errors.
         `
 	)
 	.summary('Login user')
@@ -74,8 +88,54 @@ router.post('login', doLogin, 'login')
             - \`username\`: The username or code.
             - \`password\`: The user password.
             
-            The service will return a \`200\` status with the authentication token \
-            or \`401\` if authentication failed and \`500\` for all other errors.
+            The service will return a \`200\` status with the user record \
+            or \`401\` if authentication failed .
+        `
+	)
+
+/**
+ * Signup service
+ * This service will create a new user.
+ */
+router.post('signup', doSignup, 'signup')
+	.body(SignupModel, dd
+		`
+            **Service parameters**
+            
+            The service expects an object with the following properties:
+            - username: *String* - The username or code.
+            - password: *String* - The user password.
+            - role: *Array* - The list of permission roles: \
+            \`admin\` for administration, \`dict\` for dictionary management \
+            and \`read\` for dictionary usage.
+            
+            \`admin\` role allows to create and manage users.
+            \`dict\` role allows the management of dictionary elements.
+            \`read\` role allows reading the data dictionary contents.
+        `
+	)
+	.response(200, UserModel, dd
+		`
+            **User record**
+            
+            The service will return :
+            - \`200\`: The user record.
+            - \`401\`: If no user was found, or if credentials failed.
+        `
+	)
+	.summary('Signup user')
+	.description(dd
+		`
+            **Signup user**
+            
+            *Use this service to create a new user.*
+            
+            The service expects an object including the username, password and the list of roles.
+            
+            The service will return a \`200\` status with the user record.
+            
+            Note that we do not validate user roles, the \`role\` user property \
+            may include any value, whether values match default roles counts.
         `
 	)
 
@@ -92,42 +152,98 @@ router.post('login', doLogin, 'login')
 function doLogin(request, response)
 {
 	//
-	// TRY BLOCK
+	// Resolve username.
 	//
-	try {
-		//
-		// Retrieve user record.
-		//
-		const user = users.document(request.body.username)
+	const username = request.body.username
+	const user = users.firstExample({ username })
+	if(user) {
 
 		//
-		// Validate user.
+		// Resolve password.
 		//
-		response.send(user._key)
-	}
+		if(Auth.verify(user.auth, request.body.password)) {
 
-	//
-	// CATCH BLOCK
-	//
-	catch (error) {
+			//
+			// Save session.
+			//
+			request.session.uid = user._key
+			request.sessionStorage.save(request.session)
 
-		//
-		// Handle record not found.
-		//
-		if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			//
+			// Clean user record.
+			//
+			delete user._id
+			delete user._rev
+			delete user.auth
+
+			response.send(user)													// ==>
+
+		} // Valid password.
+
+		else {
 			response.throw(
 				401,
-				K.error.kMSG_UNKNOWN_USER.message.iso_639_3_eng
-			)
-		}
+				K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+			)																	// ==>
+
+		} // Invalid password.
+
+	} // Valid user.
+
+	else {
+		response.throw(
+			401,
+			K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+		)																		// ==>
+
+	} // Invalid user.
+
+} // doLogin()
+
+/**
+ * Signup user.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doSignup(request, response)
+{
+	//
+	// Init local storage.
+	//
+	const user = {}
+
+	//
+	// Build user.
+	//
+	user.username = request.body.username
+	user.role = request.body.role
+	user.auth = Auth.create(request.body.password)
+
+	//
+	// Save user.
+	//
+	try
+	{
+		//
+		// Save user.
+		//
+		const meta = users.save(user)
+		Object.assign(user, meta)
 
 		//
-		// Handle other errors.
+		// Save session.
 		//
+		request.session.uid = meta._key
+		request.sessionStorage.save(request.session)
+
+		delete user.auth
+		response.send(user)														// ==>
+
+	} catch (error) {
 		response.throw(
-			500,
-			error
+			409,
+			K.error.kMSG_DUPLICATE_USER[module.context.configuration.language]
 		)
 	}
 
-} // doLogin()
+} // doSignup()
