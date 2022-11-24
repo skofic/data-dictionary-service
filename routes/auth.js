@@ -312,16 +312,11 @@ router.delete(
 			case 200:
 				const key = request.pathParams.key
 				try {
-
-				} catch {
-
-				}
-				const user = users.document(key)
-				if(user) {
+					const user = users.document(key)
 					response.send(
-						Application.deleteUser(key, user.username)
+						Application.deleteUser(user._key, user.username)
 					)
-				} else {
+				} catch {
 					response.send(
 						`User ${key} not found`
 					)
