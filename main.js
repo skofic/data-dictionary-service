@@ -21,7 +21,7 @@ module.context.use('/util', require('./routes/utils'), 'utils')
 // Sessions.
 //
 const sessions = require("./utils/sessions")
-module.context.use(sessions)
+module.context.use(sessions.Session)
 
 //
 // Ensure a user is logged in.

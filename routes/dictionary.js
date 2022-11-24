@@ -12,6 +12,7 @@ const createRouter = require('@arangodb/foxx/router')  // Router.
 // Application includes.
 //
 const K = require( '../utils/constants' )               // Constants.
+const Session = require('../utils/sessions')            // Sessions.
 const dictionary = require("../utils/dictionary")      // Dictionary database queries.
 
 //
@@ -47,7 +48,38 @@ router.tag('dictionary')
  * provided as a term global identifier.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('enum/all/keys/:path', getAllEnumerationKeys, 'all-enum-keys')
+router.get(
+    'enum/all/keys/:path',
+    (request, response) => {
+        switch (
+            Session.authorise(
+                request,
+                [
+                    K.environment.role.read
+                ])
+            )
+        {
+            case 200:
+                getAllEnumerationKeys(request, response)
+                break
+
+            case 401:
+                response.throw(
+                    401,
+                    K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
+                )													    		// ==>
+                break
+
+            case 403:
+                response.throw(
+                    403,
+                    K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
+                )													    		// ==>
+                break
+        }
+    },
+    'all-enum-keys'
+)
     .pathParam('path', paramRequiredIdentifier, "Enumeration root global identifier")
     .response(paramIdentifiersList, dd
         `

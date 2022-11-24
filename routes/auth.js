@@ -15,6 +15,7 @@ const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
 //
 const K = require('../utils/constants')
 const Auth = require('../utils/auth')
+const Session = require('../utils/sessions')
 const Application = require("../utils/application")
 
 //
@@ -97,7 +98,38 @@ router.post('login', doLogin, 'login')
  * Signup service
  * This service will create a new user.
  */
-router.post('signup', doSignup, 'signup')
+router.post(
+	'signup',
+	(request, response) => {
+		switch (
+			Session.authorise(
+				request,
+				[
+					K.environment.role.admin
+				])
+			)
+		{
+			case 200:
+				doSignup(request, response)
+				break
+
+			case 401:
+				response.throw(
+					401,
+					K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
+				)													    		// ==>
+				break
+
+			case 403:
+				response.throw(
+					403,
+					K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
+				)													    		// ==>
+				break
+		}
+	},
+	'signup'
+)
 	.body(SignupModel, dd
 		`
             **Service parameters**
@@ -185,7 +217,38 @@ router.get('logout', doLogout, 'logout')
  * Reset
  * This service will delete and re-create the default users.
  */
-router.get('reset', doReset, 'reset')
+router.get(
+	'reset',
+	(request, response) => {
+		switch (
+			Session.authorise(
+				request,
+				[
+					K.environment.role.admin
+				])
+			)
+		{
+			case 200:
+				doReset(request, response)
+				break
+
+			case 401:
+				response.throw(
+					401,
+					K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
+				)													    		// ==>
+				break
+
+			case 403:
+				response.throw(
+					403,
+					K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
+				)													    		// ==>
+				break
+		}
+	},
+	'reset'
+)
 	.response(200, joi.array().items(joi.string()), dd
 		`
             **Messages**
@@ -248,7 +311,7 @@ function doLogin(request, response) {
 		else {
 			response.throw(
 				401,
-				K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+				K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
 			)																	// ==>
 
 		} // Invalid password.
@@ -258,7 +321,7 @@ function doLogin(request, response) {
 	else {
 		response.throw(
 			401,
-			K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+			K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
 		)																		// ==>
 
 	} // Invalid user.
@@ -273,69 +336,45 @@ function doLogin(request, response) {
 function doSignup(request, response)
 {
 	//
-	// Assert user is logged in.
+	// Build user.
 	//
-	if(request.session.uid !== null) {
+	const user = {
+		username: request.body.username,
+		role: request.body.role,
+		auth: Auth.create(request.body.password),
+		default: false
+	}
+
+	//
+	// Save user.
+	//
+	try
+	{
+		//
+		// Save user.
+		//
+		const meta = users.save(user)
 
 		//
-		// Assert user is administrator.
+		// Save session.
 		//
-		if(request.session.data.user.role.includes(K.environment.role.admin)) {
-
-			//
-			// Build user.
-			//
-			const user = {
-				username: request.body.username,
-				role: request.body.role,
-				auth: Auth.create(request.body.password),
-				default: false
+		request.session.uid = meta._key
+		request.session.data = {
+			user: {
+				username: user.username,
+				role: user.role,
+				default: user.default
 			}
-
-			//
-			// Save user.
-			//
-			try
-			{
-				//
-				// Save user.
-				//
-				const meta = users.save(user)
-
-				//
-				// Save session.
-				//
-				request.session.uid = meta._key
-				request.session.data = {
-					user: {
-						username: user.username,
-						role: user.role,
-						default: user.default
-					}
-				}
-				request.sessionStorage.save(request.session)
-
-				response.send(request.session.data.user)							    // ==>
-
-			} catch (error) {
-				response.throw(
-					409,
-					K.error.kMSG_DUPLICATE_USER[module.context.configuration.language]
-				)
-			}
-
-		} else {
-			response.throw(
-				403,
-				K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
-			)													    			// ==>
 		}
+		request.sessionStorage.save(request.session)
 
-	} else {
+		response.send(request.session.data.user)						// ==>
+
+	} catch (error) {
 		response.throw(
-			401,
-			K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
-		)													    				// ==>
+			409,
+			K.error.kMSG_DUPLICATE_USER.message[module.context.configuration.language]
+		)                                                               // ==>
 	}
 
 } // doSignup()
@@ -363,8 +402,8 @@ function doWhoAmI(request, response) {
  * @param request: API request.
  * @param response: API response.
  */
-function doLogout(request, response) {
-
+function doLogout(request, response)
+{
 	//
 	// Check if there is a logged in user.
 	//
@@ -388,35 +427,11 @@ function doLogout(request, response) {
  * @param request: API request.
  * @param response: API response.
  */
-function doReset(request, response) {
-
+function doReset(request, response)
+{
 	//
-	// Assert user is logged in.
+	// Delete and create default users.
 	//
-	if(request.session.uid !== null) {
-
-		//
-		// Assert user is administrator.
-		//
-		if(request.session.data.user.role.includes(K.environment.role.admin)) {
-
-			//
-			// Delete and create default users.
-			//
-			response.send(Application.createDefaultUsers(true))                 // ==>
-
-		} else {
-			response.throw(
-				403,
-				K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
-			)													    			// ==>
-		}
-
-	} else {
-		response.throw(
-			401,
-			K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
-		)													    				// ==>
-	}
+	response.send(Application.createDefaultUsers(true))                 // ==>
 
 } // doReset()
