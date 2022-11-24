@@ -12,19 +12,12 @@
 const fs = require('fs')                    // File system.
 const db = require('@arangodb').db          // Database.
 const aql = require('@arangodb').aql        // Database AQL queries.
-const errors = require('@arangodb').errors  // Database errors.
-const crypto = require('@arangodb/crypto')  // Cryptographic functions.
 
 //
 // Application.
 //
 const K = require( './constants' )          // Application constants.
 const Auth = require('./auth')      		// Authentication functions.
-
-//
-// Database constants.
-//
-const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code
 
 
 /**
@@ -132,20 +125,12 @@ function createCollections()
  *
  * The default property is automatically managed.
  *
- * @param doReset {Boolean}: If true, default users will be deleted beforehand.
  * @return {Array<String>}: List of users parsed.
  */
-function createDefaultUsers(doReset = false)
+function createDefaultUsers()
 {
     let messages = []
     const users = db._collection(K.collection.user.name)
-
-    //
-    // Delete default users.
-    //
-    if(doReset) {
-        messages = messages.concat(deleteDefaultUsers())
-    }
 
     //
     // Create administrator user.
@@ -240,36 +225,102 @@ function deleteDefaultUsers()
         `).toArray()
 
     //
-    // Iterate users.
+    // Delete users.
     //
     defaultUsers.forEach(user => {
-
-        //
-        // Delete user.
-        //
-        K.db._query( aql`
-            REMOVE ${user._key} IN ${usersCollection}
-        `)
-
-        //
-        // Delete open sessions.
-        //
-        K.db._query( aql`
-            FOR session IN ${sessionsCollection}
-                FILTER session.uid == ${user._key}
-                REMOVE session._key IN ${sessionsCollection}
-        `)
-
-        messages.push(`Deleted user ${user.username}.`)
+        messages.push(deleteUser(user._key, user.username))
     })
 
     return messages                                                             // ==>
 
 } // deleteDefaultUsers()
 
+/**
+ * Delete created users.
+ *
+ * This function will delete the created users.
+ * Created users are users other than default users.
+ *
+ * As the users are deleted, the function will also delete the corresponding sessions.
+ *
+ * @return {Array<String>}: List of users parsed.
+ */
+function deleteCreatedUsers()
+{
+    let messages = []
+
+    //
+    // Init local storage.
+    //
+    const usersCollection = K.db._collection(K.collection.user.name)
+    const sessionsCollection = K.db._collection(K.collection.session.name)
+
+    //
+    // Load default users.
+    //
+    const defaultUsers =
+        K.db._query( aql`
+            FOR user IN ${usersCollection}
+                FILTER user.default == false
+            RETURN user
+        `).toArray()
+
+    //
+    // Iterate users.
+    //
+    defaultUsers.forEach(user => {
+        messages.push(deleteUser(user._key, user.username))
+    })
+
+    return messages                                                             // ==>
+
+} // deleteCreatedUsers()
+
+/**
+ * Delete user.
+ *
+ * This function will delete the user corresponding to the provided key.
+ *
+ * As the users are deleted, the function will also delete the corresponding sessions.
+ *
+ * @param theKey {String}: User _key.
+ * @param theCode {String}: Username.
+ * @return {String}: Deleted username, if existing.
+ */
+function deleteUser(theKey, theCode = 'anonymous')
+{
+    //
+    // Init local storage.
+    //
+    const usersCollection = K.db._collection(K.collection.user.name)
+    const sessionsCollection = K.db._collection(K.collection.session.name)
+
+    //
+    // Delete user.
+    //
+    K.db._query( aql`
+            REMOVE ${theKey} IN ${usersCollection}
+        `)
+
+    //
+    // Delete open sessions.
+    //
+    K.db._query( aql`
+            FOR session IN ${sessionsCollection}
+                FILTER session.uid == ${theKey}
+                REMOVE session._key IN ${sessionsCollection}
+        `)
+
+    return `Deleted user ${theCode}.`                                           // ==>
+
+} // deleteUser()
+
 
 module.exports = {
     createDirectories,
     createCollections,
-    createDefaultUsers
+    createDefaultUsers,
+    deleteDefaultUsers,
+    deleteCreatedUsers,
+    deleteUser
 }

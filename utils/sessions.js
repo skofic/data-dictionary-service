@@ -9,13 +9,21 @@ const K = require('./constants')
 // Includes.
 //
 const sessionsMiddleware = require("@arangodb/foxx/sessions")
+const cookieTransport = require('@arangodb/foxx/sessions/transports/cookie')
 
 /**
  * Sessions middleware
  */
+// const Session = sessionsMiddleware({
+// 	storage: K.db._collection(K.collection.session.name),
+// 	transport: "cookie"
+// })
+const secret = module.context.configuration.cookieSecret
 const Session = sessionsMiddleware({
 	storage: K.db._collection(K.collection.session.name),
-	transport: "cookie"
+	transport: cookieTransport({
+		ttl: module.context.configuration.timeToLive
+	})
 })
 
 /**

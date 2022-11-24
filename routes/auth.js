@@ -47,6 +47,8 @@ const SignupModel =
 			password: joi.string().required(),
 			role: joi.array().items(joi.string()).required()
 		})
+const keySchema = joi.string().required()
+	.description('The key of the user');
 
 //
 // Instantiate and export router.
@@ -215,9 +217,9 @@ router.get('logout', doLogout, 'logout')
 
 /**
  * Reset
- * This service will delete and re-create the default users.
+ * This service will delete and re-create users.
  */
-router.get(
+router.post(
 	'reset',
 	(request, response) => {
 		switch (
@@ -229,7 +231,16 @@ router.get(
 			)
 		{
 			case 200:
-				doReset(request, response)
+				let messages = []
+				if(request.body.default) {
+					messages = messages.concat(Application.deleteDefaultUsers())
+				}
+
+				if(request.body.created) {
+					messages = messages.concat(Application.deleteCreatedUsers())
+				}
+
+				response.send(messages.concat(createDefaultUsers(request, response)))
 				break
 
 			case 401:
@@ -249,6 +260,20 @@ router.get(
 	},
 	'reset'
 )
+	.body(
+		joi.object({
+			default: joi.boolean().default(false),
+			created: joi.boolean().default(false)
+		}),
+		dd
+		`
+            **Which users?**
+            
+            The service body expects an object with the following properties:
+            - default {Boolean}: Whether to delete default users.
+            - created {Boolean}: Whether to delete created users.
+        `
+	)
 	.response(200, joi.array().items(joi.string()), dd
 		`
             **Messages**
@@ -256,15 +281,88 @@ router.get(
             The service will return the list of operations.
         `
 	)
-	.summary('Reset')
+	.summary('Reset users')
 	.description(dd
 		`
-            **Reset default users**
+            **Reset users**
             
-            This service will delete and re-create all default users,
-            deleting all related sessions in the process.
+            This service will delete default or created users, and re-create default users.
+            All operations will delete corresponding session records and logout corresponding users,
+            this means that the current user might also be disconnected.
             
             You can use this service after changing the default users codes or passwords in the configuration.
+        `
+	)
+
+/**
+ * Delete service
+ * This service will delete a user by key.
+ */
+router.delete(
+	':key',
+	(request, response) => {
+		switch (
+			Session.authorise(
+				request,
+				[
+					K.environment.role.admin
+				])
+			)
+		{
+			case 200:
+				const key = request.pathParams.key
+				try {
+
+				} catch {
+
+				}
+				const user = users.document(key)
+				if(user) {
+					response.send(
+						Application.deleteUser(key, user.username)
+					)
+				} else {
+					response.send(
+						`User ${key} not found`
+					)
+				}
+				break
+
+			case 401:
+				response.throw(
+					401,
+					K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
+				)													    		// ==>
+				break
+
+			case 403:
+				response.throw(
+					403,
+					K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
+				)													    		// ==>
+				break
+		}
+	},
+	'delete'
+)
+	.pathParam('key', keySchema)
+	.response(200, joi.string(), dd
+		`
+            **Messages**
+            
+            The service will return the list of operations.
+        `
+	)
+	.summary('Delete user')
+	.description(dd
+		`
+            **Delete user**
+            
+            *Use this service to remove a user.*
+            
+            The service expects the user _key in the path.
+            
+            The service will return \`null\`.
         `
 	)
 
@@ -278,7 +376,8 @@ router.get(
  * @param request: API request.
  * @param response: API response.
  */
-function doLogin(request, response) {
+function doLogin(request, response)
+{
 	//
 	// Resolve username.
 	//
@@ -423,15 +522,16 @@ function doLogout(request, response)
 } // doLogout()
 
 /**
- * Reset default users.
+ * Create default users.
  * @param request: API request.
  * @param response: API response.
+ * @return {Array<String>>}: List of operation messages.
  */
-function doReset(request, response)
+function createDefaultUsers(request, response)
 {
 	//
 	// Delete and create default users.
 	//
-	response.send(Application.createDefaultUsers(true))                 // ==>
+	return Application.createDefaultUsers()                                     // ==>
 
-} // doReset()
+} // createDefaultUsers()
