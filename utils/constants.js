@@ -488,8 +488,17 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "Usuario desconocido."
             }
         },
-        kMSG_DUPLICATE_USER: {
+        kMSG_UNAUTHORISED_USER: {
             code: 30,
+            message: {
+                iso_639_3_eng: "Unauthorised user.",
+                iso_639_3_ita: "Utente non autorizzato.",
+                iso_639_3_fra: "Utilisateur pas authorisé.",
+                iso_639_3_esp: "Usuario no autorizado."
+            }
+        },
+        kMSG_DUPLICATE_USER: {
+            code: 31,
             message: {
                 iso_639_3_eng: "User already registered.",
                 iso_639_3_ita: "Utente già registrato.",

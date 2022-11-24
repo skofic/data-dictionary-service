@@ -73,6 +73,18 @@
             "required": true,
             "default": 16
         },
+        "secretLength": {
+            "description": "Length of the cookie secret",
+            "type": "integer",
+            "required": true,
+            "default": 48
+        },
+        "timeToLive": {
+            "description": "Cppkie timeout period in seconds, defaults to one week",
+            "type": "integer",
+            "required": true,
+            "default": 604800
+        },
         "collectionTerm": {
             "description": "Terms collection name",
             "type": "string",

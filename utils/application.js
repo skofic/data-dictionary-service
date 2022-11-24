@@ -100,8 +100,8 @@ function createCollections()
             messages.push(`Collection ${name} created.`)
         }
 
-            //
-            // Handle existing collection.
+        //
+        // Handle existing collection.
         //
         else {
             messages.push(`Collection ${name} already exists. Leaving it untouched.`)
@@ -113,23 +113,39 @@ function createCollections()
 }	// createCollections()
 
 /**
- * Initialise users
+ * Initialise default users
  *
  * This method will create the admin and user users.
  * The default password can be found in the manifest file
  * in the configurations section.
  *
  * Users are composed as follows:
- * - _key_: Username or code.
- * - auth:  Authentication record containing method used to generate the hash,
- * random salt used to generate the hash and the hash string.
+ * - username: Username or code.
+ * - role: An array of roles.
+ * - auth:  Authentication record containing method used to generate the hash, random salt used to generate the hash and the hash string.
+ * - default: A boolean indicating whether it is a default user.
  *
+ * Roles are the following:
+ * - admin: Can manage users.
+ * - dict: Can manage the data dictionary.
+ * - read: Can use the data dictionary.
+ *
+ * The default property is automatically managed.
+ *
+ * @param doReset {Boolean}: If true, default users will be deleted beforehand.
  * @return {Array<String>}: List of users parsed.
  */
-function createUsers()
+function createDefaultUsers(doReset = false)
 {
     let messages = []
     const users = db._collection(K.collection.user.name)
+
+    //
+    // Delete default users.
+    //
+    if(doReset) {
+        messages = messages.concat(deleteDefaultUsers())
+    }
 
     //
     // Create administrator user.
@@ -142,7 +158,8 @@ function createUsers()
                 K.environment.role.dict,
                 K.environment.role.read
             ],
-            auth: Auth.create(module.context.configuration.adminPass)
+            auth: Auth.create(module.context.configuration.adminPass),
+            default: true
         })
         messages.push(`Created ${module.context.configuration.adminCode} user.`)
     } else {
@@ -159,7 +176,8 @@ function createUsers()
                 K.environment.role.dict,
                 K.environment.role.read
             ],
-            auth: Auth.create(module.context.configuration.managerPass)
+            auth: Auth.create(module.context.configuration.managerPass),
+            default: true
         })
         messages.push(`Created ${module.context.configuration.managerCode} user.`)
     } else {
@@ -175,7 +193,8 @@ function createUsers()
             role: [
                 K.environment.role.read
             ],
-            auth: Auth.create(module.context.configuration.userPass)
+            auth: Auth.create(module.context.configuration.userPass),
+            default: true
         })
         messages.push(`Created ${module.context.configuration.userCode} user.`)
     } else {
@@ -184,11 +203,73 @@ function createUsers()
 
     return messages                                                             // ==>
 
-}	// createUsers()
+}	// createDefaultUsers()
+
+/**
+ * Delete default users.
+ *
+ * This function will delete the default users:
+ * - admin: Administrator.
+ * - manager: Dictionary manager.
+ * - user: Dictionary user.
+ *
+ * As the users are deleted, the function will also delete the corresponding sessions.
+ *
+ * The actual usernames are stored in the manifest configuration section.
+ *
+ * @return {Array<String>}: List of users parsed.
+ */
+function deleteDefaultUsers()
+{
+    let messages = []
+
+    //
+    // Init local storage.
+    //
+    const usersCollection = K.db._collection(K.collection.user.name)
+    const sessionsCollection = K.db._collection(K.collection.session.name)
+
+    //
+    // Load default users.
+    //
+    const defaultUsers =
+        K.db._query( aql`
+            FOR user IN ${usersCollection}
+                FILTER user.default == true
+            RETURN user
+        `).toArray()
+
+    //
+    // Iterate users.
+    //
+    defaultUsers.forEach(user => {
+
+        //
+        // Delete user.
+        //
+        K.db._query( aql`
+            REMOVE ${user._key} IN ${usersCollection}
+        `)
+
+        //
+        // Delete open sessions.
+        //
+        K.db._query( aql`
+            FOR session IN ${sessionsCollection}
+                FILTER session.uid == ${user._key}
+                REMOVE session._key IN ${sessionsCollection}
+        `)
+
+        messages.push(`Deleted user ${user.username}.`)
+    })
+
+    return messages                                                             // ==>
+
+} // deleteDefaultUsers()
 
 
 module.exports = {
     createDirectories,
     createCollections,
-    createUsers
+    createDefaultUsers
 }

@@ -13,9 +13,9 @@ const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
 //
 // Application constants.
 //
-const K = require( '../utils/constants' )	// Application constants.
+const K = require('../utils/constants')
 const Auth = require('../utils/auth')
-const dictionary = require("../utils/dictionary");		// Authentication functions.
+const Application = require("../utils/application")
 
 //
 // Collections.
@@ -139,6 +139,72 @@ router.post('signup', doSignup, 'signup')
         `
 	)
 
+/**
+ * Who am I?
+ * This service will return the current user record or an empty object.
+ */
+router.get('whoami', doWhoAmI, 'whoami')
+	.response(200, UserModel, dd
+		`
+            **User record**
+            
+            The service will return the current user record.
+        `
+	)
+	.summary('Who am I?')
+	.description(dd
+		`
+            **Current user**
+            
+            *Use this service to retrieve information on the current user.*
+        `
+	)
+
+/**
+ * Logout
+ * This service will logout the user and return its record.
+ */
+router.get('logout', doLogout, 'logout')
+	.response(200, UserModel, dd
+		`
+            **User record**
+            
+            The service will return the former current user record.
+        `
+	)
+	.summary('Logout')
+	.description(dd
+		`
+            **Logout user**
+            
+            *Use this service to logout the current user.*
+        `
+	)
+
+/**
+ * Reset
+ * This service will delete and re-create the default users.
+ */
+router.get('reset', doReset, 'reset')
+	.response(200, joi.array().items(joi.string()), dd
+		`
+            **Messages**
+            
+            The service will return the list of operations.
+        `
+	)
+	.summary('Reset')
+	.description(dd
+		`
+            **Reset default users**
+            
+            This service will delete and re-create all default users,
+            deleting all related sessions in the process.
+            
+            You can use this service after changing the default users codes or passwords in the configuration.
+        `
+	)
+
 
 //
 // Functions.
@@ -149,34 +215,33 @@ router.post('signup', doSignup, 'signup')
  * @param request: API request.
  * @param response: API response.
  */
-function doLogin(request, response)
-{
+function doLogin(request, response) {
 	//
 	// Resolve username.
 	//
 	const username = request.body.username
-	const user = users.firstExample({ username })
-	if(user) {
+	const user = users.firstExample({username})
+	if (user) {
 
 		//
 		// Resolve password.
 		//
-		if(Auth.verify(user.auth, request.body.password)) {
+		if (Auth.verify(user.auth, request.body.password)) {
 
 			//
 			// Save session.
 			//
 			request.session.uid = user._key
+			request.session.data = {
+				user: {
+					username: user.username,
+					role: user.role,
+					default: user.default
+				}
+			}
 			request.sessionStorage.save(request.session)
 
-			//
-			// Clean user record.
-			//
-			delete user._id
-			delete user._rev
-			delete user.auth
-
-			response.send(user)													// ==>
+			response.send(request.session.data.user)							// ==>
 
 		} // Valid password.
 
@@ -208,42 +273,150 @@ function doLogin(request, response)
 function doSignup(request, response)
 {
 	//
-	// Init local storage.
+	// Assert user is logged in.
 	//
-	const user = {}
-
-	//
-	// Build user.
-	//
-	user.username = request.body.username
-	user.role = request.body.role
-	user.auth = Auth.create(request.body.password)
-
-	//
-	// Save user.
-	//
-	try
-	{
-		//
-		// Save user.
-		//
-		const meta = users.save(user)
-		Object.assign(user, meta)
+	if(request.session.uid !== null) {
 
 		//
-		// Save session.
+		// Assert user is administrator.
 		//
-		request.session.uid = meta._key
-		request.sessionStorage.save(request.session)
+		if(request.session.data.user.role.includes(K.environment.role.admin)) {
 
-		delete user.auth
-		response.send(user)														// ==>
+			//
+			// Build user.
+			//
+			const user = {
+				username: request.body.username,
+				role: request.body.role,
+				auth: Auth.create(request.body.password),
+				default: false
+			}
 
-	} catch (error) {
+			//
+			// Save user.
+			//
+			try
+			{
+				//
+				// Save user.
+				//
+				const meta = users.save(user)
+
+				//
+				// Save session.
+				//
+				request.session.uid = meta._key
+				request.session.data = {
+					user: {
+						username: user.username,
+						role: user.role,
+						default: user.default
+					}
+				}
+				request.sessionStorage.save(request.session)
+
+				response.send(request.session.data.user)							    // ==>
+
+			} catch (error) {
+				response.throw(
+					409,
+					K.error.kMSG_DUPLICATE_USER[module.context.configuration.language]
+				)
+			}
+
+		} else {
+			response.throw(
+				403,
+				K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+			)													    			// ==>
+		}
+
+	} else {
 		response.throw(
-			409,
-			K.error.kMSG_DUPLICATE_USER[module.context.configuration.language]
-		)
+			401,
+			K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+		)													    				// ==>
 	}
 
 } // doSignup()
+
+/**
+ * Return current user.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doWhoAmI(request, response) {
+
+	//
+	// Check if there is a logged in user.
+	//
+	if (request.session.uid !== null) {
+		response.send(request.session.data.user)                                // ==>
+	} else {
+		response.send({ })                                                      // ==>
+	}
+
+} // doWhoAmI()
+
+/**
+ * Logout current user.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doLogout(request, response) {
+
+	//
+	// Check if there is a logged in user.
+	//
+	if (request.session.uid !== null) {
+		const user = JSON.parse(JSON.stringify(request.session.data.user))
+
+		request.session.uid = null
+		request.session.data = null
+		request.sessionStorage.save(request.session)
+
+		response.send(user)                                                     // ==>
+
+	} else {
+		response.send({ })                                                      // ==>
+	}
+
+} // doLogout()
+
+/**
+ * Reset default users.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doReset(request, response) {
+
+	//
+	// Assert user is logged in.
+	//
+	if(request.session.uid !== null) {
+
+		//
+		// Assert user is administrator.
+		//
+		if(request.session.data.user.role.includes(K.environment.role.admin)) {
+
+			//
+			// Delete and create default users.
+			//
+			response.send(Application.createDefaultUsers(true))                 // ==>
+
+		} else {
+			response.throw(
+				403,
+				K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+			)													    			// ==>
+		}
+
+	} else {
+		response.throw(
+			401,
+			K.error.kMSG_UNKNOWN_USER[module.context.configuration.language]
+		)													    				// ==>
+	}
+
+} // doReset()

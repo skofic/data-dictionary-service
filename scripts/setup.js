@@ -35,7 +35,7 @@ messages = messages.concat(App.createDirectories())
 //
 // Create users.
 //
-messages = messages.concat(App.createUsers())
+messages = messages.concat(App.createDefaultUsers())
 
 
 module.exports = messages

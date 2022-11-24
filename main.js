@@ -28,13 +28,35 @@ module.context.use(sessions)
 //
 module.context.use(
 	(request, response, next) => {
-		if(request.session.uid) {
-			try {
-				request.user =
+
+		//
+		// Request has user _key.
+		//
+		if(request.session.uid)
+		{
+			try
+			{
+				//
+				// Get user.
+				//
+				const user =
 					K.db._collection(K.collection.user.name)
 						.document(request.session.uid)
+
+				//
+				// Save in session.
+				//
+				request.session.data = {
+					user: {
+						username: user.username,
+						role: user.role,
+						default: user.default
+					}
+				}
+
 			} catch (error) {
 				request.session.uid = null
+				request.session.data = null
 				request.sessionStorage.save()
 			}
 		}
