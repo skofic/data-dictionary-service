@@ -1,9 +1,7 @@
 'use strict';
 
 /**
- * Test services
- *
- * This path is used to test services.
+ * Administration utility services
  */
 
 //
@@ -38,11 +36,7 @@ const Cache = new TermCache()
 //
 const router = createRouter();
 module.exports = router;
-
-//
-// Set router tags.
-//
-router.tag( 'Utils' );
+router.tag( 'Administration utilities' );
 
 
 /**

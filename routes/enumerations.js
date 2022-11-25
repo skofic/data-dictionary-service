@@ -39,11 +39,7 @@ const K = require( '../utils/constants' )
 //
 const router = createRouter();
 module.exports = router;
-
-//
-// Set router tags.
-//
-router.tag('enumerations');
+router.tag('Enumerated types');
 
 
 //

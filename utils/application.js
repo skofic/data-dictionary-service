@@ -138,52 +138,13 @@ function createDefaultUsers()
     if (!users.firstExample({username: module.context.configuration.adminCode})) {
         users.save({
             username: module.context.configuration.adminCode,
-            role: [
-                K.environment.role.admin,
-                K.environment.role.dict,
-                K.environment.role.read
-            ],
+            role: [K.environment.role.admin],
             auth: Auth.create(module.context.configuration.adminPass),
             default: true
         })
         messages.push(`Created ${module.context.configuration.adminCode} user.`)
     } else {
         messages.push(`User ${module.context.configuration.adminCode} exists.`)
-    }
-
-    //
-    // Create manager user.
-    //
-    if (!users.firstExample({username: module.context.configuration.managerCode})) {
-        users.save({
-            username: module.context.configuration.managerCode,
-            role: [
-                K.environment.role.dict,
-                K.environment.role.read
-            ],
-            auth: Auth.create(module.context.configuration.managerPass),
-            default: true
-        })
-        messages.push(`Created ${module.context.configuration.managerCode} user.`)
-    } else {
-        messages.push(`User ${module.context.configuration.managerCode} exists.`)
-    }
-
-    //
-    // Create reader user.
-    //
-    if (!users.firstExample({username: module.context.configuration.userCode})) {
-        users.save({
-            username: module.context.configuration.userCode,
-            role: [
-                K.environment.role.read
-            ],
-            auth: Auth.create(module.context.configuration.userPass),
-            default: true
-        })
-        messages.push(`Created ${module.context.configuration.userCode} user.`)
-    } else {
-        messages.push(`User ${module.context.configuration.userCode} exists.`)
     }
 
     return messages                                                             // ==>
@@ -212,7 +173,6 @@ function deleteDefaultUsers()
     // Init local storage.
     //
     const usersCollection = K.db._collection(K.collection.user.name)
-    const sessionsCollection = K.db._collection(K.collection.session.name)
 
     //
     // Load default users.

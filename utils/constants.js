@@ -505,6 +505,33 @@ module.exports = Object.freeze({
                 iso_639_3_fra: "Utilisateur déjà enregistré.",
                 iso_639_3_esp: "Usuario ya existe."
             }
+        },
+        kMSG_MUST_LOGIN: {
+            code: 32,
+            message: {
+                iso_639_3_eng: "You are required to log in.",
+                iso_639_3_ita: "È necessario registrarsi.",
+                iso_639_3_fra: "Il est nécessaire de s'enregistrer.",
+                iso_639_3_esp: "Es necessario registrarse."
+            }
+        },
+        kMSG_ROLE_REQUIRED: {
+            code: 33,
+            message: {
+                iso_639_3_eng: "The service requires the user to have the @@@ role.",
+                iso_639_3_ita: "L'utente necessita il ruolo @@@.",
+                iso_639_3_fra: "L'utilisateur doit avoir le role @@@.",
+                iso_639_3_esp: "El usuario necessita el permiso @@@."
+            }
+        },
+        kMSG_NO_CURRENT_USER: {
+            code: 34,
+            message: {
+                iso_639_3_eng: "No registered user.",
+                iso_639_3_ita: "Non c'è un utente registrato.",
+                iso_639_3_fra: "Pas d'utilisateur enregistré.",
+                iso_639_3_esp: "No hay usuario registrado."
+            }
         }
     }
 

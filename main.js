@@ -4,18 +4,22 @@
 // Application constants.
 //
 const K = require("./utils/constants")
+const Session = require('./utils/sessions')
 
 //
 // Routes.
 //
-module.context.use('/terms', require('./routes/terms'), 'terms')
-module.context.use('/schemas', require('./routes/schemas'), 'schemas')
-module.context.use('/topos', require('./routes/topos'), 'topos')
-module.context.use('/enum', require('./routes/enumerations'), 'enum')
-module.context.use('/struct', require('./routes/structures'), 'struct')
-module.context.use('/check', require('./routes/validation'), 'check')
 module.context.use('/auth', require('./routes/auth'), 'auth')
 module.context.use('/util', require('./routes/utils'), 'utils')
+
+module.context.use('/enum', require('./routes/enumerations'), 'enum')
+module.context.use('/struct', require('./routes/structures'), 'struct')
+
+module.context.use('/check', require('./routes/validation'), 'check')
+
+// module.context.use('/terms', require('./routes/terms'), 'terms')
+// module.context.use('/schemas', require('./routes/schemas'), 'schemas')
+// module.context.use('/topos', require('./routes/topos'), 'topos')
 
 //
 // Sessions.
@@ -46,18 +50,10 @@ module.context.use(
 				//
 				// Save in session.
 				//
-				request.session.data = {
-					user: {
-						username: user.username,
-						role: user.role,
-						default: user.default
-					}
-				}
+				Session.setUser(request, user)
 
 			} catch (error) {
-				request.session.uid = null
-				request.session.data = null
-				request.sessionStorage.save()
+				Session.clearUser(request)
 			}
 		}
 		next()

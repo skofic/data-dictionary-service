@@ -25,30 +25,6 @@
             "required": true,
             "default": "secret"
         },
-        "managerCode": {
-            "description": "Default services manager code.",
-            "type": "string",
-            "required": true,
-            "default": "manager"
-        },
-        "managerPass": {
-            "description": "Default services user password.",
-            "type": "password",
-            "required": true,
-            "default": "secret"
-        },
-        "userCode": {
-            "description": "Default services user code.",
-            "type": "string",
-            "required": true,
-            "default": "user"
-        },
-        "userPass": {
-            "description": "Default services user password.",
-            "type": "password",
-            "required": true,
-            "default": "secret"
-        },
         "dataDir": {
             "description": "Data directory name",
             "type": "string",
@@ -72,18 +48,6 @@
             "type": "integer",
             "required": true,
             "default": 16
-        },
-        "secretLength": {
-            "description": "Length of the cookie secret",
-            "type": "integer",
-            "required": true,
-            "default": 48
-        },
-        "timeToLive": {
-            "description": "Cppkie timeout period in seconds, defaults to one week",
-            "type": "integer",
-            "required": true,
-            "default": 604800
         },
         "collectionTerm": {
             "description": "Terms collection name",
@@ -126,12 +90,6 @@
             "type": "string",
             "required": true,
             "default": "logs"
-        },
-        "collectionCharacterisation": {
-            "description": "Characterisation data collection name",
-            "type": "string",
-            "required": true,
-            "default": "characterisation"
         }
     },
     "tests": [

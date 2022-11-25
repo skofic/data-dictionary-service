@@ -1,14 +1,22 @@
 'use strict'
 
+/**
+ * Authentication services
+ */
+
 //
 // Imports.
 //
-const _ = require('lodash')
 const dd = require('dedent')
 const joi = require('joi')
 const createRouter = require('@arangodb/foxx/router')
-const errors = require('@arangodb').errors;
-const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
+const errors = require('@arangodb').errors
+
+//
+// Error codes.
+//
+const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code
+const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code
 
 //
 // Application constants.
@@ -26,44 +34,28 @@ const users = K.db._collection(K.collection.user.name)
 //
 // Models.
 //
-const CredentialsModel =
-	joi
-		.object({
-			username: joi.string().required(),
-			password: joi.string().required()
-		})
-
-const UserModel =
-	joi
-		.object({
-			username: joi.string().required(),
-			role: joi.array().items(joi.string()).required()
-		})
-
-const SignupModel =
-	joi
-		.object({
-			username: joi.string().required(),
-			password: joi.string().required(),
-			role: joi.array().items(joi.string()).required()
-		})
+const UserSignupModel = require('../models/user_signup')
+const UserCredentialsModel = require('../models/user_credentials')
+const UserDisplayModel = require('../models/user_display')
+const UserResetModel = require('../models/user_reset')
+const ErrorModel = require('../models/error_generic')
 const keySchema = joi.string().required()
-	.description('The key of the user');
+	.description('The `_key` of the user document.')
 
 //
 // Instantiate and export router.
 //
-const router = createRouter();
-module.exports = router;
-router.tag('authentication')
+const router = createRouter()
+module.exports = router
+router.tag('Authentication')
 
 
 /**
- * Login service
+ * Login user service
  * This service will login a user given its code and password.
  */
 router.post('login', doLogin, 'login')
-	.body(CredentialsModel, dd
+	.body(UserCredentialsModel, dd
 		`
             **Service parameters**
             
@@ -71,13 +63,19 @@ router.post('login', doLogin, 'login')
             - \`password\`: The user password.
         `
 	)
-	.response(200, UserModel, dd
+	.response(200, UserDisplayModel, dd
 		`
             **User record**
             
-            The service will return :
-            - \`200\`: The user record.
-            - \`401\`: If no user was found, or if credentials failed.
+            The service will return the user document.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **Unable to register user**
+            
+            The service will return this code if either the user was not found, \
+            or if the provided password did not match.
         `
 	)
 	.summary('Login user')
@@ -86,75 +84,68 @@ router.post('login', doLogin, 'login')
             **Login user**
             
             *Use this service if you need to login.*
-            
-            The service expects an object with the user credentials:
-            - \`username\`: The username or code.
-            - \`password\`: The user password.
-            
-            The service will return a \`200\` status with the user record \
-            or \`401\` if authentication failed .
         `
 	)
 
 /**
- * Signup service
+ * Signup user service
  * This service will create a new user.
  */
 router.post(
 	'signup',
 	(request, response) => {
-		switch (
-			Session.authorise(
-				request,
-				[
-					K.environment.role.admin
-				])
-			)
-		{
-			case 200:
-				doSignup(request, response)
-				break
-
-			case 401:
-				response.throw(
-					401,
-					K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
-				)													    		// ==>
-				break
-
-			case 403:
-				response.throw(
-					403,
-					K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
-				)													    		// ==>
-				break
+		const roles = [K.environment.role.admin]
+		if(Session.hasPermission(request, response, roles)) {
+			doSignup(request, response)
 		}
 	},
 	'signup'
 )
-	.body(SignupModel, dd
+	.body(UserSignupModel, dd
 		`
             **Service parameters**
             
             The service expects an object with the following properties:
-            - username: *String* - The username or code.
-            - password: *String* - The user password.
-            - role: *Array* - The list of permission roles: \
-            \`admin\` for administration, \`dict\` for dictionary management \
-            and \`read\` for dictionary usage.
+            - \`username\`: *String* - The username or code.
+            - \`password\`: *String* - The user password.
+            - \`role\`: *Array* - The list of permission roles.
             
-            \`admin\` role allows to create and manage users.
-            \`dict\` role allows the management of dictionary elements.
-            \`read\` role allows reading the data dictionary contents.
+            The \`role\` property is an array that may contain none, one or more codes:
+            - \`admin\` role allows to manage users and sessions.
+            - \`dict\` role allows the management of dictionary elements.
+            - \`read\` role allows reading the data dictionary contents.
+            
+            Besides the above codes, you may set other values in the roles list, \
+            if you intent to use them for purposes other than service permissions.
         `
 	)
-	.response(200, UserModel, dd
+	.response(200, UserDisplayModel, dd
 		`
             **User record**
             
-            The service will return :
-            - \`200\`: The user record.
-            - \`401\`: If no user was found, or if credentials failed.
+            The service will return the newly created user document, only \
+            \`username\`, \`role\` and \`default\` properties will be returned.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not an administrator.
+        `
+	)
+	.response(409, ErrorModel, dd
+		`
+            **Username conflict**
+            
+            The service will return this code if the provided user already exists.
         `
 	)
 	.summary('Signup user')
@@ -164,46 +155,58 @@ router.post(
             
             *Use this service to create a new user.*
             
-            The service expects an object including the username, password and the list of roles.
-            
-            The service will return a \`200\` status with the user record.
-            
-            Note that we do not validate user roles, the \`role\` user property \
-            may include any value, whether values match default roles counts.
+             ***In order to create a user, the current user must have the \`admin\` role.***
+           
+            The service expects the user code, password and roles, if successful, \
+            the service will return the code, roles and default flag.
         `
 	)
 
 /**
- * Who am I?
+ * Who am I? service
  * This service will return the current user record or an empty object.
  */
 router.get('whoami', doWhoAmI, 'whoami')
-	.response(200, UserModel, dd
+	.response(200, UserDisplayModel, dd
 		`
             **User record**
             
             The service will return the current user record.
         `
 	)
+	.response(404, ErrorModel, dd
+		`
+            **No current user**
+            
+            The current session does not have a registered user.
+        `
+	)
 	.summary('Who am I?')
 	.description(dd
 		`
-            **Current user**
+            **Current session user**
             
-            *Use this service to retrieve information on the current user.*
+            *Use this service to retrieve information on the current session user.*
         `
 	)
 
 /**
- * Logout
+ * Logout user service
  * This service will logout the user and return its record.
  */
 router.get('logout', doLogout, 'logout')
-	.response(200, UserModel, dd
+	.response(200, UserDisplayModel, dd
 		`
             **User record**
             
-            The service will return the former current user record.
+            The service will return the former current user document.
+        `
+	)
+	.response(404, ErrorModel, dd
+		`
+            **No current user**
+            
+            The current session does not have a registered user.
         `
 	)
 	.summary('Logout')
@@ -216,62 +219,34 @@ router.get('logout', doLogout, 'logout')
 	)
 
 /**
- * Reset
+ * Reset users service
  * This service will delete and re-create users.
  */
 router.post(
 	'reset',
 	(request, response) => {
-		switch (
-			Session.authorise(
-				request,
-				[
-					K.environment.role.admin
-				])
-			)
-		{
-			case 200:
-				let messages = []
-				if(request.body.default) {
-					messages = messages.concat(Application.deleteDefaultUsers())
-				}
-
-				if(request.body.created) {
-					messages = messages.concat(Application.deleteCreatedUsers())
-				}
-
-				response.send(messages.concat(createDefaultUsers(request, response)))
-				break
-
-			case 401:
-				response.throw(
-					401,
-					K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
-				)													    		// ==>
-				break
-
-			case 403:
-				response.throw(
-					403,
-					K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
-				)													    		// ==>
-				break
+		const roles = [K.environment.role.admin]
+		if(Session.hasPermission(request, response, roles)) {
+			doReset(request, response)
 		}
 	},
 	'reset'
 )
-	.body(
-		joi.object({
-			default: joi.boolean().default(false),
-			created: joi.boolean().default(false)
-		}),
-		dd
+	.body(UserResetModel, dd
 		`
             **Which users?**
             
             The service body expects an object with the following properties:
-            - default {Boolean}: Whether to delete default users.
-            - created {Boolean}: Whether to delete created users.
+            - \`default\` {Boolean}: Whether to delete *default* users.
+            - \`created\` {Boolean}: Whether to delete *created* users.
+            
+            *Default* users are those who have the \`default\` property set to \`true\`, \
+            these users can be managed using the service settings.
+            *Created* users are those who have the \`default\` property set to \`false\`, \
+            these users are those created with the *signup* service.
+            
+            If the value is \`false\`, existing users will not be modified.
+            In all cases, the default users will be created if not already there.
         `
 	)
 	.response(200, joi.array().items(joi.string()), dd
@@ -281,61 +256,50 @@ router.post(
             The service will return the list of operations.
         `
 	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not an administrator.
+        `
+	)
 	.summary('Reset users')
 	.description(dd
 		`
             **Reset users**
-            
-            This service will delete default or created users, and re-create default users.
+             
+             ***In order to use this service, the current user must have the \`admin\` role.***
+           
+            This service will delete *default* or *created* users, and re-create default users.
             All operations will delete corresponding session records and logout corresponding users,
             this means that the current user might also be disconnected.
             
-            You can use this service after changing the default users codes or passwords in the configuration.
+            Default users can be managed through the services settings, you can change \
+            the username and the password, to register these changes you call this service \
+            with the \`default\` parameter set to \`true\`: this will remove the former user, \
+            clear related sessions, and will re-create the modified default user.
+            
+            You can use this service to clear all users and start over with the default administrator.
         `
 	)
 
 /**
- * Delete service
+ * Delete user service
  * This service will delete a user by key.
  */
 router.delete(
 	':key',
 	(request, response) => {
-		switch (
-			Session.authorise(
-				request,
-				[
-					K.environment.role.admin
-				])
-			)
-		{
-			case 200:
-				const key = request.pathParams.key
-				try {
-					const user = users.document(key)
-					response.send(
-						Application.deleteUser(user._key, user.username)
-					)
-				} catch {
-					response.send(
-						`User ${key} not found`
-					)
-				}
-				break
-
-			case 401:
-				response.throw(
-					401,
-					K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
-				)													    		// ==>
-				break
-
-			case 403:
-				response.throw(
-					403,
-					K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
-				)													    		// ==>
-				break
+		const roles = [K.environment.role.admin]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelete(request, response)
 		}
 	},
 	'delete'
@@ -345,7 +309,14 @@ router.delete(
 		`
             **Messages**
             
-            The service will return the list of operations.
+            The service will return the operation outcome.
+        `
+	)
+	.response(404, ErrorModel, dd
+		`
+            **User not found**
+            
+            The provided key is not associated with any users.
         `
 	)
 	.summary('Delete user')
@@ -353,11 +324,51 @@ router.delete(
 		`
             **Delete user**
             
-            *Use this service to remove a user.*
+            This service is used by administrators to delete specific users.
+              
+            ***In order to use this service, the current user must have the \`admin\` role.***
+        `
+	)
+
+/**
+ * Delete current user service
+ * This service will delete the current user.
+ */
+router.delete(
+	(request, response) => {
+		const roles = [K.environment.role.admin]
+		if(Session.hasPermission(request, response, roles)) {
+			doDeleteCurrent(request, response)
+		}
+	},
+	'delete-me'
+)
+	.response(200, joi.string(), dd
+		`
+            **Messages**
             
-            The service expects the user _key in the path.
+            The service will return the operation outcome.
+        `
+	)
+	.response(404, ErrorModel, dd
+		`
+            **User not found**
             
-            The service will return \`null\`.
+            This error is either returned if the current session user cannot be located, \
+            or if there is no current user in the session.
+        `
+	)
+	.summary('Delete current user')
+	.description(dd
+		`
+            **Delete current user**
+            
+            This service can be used by a user to delete itself.
+            Once deleted, the former current user will no more be able to login \
+            and all related sessions will be deleted.
+            
+            If you are logged in as the default administrator, \
+            that user will be re-created automatically.
         `
 	)
 
@@ -447,28 +458,27 @@ function doSignup(request, response)
 		//
 		// Save user.
 		//
-		const meta = users.save(user)
+		users.save(user)
 
-		//
-		// Save session.
-		//
-		request.session.uid = meta._key
-		request.session.data = {
-			user: {
-				username: user.username,
-				role: user.role,
-				default: user.default
-			}
+		response.send({
+			username: user.username,
+			role: user.role,
+			default: user.default
+		})                                                                      // ==>
+	}
+
+	//
+	// Assume duplicate user.
+	//
+	catch (error) {
+		if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
+			response.throw(
+				409,
+				K.error.kMSG_DUPLICATE_USER.message[module.context.configuration.language]
+			)                                                                   // ==>
+		} else {
+			response.throw(error)                                               // ==>
 		}
-		request.sessionStorage.save(request.session)
-
-		response.send(request.session.data.user)						// ==>
-
-	} catch (error) {
-		response.throw(
-			409,
-			K.error.kMSG_DUPLICATE_USER.message[module.context.configuration.language]
-		)                                                               // ==>
 	}
 
 } // doSignup()
@@ -486,7 +496,10 @@ function doWhoAmI(request, response) {
 	if (request.session.uid !== null) {
 		response.send(request.session.data.user)                                // ==>
 	} else {
-		response.send({ })                                                      // ==>
+		response.throw(
+			404,
+			K.error.kMSG_NO_CURRENT_USER.message[module.context.configuration.language]
+		)                                                                       // ==>
 	}
 
 } // doWhoAmI()
@@ -502,31 +515,118 @@ function doLogout(request, response)
 	// Check if there is a logged in user.
 	//
 	if (request.session.uid !== null) {
+
+		//
+		// Save current user.
+		//
 		const user = JSON.parse(JSON.stringify(request.session.data.user))
 
-		request.session.uid = null
-		request.session.data = null
-		request.sessionStorage.save(request.session)
+		//
+		// Clear user from session.
+		//
+		Session.clearUser(request)
 
 		response.send(user)                                                     // ==>
 
 	} else {
-		response.send({ })                                                      // ==>
+		response.throw(
+			404,
+			K.error.kMSG_NO_CURRENT_USER.message[module.context.configuration.language]
+		)                                                                       // ==>
 	}
 
 } // doLogout()
 
 /**
- * Create default users.
+ * Reset users.
  * @param request: API request.
  * @param response: API response.
- * @return {Array<String>>}: List of operation messages.
  */
-function createDefaultUsers(request, response)
+function doReset(request, response)
+{
+	let messages = []
+
+	//
+	// Delete default users.
+	//
+	if(request.body.default) {
+		messages = messages.concat(Application.deleteDefaultUsers())
+	}
+
+	//
+	// Delete created users.
+	//
+	if(request.body.created) {
+		messages = messages.concat(Application.deleteCreatedUsers())
+	}
+
+	//
+	// Create default users.
+	//
+	messages = messages.concat(Application.createDefaultUsers())
+
+	response.send(messages)
+
+} // doReset()
+
+/**
+ * Delete user.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doDelete(request, response)
+{
+	const key = request.pathParams.key
+
+	try {
+		const user = users.document(key)
+		response.send(
+			Application.deleteUser(user._key, user.username)
+		)
+	} catch {
+		if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			response.throw(
+				404,
+				K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
+			)                                                                   // ==>
+		} else {
+			response.throw(error)                                               // ==>
+		}
+	}
+
+} // doDelete()
+
+/**
+ * Delete current user.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doDeleteCurrent(request, response)
 {
 	//
-	// Delete and create default users.
+	// Assert there is a current user.
 	//
-	return Application.createDefaultUsers()                                     // ==>
+	if(request.session.uid !== null) {
+		try {
+			const user = users.document(request.session.uid)
+			response.send(
+				Application.deleteUser(user._key, user.username)
+			)
+		} catch {
+			if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+				response.throw(
+					404,
+					K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
+				)                                                               // ==>
+			} else {
+				response.throw(error)                                           // ==>
+			}
+		}
+	} else {
+		response.throw(
+			404,
+			K.error.kMSG_NO_CURRENT_USER.message[module.context.configuration.language]
+		)                                                                       // ==>
+	}
 
-} // createDefaultUsers()
+} // doDeleteCurrent()

@@ -20,8 +20,6 @@ const HTTP_CONFLICT = status('conflict');
 
 const router = createRouter();
 module.exports = router;
-
-
 router.tag('schema');
 
 

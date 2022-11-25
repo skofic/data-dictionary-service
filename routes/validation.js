@@ -54,11 +54,7 @@ const ValidationReport = require('../models/ValidationReport')
 //
 const router = createRouter();
 module.exports = router;
-
-//
-// Set router tags.
-//
-router.tag('validation');
+router.tag('Validation services');
 
 
 /**
