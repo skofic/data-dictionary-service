@@ -40,15 +40,56 @@ module.exports = Object.freeze({
     collection : {
         term: {
             name: module.context.configuration.collectionTerm,
-            type: 'D'
+            type: 'D',
+            index: [
+                {
+                    type: 'persistent',
+                    fields: ['_code._gid'],
+                    name: "idx-global-identifier",
+                    unique: true
+                },
+                {
+                    type: 'persistent',
+                    fields: ['_code._lid'],
+                    name: "idx-local-identifier",
+                    unique: false
+                },
+                {
+                    type: 'persistent',
+                    fields: ['_code._aid[*]'],
+                    name: "idx-alias-identifiers",
+                    unique: false,
+                    sparse: true
+                }
+            ]
         },
         schema: {
             name: module.context.configuration.collectionEdge,
-            type: 'E'
+            type: 'E',
+            index: [
+                {
+                    type: 'persistent',
+                    fields: ['_path[*]', '_predicate'],
+                    deduplicate: true,
+                    estimates: true,
+                    name: "idx-schema-path-predicate",
+                    unique: false
+                }
+            ]
         },
         topo: {
             name: module.context.configuration.collectionTopo,
-            type: 'E'
+            type: 'E',
+            index: [
+                {
+                    type: 'persistent',
+                    fields: ['_path[*]', '_predicate'],
+                    deduplicate: true,
+                    estimates: true,
+                    name: "idx-topo-path-predicate",
+                    unique: false
+                }
+            ]
         },
         error: {
             name: module.context.configuration.collectionError,
@@ -61,6 +102,9 @@ module.exports = Object.freeze({
                 {
                     type: 'hash',
                     fields: ['username'],
+                    deduplicate: true,
+                    estimates: true,
+                    name: "idx-user-username",
                     unique: true
                 }
             ]
@@ -71,10 +115,6 @@ module.exports = Object.freeze({
         },
         log: {
             name: module.context.configuration.collectionLog,
-            type: 'D'
-        },
-        char: {
-            name: module.context.configuration.collectionCharacterisation,
             type: 'D'
         }
     },

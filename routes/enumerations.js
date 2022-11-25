@@ -10,26 +10,13 @@ const joi = require('joi');
 // Application constants.
 //
 const K = require('../utils/constants')
-const Auth = require('../utils/auth')
 const Session = require('../utils/sessions')
 const Dictionary = require("../utils/dictionary");
-const Application = require("../utils/application")
 
 //
 // Models.
 //
-const DefaultLanguageTokenModel = joi.string().default("@")
-const StringModel = joi.string().required()
-const StringArrayModel = joi.array().items(joi.string())
-const TermsArrayModel = joi.array().items(joi.object({
-    _key: joi.string(),
-    _code: joi.object(),
-    _info: joi.object()
-}))
-const GraphPathsModel = joi.array().items(joi.object({
-    edges: joi.array().items(joi.object()),
-    vertices: joi.array().items(TermsArrayModel)
-}))
+const Models = require('../models/generic_models')
 
 //
 // Instantiate router.
@@ -60,8 +47,8 @@ router.get(
     },
     'all-enum-keys'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .response(200, StringArrayModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .response(200, Models.StringArrayModel, dd
         `
             **List of enumeration global identifiers**
             
@@ -106,9 +93,9 @@ router.get(
     },
     'all-enum-terms'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .pathParam('lang', DefaultLanguageTokenModel, "Language global identifier, @ for all")
-    .response(200, TermsArrayModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('lang', Models.DefaultLanguageTokenModel, "Language global identifier, @ for all")
+    .response(200, Models.TermsArrayModel, dd
         `
             **List of enumeration terms**
             
@@ -168,9 +155,9 @@ router.get(
     },
     'match-enum-code-terms'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .pathParam('code', StringModel, "Target enumeration identifier or code")
-    .response(200, TermsArrayModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
+    .response(200, Models.TermsArrayModel, dd
         `
             **List of matched terms**
             
@@ -227,9 +214,9 @@ router.get(
     },
     'match-enum-lid-terms'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .pathParam('code', StringModel, "Target enumeration local identifier")
-    .response(200, TermsArrayModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
+    .response(200, Models.TermsArrayModel, dd
         `
             **List of matched terms**
             
@@ -290,9 +277,9 @@ router.get(
     },
     'match-enum-gid-terms'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .pathParam('code', StringModel, "Target enumeration global identifier")
-    .response(200, TermsArrayModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
+    .response(200, Models.TermsArrayModel, dd
         `
             **List of matched terms**
             
@@ -357,9 +344,9 @@ router.get(
     },
     'match-enum-code-path'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .pathParam('code', StringModel, "Target enumeration identifier or code")
-    .response(200, GraphPathsModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
+    .response(200, Models.GraphPathsModel, dd
         `
             **Path to matched term**
             
@@ -418,9 +405,9 @@ router.get(
     },
     'match-enum-lid-path'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .pathParam('code', StringModel, "Target enumeration local identifier")
-    .response(200, GraphPathsModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
+    .response(200, Models.GraphPathsModel, dd
         `
             **Path to matched term**
             
@@ -481,9 +468,9 @@ router.get(
     },
     'match-enum-gid-path'
 )
-    .pathParam('path', StringModel, "Enumeration root global identifier")
-    .pathParam('code', StringModel, "Target enumeration global identifier")
-    .response(200, GraphPathsModel, dd
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
+    .response(200, Models.GraphPathsModel, dd
         `
             **Path to matched term**
             
@@ -545,7 +532,7 @@ router.post(
     },
     'check-enum-list-keys'
 )
-    .body(StringArrayModel, dd
+    .body(Models.StringArrayModel, dd
         `
             **Service parameters**
             
@@ -600,7 +587,7 @@ router.post(
     },
     'check-enum-list-codes'
 )
-    .body(StringArrayModel, dd
+    .body(Models.StringArrayModel, dd
         `
             **Service parameters**
             

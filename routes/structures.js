@@ -8,25 +8,16 @@ const joi = require('joi');
 const createRouter = require('@arangodb/foxx/router');
 
 //
-// Functions.
+// Application constants.
 //
-const dictionary = require("../utils/dictionary");
+const K = require('../utils/constants')
+const Session = require('../utils/sessions')
+const Dictionary = require("../utils/dictionary");
 
 //
-// Constants.
+// Models.
 //
-const identifierString = joi.string().required()
-const arrayString = joi.array().items(joi.string())
-const arrayTerms = joi.array().items(joi.object({
-    _key: joi.string(),
-    _code: joi.object(),
-    _info: joi.object()
-}))
-
-//
-// Application.
-//
-const K = require( '../utils/constants' )
+const Models = require('../models/generic_models')
 
 //
 // Instantiate router.
@@ -46,9 +37,18 @@ router.tag('Structured types');
  * to the provided path global identifier.
  * No hierarchy is maintained and only valid properties are selected.
  */
-router.get('all/keys/:path', getPropertyNames, 'all-struct-keys')
-    .pathParam('path', identifierString, "Object descriptor global identifier")
-    .response(arrayString, dd
+router.get(
+    'all/keys/:path',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            getPropertyNames(request, response)
+        }
+    },
+    'all-struct-keys'
+)
+    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
+    .response(200, Models.StringArrayModel, dd
         `
             **List of structure property names**
             
@@ -90,9 +90,18 @@ router.get('all/keys/:path', getPropertyNames, 'all-struct-keys')
  * The service will return all the properties of the provided object descriptor glonal identifier.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('all/terms/:path', getProperties, 'all-struct-terms')
-    .pathParam('path', identifierString, "Object descriptor global identifier")
-    .response(arrayTerms, dd
+router.get(
+    'all/terms/:path',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            getProperties(request, response)
+        }
+    },
+    'all-struct-terms'
+)
+    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
+    .response(200, Models.TermsArrayModel, dd
         `
             **List of structure properties**
             
@@ -143,7 +152,7 @@ function getPropertyNames(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getPropertyNames(request.pathParams.path);
+    const result = Dictionary.getPropertyNames(request.pathParams.path);
 
     response.send(result);                                                      // ==>
 
@@ -159,7 +168,7 @@ function getProperties(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getProperties(request.pathParams.path);
+    const result = Dictionary.getProperties(request.pathParams.path);
 
     response.send(result);                                                      // ==>
 

@@ -6,22 +6,58 @@
 const _ = require('lodash');
 const dd = require('dedent');
 const joi = require('joi');
-const createRouter = require('@arangodb/foxx/router');
+
+//
+// Import resources.
+//
+const K = require( '../utils/constants' );
+const Session = require('../utils/sessions')
+const utils = require("../utils/utils");
+const validation = require("../utils/validation");
+
+//
+// Types.
+//
+const ValidationReport = require('../models/ValidationReport')
 
 //
 // Models.
 //
-const DescriptorReport = require(('../models/descriptorReport'))
-const DefinitionReport = require(('../models/definitionReport'))
-const ValidateDescriptor = require(('../models/validateDescriptor'))
-const ValidateDefinition = require(('../models/validateDefinition'))
-const ValidateObject = require(('../models/validateObject'))
-const ValidateObjects = require(('../models/validateObjects'))
+const DescriptorReport = joi.object({
+    descriptor: joi.string().required(),
+    value: joi.any().required(),
+    result: joi.object().required()
+})
 
-//
-// Constants.
-//
-const validationStatus = joi.object({
+const DefinitionReport = joi.object({
+    definition: joi.object().required(),
+    value: joi.any().required(),
+    result: joi.object().required()
+})
+
+const ValidateDescriptor = joi.object({
+    descriptor: joi.string().required(),
+    value: joi.any().required(),
+    language: joi.string(),
+})
+
+const ValidateDefinition = joi.object({
+    definition: joi.object().required(),
+    value: joi.any().required(),
+    language: joi.string(),
+})
+
+const ValidateObject = joi.object({
+    value: joi.object().required(),
+    language: joi.string()
+})
+
+const ValidateObjects = joi.object({
+    value: joi.array().items(joi.object()).required(),
+    language: joi.string()
+})
+
+const ValidationStatus = joi.object({
     valid: joi.array().items(joi.object()),
     warnings: joi.array().items(joi.object({
         value: joi.object(),
@@ -34,24 +70,9 @@ const validationStatus = joi.object({
 })
 
 //
-// Import resources.
-//
-const K = require( '../utils/constants' );
-
-//
-// Functions.
-//
-const utils = require("../utils/utils");
-const validation = require("../utils/validation");
-
-//
-// Types.
-//
-const ValidationReport = require('../models/ValidationReport')
-
-//
 // Instantiate router.
 //
+const createRouter = require('@arangodb/foxx/router');
 const router = createRouter();
 module.exports = router;
 router.tag('Validation services');
@@ -62,7 +83,16 @@ router.tag('Validation services');
  * The service will check whether the provided value corresponds to the provided
  * descriptor.
  */
-router.post('descriptor', doCheckDescriptor, 'descriptor')
+router.post(
+    'descriptor',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckDescriptor(request, response)
+        }
+    },
+    'descriptor'
+)
     .body(ValidateDescriptor, dd
         `
             **Service parameters**
@@ -154,7 +184,16 @@ router.post('descriptor', doCheckDescriptor, 'descriptor')
  * Validate data definition.
  * The service will check whether the provided value corresponds to the provided data section.
  */
-router.post('definition', doCheckDefinition, 'definition')
+router.post(
+    'definition',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckDefinition(request, response)
+        }
+    },
+    'definition'
+)
     .body(ValidateDefinition, dd
         `
             **Service parameters**
@@ -245,7 +284,16 @@ router.post('definition', doCheckDefinition, 'definition')
  * The service will check whether the provided value corresponds to the provided data section.
  * MILKO - Need to check.
  */
-router.post('object', doCheckObject, 'object')
+router.post(
+    'object',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckObject(request, response)
+        }
+    },
+    'object'
+)
     .body(ValidateObject, dd
         `
             **Service parameters**
@@ -334,7 +382,16 @@ router.post('object', doCheckObject, 'object')
  * - warnings: The list of warnings.
  * - errors: The list of errors
  */
-router.post('objects', doCheckObjects, 'objects')
+router.post(
+    'objects',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckObjects(request, response)
+        }
+    },
+    'objects'
+)
     .body(ValidateObjects, dd
         `
             **Service parameters**
@@ -352,7 +409,7 @@ router.post('objects', doCheckObjects, 'objects')
             *Validate object* service.
         `
     )
-    .response(200, validationStatus, dd
+    .response(200, ValidationStatus, dd
         `
             **Validation status**
             
