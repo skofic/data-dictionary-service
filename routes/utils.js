@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * Administration utility services
@@ -7,215 +7,294 @@
 //
 // Import frameworks.
 //
-const dd = require('dedent');							// For multiline text.
-const fs = require('fs');								// File system utilities.
-const joi = require('joi');
-const errors = require('@arangodb').errors;				// ArangoDB errors.
-const createRouter = require('@arangodb/foxx/router');  // Router class.
+const fs = require('fs')
+const joi = require('joi')
+const dd = require('dedent')
+const createRouter = require('@arangodb/foxx/router')
 
 //
-//* Import models.
+// Application constants.
 //
-const Term = require('../models/term');                 // Term model.
-
-//
-// Application.
-//
-const reader = require('../utils/JsonLReader')
-const utils = require('../utils/utils');                // Utility functions.
-const K = require( '../utils/constants' );              // Constants.
-
-//
-// Cache.
-//
-const TermCache = require('../utils/TermCache')
-const Cache = new TermCache()
+const K = require('../utils/constants')
+const Session = require('../utils/sessions')
 
 //
 // Instantiate and export router.
 //
-const router = createRouter();
-module.exports = router;
-router.tag( 'Administration utilities' );
+const router = createRouter()
+module.exports = router
+router.tag( 'Administration utilities' )
 
 
 /**
  * Ping
- *
  * The service will return pong.
- *
- * @path		/ping
- * @verb		get
- * @response	{String}	"pong".
  */
-router.get(
-    '/ping',
-    (request, response) => { response.send( 'pong' ); },
-    'ping'
-)
-    .response(
-        200,
-        [ 'application/text' ],
-        "The ping response"
+router.get('/ping', doPong, 'ping')
+    .response(200, joi.string().default("pong"), dd
+        `
+            **"pong"**
+        `
     )
-    .summary(
-        "Check if database is on-line."
+    .summary("Check if database is on-line.")
+    .description(dd
+        `
+            **Ping database**
+            
+            The service should return "\`pong\`" if the database is on-line and responding.
+        `
     )
-    .description(dd`
-  Returns a "pong" response.
-`);
 
 
 /**
  * Mirror GET request contents
- *
  * The service will return the GET request contents.
- *
- * @path		/echo-get
- * @verb		get
- * @response	{Object}	The GET request contents.
  */
 router.get(
     '/echo/get',
-    (request, response) => { response.send( request ); },
+    (request, response) => {
+        const roles = [K.environment.role.admin]
+        if(Session.hasPermission(request, response, roles)) {
+            doMirrorRequest(request, response)
+        }
+    },
     'echoGET'
 )
-    .response(
-        200,
-        [ 'application/json' ],
-        "Request echo"
+    .response(200, joi.object(), dd
+        `
+            **The service request**
+        `
     )
-    .summary(
-        "Echo GET request"
+    .summary("Mirror the GET request data.")
+    .description(dd
+        `
+            **Mirror GET request data**
+            
+            The service will return the full GET request contents.
+            Can be useful to debug request data.
+        `
     )
-    .description(dd`
-  The service will return the GET request contents.
-`);
 
 
 /**
  * Mirror POST request contents
- *
- * The service will return the request contents.
- *
- * @path		/echo-post
- * @verb		post
- * @response	{Object}	The POST request contents.
+ * The service will return the POST request contents.
  */
 router.post(
     '/echo/post',
-    (request, response) => { response.send( request ); },
+    (request, response) => {
+        const roles = [K.environment.role.admin]
+        if(Session.hasPermission(request, response, roles)) {
+            doMirrorRequest(request, response)
+        }
+    },
     'echoPOST'
 )
-    .body(
-        [ 'application/json' ],
-        "Request contents."
+    .body(joi.any(), dd
+        `
+            **Body contents**
+        `
     )
-    .response(
-        [ 'application/json' ],
-        "Request echo."
+    .response(200, joi.object(), dd
+        `
+            **The service request**
+        `
     )
-    .summary(
-        "Echo POST request"
+    .summary("Mirror the POST request data.")
+    .description(dd
+        `
+            **Mirror POST request data**
+            
+            The service will return the full POST request contents.
+            Can be useful to debug request data.
+        `
     )
-    .description(dd`
-  Returns the POST request contents.
-`);
 
 
 /**
- * Test get base path
- *
- * The service will return the base path.
- *
- * @path		/path/base
- * @verb		get
- * @response	{Object}	The request contents.
+ * Return service base path
+ * The service will return the base path of the application.
  */
 router.get(
     '/path/base',
-    (request, response) => { response.send( module.context.basePath ); },
-    'echoGET'
+    (request, response) => {
+        const roles = [K.environment.role.admin]
+        if(Session.hasPermission(request, response, roles)) {
+            doBasePath(request, response)
+        }
+    },
+    'basePath'
 )
-    .response(
-        200,
-        [ 'application/text' ],
-        "Base path."
+    .response(200, joi.string(), dd
+        `
+            The service application base path.
+        `
     )
-    .summary(
-        "Returns base path"
+    .summary("Return the base path.")
+    .description(dd
+        `
+            **Return base path**
+            
+            The service will return the base path of the service application.
+        `
     )
-    .description(dd`
-  Returns the base path.
-`);
 
 
 /**
- * Test get temp directory
- *
- * The service will return the temp directory path.
- *
- * @path		/path/temp
- * @verb		get
- * @response	{String}	The temp directory path.
+ * Return service temp path
+ * The service will return the temp path of the server.
  */
 router.get(
     '/path/temp',
-    (request, response) => { response.send( fs.getTempPath() ); },
-    'tempPath'
-)
-    .response(
-        [ 'application/text' ],
-        "Temp path."
-    )
-    .summary(
-        "Returns temp path"
-    )
-    .description(dd`
-  Returns the temp path.
-`);
-
-
-/**
- * Test get temp file
- *
- * The service will return the temp file path.
- *
- * @path		/path/temp
- * @verb		get
- * @response	{String}	The temp file path.
- */
-router.get(
-    '/path/temp/file',
     (request, response) => {
-        response.send( fs.getTempFile( fs.getTempPath(), false ) );
+        const roles = [K.environment.role.admin]
+        if(Session.hasPermission(request, response, roles)) {
+            doTempPath(request, response)
+        }
     },
     'tempPath'
 )
-    .response(
-        [ 'application/text' ],
-        "Temp path."
+    .response(200, joi.string(), dd
+        `
+            The service application temporary files path.
+        `
     )
-    .summary(
-        "Returns temp path"
+    .summary("Return the temp path.")
+    .description(dd
+        `
+            **Return temp path**
+            
+            The service will return the temporary files path of the service server.
+        `
     )
-    .description(dd`
-  Returns the temp path.
-`);
+
 
 /**
- * Session
- * Returns the currently active session.
+ * Return temp file path
+ * The service will return the path to the temporary file.
+ */
+router.get(
+    '/file/temp',
+    (request, response) => {
+        const roles = [K.environment.role.admin]
+        if(Session.hasPermission(request, response, roles)) {
+            doTempFile(request, response)
+        }
+    },
+    'tempFile'
+)
+    .response(200, joi.string(), dd
+        `
+            The service application temporary file path.
+        `
+    )
+    .summary("Return the temp file path.")
+    .description(dd
+        `
+            **Return temp file path**
+            
+            The service will return the path to a temporary file, \
+            *the file will not be created*.
+        `
+    )
+
+
+/**
+ * Return session
+ * The service will return the current session.
  */
 router.get(
     '/session',
     (request, response) => {
-        try {
-            response.send(request.session)
-        } catch (e) {
-            response.send({session: null})
+        const roles = [K.environment.role.admin]
+        if(Session.hasPermission(request, response, roles)) {
+            doSession(request, response)
         }
-    }
+    },
+    'session'
 )
-    .summary("Returns session")
-    .description("Returns the current session record.")
+    .response(200, joi.object(), dd
+        `
+            The current session information from the service request.
+        `
+    )
+    .summary("Return the current session.")
+    .description(dd
+        `
+            **Return current session**
+            
+            The service will return the current session information \
+            from the service request.
+        `
+    )
+
+
+//
+// Functions.
+//
+
+/**
+ * Return pong.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doPong(request, response)
+{
+    response.send("pong")                                                       // ==>
+
+} // doPong()
+
+/**
+ * Return GET request.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doMirrorRequest(request, response)
+{
+    response.send(request)                                                      // ==>
+
+} // doMirrorRequest()
+
+/**
+ * Return base path.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doBasePath(request, response)
+{
+    response.send(module.context.basePath)                                      // ==>
+
+} // doBasePath()
+
+/**
+ * Return temp path.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doTempPath(request, response)
+{
+    response.send(fs.getTempPath())                                             // ==>
+
+} // doTempPath()
+
+/**
+ * Return temp file.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doTempFile(request, response)
+{
+    response.send(fs.getTempFile(fs.getTempPath(), false))                      // ==>
+
+} // doTempFile()
+
+/**
+ * Return session.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doSession(request, response)
+{
+    response.send(request.session)                                              // ==>
+
+} // doSession()
