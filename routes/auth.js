@@ -9,7 +9,6 @@
 //
 const dd = require('dedent')
 const joi = require('joi')
-const createRouter = require('@arangodb/foxx/router')
 const errors = require('@arangodb').errors
 
 //
@@ -45,6 +44,7 @@ const keySchema = joi.string().required()
 //
 // Instantiate and export router.
 //
+const createRouter = require('@arangodb/foxx/router')
 const router = createRouter()
 module.exports = router
 router.tag('Authentication')

@@ -5,38 +5,36 @@
 //
 const dd = require('dedent');
 const joi = require('joi');
-const createRouter = require('@arangodb/foxx/router');
 
 //
-// Functions.
+// Application constants.
 //
+const K = require('../utils/constants')
+const Auth = require('../utils/auth')
 const Session = require('../utils/sessions')
-const dictionary = require("../utils/dictionary");
+const Dictionary = require("../utils/dictionary");
+const Application = require("../utils/application")
 
 //
-// Constants.
+// Models.
 //
-const languageCode = joi.string().default("@")
-const identifierString = joi.string().required()
-const arrayString = joi.array().items(joi.string())
-const arrayTerms = joi.array().items(joi.object({
+const DefaultLanguageTokenModel = joi.string().default("@")
+const StringModel = joi.string().required()
+const StringArrayModel = joi.array().items(joi.string())
+const TermsArrayModel = joi.array().items(joi.object({
     _key: joi.string(),
     _code: joi.object(),
     _info: joi.object()
 }))
-const arrayPaths = joi.array().items(joi.object({
+const GraphPathsModel = joi.array().items(joi.object({
     edges: joi.array().items(joi.object()),
-    vertices: joi.array().items(joi.object())
+    vertices: joi.array().items(TermsArrayModel)
 }))
-
-//
-// Application.
-//
-const K = require( '../utils/constants' )
 
 //
 // Instantiate router.
 //
+const createRouter = require('@arangodb/foxx/router');
 const router = createRouter();
 module.exports = router;
 router.tag('Enumerated types');
@@ -55,37 +53,15 @@ router.tag('Enumerated types');
 router.get(
     'all/keys/:path',
     (request, response) => {
-        switch (
-            Session.authorise(
-                request,
-                [
-                    K.environment.role.admin
-                ])
-            )
-        {
-            case 200:
-                getAllEnumerationKeys(request, response)
-                break
-
-            case 401:
-                response.throw(
-                    401,
-                    K.error.kMSG_UNKNOWN_USER.message[module.context.configuration.language]
-                )													    		// ==>
-                break
-
-            case 403:
-                response.throw(
-                    403,
-                    K.error.kMSG_UNAUTHORISED_USER.message[module.context.configuration.language]
-                )													    		// ==>
-                break
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            getAllEnumerationKeys(request, response)
         }
     },
     'all-enum-keys'
 )
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .response(arrayString, dd
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .response(200, StringArrayModel, dd
         `
             **List of enumeration global identifiers**
             
@@ -120,10 +96,19 @@ router.get(
  * provide the enumeration type root, the language and the service will return the array of terms.
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
-router.get('all/terms/:path/:lang', getAllEnumerations, 'all-enum-terms')
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .pathParam('lang', languageCode, "Language global identifier, @ for all")
-    .response(arrayTerms, dd
+router.get(
+    'all/terms/:path/:lang',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            getAllEnumerations(request, response)
+        }
+    },
+    'all-enum-terms'
+)
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .pathParam('lang', DefaultLanguageTokenModel, "Language global identifier, @ for all")
+    .response(200, TermsArrayModel, dd
         `
             **List of enumeration terms**
             
@@ -173,10 +158,19 @@ router.get('all/terms/:path/:lang', getAllEnumerations, 'all-enum-terms')
  * The service will return the first term that matches the provided code in the enumeration
  * corresponding to the provided path.
  */
-router.get('code/terms/:path/:code', matchEnumerationCode, 'match-enum-code-terms')
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .pathParam('code', identifierString, "Target enumeration identifier or code")
-    .response(arrayTerms, dd
+router.get(
+    'code/terms/:path/:code',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            matchEnumerationCode(request, response)
+        }
+    },
+    'match-enum-code-terms'
+)
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .pathParam('code', StringModel, "Target enumeration identifier or code")
+    .response(200, TermsArrayModel, dd
         `
             **List of matched terms**
             
@@ -223,10 +217,19 @@ router.get('code/terms/:path/:code', matchEnumerationCode, 'match-enum-code-term
  * The service will return the first term that matches the provided local identifier in the enumeration
  * corresponding to the provided path.
  */
-router.get('lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum-lid-terms')
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .pathParam('code', identifierString, "Target enumeration local identifier")
-    .response(arrayTerms, dd
+router.get(
+    'lid/terms/:path/:code',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            matchEnumerationIdentifier(request, response)
+        }
+    },
+    'match-enum-lid-terms'
+)
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .pathParam('code', StringModel, "Target enumeration local identifier")
+    .response(200, TermsArrayModel, dd
         `
             **List of matched terms**
             
@@ -277,10 +280,19 @@ router.get('lid/terms/:path/:code', matchEnumerationIdentifier, 'match-enum-lid-
  * The service will return the first term that matches the provided local identifier in the enumeration
  * corresponding to the provided path.
  */
-router.get('gid/terms/:path/:code', matchEnumerationGlobalIdentifier, 'match-enum-gid-terms')
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .pathParam('code', identifierString, "Target enumeration global identifier")
-    .response(arrayTerms, dd
+router.get(
+    'gid/terms/:path/:code',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            matchEnumerationGlobalIdentifier(request, response)
+        }
+    },
+    'match-enum-gid-terms'
+)
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .pathParam('code', StringModel, "Target enumeration global identifier")
+    .response(200, TermsArrayModel, dd
         `
             **List of matched terms**
             
@@ -335,10 +347,19 @@ router.get('gid/terms/:path/:code', matchEnumerationGlobalIdentifier, 'match-enu
  * The service will return the path from the enumeration root element, expressed by its global identifier,
  * to the first term element matching the provided code.
  */
-router.get('code/path/:path/:code', matchEnumerationCodePath, 'match-enum-code-path')
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .pathParam('code', identifierString, "Target enumeration identifier or code")
-    .response(arrayPaths, dd
+router.get(
+    'code/path/:path/:code',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            matchEnumerationCodePath(request, response)
+        }
+    },
+    'match-enum-code-path'
+)
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .pathParam('code', StringModel, "Target enumeration identifier or code")
+    .response(200, GraphPathsModel, dd
         `
             **Path to matched term**
             
@@ -387,10 +408,19 @@ router.get('code/path/:path/:code', matchEnumerationCodePath, 'match-enum-code-p
  * The service will return the path from the root pf the enumeration to the first term
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
-router.get('lid/path/:path/:code', matchEnumerationIdentifierPath, 'match-enum-lid-path')
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .pathParam('code', identifierString, "Target enumeration local identifier")
-    .response(arrayPaths, dd
+router.get(
+    'lid/path/:path/:code',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            matchEnumerationIdentifierPath(request, response)
+        }
+    },
+    'match-enum-lid-path'
+)
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .pathParam('code', StringModel, "Target enumeration local identifier")
+    .response(200, GraphPathsModel, dd
         `
             **Path to matched term**
             
@@ -441,10 +471,19 @@ router.get('lid/path/:path/:code', matchEnumerationIdentifierPath, 'match-enum-l
  * The service will return the path from the root pf the enumeration to the first term
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
-router.get('gid/path/:path/:code', matchEnumerationTermPath, 'match-enum-gid-path')
-    .pathParam('path', identifierString, "Enumeration root global identifier")
-    .pathParam('code', identifierString, "Target enumeration global identifier")
-    .response(arrayPaths, dd
+router.get(
+    'gid/path/:path/:code',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            matchEnumerationTermPath(request, response)
+        }
+    },
+    'match-enum-gid-path'
+)
+    .pathParam('path', StringModel, "Enumeration root global identifier")
+    .pathParam('code', StringModel, "Target enumeration global identifier")
+    .response(200, GraphPathsModel, dd
         `
             **Path to matched term**
             
@@ -496,8 +535,17 @@ router.get('gid/path/:path/:code', matchEnumerationTermPath, 'match-enum-gid-pat
  * The service will return a dictionary whose keys are the provided list of ter keys
  * and the values will be the matched preferred enumeration keys or false if unmatched.
  */
-router.post('check/keys/:path', doCheckEnumsByKeys, 'check-enum-list-keys')
-    .body(arrayString, dd
+router.post(
+    'check/keys/:path',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckEnumsByKeys(request, response)
+        }
+    },
+    'check-enum-list-keys'
+)
+    .body(StringArrayModel, dd
         `
             **Service parameters**
             
@@ -542,8 +590,17 @@ router.post('check/keys/:path', doCheckEnumsByKeys, 'check-enum-list-keys')
  * The service will return a dictionary whose keys are the provided list of local identifiers
  * and the values will be the matched preferred enumeration keys or false if unmatched.
  */
-router.post('check/codes/:path', doCheckEnumsByCodes, 'check-enum-list-codes')
-    .body(arrayString, dd
+router.post(
+    'check/codes/:path',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckEnumsByCodes(request, response)
+        }
+    },
+    'check-enum-list-codes'
+)
+    .body(StringArrayModel, dd
         `
             **Service parameters**
             
@@ -596,7 +653,7 @@ function getAllEnumerationKeys(request, response)
     //
     // Query database.
     //
-    const result = dictionary.getAllEnumerationKeys(request.pathParams.path);
+    const result = Dictionary.getAllEnumerationKeys(request.pathParams.path);
 
     response.send(result);                                                      // ==>
 
@@ -613,7 +670,7 @@ function getAllEnumerations(request, response)
     // Query database.
     //
     const result =
-        dictionary.getAllEnumerations(
+        Dictionary.getAllEnumerations(
             request.pathParams.path,
             request.pathParams.lang
         )
@@ -632,7 +689,7 @@ function matchEnumerationCode(request, response)
     //
     // Query database.
     //
-    const result = dictionary.matchEnumerationCodeTerm(
+    const result = Dictionary.matchEnumerationCodeTerm(
         request.pathParams.path,
         request.pathParams.code
     )
@@ -651,7 +708,7 @@ function matchEnumerationIdentifier(request, response)
     //
     // Query database.
     //
-    const result = dictionary.matchEnumerationIdentifierTerm(
+    const result = Dictionary.matchEnumerationIdentifierTerm(
         request.pathParams.path,
         request.pathParams.code
     )
@@ -670,7 +727,7 @@ function matchEnumerationGlobalIdentifier(request, response)
     //
     // Query database.
     //
-    const result = dictionary.matchEnumerationTerm(
+    const result = Dictionary.matchEnumerationTerm(
         request.pathParams.path,
         request.pathParams.code
     )
@@ -689,7 +746,7 @@ function matchEnumerationCodePath(request, response)
     //
     // Query database.
     //
-    const result = dictionary.matchEnumerationCodePath(
+    const result = Dictionary.matchEnumerationCodePath(
         request.pathParams.path,
         request.pathParams.code
     )
@@ -708,7 +765,7 @@ function matchEnumerationIdentifierPath(request, response)
     //
     // Query database.
     //
-    const result = dictionary.matchEnumerationIdentifierPath(
+    const result = Dictionary.matchEnumerationIdentifierPath(
         request.pathParams.path,
         request.pathParams.code
     )
@@ -727,7 +784,7 @@ function matchEnumerationTermPath(request, response)
     //
     // Query database.
     //
-    const result = dictionary.matchEnumerationTermPath(
+    const result = Dictionary.matchEnumerationTermPath(
         request.pathParams.path,
         request.pathParams.code
     )
@@ -746,7 +803,7 @@ function doCheckEnumsByKeys(request, response)
     //
     // Query database.
     //
-    const result = dictionary.checkEnumsByKeys(
+    const result = Dictionary.checkEnumsByKeys(
         request.body,
         request.pathParams.path
     )
@@ -765,7 +822,7 @@ function doCheckEnumsByCodes(request, response)
     //
     // Query database.
     //
-    const result = dictionary.checkEnumsByCodes(
+    const result = Dictionary.checkEnumsByCodes(
         request.body,
         request.pathParams.path
     )

@@ -10,7 +10,6 @@
 const fs = require('fs')
 const joi = require('joi')
 const dd = require('dedent')
-const createRouter = require('@arangodb/foxx/router')
 
 //
 // Application constants.
@@ -21,6 +20,7 @@ const Session = require('../utils/sessions')
 //
 // Instantiate and export router.
 //
+const createRouter = require('@arangodb/foxx/router')
 const router = createRouter()
 module.exports = router
 router.tag( 'Administration utilities' )
