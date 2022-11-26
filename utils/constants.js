@@ -18,6 +18,7 @@ module.exports = Object.freeze({
     environment: {
         page: 4096,
         buffer: 819200,
+        auth: 'AUTH',
         role: {
             admin: "admin",
             dict: "dict",
@@ -111,6 +112,10 @@ module.exports = Object.freeze({
         },
         session: {
             name: module.context.configuration.collectionSession,
+            type: 'D'
+        },
+        settings: {
+            name: module.context.configuration.collectionSettings,
             type: 'D'
         },
         log: {

@@ -394,7 +394,7 @@ function doLogin(request, response)
 		//
 		// Resolve password.
 		//
-		if (Auth.verify(user.auth, request.body.password)) {
+		if (Auth.Module.verify(user.auth, request.body.password)) {
 
 			//
 			// Save session.
@@ -446,7 +446,7 @@ function doSignup(request, response)
 	const user = {
 		username: request.body.username,
 		role: request.body.role,
-		auth: Auth.create(request.body.password),
+		auth: Auth.Module.Create.create(request.body.password),
 		default: false
 	}
 

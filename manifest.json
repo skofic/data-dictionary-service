@@ -79,6 +79,12 @@
             "required": true,
             "default": "sessions"
         },
+        "collectionSettings": {
+            "description": "Settings collection name",
+            "type": "string",
+            "required": true,
+            "default": "settings"
+        },
         "collectionError": {
             "description": "Errors collection name",
             "type": "string",

@@ -12,6 +12,7 @@
 const fs = require('fs')                    // File system.
 const db = require('@arangodb').db          // Database.
 const aql = require('@arangodb').aql        // Database AQL queries.
+const crypto = require('@arangodb/crypto')  // Cryptographic functions.
 
 //
 // Application.
@@ -77,7 +78,6 @@ function createCollections()
         const type = K.collection[key].type
 
         if (!K.db._collection(name)) {
-
             if (type === 'D') {
                 K.db._createDocumentCollection(name)
             } else if (type === 'E') {
@@ -104,6 +104,100 @@ function createCollections()
     return messages                                                             // ==>
 
 }	// createCollections()
+
+/**
+ * Create authentication file
+ *
+ * This method will create and initialise the authentication file, which resides
+ * in the data directory. If the file exists the method will return false; if it
+ * doesn't exist, the method will create it, initialise the administrator, user
+ * and cookies authentication data.
+ *
+ * The contained object is structured as follows:
+ *
+ * 	admin:	An object containing the system administrator codes.
+ * 		key:	The token key.
+ * 		code:	The code.
+ * 		pass:	The password.
+ * 	user:	An object containing the user codes.
+ * 		key:	The token key.
+ * 		code:	The code.
+ * 		pass:	The password.
+ * 	cookie:	An object containing the cookie codes.
+ * 		key:	The cookie secret.
+ *
+ * The user codes are all 16 character long, the cookie secret is 48 characters.
+ *
+ * The method will return an object indexed by the authentication data key with as
+ * value a boolean indicating whether the element was created.
+ *
+ * Note: the method must not throw or fail.
+ *
+ * @param doRefresh {Boolean}: To refresh data pass `true`.
+ * @returns {Object}: The operation status.
+ */
+function createAuthSettings(doRefresh = false)
+{
+    //
+    // Init local storage.
+    //
+    let auth = {}
+    const collection = K.db._collection(K.collection.settings.name)
+    const result = { admin : false, user : false, cookie : false }
+
+    //
+    // Get authentication record.
+    //
+    try {
+        auth = collection.document(K.environment.auth)
+    } catch {
+        auth = { _key: K.environment.auth }
+    }
+
+    //
+    // Handle admin authentication.
+    //
+    if( doRefresh || (! auth.hasOwnProperty( 'admin' )) )
+    {
+        auth.admin = {}
+        auth.admin.key = crypto.genRandomAlphaNumbers( 16 )
+        auth.admin.code = crypto.genRandomAlphaNumbers( 16 )
+        auth.admin.pass = crypto.genRandomAlphaNumbers( 16 )
+        result.admin = true
+    }
+
+    //
+    // Handle user authentication.
+    //
+    if( doRefresh || (! auth.hasOwnProperty( 'user' )) )
+    {
+        auth.user = {}
+        auth.user.key = crypto.genRandomAlphaNumbers( 16 )
+        auth.user.code = crypto.genRandomAlphaNumbers( 16 )
+        auth.user.pass = crypto.genRandomAlphaNumbers( 16 )
+        result.user = true
+    }
+
+    //
+    // Handle cookie authentication.
+    //
+    if( doRefresh || (! auth.hasOwnProperty( 'cookie' )) )
+    {
+        auth.cookie = {}
+        auth.cookie.key = crypto.genRandomAlphaNumbers( 48 )
+        result.cookie = true
+    }
+
+    //
+    // Refresh/create file.
+    //
+    if( result.admin || result.user || result.cookie ) {
+        collection.save(auth)
+    }
+
+    return result																// ==>
+
+}	// createAuthSettings
 
 /**
  * Initialise default users
@@ -139,7 +233,7 @@ function createDefaultUsers()
         users.save({
             username: module.context.configuration.adminCode,
             role: [K.environment.role.admin],
-            auth: Auth.create(module.context.configuration.adminPass),
+            auth: Auth.Module.create(module.context.configuration.adminPass),
             default: true
         })
         messages.push(`Created ${module.context.configuration.adminCode} user.`)
@@ -213,7 +307,6 @@ function deleteCreatedUsers()
     // Init local storage.
     //
     const usersCollection = K.db._collection(K.collection.user.name)
-    const sessionsCollection = K.db._collection(K.collection.session.name)
 
     //
     // Load default users.
@@ -279,6 +372,7 @@ function deleteUser(theKey, theCode = 'anonymous')
 module.exports = {
     createDirectories,
     createCollections,
+    createAuthSettings,
     createDefaultUsers,
     deleteDefaultUsers,
     deleteCreatedUsers,

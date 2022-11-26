@@ -33,6 +33,16 @@ messages = messages.concat(App.createCollections())
 messages = messages.concat(App.createDirectories())
 
 //
+// Create authentication file.
+//
+const result = App.createAuthSettings()
+for(const key of Object.keys(result)) {
+	if(result[key]) {
+		messages.push(`Creates authentication for ${key}`)
+	}
+}
+
+//
 // Create users.
 //
 messages = messages.concat(App.createDefaultUsers())

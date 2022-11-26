@@ -1,7 +1,7 @@
 'use strict'
 
 //
-// Application constants.
+// Application.
 //
 const K = require("./utils/constants")
 const Session = require('./utils/sessions')
@@ -24,8 +24,7 @@ module.context.use('/check', require('./routes/validation'), 'check')
 //
 // Sessions.
 //
-const sessions = require("./utils/sessions")
-module.context.use(sessions.Session)
+module.context.use(Session.Session)
 
 //
 // Ensure a user is logged in.
