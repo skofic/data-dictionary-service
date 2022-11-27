@@ -37,6 +37,12 @@
             "required": true,
             "default": "iso_639_3_eng"
         },
+        "cookie": {
+            "description": "Cookie name",
+            "type": "string",
+            "required": true,
+            "default": "FOXXSID"
+        },
         "method": {
             "description": "Hashing algorithm for creating password hashes",
             "type": "string",
@@ -48,6 +54,18 @@
             "type": "integer",
             "required": true,
             "default": 16
+        },
+        "secretLength": {
+            "description": "Length of the cookie secret",
+            "type": "integer",
+            "required": true,
+            "default": 48
+        },
+        "timeToLive": {
+            "description": "Cookie time to live (60 * 60 * 24 * 7)",
+            "type": "integer",
+            "required": true,
+            "default": 604800
         },
         "collectionTerm": {
             "description": "Terms collection name",

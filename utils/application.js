@@ -134,7 +134,7 @@ function createCollections()
  * Note: the method must not throw or fail.
  *
  * @param doRefresh {Boolean}: To refresh data pass `true`.
- * @returns {Object}: The operation status.
+ * @return {Array<String>}: List of operations.
  */
 function createAuthSettings(doRefresh = false)
 {
@@ -142,15 +142,26 @@ function createAuthSettings(doRefresh = false)
     // Init local storage.
     //
     let auth = {}
+    let save = false
+    let messages = []
     const collection = K.db._collection(K.collection.settings.name)
-    const result = { admin : false, user : false, cookie : false }
 
     //
     // Get authentication record.
     //
-    try {
+    try
+    {
+        //
+        // Read settings.
+        //
         auth = collection.document(K.environment.auth)
-    } catch {
+    }
+    catch
+    {
+        //
+        // Assume record not found.
+        //
+        save = true
         auth = { _key: K.environment.auth }
     }
 
@@ -159,11 +170,15 @@ function createAuthSettings(doRefresh = false)
     //
     if( doRefresh || (! auth.hasOwnProperty( 'admin' )) )
     {
-        auth.admin = {}
-        auth.admin.key = crypto.genRandomAlphaNumbers( 16 )
-        auth.admin.code = crypto.genRandomAlphaNumbers( 16 )
-        auth.admin.pass = crypto.genRandomAlphaNumbers( 16 )
-        result.admin = true
+        save = true
+        auth['admin'] = {
+            key: crypto.genRandomAlphaNumbers( 16 ),
+            code: crypto.genRandomAlphaNumbers( 16 ),
+            pass: crypto.genRandomAlphaNumbers( 16 )
+        }
+        messages.push("Added/refreshed administration authentication settings.")
+    } else {
+        messages.push("Administration authentication settings exist.")
     }
 
     //
@@ -171,11 +186,15 @@ function createAuthSettings(doRefresh = false)
     //
     if( doRefresh || (! auth.hasOwnProperty( 'user' )) )
     {
-        auth.user = {}
-        auth.user.key = crypto.genRandomAlphaNumbers( 16 )
-        auth.user.code = crypto.genRandomAlphaNumbers( 16 )
-        auth.user.pass = crypto.genRandomAlphaNumbers( 16 )
-        result.user = true
+        save = true
+        auth['user'] = {
+            key: crypto.genRandomAlphaNumbers( 16 ),
+            code: crypto.genRandomAlphaNumbers( 16 ),
+            pass: crypto.genRandomAlphaNumbers( 16 )
+        }
+        messages.push("Added/refreshed user authentication settings.")
+    } else {
+        messages.push("User authentication settings exist.")
     }
 
     //
@@ -183,19 +202,23 @@ function createAuthSettings(doRefresh = false)
     //
     if( doRefresh || (! auth.hasOwnProperty( 'cookie' )) )
     {
-        auth.cookie = {}
-        auth.cookie.key = crypto.genRandomAlphaNumbers( 48 )
-        result.cookie = true
+        save = true
+        auth.cookie = {
+            key: crypto.genRandomAlphaNumbers( 48 )
+        }
+        messages.push("Added/refreshed cookie secret.")
+    } else {
+        messages.push("Cookie secret exists.")
     }
 
     //
     // Refresh/create file.
     //
-    if( result.admin || result.user || result.cookie ) {
+    if( doRefresh || save ) {
         collection.save(auth)
     }
 
-    return result																// ==>
+    return messages                                                             // ==>
 
 }	// createAuthSettings
 

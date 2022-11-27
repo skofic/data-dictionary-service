@@ -7,14 +7,8 @@
  */
 
 //
-// Frameworks.
-//
-const fs = require('fs')					// File system.
-
-//
 // Application.
 //
-const K = require('../utils/constants')		// Application constants.
 const App = require('../utils/application')	// Application functions.
 
 //
@@ -35,12 +29,7 @@ messages = messages.concat(App.createDirectories())
 //
 // Create authentication file.
 //
-const result = App.createAuthSettings()
-for(const key of Object.keys(result)) {
-	if(result[key]) {
-		messages.push(`Creates authentication for ${key}`)
-	}
-}
+messages = messages.concat(App.createAuthSettings())
 
 //
 // Create users.

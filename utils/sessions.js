@@ -3,36 +3,33 @@
 //
 // Includes.
 //
-// const crypto = require('@arangodb/crypto');
 const sessionsMiddleware = require("@arangodb/foxx/sessions")
-// const cookieTransport = require('@arangodb/foxx/sessions/transports/cookie');
+const cookieTransport = require('@arangodb/foxx/sessions/transports/cookie');
 
 //
 // Application constants.
 //
 const K = require('./constants')
+const Auth = require('./auth')
 
 //
 // Set sessions middleware.
 // Note: you should expect a session property in the request.
 //
-// const timeout = 60 * 60 * 24 * 7
-// const secret = crypto.genRandomAlphaNumbers( 48 )
-// const algo = "sha256"
-// const Session = sessionsMiddleware({						    // Middleware.
-// 	storage	  : K.db._collection(K.collection.session.name),    // Collection.
-// 	transport : cookieTransport({							    // Transport.
-// 		name: 'FOXXSID',									    // Name.
-// 		ttl:  timeout,										    // Timeout.
-// 		algorithm: algo,									    // Algorythm.
-// 		secret:	   secret									    // Secret.
-// 	})
-// })
-
-const Session = sessionsMiddleware({
-	storage: K.db._collection(K.collection.session.name),
-	transport: 'cookie'
+const Session = sessionsMiddleware({						    // Middleware.
+	storage	  : K.db._collection(K.collection.session.name),    // Collection.
+	transport : cookieTransport({							    // Transport.
+		name: module.context.configuration.cookie,			    // Name.
+		ttl:  module.context.configuration.timeToLive,          // Timeout.
+		algorithm: module.context.configuration.method,         // Algorythm.
+		secret: Auth.getSettings().cookie                       // Secret.
+	})
 })
+
+// const Session = sessionsMiddleware({
+// 	storage: K.db._collection(K.collection.session.name),
+// 	transport: 'cookie'
+// })
 
 /**
  * Has permission

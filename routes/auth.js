@@ -446,7 +446,7 @@ function doSignup(request, response)
 	const user = {
 		username: request.body.username,
 		role: request.body.role,
-		auth: Auth.Module.Create.create(request.body.password),
+		auth: Auth.Module.create(request.body.password),
 		default: false
 	}
 
