@@ -577,6 +577,15 @@ module.exports = Object.freeze({
                 iso_639_3_fra: "Pas d'utilisateur enregistré.",
                 iso_639_3_esp: "No hay usuario registrado."
             }
+        },
+        kMSG_ERROR_CONFLICT: {
+            code: 35,
+            message: {
+                iso_639_3_eng: "Conflict error: the record was modified before your operation.",
+                iso_639_3_ita: "Errore di conflitto: il record è stato modificato prima dell'operazione.",
+                iso_639_3_fra: "Erreur de conflit: la fiche a été modifiée avant votre opération.",
+                iso_639_3_esp: "Error de conflicto: el registro fue modificado antes de su operación."
+            }
         }
     }
 

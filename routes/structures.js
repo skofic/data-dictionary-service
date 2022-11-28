@@ -18,6 +18,7 @@ const Dictionary = require("../utils/dictionary");
 // Models.
 //
 const Models = require('../models/generic_models')
+const ErrorModel = require("../models/error_generic");
 
 //
 // Instantiate router.
@@ -47,6 +48,28 @@ router.get(
     },
     'all-struct-keys'
 )
+    .summary('Return flattened list of object property names')
+    .description(dd
+        `
+            **Get all property names**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            Structures are tree graphs representing the properties that belong to a specific \
+            object descriptor. \
+            At the root of the graph is the term that represents the root property descriptor, \
+            the descriptor properties that belong to this root are connected through the graph, \
+            the service will return all property names connected to the provided root term.
+            
+            The service expects the global identifier of the root property as a path parameter, \
+            and will return the flattened list of all property names belonging to that structure. \
+            These elements will be returned as the global identifiers of the descriptor terms.
+            
+            You can try providing \`_scalar\`, which represents a scalar value container: \
+            this will return the list of properties that belong to that descriptor, \
+            and that can be used to define a scalar data type.
+        `
+    )
     .pathParam('path', Models.StringModel, "Object descriptor global identifier")
     .response(200, Models.StringArrayModel, dd
         `
@@ -64,24 +87,18 @@ router.get(
             by *usually* we mean the properties that we expect to find in the object.
         `
     )
-    .summary('Return flattened list of object property names')
-    .description(dd
+    .response(401, ErrorModel, dd
         `
-            **Get all property names**
+            **No user registered**
             
-            Structures are tree graphs representing the properties that belong to a specific \
-            object descriptor. \
-            At the root of the graph is the term that represents the root property descriptor, \
-            the descriptor properties that belong to this root are connected through the graph, \
-            the service will return all property names connected to the provided root term.
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
             
-            The service expects the global identifier of the root property as a path parameter, \
-            and will return the flattened list of all property names belonging to that structure. \
-            These elements will be returned as the global identifiers of the descriptor terms.
-            
-            You can try providing \`_scalar\`, which represents a scalar value container: \
-            this will return the list of properties that belong to that descriptor, \
-            and that can be used to define a scalar data type.
+            The current user is not authorised to perform the operation.
         `
     )
 
@@ -100,6 +117,28 @@ router.get(
     },
     'all-struct-terms'
 )
+    .summary('Return flattened list of properties')
+    .description(dd
+        `
+            **Get all properties**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            Structures are tree graphs representing the properties that belong to a specific \
+            object descriptor. \
+            At the root of the graph is the term that represents the root property descriptor, \
+            the descriptor properties that belong to this root are connected through the graph, \
+            the service will return all descriptor terms connected to the provided root term.
+            
+            The service expects the global identifier of the root property as a path parameter, \
+            and will return the flattened list of all descriptor terms belonging to that structure. \
+            These elements will be returned as term objects.
+            
+            You can try providing \`_scalar\`, which represents a scalar value container: \
+            this will return the properties that belong to that descriptor, \
+            and that can be used to define a scalar data type.
+        `
+    )
     .pathParam('path', Models.StringModel, "Object descriptor global identifier")
     .response(200, Models.TermsArrayModel, dd
         `
@@ -116,24 +155,18 @@ router.get(
             by *usually* we mean the properties that we expect to find in the object.
         `
     )
-    .summary('Return flattened list of properties')
-    .description(dd
+    .response(401, ErrorModel, dd
         `
-            **Get all properties**
+            **No user registered**
             
-            Structures are tree graphs representing the properties that belong to a specific \
-            object descriptor. \
-            At the root of the graph is the term that represents the root property descriptor, \
-            the descriptor properties that belong to this root are connected through the graph, \
-            the service will return all descriptor terms connected to the provided root term.
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
             
-            The service expects the global identifier of the root property as a path parameter, \
-            and will return the flattened list of all descriptor terms belonging to that structure. \
-            These elements will be returned as term objects.
-            
-            You can try providing \`_scalar\`, which represents a scalar value container: \
-            this will return the properties that belong to that descriptor, \
-            and that can be used to define a scalar data type.
+            The current user is not authorised to perform the operation.
         `
     )
 

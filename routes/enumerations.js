@@ -22,6 +22,7 @@ const Models = require('../models/generic_models')
 // Instantiate router.
 //
 const createRouter = require('@arangodb/foxx/router');
+const ErrorModel = require("../models/error_generic");
 const router = createRouter();
 module.exports = router;
 router.tag('Enumerated types');
@@ -47,6 +48,24 @@ router.get(
     },
     'all-enum-keys'
 )
+    .summary('Return flattened list of all enumeration keys for path')
+    .description(dd
+        `
+            **Get all enumeration element global identifiers**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
+            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
+            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
+            
+            The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
+            return the *flattened list* of *all enumeration elements* belonging to that *controlled vocabulary*.\
+            These elements will be returned as the *global identifiers* of the *terms*.
+            
+            You can try providing \`_type\`: this will return the *list* of *data type identifiers*.
+        `
+    )
     .pathParam('path', Models.StringModel, "Enumeration root global identifier")
     .response(200, Models.StringArrayModel, dd
         `
@@ -60,20 +79,18 @@ router.get(
             that terms used as *sections* or *bridges* will not be returned.
         `
     )
-    .summary('Return flattened list of all enumeration keys')
-    .description(dd
+    .response(401, ErrorModel, dd
         `
-            **Get all enumeration element global identifiers**
+            **No user registered**
             
-            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
-            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
-            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
             
-            The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
-            return the *flattened list* of *all enumeration elements* belonging to that *controlled vocabulary*.\
-            These elements will be returned as the *global identifiers* of the *terms*.
-            
-            You can try providing \`_type\`: this will return the *list* of *data type identifiers*.
+            The current user is not authorised to perform the operation.
         `
     )
 
@@ -93,6 +110,29 @@ router.get(
     },
     'all-enum-terms'
 )
+    .summary('Return flattened list of all enumeration terms')
+    .description(dd
+        `
+            **Get all enumeration terms**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
+            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
+            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
+            
+            The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
+            return the *flattened list* of *all enumeration terms* belonging to that *controlled vocabulary*.\
+            These elements will be returned as the *term objects*.
+            
+            You can try providing \`_type\` in the *path* parameter and \`iso_639_3_eng\` \
+            in the *lang* parameter: this will return the *list* of *data types* with their descriptions \
+            in *English*.
+            You can try providing \`iso_639_1\` in the *path* parameter and \`@\` \
+            in the *lang* parameter: this will return the *list* of *major languages* with their descriptions \
+            in *all available languages*.
+        `
+    )
     .pathParam('path', Models.StringModel, "Enumeration root global identifier")
     .pathParam('lang', Models.DefaultLanguageTokenModel, "Language global identifier, @ for all")
     .response(200, Models.TermsArrayModel, dd
@@ -113,25 +153,18 @@ router.get(
             that terms used as *sections* or *bridges* will not be returned.
         `
     )
-    .summary('Return flattened list of all enumeration terms')
-    .description(dd
+    .response(401, ErrorModel, dd
         `
-            **Get all enumeration terms**
+            **No user registered**
             
-            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
-            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
-            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
             
-            The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
-            return the *flattened list* of *all enumeration terms* belonging to that *controlled vocabulary*.\
-            These elements will be returned as the *term objects*.
-            
-            You can try providing \`_type\` in the *path* parameter and \`iso_639_3_eng\` \
-            in the *lang* parameter: this will return the *list* of *data types* with their descriptions \
-            in *English*.
-            You can try providing \`iso_639_1\` in the *path* parameter and \`@\` \
-            in the *lang* parameter: this will return the *list* of *major languages* with their descriptions \
-            in *all available languages*.
+            The current user is not authorised to perform the operation.
         `
     )
 
@@ -155,24 +188,12 @@ router.get(
     },
     'match-enum-code-terms'
 )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
-    .response(200, Models.TermsArrayModel, dd
-        `
-            **List of matched terms**
-            
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the identifier provided in the \`code\` parameter, \
-            the service will return the term objects in the array result.
-            
-            If no term matches the identifier provided in the \`code\` parameter, \
-            the service will return an empty array.
-        `
-    )
     .summary('Return enumeration term by code')
     .description(dd
         `
             **Get enumeration term by identifier**
+            
+            ***To use this service, the current user must have the \`read\` role.***
             
             Enumerations are graphs used as controlled vocabularies whose elements are terms. \
             At the root of the graph is a term that represents the type or definition of this \
@@ -198,6 +219,34 @@ router.get(
             is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
+    .response(200, Models.TermsArrayModel, dd
+        `
+            **List of matched terms**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the identifier provided in the \`code\` parameter, \
+            the service will return the term objects in the array result.
+            
+            If no term matches the identifier provided in the \`code\` parameter, \
+            the service will return an empty array.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
 
 /**
  * Return first term matching the provided local identifier in provided path.
@@ -214,27 +263,12 @@ router.get(
     },
     'match-enum-lid-terms'
 )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
-    .response(200, Models.TermsArrayModel, dd
-        `
-            **List of matched terms**
-            
-            If there is a term, in the enumeration defined by the \`path\` parameter, \
-            that matches the local identifier provided in the \`code\` parameter, \
-            the service will return the term object in the array result.
-            
-            If no term matches the local identifier provided in the \`code\` parameter, \
-            the service will return an empty array.
-            
-            Note that controlled vocabularies represent a unique set of identifiers, so \
-            the result of the service should contain at most one match.
-        `
-    )
     .summary('Return enumeration term by local identifier')
     .description(dd
         `
             **Get enumeration term by local identifier**
+            
+            ***To use this service, the current user must have the \`read\` role.***
             
             Enumerations are graphs used as controlled vocabularies whose elements are terms. \
             At the root of the graph is a term that represents the type or definition of this \
@@ -261,6 +295,37 @@ router.get(
             matched, this service expects only preferred local identifiers.
         `
     )
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
+    .response(200, Models.TermsArrayModel, dd
+        `
+            **List of matched terms**
+            
+            If there is a term, in the enumeration defined by the \`path\` parameter, \
+            that matches the local identifier provided in the \`code\` parameter, \
+            the service will return the term object in the array result.
+            
+            If no term matches the local identifier provided in the \`code\` parameter, \
+            the service will return an empty array.
+            
+            Note that controlled vocabularies represent a unique set of identifiers, so \
+            the result of the service should contain at most one match.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
 
 /**
  * Return first term matching the provided local identifier in provided path.
@@ -277,27 +342,12 @@ router.get(
     },
     'match-enum-gid-terms'
 )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
-    .response(200, Models.TermsArrayModel, dd
-        `
-            **List of matched terms**
-            
-            If there is a term, in the enumeration defined by the \`path\` parameter, \
-            that matches the global identifier provided in the \`code\` parameter, \
-            the service will return the term object in the array result.
-            
-            If no term matches the global identifier provided in the \`code\` parameter, \
-            the service will return an empty array.
-            
-            Note that controlled vocabularies represent a unique set of identifiers, so \
-            the result of the service should contain at most one match.
-        `
-    )
     .summary('Return enumeration term by global identifier')
     .description(dd
         `
             **Get enumeration term by global identifier**
+            
+            ***To use this service, the current user must have the \`read\` role.***
             
             Enumerations are graphs used as controlled vocabularies whose elements are terms. \
             At the root of the graph is a term that represents the type or definition of this \
@@ -323,6 +373,37 @@ router.get(
             is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
+    .response(200, Models.TermsArrayModel, dd
+        `
+            **List of matched terms**
+            
+            If there is a term, in the enumeration defined by the \`path\` parameter, \
+            that matches the global identifier provided in the \`code\` parameter, \
+            the service will return the term object in the array result.
+            
+            If no term matches the global identifier provided in the \`code\` parameter, \
+            the service will return an empty array.
+            
+            Note that controlled vocabularies represent a unique set of identifiers, so \
+            the result of the service should contain at most one match.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
 
 
 //
@@ -344,27 +425,12 @@ router.get(
     },
     'match-enum-code-path'
 )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
-    .response(200, Models.GraphPathsModel, dd
-        `
-            **Path to matched term**
-            
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the identifier provided in the \`code\` parameter, \
-            the service will return the path starting from the enumeration root element \
-            to the terms whose \`_aid\` property contains a match for the identifier \
-            provided in the \`code\` parameter; if there is no match, the service will \
-            return an empty array.
-            
-            The result is an array in which each element is an object representing a path \
-            constituted by a list of edges and a list of vertices.
-        `
-    )
     .summary('Return path from enumeration root to target by code')
     .description(dd
         `
             **Get path from enumeration root to term matching code**
+            
+            ***To use this service, the current user must have the \`read\` role.***
             
             Enumerations are graphs used as controlled vocabularies whose elements are terms. \
             At the root of the graph is a term that represents the type or definition of this \
@@ -389,6 +455,37 @@ router.get(
             is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
+    .response(200, Models.GraphPathsModel, dd
+        `
+            **Path to matched term**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the identifier provided in the \`code\` parameter, \
+            the service will return the path starting from the enumeration root element \
+            to the terms whose \`_aid\` property contains a match for the identifier \
+            provided in the \`code\` parameter; if there is no match, the service will \
+            return an empty array.
+            
+            The result is an array in which each element is an object representing a path \
+            constituted by a list of edges and a list of vertices.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
 
 /**
  * Return path from enumeration root to first term matching provided local identifier.
@@ -405,27 +502,12 @@ router.get(
     },
     'match-enum-lid-path'
 )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
-    .response(200, Models.GraphPathsModel, dd
-        `
-            **Path to matched term**
-            
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the local identifier provided in the \`code\` parameter, \
-            the service will return the path starting from the enumeration root element \
-            to the term whose \`_lid\` local identifier property matches the code \
-            provided in the \`code\` parameter; if there is no match, the service will \
-            return an empty array.
-            
-            The result is an array in which each element is an object representing a path \
-            constituted by a list of edges and a list of vertices.
-        `
-    )
     .summary('Return path from enumeration root to target by local identifier')
     .description(dd
         `
             **Get path from enumeration root to term matching local identifier**
+            
+            ***To use this service, the current user must have the \`read\` role.***
             
             Enumerations are graphs used as controlled vocabularies whose elements are terms. \
             At the root of the graph is a term that represents the type or definition of this \
@@ -452,6 +534,37 @@ router.get(
             matched, this service expects only preferred local identifiers.
         `
     )
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
+    .response(200, Models.GraphPathsModel, dd
+        `
+            **Path to matched term**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the local identifier provided in the \`code\` parameter, \
+            the service will return the path starting from the enumeration root element \
+            to the term whose \`_lid\` local identifier property matches the code \
+            provided in the \`code\` parameter; if there is no match, the service will \
+            return an empty array.
+            
+            The result is an array in which each element is an object representing a path \
+            constituted by a list of edges and a list of vertices.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
 
 /**
  * Return path from enumeration root to first term matching provided local identifier.
@@ -468,27 +581,12 @@ router.get(
     },
     'match-enum-gid-path'
 )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
-    .response(200, Models.GraphPathsModel, dd
-        `
-            **Path to matched term**
-            
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the global identifier provided in the \`code\` parameter, \
-            the service will return the path starting from the enumeration root element \
-            to the term whose \`_gid\` global identifier property matches the code \
-            provided in the \`code\` parameter; if there is no match, the service will \
-            return an empty array.
-            
-            The result is an array in which each element is an object representing a path \
-            constituted by a list of edges and a list of vertices.
-        `
-    )
     .summary('Return path from enumeration root to target by global identifier')
     .description(dd
         `
             **Get path from enumeration root to term matching global identifier**
+            
+            ***To use this service, the current user must have the \`read\` role.***
             
             Enumerations are graphs used as controlled vocabularies whose elements are terms. \
             At the root of the graph is a term that represents the type or definition of this \
@@ -514,6 +612,37 @@ router.get(
             this term is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
+    .response(200, Models.GraphPathsModel, dd
+        `
+            **Path to matched term**
+            
+            If there are terms, in the enumeration defined by the \`path\` parameter, \
+            that match the global identifier provided in the \`code\` parameter, \
+            the service will return the path starting from the enumeration root element \
+            to the term whose \`_gid\` global identifier property matches the code \
+            provided in the \`code\` parameter; if there is no match, the service will \
+            return an empty array.
+            
+            The result is an array in which each element is an object representing a path \
+            constituted by a list of edges and a list of vertices.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
 
 /**
  * Check if list of global identifiers belong to provided enumeration.
@@ -532,6 +661,28 @@ router.post(
     },
     'check-enum-list-keys'
 )
+    .summary('Check if list of term keys belong to enumeration')
+    .description(dd
+        `
+            **Check if list of term keys belong to enumeration**
+            
+            *Use this service if you want to check if a list of term keys belong to an enumeration.*
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            The service expects the enumeration type term key as the last element of the path and
+            the list of term keys to match in the POST body.
+            
+            The service will return a dictionary with as keys the provided list of identifiers
+            and as values the matched enumeration element term keys or false if there was no match.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and 
+            \`["iso_639_1_en", "iso_639_1_fr", "UNKNOWN"]\` as the body.
+            The returned dictionary will have as keys the provided identifiers and as values the
+            matched enumerations, which for the first two elements of the list will be the preferred
+            enumeration and for the last element, that we assume doesn't match, \`false\`.
+        `
+    )
     .body(Models.StringArrayModel, dd
         `
             **Service parameters**
@@ -549,24 +700,18 @@ router.post(
             if there was no match.
         `
     )
-    .summary('Check if list of term keys belong to enumeration')
-    .description(dd
+    .response(401, ErrorModel, dd
         `
-            **Check if list of term keys belong to enumeration**
+            **No user registered**
             
-            *Use this service if you want to check if a list of term keys belong to an enumeration.*
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
             
-            The service expects the enumeration type term key as the last element of the path and
-            the list of term keys to match in the POST body.
-            
-            The service will return a dictionary with as keys the provided list of identifiers
-            and as values the matched enumeration element term keys or false if there was no match.
-            
-            You can try providing \`iso_639_1\` as the \`path\` and 
-            \`["iso_639_1_en", "iso_639_1_fr", "UNKNOWN"]\` as the body.
-            The returned dictionary will have as keys the provided identifiers and as values the
-            matched enumerations, which for the first two elements of the list will be the preferred
-            enumeration and for the last element, that we assume doesn't match, \`false\`.
+            The current user is not authorised to perform the operation.
         `
     )
 
@@ -587,6 +732,28 @@ router.post(
     },
     'check-enum-list-codes'
 )
+    .summary('Check if list of local identifiers belong to enumeration')
+    .description(dd
+        `
+            **Check if list of local identifiers belong to enumeration**
+            
+            *Use this service if you want to check if a list of local identifiers belong to an enumeration.*
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            The service expects the enumeration type term key as the last element of the path and \
+            the list of local identifiers to match in the POST body.
+            
+            The service will return a dictionary with as keys the provided list of identifiers \
+            and as values the matched enumeration element term keys or false if there was no match.
+            
+            You can try providing \`iso_639_1\` as the \`path\` and \
+            \`["en", "fr", "UNKNOWN"]\` as the body.
+            The returned dictionary will have as keys the provided identifiers and as values the \
+            matched enumerations, which for the first two elements of the list will be the preferred \
+            enumeration and for the last element, that we assume doesn't match, \`false\`.
+        `
+    )
     .body(Models.StringArrayModel, dd
         `
             **Service parameters**
@@ -604,24 +771,18 @@ router.post(
             if there was no match.
         `
     )
-    .summary('Check if list of local identifiers belong to enumeration')
-    .description(dd
+    .response(401, ErrorModel, dd
         `
-            **Check if list of local identifiers belong to enumeration**
+            **No user registered**
             
-            *Use this service if you want to check if a list of local identifiers belong to an enumeration.*
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
             
-            The service expects the enumeration type term key as the last element of the path and \
-            the list of local identifiers to match in the POST body.
-            
-            The service will return a dictionary with as keys the provided list of identifiers \
-            and as values the matched enumeration element term keys or false if there was no match.
-            
-            You can try providing \`iso_639_1\` as the \`path\` and \
-            \`["en", "fr", "UNKNOWN"]\` as the body.
-            The returned dictionary will have as keys the provided identifiers and as values the \
-            matched enumerations, which for the first two elements of the list will be the preferred \
-            enumeration and for the last element, that we assume doesn't match, \`false\`.
+            The current user is not authorised to perform the operation.
         `
     )
 

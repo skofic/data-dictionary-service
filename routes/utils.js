@@ -31,17 +31,17 @@ router.tag( 'Administration utilities' )
  * The service will return pong.
  */
 router.get('/ping', doPong, 'ping')
-    .response(200, joi.string().default("pong"), dd
-        `
-            **"pong"**
-        `
-    )
     .summary("Check if database is on-line.")
     .description(dd
         `
             **Ping database**
             
             The service should return "\`pong\`" if the database is on-line and responding.
+        `
+    )
+    .response(200, joi.string().default("pong"), dd
+        `
+            **"pong"**
         `
     )
 
@@ -60,18 +60,20 @@ router.get(
     },
     'echoGET'
 )
-    .response(200, joi.object(), dd
-        `
-            **The service request**
-        `
-    )
     .summary("Mirror the GET request data.")
     .description(dd
         `
             **Mirror GET request data**
             
+            ***To use this service, the current user must have the \`admin\` role.***
+           
             The service will return the full GET request contents.
             Can be useful to debug request data.
+        `
+    )
+    .response(200, joi.object(), dd
+        `
+            **The service request**
         `
     )
 
@@ -90,6 +92,17 @@ router.post(
     },
     'echoPOST'
 )
+    .summary("Mirror the POST request data.")
+    .description(dd
+        `
+            **Mirror POST request data**
+            
+            ***To use this service, the current user must have the \`admin\` role.***
+            
+            The service will return the full POST request contents.
+            Can be useful to debug request data.
+        `
+    )
     .body(joi.any(), dd
         `
             **Body contents**
@@ -98,15 +111,6 @@ router.post(
     .response(200, joi.object(), dd
         `
             **The service request**
-        `
-    )
-    .summary("Mirror the POST request data.")
-    .description(dd
-        `
-            **Mirror POST request data**
-            
-            The service will return the full POST request contents.
-            Can be useful to debug request data.
         `
     )
 
@@ -125,17 +129,19 @@ router.get(
     },
     'basePath'
 )
-    .response(200, joi.string(), dd
-        `
-            The service application base path.
-        `
-    )
     .summary("Return the base path.")
     .description(dd
         `
             **Return base path**
             
+            ***To use this service, the current user must have the \`admin\` role.***
+            
             The service will return the base path of the service application.
+        `
+    )
+    .response(200, joi.string(), dd
+        `
+            The service application base path.
         `
     )
 
@@ -154,17 +160,19 @@ router.get(
     },
     'tempPath'
 )
-    .response(200, joi.string(), dd
-        `
-            The service application temporary files path.
-        `
-    )
     .summary("Return the temp path.")
     .description(dd
         `
             **Return temp path**
             
+            ***To use this service, the current user must have the \`admin\` role.***
+            
             The service will return the temporary files path of the service server.
+        `
+    )
+    .response(200, joi.string(), dd
+        `
+            The service application temporary files path.
         `
     )
 
@@ -183,18 +191,20 @@ router.get(
     },
     'tempFile'
 )
-    .response(200, joi.string(), dd
-        `
-            The service application temporary file path.
-        `
-    )
     .summary("Return the temp file path.")
     .description(dd
         `
             **Return temp file path**
-            
+             
+            ***To use this service, the current user must have the \`admin\` role.***
+           
             The service will return the path to a temporary file, \
             *the file will not be created*.
+        `
+    )
+    .response(200, joi.string(), dd
+        `
+            The service application temporary file path.
         `
     )
 
@@ -213,18 +223,20 @@ router.get(
     },
     'session'
 )
-    .response(200, joi.object(), dd
-        `
-            The current session information from the service request.
-        `
-    )
     .summary("Return the current session.")
     .description(dd
         `
             **Return current session**
             
+            ***To use this service, the current user must have the \`admin\` role.***
+            
             The service will return the current session information \
             from the service request.
+        `
+    )
+    .response(200, joi.object(), dd
+        `
+            The current session information from the service request.
         `
     )
 

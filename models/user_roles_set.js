@@ -4,20 +4,18 @@ const _ = require('lodash')
 const joi = require('joi')
 
 /**
- * Reset users model
- * This model represents the request to reset users.
+ * User roles set model
+ * This model represents the data needed to change the roles of a user.
  */
 module.exports = {
 	schema: {
 		// Describe the attributes with joi here
-		default: joi.boolean().default(false),
-		created: joi.boolean().default(false),
-		auth:    joi.boolean().default(false)
+		role: joi.array().items(joi.string()).required()
 	},
 
 	forClient(obj) {
 		// Implement outgoing transformations here
-		obj = _.omit(obj)
+		obj = _.omit(obj, ['_id', '_rev', '_oldRev', 'auth'])
 		return obj
 	},
 
