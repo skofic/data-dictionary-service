@@ -3,12 +3,12 @@
 //
 // Imports.
 //
-const joi = require('joi');
+const joi = require('joi')
 
 //
 // Generic models.
 //
-const DefaultLanguageTokenModel = joi.string().default("@")
+const DefaultLanguageTokenModel = joi.string().default(module.context.configuration.language)
 const StringModel = joi.string().required()
 const StringArrayModel = joi.array().items(joi.string())
 const TermsArrayModel = joi.array().items(joi.object({

@@ -351,7 +351,7 @@ function reportResolved(theKey, theValue, theReport = false)
  * it will return the _info properties in the provided language.
  * If an _info element does not have the provided language,
  * the function will return the element as-is.
- * Note that the mordifications are performed on the original object.
+ * Note that the modifications are performed on the original object.
  * @param theTerm {Object}: The term.
  * @param theLanguage {String}: A valid language code.
  * @return {Object}: The term with info in the provided language.

@@ -125,16 +125,15 @@ router.get(
             return the *flattened list* of *all enumeration terms* belonging to that *controlled vocabulary*.\
             These elements will be returned as the *term objects*.
             
-            You can try providing \`_type\` in the *path* parameter and \`iso_639_3_eng\` \
-            in the *lang* parameter: this will return the *list* of *data types* with their descriptions \
-            in *English*.
+            You can try providing \`_type\` in the *path* parameter: this will return the *list* of \
+            *data types* with their descriptions in *English*.
             You can try providing \`iso_639_1\` in the *path* parameter and \`@\` \
             in the *lang* parameter: this will return the *list* of *major languages* with their descriptions \
             in *all available languages*.
         `
     )
     .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('lang', Models.DefaultLanguageTokenModel, "Language global identifier, @ for all")
+    .pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
     .response(200, Models.TermsArrayModel, dd
         `
             **List of enumeration terms**

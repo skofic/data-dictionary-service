@@ -1,159 +1,193 @@
-'use strict';
-const dd = require('dedent');
-const joi = require('joi');
-const httpError = require('http-errors');
-const status = require('statuses');
-const errors = require('@arangodb').errors;
-const createRouter = require('@arangodb/foxx/router');
-const Term = require('../models/term');
-const K = require("../utils/constants");
+'use strict'
 
-const terms = K.db._collection(K.collection.term.name)
+//
+// Includes.
+//
+const joi = require('joi')
+const dd = require('dedent')
+const status = require('statuses')
+const httpError = require('http-errors')
+const errors = require('@arangodb').errors
+const createRouter = require('@arangodb/foxx/router')
+
+//
+// Application includes.
+//
+const K = require("../utils/constants")
+const Utils = require('../utils/utils')
+const Session = require('../utils/sessions')
+const Dictionary = require("../utils/dictionary")
+
+//
+// Models.
+//
+const Models = require('../models/generic_models')
+const ErrorModel = require("../models/error_generic")
+const TermDisplay = require('../models/term_display')
 const keySchema = joi.string().required()
-.description('The key of the term');
+	.description('The key of the document')
 
-const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code;
-const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code;
-const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
-const HTTP_NOT_FOUND = status('not found');
-const HTTP_CONFLICT = status('conflict');
+//
+// Collections.
+//
+const collection = K.db._collection(K.collection.term.name)
 
-const router = createRouter();
-module.exports = router;
+//
+// Constants.
+//
+const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code
+const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code
+const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code
+const HTTP_NOT_FOUND = status('not found')
+const HTTP_CONFLICT = status('conflict')
 
+//
+// Create router.
+//
+const router = createRouter()
+module.exports = router
+router.tag('Terms')
 
-router.tag('term');
+/**
+ * Get term by key
+ * This service will return the term corresponding to the provided key.
+ */
+router.get(
+	':key/:lang',
+	(request, response) => {
+		const roles = [K.environment.role.read]
+		if(Session.hasPermission(request, response, roles)) {
+			doGetTermByKey(request, response)
+		}
+	},
+	'term-key'
+)
+	.summary('Get term by key')
+	.description(dd
+		`
+            **Get a term by key**
+            
+            *Use this service to get a specific term.*
+            
+             ***In order to use this service, the current user must have the \`read\` role.***
+             
+             The service expects two parameters:
+             - *key*: It represents the term \`_key\`, or global identifier.
+             - *lang*: The language code for the description texts; \
+             the field will be set with the default language,, or pass \`@\` to get the result \
+             in all languages.
+             
+             Try providing \`iso_639_3_eng\` in the *key* parameter: you will get the \
+             English language ISO entry with names in English.
+             Try providing \`iso_639_3_eng\` in the *key* parameter and \`@\` in the language parameter: \
+             you will get the English language ISO entry with names in all available languages.
+        `
+	)
+	.pathParam('key', keySchema, "Term global identifier")
+	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
+	.response(200, TermDisplay, dd
+		`
+            **Term record**
+            
+            The service will return the matched term.
+        `
+	)
+	.response(404, ErrorModel, dd
+		`
+            **Term not found**
+            
+            The provided key does not match any terms.
+        `
+	)
 
-/*
-router.get(function (req, res) {
-  res.send(terms.all());
-}, 'list')
-.response([Term], 'A list of terms.')
-.summary('List all terms')
-.description(dd`
-  Retrieves a list of all terms.
-`);
-*/
-
-router.post(function (req, res) {
-  const term = req.body;
-  let meta;
-  try {
-    meta = terms.save(term);
-  } catch (e) {
-    if (e.isArangoError && e.errorNum === ARANGO_DUPLICATE) {
-      throw httpError(HTTP_CONFLICT, e.message);
-    }
-    throw e;
-  }
-  Object.assign(term, meta);
-  res.status(201);
-  res.set('location', req.makeAbsolute(
-    req.reverse('detail', {key: term._key})
-  ));
-  res.send(term);
-}, 'create')
-.body(Term, 'The term to create.')
-.response(201, Term, 'The created term.')
-.error(HTTP_CONFLICT, 'The term already exists.')
-.summary('Create a new term')
-.description(dd`
-  Creates a new term from the request body and
-  returns the saved document.
-`);
-
-
-router.get(':key', function (req, res) {
-  const key = req.pathParams.key;
-  let term
-  try {
-    term = terms.document(key);
-  } catch (e) {
-    if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-      throw httpError(HTTP_NOT_FOUND, e.message);
-    }
-    throw e;
-  }
-  res.send(term);
-}, 'detail')
-.pathParam('key', keySchema)
-.response(Term, 'The term.')
-.summary('Fetch a term')
-.description(dd`
-  Retrieves a term by its key.
-`);
-
-
-router.put(':key', function (req, res) {
-  const key = req.pathParams.key;
-  const term = req.body;
-  let meta;
-  try {
-    meta = terms.replace(key, term);
-  } catch (e) {
-    if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-      throw httpError(HTTP_NOT_FOUND, e.message);
-    }
-    if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
-      throw httpError(HTTP_CONFLICT, e.message);
-    }
-    throw e;
-  }
-  Object.assign(term, meta);
-  res.send(term);
-}, 'replace')
-.pathParam('key', keySchema)
-.body(Term, 'The data to replace the term with.')
-.response(Term, 'The new term.')
-.summary('Replace a term')
-.description(dd`
-  Replaces an existing term with the request body and
-  returns the new document.
-`);
-
-
-router.patch(':key', function (req, res) {
-  const key = req.pathParams.key;
-  const patchData = req.body;
-  let term;
-  try {
-    terms.update(key, patchData);
-    term = terms.document(key);
-  } catch (e) {
-    if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-      throw httpError(HTTP_NOT_FOUND, e.message);
-    }
-    if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
-      throw httpError(HTTP_CONFLICT, e.message);
-    }
-    throw e;
-  }
-  res.send(term);
-}, 'update')
-.pathParam('key', keySchema)
-.body(joi.object().description('The data to update the term with.'))
-.response(Term, 'The updated term.')
-.summary('Update a term')
-.description(dd`
-  Patches a term with the request body and
-  returns the updated document.
-`);
+/**
+ * Get all terms
+ * This service will return all terms.
+ */
+router.get(
+	':lang',
+	doGetTermByKey,
+	'term-all'
+)
+	.summary('Get term by key')
+	.description(dd
+		`
+            **Get a term by key**
+            
+            *Use this service to get a specific term.*
+            
+             ***In order to use this service, the current user must have the \`read\` role.***
+             
+             The service expects two parameters:
+             - *key*: It represents the term \`_key\`, or global identifier.
+             - *lang*: The language code for the description texts; \
+             the field will be set with the default language,, or pass \`@\` to get the result \
+             in all languages.
+             
+             Try providing \`iso_639_3_eng\` in the *key* parameter: you will get the \
+             English language ISO entry with names in English.
+             Try providing \`iso_639_3_eng\` in the *key* parameter and \`@\` in the language parameter: \
+             you will get the English language ISO entry with names in all available languages.
+        `
+	)
+	.pathParam('key', keySchema, "Term global identifier")
+	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
+	.response(200, TermDisplay, dd
+		`
+            **Term record**
+            
+            The service will return the matched term.
+        `
+	)
+	.response(404, ErrorModel, dd
+		`
+            **Term not found**
+            
+            The provided key does not match any terms.
+        `
+	)
 
 
-router.delete(':key', function (req, res) {
-  const key = req.pathParams.key;
-  try {
-    terms.remove(key);
-  } catch (e) {
-    if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-      throw httpError(HTTP_NOT_FOUND, e.message);
-    }
-    throw e;
-  }
-}, 'delete')
-.pathParam('key', keySchema)
-.response(null)
-.summary('Remove a term')
-.description(dd`
-  Deletes a term from the database.
-`);
+//
+// Functions.
+//
+
+/**
+ * Get term by key.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doGetTermByKey(request, response)
+{
+	//
+	// Try query.
+	//
+	try
+	{
+		//
+		// Get term.
+		//
+		const term = collection.document(request.pathParams.key)
+
+		//
+		// Select language.
+		//
+		if(request.pathParams.lang != '@') {
+			Utils.termLanguage(term, request.pathParams.lang)
+		}
+
+		response.send(term)                                                     // ==>
+	}
+	catch (error)
+	{
+		if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			response.throw(
+				404,
+				K.error.kMSG_TERM_NOT_FOUND.message[module.context.configuration.language]
+			)                                                                   // ==>
+		} else {
+			response.throw(500, error.message)                               // ==>
+		}
+	}
+
+} // getAllEnumerations()

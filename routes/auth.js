@@ -42,6 +42,7 @@ const UserSetRoles = require('../models/user_roles_set')
 const UserSetPassword = require('../models/user_password_set')
 const UserSignupModel = require('../models/user_signup')
 const UserCredentialsModel = require('../models/user_credentials')
+const UserSelectionModel = require('../models/user_selection')
 const UserDisplayModel = require('../models/user_display')
 const UserResetModel = require('../models/user_reset')
 const ErrorModel = require('../models/error_generic')
@@ -228,6 +229,62 @@ router.get('logout', doLogout, 'logout')
             **No current user**
             
             The current session does not have a registered user.
+        `
+	)
+
+/**
+ * Get users
+ * This service will return the list of users.
+ */
+router.post(
+	'login',
+	(request, response) => {
+		const roles = [K.environment.role.admin]
+		if(Session.hasPermission(request, response, roles)) {
+			doListUsers(request, response)
+		}
+	},
+	'login'
+)
+	.summary('List users')
+	.description(dd
+		`
+            **Get list of users**
+            
+            *Use this service to consult registered users.*
+            
+            The service will return the list of users that match the \
+            selection criteria provided in the request body. The criteria \
+            selects all terms that match the provided body items.
+        `
+	)
+	.body(UserCredentialsModel, dd
+		`
+            **Service parameters**
+            
+            - \`username\`: The username or user code.
+            - \`password\`: The user password.
+        `
+	)
+	.response(200, UserDisplayModel, dd
+		`
+            **User record**
+            
+            The service will return the user document.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **Invalid password**
+            
+            Provided a password that does not match the user authentication data.
+        `
+	)
+	.response(404, ErrorModel, dd
+		`
+            **Unable to find user**
+            
+            No user exists with the provided username.
         `
 	)
 
