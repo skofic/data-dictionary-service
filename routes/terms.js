@@ -74,54 +74,7 @@ router.get(
              The service expects two parameters:
              - *key*: It represents the term \`_key\`, or global identifier.
              - *lang*: The language code for the description texts; \
-             the field will be set with the default language,, or pass \`@\` to get the result \
-             in all languages.
-             
-             Try providing \`iso_639_3_eng\` in the *key* parameter: you will get the \
-             English language ISO entry with names in English.
-             Try providing \`iso_639_3_eng\` in the *key* parameter and \`@\` in the language parameter: \
-             you will get the English language ISO entry with names in all available languages.
-        `
-	)
-	.pathParam('key', keySchema, "Term global identifier")
-	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
-	.response(200, TermDisplay, dd
-		`
-            **Term record**
-            
-            The service will return the matched term.
-        `
-	)
-	.response(404, ErrorModel, dd
-		`
-            **Term not found**
-            
-            The provided key does not match any terms.
-        `
-	)
-
-/**
- * Get all terms
- * This service will return all terms.
- */
-router.get(
-	':lang',
-	doGetTermByKey,
-	'term-all'
-)
-	.summary('Get term by key')
-	.description(dd
-		`
-            **Get a term by key**
-            
-            *Use this service to get a specific term.*
-            
-             ***In order to use this service, the current user must have the \`read\` role.***
-             
-             The service expects two parameters:
-             - *key*: It represents the term \`_key\`, or global identifier.
-             - *lang*: The language code for the description texts; \
-             the field will be set with the default language,, or pass \`@\` to get the result \
+             the field will be set with the default language, or pass \`@\` to get the result \
              in all languages.
              
              Try providing \`iso_639_3_eng\` in the *key* parameter: you will get the \
@@ -190,4 +143,4 @@ function doGetTermByKey(request, response)
 		}
 	}
 
-} // getAllEnumerations()
+} // doGetTermByKey()
