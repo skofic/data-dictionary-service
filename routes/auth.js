@@ -871,6 +871,7 @@ function doListUsers(request, response)
 	//
 	// Close query.
 	//
+	query.push(aql`SORT item._key ASC`)
 	query.push(aql`LIMIT ${request.body.start}, ${request.body.limit}`)
 	query.push(aql`RETURN {_key: item._key, username: item.username, role: item.role,default: item.default}`)
 
@@ -879,7 +880,7 @@ function doListUsers(request, response)
 	//
 	const result = K.db._query(aql.join(query)).toArray()
 
-	response.send(result)                                                                         // ==>
+	response.send(result)                                                       // ==>
 
 } // doListUsers()
 
