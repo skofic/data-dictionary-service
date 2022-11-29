@@ -9,6 +9,7 @@
 //
 const dd = require('dedent')
 const joi = require('joi')
+const aql = require('@arangodb').aql
 const status = require('statuses')
 const errors = require('@arangodb').errors
 const httpError = require('http-errors')
@@ -48,6 +49,12 @@ const UserResetModel = require('../models/user_reset')
 const ErrorModel = require('../models/error_generic')
 const keySchema = joi.string().required()
 	.description('The `_key` of the user document.')
+const UserDisplayListModel =
+	joi.array().items({
+		username: joi.string().required(),
+		role: joi.array().items(joi.string()).required(),
+		default: joi.boolean().default(false).required()
+	})
 
 //
 // Instantiate and export router.
@@ -237,14 +244,14 @@ router.get('logout', doLogout, 'logout')
  * This service will return the list of users.
  */
 router.post(
-	'login',
+	'users',
 	(request, response) => {
 		const roles = [K.environment.role.admin]
 		if(Session.hasPermission(request, response, roles)) {
 			doListUsers(request, response)
 		}
 	},
-	'login'
+	'users'
 )
 	.summary('List users')
 	.description(dd
@@ -258,33 +265,41 @@ router.post(
             selects all terms that match the provided body items.
         `
 	)
-	.body(UserCredentialsModel, dd
+	.body(UserSelectionModel, dd
 		`
-            **Service parameters**
+            **Selection parameters**
             
-            - \`username\`: The username or user code.
-            - \`password\`: The user password.
+            - \`start\`: Start position in results.
+            - \`limit\`: Number of elements to be returned.
+            - \`username\`: Username search pattern. The supported wildcards \
+              are \`_\` to match a single arbitrary character, and \`%\` to match \
+              any number of arbitrary characters. Literal % and _ need to be escaped \
+              with a backslash. Backslashes need to be escaped themselves.
+            - \`role\`: The user roles, set all roles that the selected users must match.
+            - \`default\`: Set \`true\` ti select only default users; \`false\` for all others.
+            
+            Any of these can be omitted to disable the selection, except \`start\` and \`limit\`.
         `
 	)
-	.response(200, UserDisplayModel, dd
+	.response(200, UserDisplayListModel, dd
 		`
-            **User record**
+            **User records**
             
-            The service will return the user document.
+            The service will return a list of user records.
         `
 	)
 	.response(401, ErrorModel, dd
 		`
-            **Invalid password**
+            **No current user**
             
-            Provided a password that does not match the user authentication data.
+            The service will return this code if no user is currently logged in.
         `
 	)
-	.response(404, ErrorModel, dd
+	.response(403, ErrorModel, dd
 		`
-            **Unable to find user**
+            **Unauthorised user**
             
-            No user exists with the provided username.
+            The service will return this code if the current user is not an administrator.
         `
 	)
 
@@ -810,6 +825,63 @@ function doLogout(request, response)
 	)                                                                           // ==>
 
 } // doLogout()
+
+/**
+ * List users.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doListUsers(request, response)
+{
+	//
+	// Init local storage.
+	//
+	const query = [aql`FOR item IN ${users}`]
+
+	//
+	// Collect values.
+	//
+	const username = request.body.hasOwnProperty('username')
+				   ? request.body.username
+				   : null
+	const role     = request.body.hasOwnProperty('role')
+				   ? request.body.role
+				   : null
+	const def      = request.body.hasOwnProperty('default')
+				   ? request.body.default
+				   : null
+
+	//
+	// Collect filters.
+	//
+	if(username !== null) {
+		query.push(aql`FILTER item.username LIKE ${username}`)
+	}
+	if(role !== null) {
+		if(role.length > 0) {
+			query.push(aql`FILTER item.role ANY IN ${role}`)
+		} else {
+			query.push(aql`FILTER LENGTH(item.role) == 0`)
+		}
+	}
+	if(def !== null) {
+		query.push(aql`FILTER item.default == ${def}`)
+	}
+
+	//
+	// Close query.
+	//
+	query.push(aql`LIMIT ${request.body.start}, ${request.body.limit}`)
+	query.push(aql`RETURN {_key: item._key, username: item.username, role: item.role,default: item.default}`)
+
+	//
+	// Perform query.
+	//
+	const result = K.db._query(aql.join(query)).toArray()
+
+	response.send(result)                                                                         // ==>
+
+} // doListUsers()
 
 /**
  * Reset users.

@@ -10,13 +10,16 @@ const joi = require('joi')
 module.exports = {
 	schema: {
 		// Describe the attributes with joi here
-		username: joi.string().required(),
-		password: joi.string().required()
+		start: joi.number().integer().min(0).default(0).required(),
+		limit: joi.number().integer().min(0).default(25).required(),
+		username: joi.string(),
+		role: joi.array().items(joi.string()),
+		default: joi.boolean()
 	},
 
 	forClient(obj) {
 		// Implement outgoing transformations here
-		obj = _.omit(obj, ['_id', '_rev', '_oldRev', 'auth'])
+		obj = _.omit(obj, [])
 		return obj
 	},
 
