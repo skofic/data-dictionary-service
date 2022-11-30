@@ -12,8 +12,8 @@ const joi = require('joi');
 //
 const K = require( '../utils/constants' );
 const Session = require('../utils/sessions')
-const utils = require("../utils/utils");
-const validation = require("../utils/validation");
+const Utils = require("../utils/utils");
+const Validation = require("../utils/validation");
 
 //
 // Types.
@@ -313,8 +313,8 @@ router.post(
     )
 
 /**
- * Validate data definition.
- * The service will check whether the provided value corresponds to the provided data section.
+ * Validate object properties.
+ * The service will check the validity of the provided object's properties.
  * MILKO - Need to check.
  */
 router.post(
@@ -723,7 +723,7 @@ function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_6
     //
     // Validate descriptor.
     //
-    const valid = validation.validateDescriptor(
+    const valid = Validation.validateDescriptor(
         theDescriptor,
         [theValue, theIndex],
         report
@@ -768,14 +768,14 @@ function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_6
     //
     // Set language.
     //
-    setLanguage(report, theLanguage)
+    Validation.setLanguage(report, theLanguage)
 
     return report                                                               // ==>
 
 } // checkDescriptor()
 
 /**
- * Validate descriptor.
+ * Validate definition.
  * @param theDefinition {String}: Data definition section.
  * @param theValue: Descriptor value parent.
  * @param theIndex {String}: Value property name.
@@ -792,7 +792,7 @@ function checkDefinition(theDefinition, theValue, theIndex, theLanguage = 'iso_6
     //
     // Validate definition.
     //
-    const valid = validation.validateDataBlock(
+    const valid = Validation.validateDataBlock(
         theDefinition,
         [theValue, theIndex],
         report
@@ -837,7 +837,7 @@ function checkDefinition(theDefinition, theValue, theIndex, theLanguage = 'iso_6
     //
     // Set language.
     //
-    setLanguage(report, theLanguage)
+    Validation.setLanguage(report, theLanguage)
 
     return report                                                               // ==>
 
@@ -882,52 +882,3 @@ function checkObject(theValue, theLanguage = 'iso_639_3_eng')
     return result                                                               // ==>
 
 } // checkObject()
-
-//
-// UTILITY FUNCTIONS
-//
-
-/**
- * Set default language if necessary
- * The function will set the status message in the required language,
- * the logic works as follows:
- * - If the language was not provided, English will be set by default.
- * - If `all` was provided, the status will return the message in all registered languages.
- * - If the provided language is a valid `iso_639_3` global identifier and the message exists
- * in that language, the message will be set in that language.
- * - If the provided language was not found, it will default to the English message.
- *
- * This will occur only if the report has the status block.
- * @param theReport {Object}: Validation report object, expected to have status.
- * @param theLanguage {String}: Language code, defaults to English.
- */
-function setLanguage(theReport, theLanguage = 'iso_639_3_eng')
-{
-    //
-    // Skip all languages.
-    //
-    if(theLanguage !== 'all') {
-
-        //
-        // Check if report has status.
-        //
-        if(theReport.hasOwnProperty('status')) {
-
-            //
-            // Ensure status message is an object.
-            //
-            if(utils.isObject(theReport.status.message)) {
-
-                //
-                // Match language code.
-                //
-                if(theReport.status.message.hasOwnProperty(theLanguage)) {
-                    theReport.status.message = theReport.status.message[theLanguage]
-                } else {
-                    theReport.status.message = theReport.status.message['iso_639_3_eng']
-                }
-            }
-        }
-    }
-
-} // setLanguage()

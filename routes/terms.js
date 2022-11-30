@@ -17,6 +17,7 @@ const createRouter = require('@arangodb/foxx/router')
 const K = require("../utils/constants")
 const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
+const Validation = require("../utils/validation")
 const Dictionary = require("../utils/dictionary")
 
 //
@@ -24,9 +25,11 @@ const Dictionary = require("../utils/dictionary")
 //
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic")
+const TermError = require("../models/error_generic")
+const TermInsert = require('../models/term_insert')
 const TermDisplay = require('../models/term_display')
 const TermSelection = require('../models/term_selection')
-const UserResetModel = require("../models/user_reset")
+const ValidationReport = require("../models/ValidationReport");
 const keySchema = joi.string().required()
 	.description('The key of the document')
 
@@ -55,6 +58,104 @@ router.tag('Terms')
 //
 // Services.
 //
+
+/**
+ * Create a term
+ * This service can be used to create a new term.
+ */
+router.post(
+	'insert',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doInsertTerm(request, response)
+		}
+	},
+	'term-insert'
+)
+	.summary('Create term')
+	.description(dd
+		`
+            **Create a term**
+             
+            ***In order to use this service, the current user must have the \`dict\` role.***
+             
+            This service can be used to create a new term of any kind: descriptor, structure type, \
+            namespace and all other types of terms.
+            
+            You provide the term in the request body, the service will validate the entry \
+            and, if correct, will insert the record.
+        `
+	)
+	.body(TermInsert, dd
+		`
+            **Service parameters**
+            
+            The service body expects the term object.
+            
+            It is required to have at least the \`_code\` and \`_info\` data blocks.
+            
+            The \`_code\` block is required to have at least the \`_nid\` and \`_lid\`. \
+            Namespaces are required, because global namespaces can only be created by \
+            data dictionary administrators, at this stage. The local identifier is required \
+            by default. The global identifier will be set, and overwritten, by the service. \
+            The list of official identifiers will also be set if missing.
+            
+            The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
+            the other properties are only provided as placeholders, delete them if not needed. \
+            Remember that all elements, except \`_provider\`, are dictionaries with the language \
+            code as the dictionary key and the text as the dictionary value, you will have to \
+            provide by default the entry in the default language (\`language\` entry in the service settings).
+            
+            The \`_data\` section and the \`_rule\` section are provided as placeholders, \
+            delete them if not needed. You are responsible for their contents.
+            
+            The document key will be automatically set, and overwritten, by the service.
+            
+            *Be aware that if you provide a local identifier in an enumeration field, \
+            its value will be resolved*.
+       `
+	)
+	.response(200, joi.object(), dd
+		`
+            **Inserted term**
+            
+            The service will return the newly inserted term.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided term is invalid:
+            - Parameter error: if the error is caught at the level of the parameter, \
+              the service will return a standard error.
+            - Validation error: if it is a validation error, the service will return an \
+              object with two properties: \`report\` will contain the status report and \
+              \`value\` will contain the provided term.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+	.response(409, ErrorModel, dd
+		`
+            **Term exists**
+            
+            The service will return this code if the term matches an already existing entry.
+        `
+	)
 
 /**
  * Get term by key
@@ -348,6 +449,124 @@ router.post(
  * @param request: API request.
  * @param response: API response.
  */
+function doInsertTerm(request, response)
+{
+	//
+	// Init local storage.
+	//
+	const term = request.body
+
+	//
+	// Init code section.
+	//
+	if(term.hasOwnProperty('_code')) {
+
+		//
+		// Set global identifier.
+		//
+		if(term._code.hasOwnProperty('_nid')) {
+			term._code['_gid'] = `${term._code._nid}${K.token.ns}${term._code._lid}`
+		} else {
+			term._code['_gid'] = term._code._lid
+		}
+
+		//
+		// Set key.
+		//
+		term._key = term._code._gid
+
+		//
+		// Set official codes.
+		//
+		if(term._code.hasOwnProperty('_aid')) {
+			if(!term._code._aid.includes(term._code._lid)) {
+				term._code._aid.push(term._code._lid)
+			}
+		} else {
+			term._code['_aid'] = [term._code._lid]
+		}
+	}
+
+	//
+	// Check information section.
+	//
+	if(term.hasOwnProperty('_info')) {
+
+		//
+		// Assert descriptions have the default language.
+		//
+		for(const field of ['_title', '_definition', '_description', '_examples', '_notes']) {
+			if(term._info.hasOwnProperty(field)) {
+				if(!term._info[field].hasOwnProperty(module.context.configuration.language)) {
+					response.throw(
+						400,
+						K.error.kMSG_ERROR_MISSING_DEF_LANG.message[module.context.configuration.language]
+					)
+
+					return                                                      // ==>
+				}
+			}
+		}
+	}
+
+	//
+	// Validate object.
+	//
+	const report = checkObject(term)
+
+	//
+	// Clean report.
+	//
+	for(const item of Object.keys(report)) {
+		if(report[item].status.code === 0 || report[item].status.code === 1) {
+			delete report[item]
+		}
+	}
+
+	//
+	// Handle errors.
+	//
+	if(Object.keys(report).length > 0) {
+		response.status(400)
+		response.send({ report: report, value: term })                          // ==>
+	}
+
+	//
+	// Save term.
+	//
+	else {
+		try
+		{
+			//
+			// Insert.
+			//
+			const meta = collection.save(term)
+
+			response.send(Object.assign(meta, term))                            // ==>
+		}
+		catch (error)
+		{
+			//
+			// Duplicate record
+			if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
+				response.throw(
+					409,
+					K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
+				)                                                               // ==>
+			}
+			else {
+				response.throw(500, error.message)                          // ==>
+			}
+		}
+	}
+
+} // doInsertTerm()
+
+/**
+ * Get term by key.
+ * @param request: API request.
+ * @param response: API response.
+ */
 function doGetTermByKey(request, response)
 {
 	//
@@ -393,60 +612,11 @@ function doSelectTerms(request, response)
 	//
 	// Init local storage.
 	//
-	const query = [aql`FOR item IN ${collection}`]
-
-	//
-	// Collect filters.
-	//
-	if(request.body.hasOwnProperty('term_type')) {
-		switch(request.body.term_type) {
-			case 'descriptor':
-				query.push(aql`FILTER HAS(item, '_data')`)
-				break;
-			case 'structure':
-				query.push(aql`FILTER HAS(item, '_rule')`)
-				break;
-		}
-	}
-	if(request.body.hasOwnProperty('_nid')) {
-		query.push(aql`FILTER item._code._nid LIKE ${request.body._nid}`)
-	}
-	if(request.body.hasOwnProperty('_lid')) {
-		query.push(aql`FILTER item._code._lid LIKE ${request.body._lid}`)
-	}
-	if(request.body.hasOwnProperty('_gid')) {
-		query.push(aql`FILTER item._code._gid LIKE ${request.body._gid}`)
-	}
-	if(request.body.hasOwnProperty('_aid')) {
-		query.push(aql`FILTER item._code._aid ANY IN ${request.body._aid}`)
-	}
-	if(request.body.hasOwnProperty('_title')) {
-		for(const [key, value] of Object.entries(request.body._title)) {
-			query.push(aql`FILTER item._info._title.${key} LIKE ${value}`)
-		}
-	}
-	if(request.body.hasOwnProperty('_definition')) {
-		for(const [key, value] of Object.entries(request.body._definition)) {
-			query.push(aql`FILTER item._info._definition.${key} LIKE ${value}`)
-		}
-	}
-	if(request.body.hasOwnProperty('_data')) {
-		query.push(aql`FILTER ATTRIBUTES(item._data) ANY IN ${request.body._data}`)
-	}
-	if(request.body.hasOwnProperty('_data') && request.body._data.includes('_scalar')) {
-		if(request.body.hasOwnProperty('_type')) {
-			query.push(aql`FILTER item._data._scalar._type IN ${request.body._type}`)
-		}
-		if(request.body.hasOwnProperty('_kind')) {
-			query.push(aql`FILTER item._data._scalar._kind ANY IN ${request.body._kind}`)
-		}
-	}
+	const query = termsSelectionQuery(request, response)
 
 	//
 	// Close query.
 	//
-	query.push(aql`SORT item._key ASC`)
-	query.push(aql`LIMIT ${request.body.start}, ${request.body.limit}`)
 	query.push(aql`RETURN item`)
 
 	//
@@ -478,10 +648,68 @@ function doSelectTermKeys(request, response)
 	//
 	// Init local storage.
 	//
+	const query = termsSelectionQuery(request, response)
+
+	//
+	// Close query.
+	//
+	query.push(aql`RETURN item._key`)
+
+	//
+	// Perform query.
+	//
+	const result = K.db._query(aql.join(query)).toArray()
+
+	response.send(result)                                                       // ==>
+
+} // doSelectTermKeys()
+
+/**
+ * Get term keys list.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doSelectTermKeys(request, response)
+{
+	//
+	// Init local storage.
+	//
+	const query = termsSelectionQuery(request, response)
+
+	//
+	// Close query.
+	//
+	query.push(aql`RETURN item._key`)
+
+	//
+	// Perform query.
+	//
+	const result = K.db._query(aql.join(query)).toArray()
+
+	response.send(result)                                                       // ==>
+
+} // doSelectTermKeys()
+
+
+//
+// Utility functions.
+//
+
+/**
+ * Prepare terms selection query.
+ * @param request: API request.
+ * @param response: API response.
+ * @return {Array<Aql>}: Query elements.
+ */
+function termsSelectionQuery(request, response)
+{
+	//
+	// Init local storage.
+	//
 	const query = [aql`FOR item IN ${collection}`]
 
 	//
-	// Collect filters.
+	// Term type.
 	//
 	if(request.body.hasOwnProperty('term_type')) {
 		switch(request.body.term_type) {
@@ -493,35 +721,49 @@ function doSelectTermKeys(request, response)
 				break;
 		}
 	}
-	if(request.body.hasOwnProperty('_nid')) {
-		query.push(aql`FILTER item._code._nid LIKE ${request.body._nid}`)
+
+	//
+	// Term scalar codes.
+	//
+	for(const tok of ['_nid', '_lid', '_gid']) {
+		if(request.body.hasOwnProperty(tok)) {
+			query.push(aql`FILTER item._code.${tok} LIKE ${request.body[tok]}`)
+		}
 	}
-	if(request.body.hasOwnProperty('_lid')) {
-		query.push(aql`FILTER item._code._lid LIKE ${request.body._lid}`)
-	}
-	if(request.body.hasOwnProperty('_gid')) {
-		query.push(aql`FILTER item._code._gid LIKE ${request.body._gid}`)
-	}
+
+	//
+	// List of official codes.
+	//
 	if(request.body.hasOwnProperty('_aid')) {
 		query.push(aql`FILTER item._code._aid ANY IN ${request.body._aid}`)
 	}
-	if(request.body.hasOwnProperty('_title')) {
-		for(const [key, value] of Object.entries(request.body._title)) {
-			query.push(aql`FILTER item._info._title.${key} LIKE ${value}`)
+
+	//
+	// Term descriptions.
+	//
+	for(const tok of ['_title', '_definition']) {
+		if(request.body.hasOwnProperty(tok)) {
+			for(const [key, value] of Object.entries(request.body[tok])) {
+				query.push(aql`FILTER item._info.${tok}.${key} LIKE ${value}`)
+			}
 		}
 	}
-	if(request.body.hasOwnProperty('_definition')) {
-		for(const [key, value] of Object.entries(request.body._definition)) {
-			query.push(aql`FILTER item._info._definition.${key} LIKE ${value}`)
-		}
-	}
+
+	//
+	// Descriptor data block.
+	//
 	if(request.body.hasOwnProperty('_data')) {
 		query.push(aql`FILTER ATTRIBUTES(item._data) ANY IN ${request.body._data}`)
 	}
+
+	//
+	// Data type and kind.
+	//
 	if(request.body.hasOwnProperty('_data') && request.body._data.includes('_scalar')) {
 		if(request.body.hasOwnProperty('_type')) {
 			query.push(aql`FILTER item._data._scalar._type IN ${request.body._type}`)
 		}
+
 		if(request.body.hasOwnProperty('_kind')) {
 			query.push(aql`FILTER item._data._scalar._kind ANY IN ${request.body._kind}`)
 		}
@@ -532,13 +774,116 @@ function doSelectTermKeys(request, response)
 	//
 	query.push(aql`SORT item._key ASC`)
 	query.push(aql`LIMIT ${request.body.start}, ${request.body.limit}`)
-	query.push(aql`RETURN item._key`)
+
+	return query                                                                // ==>
+
+} // termsSelectionQuery()
+
+/**
+ * Validate descriptor.
+ * @param theDescriptor {String}: Descriptor.
+ * @param theValue: Descriptor value parent.
+ * @param theIndex {String}: Value property name.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
+ */
+function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_639_3_eng')
+{
+	//
+	// Init report.
+	//
+	let report = new ValidationReport(theDescriptor)
 
 	//
-	// Perform query.
+	// Validate descriptor.
 	//
-	const result = K.db._query(aql.join(query)).toArray()
+	const valid = Validation.validateDescriptor(
+		theDescriptor,
+		[theValue, theIndex],
+		report
+	)
 
-	response.send(result)                                                       // ==>
+	//
+	// Move leaf descriptor in status on error.
+	//
+	if(!valid) {
+		if(report.hasOwnProperty("status")) {
+			if(report.hasOwnProperty("current")) {
+				report.status["descriptor"] = report["current"]
+			}
+		}
+	}
 
-} // doSelectTermKeys()
+	//
+	// Delete leaf descriptor from report.
+	//
+	if(report.hasOwnProperty("current")) {
+		delete report["current"]
+	}
+
+	//
+	// Convert ignored to set.
+	//
+	if(report.ignored.length > 0) {
+		report.ignored = [...new Set(report.ignored)]
+	} else {
+		delete report.ignored
+	}
+
+	//
+	// Remove resolved if empty.
+	//
+	if(report.hasOwnProperty("resolved")) {
+		if(Object.keys(report.resolved).length === 0) {
+			delete report.resolved
+		}
+	}
+
+	//
+	// Set language.
+	//
+	Validation.setLanguage(report, theLanguage)
+
+	return report                                                               // ==>
+
+} // checkDescriptor()
+
+/**
+ * Validate object.
+ * @param theValue: Object value.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
+ */
+function checkObject(theValue, theLanguage = 'iso_639_3_eng')
+{
+	//
+	// Init local storage.
+	//
+	let result = {}
+
+	//
+	// Iterate object properties.
+	//
+	for(const property in theValue) {
+
+		//
+		// Validate current descriptor.
+		//
+		let report = checkDescriptor(property, theValue, property, theLanguage)
+
+		//
+		// Remove top level descriptor from report.
+		//
+		if(report.hasOwnProperty("descriptor")) {
+			delete report["descriptor"]
+		}
+
+		//
+		// Add to result.
+		//
+		result[property] = report
+	}
+
+	return result                                                               // ==>
+
+} // checkObject()

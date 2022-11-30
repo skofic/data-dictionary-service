@@ -27,6 +27,14 @@ module.exports = Object.freeze({
     },
 
     //
+    // Tokens.
+    //
+    "token": {
+        "ns": "_",
+        "tok": "/"
+    },
+
+    //
     // Database connection.
     //
     db: database,
@@ -585,6 +593,33 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Errore di conflitto: il record è stato modificato prima dell'operazione.",
                 iso_639_3_fra: "Erreur de conflit: la fiche a été modifiée avant votre opération.",
                 iso_639_3_esp: "Error de conflicto: el registro fue modificado antes de su operación."
+            }
+        },
+        kMSG_ERROR_DUPLICATE: {
+            code: 36,
+            message: {
+                iso_639_3_eng: "Conflict error: existing record.",
+                iso_639_3_ita: "Errore di conflitto: record esistente.",
+                iso_639_3_fra: "Erreur de conflit: la fiche existe.",
+                iso_639_3_esp: "Error de conflicto: el registro existe."
+            }
+        },
+        kMSG_ERROR_BAD_PARAM: {
+            code: 37,
+            message: {
+                iso_639_3_eng: "Invalid parameter.",
+                iso_639_3_ita: "Parametro invalido.",
+                iso_639_3_fra: "Paramètre invalide.",
+                iso_639_3_esp: "Parametro no valido."
+            }
+        },
+        kMSG_ERROR_MISSING_DEF_LANG: {
+            code: 38,
+            message: {
+                iso_639_3_eng: "Missing default language description.",
+                iso_639_3_ita: "Manca descrizione nella lingua base.",
+                iso_639_3_fra: "Description dans la langue de default manque.",
+                iso_639_3_esp: "Falta descripción en el idioma de base."
             }
         }
     }

@@ -1483,6 +1483,51 @@ function validateRegexp(theBlock, theValue, theReport)
 
 } // validateRegexp()
 
+/**
+ * Set default language if necessary
+ * The function will set the status message in the required language,
+ * the logic works as follows:
+ * - If the language was not provided, English will be set by default.
+ * - If `all` was provided, the status will return the message in all registered languages.
+ * - If the provided language is a valid `iso_639_3` global identifier and the message exists
+ * in that language, the message will be set in that language.
+ * - If the provided language was not found, it will default to the English message.
+ *
+ * This will occur only if the report has the status block.
+ * @param theReport {Object}: Validation report object, expected to have status.
+ * @param theLanguage {String}: Language code, defaults to English.
+ */
+function setLanguage(theReport, theLanguage = 'iso_639_3_eng')
+{
+    //
+    // Skip all languages.
+    //
+    if(theLanguage !== 'all') {
+
+        //
+        // Check if report has status.
+        //
+        if(theReport.hasOwnProperty('status')) {
+
+            //
+            // Ensure status message is an object.
+            //
+            if(utils.isObject(theReport.status.message)) {
+
+                //
+                // Match language code.
+                //
+                if(theReport.status.message.hasOwnProperty(theLanguage)) {
+                    theReport.status.message = theReport.status.message[theLanguage]
+                } else {
+                    theReport.status.message = theReport.status.message['iso_639_3_eng']
+                }
+            }
+        }
+    }
+
+} // setLanguage()
+
 
 module.exports = {
     validateDescriptor,
@@ -1499,5 +1544,7 @@ module.exports = {
     validateInteger,
     validateNumber,
     validateTimestamp,
-    validateString
+    validateString,
+
+    setLanguage
 }
