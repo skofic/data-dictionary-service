@@ -22,7 +22,7 @@ const router = createRouter();
 module.exports = router;
 
 
-router.tag('term');
+router.tag('UNSAFE TERM SERVICES');
 
 /*
 router.get(function (req, res) {
@@ -35,6 +35,7 @@ router.get(function (req, res) {
 `);
 */
 
+/*
 router.post(function (req, res) {
   const term = req.body;
   let meta;
@@ -61,8 +62,9 @@ router.post(function (req, res) {
   Creates a new term from the request body and
   returns the saved document.
 `);
+ */
 
-
+/*
 router.get(':key', function (req, res) {
   const key = req.pathParams.key;
   let term
@@ -82,7 +84,7 @@ router.get(':key', function (req, res) {
 .description(dd`
   Retrieves a term by its key.
 `);
-
+ */
 
 router.put(':key', function (req, res) {
   const key = req.pathParams.key;
