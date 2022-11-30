@@ -17,8 +17,8 @@ module.exports = {
 		_lid: joi.string(),
 		_gis: joi.string(),
 		_aid: joi.array().items(joi.string()),
-		_title: joi.string(),
-		_definition: joi.string(),
+		_title: joi.object(),
+		_definition: joi.object(),
 		_data: joi.array().items(joi.string()),
 		_type: joi.array().items(joi.string()),
 		_kind: joi.array().items(joi.string())
