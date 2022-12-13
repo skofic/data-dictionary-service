@@ -171,7 +171,7 @@ router.get(
 	},
 	'term-key'
 )
-	.summary('Get term by key')
+	.summary('Term by key')
 	.description(dd
 		`
             **Get a term by key**
@@ -224,6 +224,66 @@ router.get(
 	)
 
 /**
+ * Get terms dictionary
+ * This service can be used to retrieve a dictionary of ters.
+ */
+router.post(
+	'dict/:lang',
+	(request, response) => {
+		const roles = [K.environment.role.read]
+		if(Session.hasPermission(request, response, roles)) {
+			doDictionaryTerms(request, response)
+		}
+	},
+	'term-dictionary'
+)
+	.summary('Get terms dictionary')
+	.description(dd
+		`
+            **Get a dictionary of terms**
+             
+            ***In order to use this service, the current user must have the \`read\` role.***
+             
+            This service can be used to retrieve a dictionary of terms. Provide an array of term \
+            keys and the service will return a key/value dictionary in which the keys will be the \
+            provided keys and the values will be the found term objects.
+             
+             The service expects a parameter, \`lang\`, which represents the language code in which \
+             you want the term descriptions returned. To return all available languages pass \`@\`.
+        `
+	)
+	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
+	.body(joi.array().items(joi.string()).required(), dd
+		`
+            **Service parameters**
+            
+            The service body expects an array of term global identifiers.
+       `
+	)
+	.response(200, joi.object(), dd
+		`
+            **Terms dictionary**
+            
+            The service will return a dictionary featuring the term key as the dictionary key \
+            and the term object as the dictionary value. Unmatched term keys will have a value of \`null\`.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
  * Get list of term keys
  * This service can be used to get a selected list of term keys.
  */
@@ -237,7 +297,7 @@ router.post(
 	},
 	'term-key-list'
 )
-	.summary('List term keys')
+	.summary('Query term keys')
 	.description(dd
 		`
             **Get a list of term keys**
@@ -342,7 +402,7 @@ router.post(
 	},
 	'term-list'
 )
-	.summary('List terms')
+	.summary('Query terms')
 	.description(dd
 		`
             **Get a list of terms**
@@ -601,6 +661,55 @@ function doGetTermByKey(request, response)
 	}
 
 } // doGetTermByKey()
+
+/**
+ * Get term by key.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doDictionaryTerms(request, response)
+{
+	//
+	// Try query.
+	//
+	try
+	{
+		//
+		// Get term.
+		//
+		const terms = collection.documents(request.body)
+
+		//
+		// Select language.
+		//
+		if(request.pathParams.lang !== '@') {
+			for(let i = 0; i < terms.documents.length; i++) {
+				Utils.termLanguage(terms.documents[i], request.pathParams.lang)
+			}
+		}
+
+		//
+		// Build dictionary.
+		//
+		let result = {}
+		request.body.forEach(key => { result[key] = null })
+		terms.documents.forEach(term => { result[term._key] = term})
+
+		response.send(result)                                                   // ==>
+	}
+	catch (error)
+	{
+		if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			response.throw(
+				404,
+				K.error.kMSG_TERM_NOT_FOUND.message[module.context.configuration.language]
+			)                                                                   // ==>
+		} else {
+			response.throw(500, error.message)                               // ==>
+		}
+	}
+
+} // doDictionaryTerms()
 
 /**
  * Get terms list.
