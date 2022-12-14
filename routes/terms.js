@@ -27,6 +27,7 @@ const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic")
 const TermError = require("../models/error_generic")
 const TermInsert = require('../models/term_insert')
+const TermsInsert = require('../models/terms_insert')
 const TermDisplay = require('../models/term_display')
 const TermSelection = require('../models/term_selection')
 const ValidationReport = require("../models/ValidationReport");
@@ -60,10 +61,6 @@ router.tag('Terms')
 // Services.
 //
 
-/**
- * Create a term
- * This service can be used to create a new term.
- */
 router.post(
 	'insert',
 	(request, response) => {
@@ -74,30 +71,121 @@ router.post(
 	},
 	'term-insert'
 )
-	.summary('Create terms')
+	.summary('Create term')
 	.description(dd
 		`
-            **Create terms**
+            **Create a term**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              
-            This service can be used to create one or more terms of any kind: descriptor, \
-            structure type, namespace and all other types of terms.
+            This service can be used to create a new term of any kind: descriptor, structure type, \
+            namespace and all other types of terms.
             
-            You provide the terms in the request body, the service will validate the entry \
+            You provide the term in the request body, the service will validate the entry \
             and, if correct, will insert the record.
-            
-            You can either provide a single term object, or an array of term objects. \
-            The operation performs an insert, so any duplicate key will result in a failure.
         `
 	)
 	.body(TermInsert, dd
 		`
             **Service parameters**
             
-            The service body expects the term object, or an array of term objects.
+            The service body expects the term object.
             
-            Terms are required to have at least the \`_code\` and \`_info\` data blocks.
+            It is required to have at least the \`_code\` and \`_info\` data blocks.
+            
+            The \`_code\` block is required to have at least the \`_nid\` and \`_lid\`. \
+            Namespaces are required, because global namespaces can only be created by \
+            data dictionary administrators, at this stage. The local identifier is required \
+            by default. The global identifier will be set, and overwritten, by the service. \
+            The list of official identifiers will also be set if missing.
+            
+            The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
+            the other properties are only provided as placeholders, delete them if not needed. \
+            Remember that all elements, except \`_provider\`, are dictionaries with the language \
+            code as the dictionary key and the text as the dictionary value, you will have to \
+            provide by default the entry in the default language (\`language\` entry in the service settings).
+            
+            The \`_data\` section and the \`_rule\` section are provided as placeholders, \
+            delete them if not needed. You are responsible for their contents.
+            
+            The document key will be automatically set, and overwritten, by the service.
+            
+            *Be aware that if you provide a local identifier in an enumeration field, \
+            its value will be resolved*.
+       `
+	)
+	.response(200, joi.object(), dd
+		`
+            **Inserted term**
+            
+            The service will return the newly inserted term.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided term is invalid:
+            - Parameter error: if the error is caught at the level of the parameter, \
+              the service will return a standard error.
+            - Validation error: if it is a validation error, the service will return an \
+              object with two properties: \`report\` will contain the status report and \
+              \`value\` will contain the provided term.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+	.response(409, ErrorModel, dd
+		`
+            **Term exists**
+            
+            The service will return this code if the term matches an already existing entry.
+        `
+	)
+
+router.post(
+	'insert/many',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doInsertTerms(request, response)
+		}
+	},
+	'terms-insert'
+)
+	.summary('Create terms')
+	.description(dd
+		`
+            **Create a list of term**
+             
+            ***In order to use this service, the current user must have the \`dict\` role.***
+             
+            This service can be used to create a new term of any kind: descriptor, structure type, \
+            namespace and all other types of terms.
+            
+            You provide the term in the request body, the service will validate the entry \
+            and, if correct, will insert the record.
+        `
+	)
+	.body(TermsInsert, dd
+		`
+            **Service parameters**
+            
+            The service body expects the term object.
+            
+            It is required to have at least the \`_code\` and \`_info\` data blocks.
             
             The \`_code\` block is required to have at least the \`_nid\` and \`_lid\`. \
             Namespaces are required, because global namespaces can only be created by \
@@ -122,11 +210,9 @@ router.post(
 	)
 	.response(200, joi.array().items(joi.object()), dd
 		`
-            **Inserted terms**
+            **Inserted term**
             
-            The service will return an array with one element for each term provided:
-            - If the operation was successful, the element will be the new term object.
-            - If there was an error, the element will be an error object.
+            The service will return the newly inserted term.
         `
 	)
 	.response(400, joi.object(), dd
@@ -139,8 +225,6 @@ router.post(
             - Validation error: if it is a validation error, the service will return an \
               object with two properties: \`report\` will contain the status report and \
               \`value\` will contain the provided term.
-            
-            The service will exit on the first error.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -155,6 +239,13 @@ router.post(
             **Unauthorised user**
             
             The service will return this code if the current user is not a dictionary user.
+        `
+	)
+	.response(409, ErrorModel, dd
+		`
+            **Term exists**
+            
+            The service will return this code if the term matches an already existing entry.
         `
 	)
 
@@ -506,12 +597,92 @@ router.post(
 //
 
 /**
- * Get term by key.
+ * Insert term.
  * @param request: API request.
  * @param response: API response.
  */
 function doInsertTerm(request, response)
 {
+	//
+	// Init local storage.
+	//
+	const term = request.body
+
+	//
+	// Init code section.
+	//
+	insertTermPrepareCode(term, request, response)
+
+	//
+	// Check information section.
+	//
+	if (!insertTermCheckInfo(term, request, response)) {
+		return                                                                  // ==>
+	}
+
+	//
+	// Validate object.
+	//
+	const report = checkObject(term)
+
+	//
+	// Clean report.
+	//
+	for(const item of Object.keys(report)) {
+		if(report[item].status.code === 0 || report[item].status.code === 1) {
+			delete report[item]
+		}
+	}
+
+	//
+	// Handle errors.
+	//
+	if(Object.keys(report).length > 0) {
+		response.status(400)
+		response.send({ report: report, value: term })                          // ==>
+	}
+
+		//
+		// Save term.
+	//
+	else {
+		try
+		{
+			//
+			// Insert.
+			//
+			const meta = collection.save(term)
+
+			response.send(Object.assign(meta, term))                            // ==>
+		}
+		catch (error)
+		{
+			//
+			// Duplicate record
+			if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
+				response.throw(
+					409,
+					K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
+				)                                                               // ==>
+			}
+			else {
+				response.throw(500, error.message)                          // ==>
+			}
+		}
+	}
+
+} // doInsertTerm()
+
+/**
+ * Insert terms.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doInsertTerms(request, response)
+{
+	response.throw(500, "Service under development...")
+	return
+
 	//
 	// Init local storage.
 	//
@@ -580,7 +751,7 @@ function doInsertTerm(request, response)
 		response.throw(500, error.message)                                  // ==>
 	}
 
-} // doInsertTerm()
+} // doInsertTerms()
 
 /**
  * Get term by key.

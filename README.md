@@ -11,7 +11,7 @@ This repository contains the [ArangoDB](https://www.arangodb.com) [Foxx micro se
 
 ## Documentation
 
-There is not yet definitive documentation available, but you can go to [this](https://github.com/skofic/data-dictionary-management/blob/main/docs/README.md) page to have an idea of the principles and ideas behind this data dictionary.
+There is not yet definitive documentation available, but you can go to **[this](https://github.com/skofic/data-dictionary-management/blob/main/docs/README.md)** page to have an idea of the principles and ideas behind this data dictionary.
 
 ## Services
 

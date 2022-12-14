@@ -8,7 +8,7 @@ const joi = require('joi')
  * This model represents the user document returned by authentication services.
  */
 module.exports = {
-	schema: {
+	schema: joi.array().items(joi.object({
 		_code: joi.object({
 			_nid: joi.string(),
 			_lid: joi.string().required(),
@@ -27,7 +27,7 @@ module.exports = {
 		}).required(),
 		_data: joi.object(),
 		_rule: joi.object()
-	},
+	})),
 
 	forClient(obj) {
 		// Implement outgoing transformations here
