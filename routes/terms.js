@@ -30,6 +30,7 @@ const TermInsert = require('../models/term_insert')
 const TermDisplay = require('../models/term_display')
 const TermSelection = require('../models/term_selection')
 const ValidationReport = require("../models/ValidationReport");
+const {isArray} = require("../utils/utils");
 const keySchema = joi.string().required()
 	.description('The key of the document')
 
@@ -73,27 +74,30 @@ router.post(
 	},
 	'term-insert'
 )
-	.summary('Create term')
+	.summary('Create terms')
 	.description(dd
 		`
-            **Create a term**
+            **Create terms**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              
-            This service can be used to create a new term of any kind: descriptor, structure type, \
-            namespace and all other types of terms.
+            This service can be used to create one or more terms of any kind: descriptor, \
+            structure type, namespace and all other types of terms.
             
-            You provide the term in the request body, the service will validate the entry \
+            You provide the terms in the request body, the service will validate the entry \
             and, if correct, will insert the record.
+            
+            You can either provide a single term object, or an array of term objects. \
+            The operation performs an insert, so any duplicate key will result in a failure.
         `
 	)
 	.body(TermInsert, dd
 		`
             **Service parameters**
             
-            The service body expects the term object.
+            The service body expects the term object, or an array of term objects.
             
-            It is required to have at least the \`_code\` and \`_info\` data blocks.
+            Terms are required to have at least the \`_code\` and \`_info\` data blocks.
             
             The \`_code\` block is required to have at least the \`_nid\` and \`_lid\`. \
             Namespaces are required, because global namespaces can only be created by \
@@ -116,11 +120,13 @@ router.post(
             its value will be resolved*.
        `
 	)
-	.response(200, joi.object(), dd
+	.response(200, joi.array().items(joi.object()), dd
 		`
-            **Inserted term**
+            **Inserted terms**
             
-            The service will return the newly inserted term.
+            The service will return an array with one element for each term provided:
+            - If the operation was successful, the element will be the new term object.
+            - If there was an error, the element will be an error object.
         `
 	)
 	.response(400, joi.object(), dd
@@ -133,6 +139,8 @@ router.post(
             - Validation error: if it is a validation error, the service will return an \
               object with two properties: \`report\` will contain the status report and \
               \`value\` will contain the provided term.
+            
+            The service will exit on the first error.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -147,13 +155,6 @@ router.post(
             **Unauthorised user**
             
             The service will return this code if the current user is not a dictionary user.
-        `
-	)
-	.response(409, ErrorModel, dd
-		`
-            **Term exists**
-            
-            The service will return this code if the term matches an already existing entry.
         `
 	)
 
@@ -514,110 +515,69 @@ function doInsertTerm(request, response)
 	//
 	// Init local storage.
 	//
-	const term = request.body
-
-	//
-	// Init code section.
-	//
-	if(term.hasOwnProperty('_code')) {
-
-		//
-		// Set global identifier.
-		//
-		if(term._code.hasOwnProperty('_nid')) {
-			term._code['_gid'] = `${term._code._nid}${K.token.ns}${term._code._lid}`
-		} else {
-			term._code['_gid'] = term._code._lid
-		}
-
-		//
-		// Set key.
-		//
-		term._key = term._code._gid
-
-		//
-		// Set official codes.
-		//
-		if(term._code.hasOwnProperty('_aid')) {
-			if(!term._code._aid.includes(term._code._lid)) {
-				term._code._aid.push(term._code._lid)
-			}
-		} else {
-			term._code['_aid'] = [term._code._lid]
-		}
+	let terms = []
+	if(!isArray(request.body)) {
+		terms.push(request.body)
+	} else {
+		terms = request.body
 	}
 
 	//
-	// Check information section.
+	// Iterate provided terms.
 	//
-	if(term.hasOwnProperty('_info')) {
+	terms.forEach(
+		term => {
+			//
+			// Init code section.
+			//
+			insertTermPrepareCode(term, request, response)
 
-		//
-		// Assert descriptions have the default language.
-		//
-		for(const field of ['_title', '_definition', '_description', '_examples', '_notes']) {
-			if(term._info.hasOwnProperty(field)) {
-				if(!term._info[field].hasOwnProperty(module.context.configuration.language)) {
-					response.throw(
-						400,
-						K.error.kMSG_ERROR_MISSING_DEF_LANG.message[module.context.configuration.language]
-					)
+			//
+			// Check information section.
+			//
+			if (!insertTermCheckInfo(term, request, response)) {
+				return                                                          // ==>
+			}
 
-					return                                                      // ==>
-				}
+			//
+			// Validate object.
+			//
+			if (!insertTermValidateObject(term, request, response)) {
+				return                                                          // ==>
 			}
 		}
-	}
-
-	//
-	// Validate object.
-	//
-	const report = checkObject(term)
-
-	//
-	// Clean report.
-	//
-	for(const item of Object.keys(report)) {
-		if(report[item].status.code === 0 || report[item].status.code === 1) {
-			delete report[item]
-		}
-	}
-
-	//
-	// Handle errors.
-	//
-	if(Object.keys(report).length > 0) {
-		response.status(400)
-		response.send({ report: report, value: term })                          // ==>
-	}
+	)
 
 	//
 	// Save term.
 	//
-	else {
-		try
-		{
-			//
-			// Insert.
-			//
-			const meta = collection.save(term)
+	try
+	{
+		//
+		// Transaction.
+		//
+		// const result = K.db._executeTransaction({
+		// 	collections: {
+		// 		write: [ params.collection ]
+		// 	},
+		// 	action: function (params) {
+		// 		var db = require("@arangodb").db
+		// 		var collection = db._collection(params['collection'])
+		//
+		// 		return collection.insert(params['data'])
+		// 	},
+		// 	params: {
+		// 		collection: K.collection.term.name,
+		// 		data: terms
+		// 	}
+		// })
+		// response.send(result)                                                   // ==>
 
-			response.send(Object.assign(meta, term))                            // ==>
-		}
-		catch (error)
-		{
-			//
-			// Duplicate record
-			if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
-				response.throw(
-					409,
-					K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
-				)                                                               // ==>
-			}
-			else {
-				response.throw(500, error.message)                          // ==>
-			}
-		}
+		response.send(collection.insert(terms, { returnNew: true }))            // ==>
+	}
+	catch (error)
+	{
+		response.throw(500, error.message)                                  // ==>
 	}
 
 } // doInsertTerm()
@@ -996,3 +956,116 @@ function checkObject(theValue, theLanguage = 'iso_639_3_eng')
 	return result                                                               // ==>
 
 } // checkObject()
+
+/**
+ * Prepare term code section.
+ * @param term: The term object.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function insertTermPrepareCode(term, request, response)
+{
+	//
+	// Init code section.
+	//
+	if(term.hasOwnProperty('_code')) {
+
+		//
+		// Set global identifier.
+		//
+		if(term._code.hasOwnProperty('_nid')) {
+			term._code['_gid'] = `${term._code._nid}${K.token.ns}${term._code._lid}`
+		} else {
+			term._code['_gid'] = term._code._lid
+		}
+
+		//
+		// Set key.
+		//
+		term._key = term._code._gid
+
+		//
+		// Set official codes.
+		//
+		if(term._code.hasOwnProperty('_aid')) {
+			if(!term._code._aid.includes(term._code._lid)) {
+				term._code._aid.push(term._code._lid)
+			}
+		} else {
+			term._code['_aid'] = [term._code._lid]
+		}
+	}
+
+} // insertTermPrepareCode()
+
+/**
+ * Check term info section.
+ * @param term: Term object.
+ * @param request: API request.
+ * @param response: API response.
+ * @return {Boolean}: `true` means correct, `false` means error: bail out.
+ */
+function insertTermCheckInfo(term, request, response)
+{
+	//
+	// Check information section.
+	//
+	if(term.hasOwnProperty('_info')) {
+
+		//
+		// Assert descriptions have the default language.
+		//
+		for(const field of ['_title', '_definition', '_description', '_examples', '_notes']) {
+			if(term._info.hasOwnProperty(field)) {
+				if(!term._info[field].hasOwnProperty(module.context.configuration.language)) {
+					response.throw(
+						400,
+						K.error.kMSG_ERROR_MISSING_DEF_LANG.message[module.context.configuration.language]
+					)
+
+					return false                                                // ==>
+				}
+			}
+		}
+	}
+
+	return true                                                                 // ==>
+
+} // insertTermCheckInfo()
+
+/**
+ * Validate term object.
+ * @param term: Term object.
+ * @param request: API request.
+ * @param response: API response.
+ * @return {Boolean}: `true` means correct, `false` means error: bail out.
+ */
+function insertTermValidateObject(term, request, response)
+{
+	//
+	// Validate object.
+	//
+	const report = checkObject(term)
+
+	//
+	// Clean report.
+	//
+	for(const item of Object.keys(report)) {
+		if(report[item].status.code === 0 || report[item].status.code === 1) {
+			delete report[item]
+		}
+	}
+
+	//
+	// Handle errors.
+	//
+	if(Object.keys(report).length > 0) {
+		response.status(400)
+		response.send({ report: report, value: term })
+
+		return false                                                            // ==>
+	}
+
+	return true                                                                 // ==>
+
+} // insertTermValidateObject()
