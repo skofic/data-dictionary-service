@@ -11,14 +11,9 @@ const joi = require('joi');
 // Import resources.
 //
 const K = require( '../utils/constants' );
-const Session = require('../utils/sessions')
 const Utils = require("../utils/utils");
+const Session = require('../utils/sessions')
 const Validation = require("../utils/validation");
-
-//
-// Types.
-//
-const ValidationReport = require('../models/ValidationReport')
 
 //
 // Models.

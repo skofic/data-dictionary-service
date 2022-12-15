@@ -18,20 +18,16 @@ const K = require("../utils/constants")
 const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
 const Validation = require("../utils/validation")
-const Dictionary = require("../utils/dictionary")
 
 //
 // Models.
 //
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic")
-const TermError = require("../models/error_generic")
 const TermInsert = require('../models/term_insert')
 const TermsInsert = require('../models/terms_insert')
 const TermDisplay = require('../models/term_display')
 const TermSelection = require('../models/term_selection')
-const ValidationReport = require("../models/ValidationReport");
-const {isArray} = require("../utils/utils");
 const keySchema = joi.string().required()
 	.description('The key of the document')
 
@@ -213,16 +209,20 @@ router.post(
             The service will return the newly inserted terms.
         `
 	)
-	.response(400, joi.object(), dd
+	.response(400, joi.array().items(joi.object()), dd
 		`
             **Invalid parameter**
             
             The service will return this code if the provided term is invalid:
             - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+              the service will return a standard error. Note that the service will exit \
+              on the first error.
+            - Validation error: in this case the service will return an object that will \
+              contain a property \`errors\`, an array of objects holding the value of the \
+              invalid term in a property called \`value\` and the status in a \`status\` \
+              property. The provided object may also contain a \`valid\` array property \
+              with the valid terms and a \`warnings\` array property containing all terms \
+              whose enumerations have been resolved and modified by the validation process.
         `
 	)
 	.response(401, ErrorModel, dd
