@@ -17,8 +17,9 @@ const TermsArrayModel = joi.array().items(joi.object({
 	_info: joi.object()
 }))
 const GraphPathsModel = joi.array().items(joi.object({
+	vertices: joi.array().items(TermsArrayModel),
 	edges: joi.array().items(joi.object()),
-	vertices: joi.array().items(TermsArrayModel)
+	weights: joi.array().items(joi.number())
 }))
 
 

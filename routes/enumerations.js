@@ -5,6 +5,7 @@
 //
 const dd = require('dedent');
 const joi = require('joi');
+const aql = require('@arangodb').aql
 
 //
 // Application constants.
@@ -785,6 +786,96 @@ router.post(
         `
     )
 
+router.post(
+    'add',
+    (request, response) => {
+        const roles = [K.environment.role.dict]
+        if(Session.hasPermission(request, response, roles)) {
+            doAddEnums(request, response)
+        }
+    },
+    'graph-add-enum'
+)
+    .summary('Add enumerations')
+    .description(dd
+        `
+            **Add enumerations**
+             
+            ***In order to use this service, the current user must have the \`dict\` role.***
+             
+            This service can be used to create an enumeration graph or to add \
+            enumerations to a parent term.
+            
+            The service expects an object that indicates the graph root, the \
+            parent node and its children. The *child* elements will be considered \
+            *valid options* of the *parent* node within the *root* graph.
+        `
+    )
+    .body(
+        joi.object({
+            root: joi.string().required(),
+            parent: joi.string().required(),
+            items: joi.array().items(joi.string()).required()
+        }),
+        dd
+            `
+            **Root, parent and elements**
+            
+            The request body should hold an object containing the following elements:
+            - \`root\`: The global identifier of the term that represents the \
+              enumeration type or root.
+            - \`parent\`: The global identifier of the term that represents \
+              the parent of the enumeration elements.
+            - \`items\`: A set of term global identifiers, each representing an enumeration.
+            
+            The *root* represents the type or name of the graph.
+            The *parent* represents a node in the graph, at any level, to which the provided \
+            enumeration options belong.
+            The *items* represent the identifiers of the terms that represent valid enumeration \
+            options for the *parent* node.
+         `
+    )
+    .response(200, joi.object(), dd
+        `
+            **Inserted enumerations**
+            
+            The service will return the newly inserted term.
+        `
+    )
+    .response(400, joi.object(), dd
+        `
+            **Invalid parameter**
+            
+            The service will return this code if the provided term is invalid:
+            - Parameter error: if the error is caught at the level of the parameter, \
+              the service will return a standard error.
+            - Validation error: if it is a validation error, the service will return an \
+              object with two properties: \`report\` will contain the status report and \
+              \`value\` will contain the provided term.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+    )
+    .response(409, ErrorModel, dd
+        `
+            **Edge exists**
+            
+            The service will return this code if an edge matches an already existing entry.
+        `
+    )
+
 
 //
 // Functions.
@@ -977,3 +1068,88 @@ function doCheckEnumsByCodes(request, response)
     response.send(result);                                                      // ==>
 
 } // doCheckEnumsByCodes()
+
+/**
+ * Insert enumerations.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doAddEnums(request, response)
+{
+    //
+    // Init local storage.
+    //
+    const data = request.body
+    const collection_terms = K.db._collection(K.collection.term.name)
+    const collection_edges = K.db._collection(K.collection.schema.name)
+
+    //
+    // Check for missing keys.
+    //
+    const missing = getMissingKeys(data)
+    if(missing.length > 0) {
+        response.throw(400, `The following terms are missing: ${missing.join(", ")}`)
+        return                                                                  // ==>
+    }
+
+    //
+    // Get edges to add.
+    //
+    const edges =
+        K.db._query( aql`
+            LET edges = (
+                FOR item IN ${data.items}
+                RETURN {
+                    _key: MD5(CONCAT(item, '\t', ${'_predicate_enum-of'}, '\t', ${`terms/${data.parent}`})),
+                    _from: item,
+                    _to: ${`terms/${data.parent}`},
+                    _predicate: ${'_predicate_enum-of'},
+                    _path: [${`terms/${data.root}`}]
+                }
+            )
+            
+            FOR edge IN edges
+            RETURN edge
+        `).toArray()
+
+    response.status(500)
+    response.send(edges)
+
+} // doAddEnums()
+
+
+//
+// Utils.
+//
+
+/**
+ * Assert enum request keys exist.
+ * This function will return the list of keys that are missing from terms collection.
+ * @param theData {Object}: Object containing `root`, `parent` and `items` term keys.
+ * @return {Array<String>}: List of missing keys
+ */
+function getMissingKeys(theData)
+{
+    //
+    // Ensure items are a set.
+    //
+    theData.items = [... new Set(theData.items)]
+
+    //
+    // Collect keys.
+    //
+    const terms = theData.items.concat([theData.root, theData.parent])
+
+    //
+    // Assert all terms exist.
+    //
+    const found =
+        K.db._query( aql`
+            LET terms = DOCUMENT(${K.db._collection(K.collection.term.name)}, ${terms})
+            FOR term IN terms
+            RETURN term._key
+        `).toArray()
+
+    return terms.filter(x => !found.includes(x))                                // ==>
+
+} // getMissingKeys()

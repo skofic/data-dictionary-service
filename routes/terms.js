@@ -720,24 +720,8 @@ function doInsertTerms(request, response)
 	try
 	{
 		//
-		// Transaction.
+		// Insert in transaction.
 		//
-		// const result = K.db._executeTransaction({
-		// 	collections: {
-		// 		write: [ params.collection ]
-		// 	},
-		// 	action: function (params) {
-		// 		var db = require("@arangodb").db
-		// 		var collection = db._collection(params['collection'])
-		//
-		// 		return collection.insert(params['data'])
-		// 	},
-		// 	params: {
-		// 		collection: K.collection.term.name,
-		// 		data: terms
-		// 	}
-		// })
-		// response.send(result)                                                   // ==>
 		const result =
 			K.db._query( aql`
             FOR term IN ${terms}
