@@ -10,7 +10,7 @@ const joi = require('joi')
 module.exports = {
 	schema: {
 		_code: joi.object({
-			_nid: joi.string(),
+			_nid: joi.string().allow(''),
 			_lid: joi.string().required(),
 			_gid: joi.string(),
 			_aid: joi.array().items(joi.string()),
@@ -19,7 +19,7 @@ module.exports = {
 		}).required(),
 		_info: joi.object({
 			_title: joi.object().required(),
-			_definition: joi.object().required(),
+			_definition: joi.object(),
 			_description: joi.object(),
 			_examples: joi.object(),
 			_notes: joi.object(),

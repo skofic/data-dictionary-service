@@ -93,10 +93,8 @@ router.post(
             
             It is required to have at least the \`_code\` and \`_info\` data blocks.
             
-            The \`_code\` block is required to have at least the \`_nid\` and \`_lid\`. \
-            Namespaces are required, because global namespaces can only be created by \
-            data dictionary administrators, at this stage. The local identifier is required \
-            by default. The global identifier will be set, and overwritten, by the service. \
+            The \`_code\` block is required to have at least the \`_lid\`. \
+            The global identifier will be set, and overwritten, by the service. \
             The list of official identifiers will also be set if missing.
             
             The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
@@ -111,8 +109,8 @@ router.post(
             The document key will be automatically set, and overwritten, by the service.
             
             *Be aware that if you provide a local identifier in an enumeration field, \
-            its value will be resolved*.
-       `
+            the service will attempt to resolve it into a global identifier*.
+         `
 	)
 	.response(200, joi.object(), dd
 		`
@@ -168,29 +166,29 @@ router.post(
 	.summary('Create terms')
 	.description(dd
 		`
-            **Create a list of term**
+            **Create a list of terms**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              
-            This service can be used to create a new term of any kind: descriptor, structure type, \
-            namespace and all other types of terms.
+            This service can be used to create a list of new terms.
             
-            You provide the term in the request body, the service will validate the entry \
-            and, if correct, will insert the record.
+            You provide an array of term objects in the request body, the service will validate \
+            the elements of the list and, if all are correct, it will insert all the the records.
+            
+            When inserting the records, the operation is executed transactionally \
+            in an all-or-nothing fashion.
         `
 	)
 	.body(TermsInsert, dd
 		`
             **Service parameters**
             
-            The service body expects the term object.
+            The service body expects an array of term objects.
             
             It is required to have at least the \`_code\` and \`_info\` data blocks.
             
-            The \`_code\` block is required to have at least the \`_nid\` and \`_lid\`. \
-            Namespaces are required, because global namespaces can only be created by \
-            data dictionary administrators, at this stage. The local identifier is required \
-            by default. The global identifier will be set, and overwritten, by the service. \
+            The \`_code\` block is required to have at least the \`_lid\`. \
+            The global identifier will be set, and overwritten, by the service. \
             The list of official identifiers will also be set if missing.
             
             The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
@@ -205,14 +203,14 @@ router.post(
             The document key will be automatically set, and overwritten, by the service.
             
             *Be aware that if you provide a local identifier in an enumeration field, \
-            its value will be resolved*.
+            the service will attempt to resolve it into a global identifier*.
        `
 	)
 	.response(200, joi.array().items(joi.object()), dd
 		`
-            **Inserted term**
+            **Inserted terms**
             
-            The service will return the newly inserted term.
+            The service will return the newly inserted terms.
         `
 	)
 	.response(400, joi.object(), dd
@@ -623,7 +621,7 @@ function doInsertTerm(request, response)
 	//
 	// Validate object.
 	//
-	const report = checkObject(term)
+	const report = Validation.checkObject(term)
 
 	//
 	// Clean report.
@@ -680,24 +678,17 @@ function doInsertTerm(request, response)
  */
 function doInsertTerms(request, response)
 {
-	response.throw(500, "Service under development...")
-	return
-
 	//
 	// Init local storage.
 	//
-	let terms = []
-	if(!isArray(request.body)) {
-		terms.push(request.body)
-	} else {
-		terms = request.body
-	}
+	let terms = request.body
 
 	//
-	// Iterate provided terms.
+	// Prepare code section and assert default language in info section.
 	//
 	terms.forEach(
-		term => {
+		term =>
+		{
 			//
 			// Init code section.
 			//
@@ -709,15 +700,19 @@ function doInsertTerms(request, response)
 			if (!insertTermCheckInfo(term, request, response)) {
 				return                                                          // ==>
 			}
-
-			//
-			// Validate object.
-			//
-			if (!insertTermValidateObject(term, request, response)) {
-				return                                                          // ==>
-			}
 		}
 	)
+
+	//
+	// Validate terms.
+	//
+	const report = Validation.checkObjects(terms)
+	if(report.hasOwnProperty('errors')) {
+		response.status(400)
+		response.send(report)
+
+		return                                                                  // ==>
+	}
 
 	//
 	// Save term.
@@ -743,8 +738,18 @@ function doInsertTerms(request, response)
 		// 	}
 		// })
 		// response.send(result)                                                   // ==>
+		const result =
+			K.db._query( aql`
+            FOR term IN ${terms}
+                INSERT term INTO ${collection}
+                OPTIONS {
+                    keepNull: false,
+                    overwriteMode: "conflict"
+                }
+            RETURN NEW
+        `).toArray();
 
-		response.send(collection.insert(terms, { returnNew: true }))            // ==>
+		response.send(result)                                                   // ==>
 	}
 	catch (error)
 	{
@@ -904,32 +909,6 @@ function doSelectTermKeys(request, response)
 
 } // doSelectTermKeys()
 
-/**
- * Get term keys list.
- * @param request: API request.
- * @param response: API response.
- */
-function doSelectTermKeys(request, response)
-{
-	//
-	// Init local storage.
-	//
-	const query = termsSelectionQuery(request, response)
-
-	//
-	// Close query.
-	//
-	query.push(aql`RETURN item._key`)
-
-	//
-	// Perform query.
-	//
-	const result = K.db._query(aql.join(query)).toArray()
-
-	response.send(result)                                                       // ==>
-
-} // doSelectTermKeys()
-
 
 //
 // Utility functions.
@@ -1020,115 +999,6 @@ function termsSelectionQuery(request, response)
 } // termsSelectionQuery()
 
 /**
- * Validate descriptor.
- * @param theDescriptor {String}: Descriptor.
- * @param theValue: Descriptor value parent.
- * @param theIndex {String}: Value property name.
- * @param theLanguage {String}: Response language enum, defaults to english.
- * @return {Object}: The validation status object.
- */
-function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_639_3_eng')
-{
-	//
-	// Init report.
-	//
-	let report = new ValidationReport(theDescriptor)
-
-	//
-	// Validate descriptor.
-	//
-	const valid = Validation.validateDescriptor(
-		theDescriptor,
-		[theValue, theIndex],
-		report
-	)
-
-	//
-	// Move leaf descriptor in status on error.
-	//
-	if(!valid) {
-		if(report.hasOwnProperty("status")) {
-			if(report.hasOwnProperty("current")) {
-				report.status["descriptor"] = report["current"]
-			}
-		}
-	}
-
-	//
-	// Delete leaf descriptor from report.
-	//
-	if(report.hasOwnProperty("current")) {
-		delete report["current"]
-	}
-
-	//
-	// Convert ignored to set.
-	//
-	if(report.ignored.length > 0) {
-		report.ignored = [...new Set(report.ignored)]
-	} else {
-		delete report.ignored
-	}
-
-	//
-	// Remove resolved if empty.
-	//
-	if(report.hasOwnProperty("resolved")) {
-		if(Object.keys(report.resolved).length === 0) {
-			delete report.resolved
-		}
-	}
-
-	//
-	// Set language.
-	//
-	Validation.setLanguage(report, theLanguage)
-
-	return report                                                               // ==>
-
-} // checkDescriptor()
-
-/**
- * Validate object.
- * @param theValue: Object value.
- * @param theLanguage {String}: Response language enum, defaults to english.
- * @return {Object}: The validation status object.
- */
-function checkObject(theValue, theLanguage = 'iso_639_3_eng')
-{
-	//
-	// Init local storage.
-	//
-	let result = {}
-
-	//
-	// Iterate object properties.
-	//
-	for(const property in theValue) {
-
-		//
-		// Validate current descriptor.
-		//
-		let report = checkDescriptor(property, theValue, property, theLanguage)
-
-		//
-		// Remove top level descriptor from report.
-		//
-		if(report.hasOwnProperty("descriptor")) {
-			delete report["descriptor"]
-		}
-
-		//
-		// Add to result.
-		//
-		result[property] = report
-	}
-
-	return result                                                               // ==>
-
-} // checkObject()
-
-/**
  * Prepare term code section.
  * @param term: The term object.
  * @param request: API request.
@@ -1189,10 +1059,9 @@ function insertTermCheckInfo(term, request, response)
 		for(const field of ['_title', '_definition', '_description', '_examples', '_notes']) {
 			if(term._info.hasOwnProperty(field)) {
 				if(!term._info[field].hasOwnProperty(module.context.configuration.language)) {
-					response.throw(
-						400,
-						K.error.kMSG_ERROR_MISSING_DEF_LANG.message[module.context.configuration.language]
-					)
+					let message = K.error.kMSG_ERROR_MISSING_DEF_LANG.message[module.context.configuration.language]
+					message += ` [term: ${term._key}]`
+					response.throw(400, message)
 
 					return false                                                // ==>
 				}
@@ -1203,40 +1072,3 @@ function insertTermCheckInfo(term, request, response)
 	return true                                                                 // ==>
 
 } // insertTermCheckInfo()
-
-/**
- * Validate term object.
- * @param term: Term object.
- * @param request: API request.
- * @param response: API response.
- * @return {Boolean}: `true` means correct, `false` means error: bail out.
- */
-function insertTermValidateObject(term, request, response)
-{
-	//
-	// Validate object.
-	//
-	const report = checkObject(term)
-
-	//
-	// Clean report.
-	//
-	for(const item of Object.keys(report)) {
-		if(report[item].status.code === 0 || report[item].status.code === 1) {
-			delete report[item]
-		}
-	}
-
-	//
-	// Handle errors.
-	//
-	if(Object.keys(report).length > 0) {
-		response.status(400)
-		response.send({ report: report, value: term })
-
-		return false                                                            // ==>
-	}
-
-	return true                                                                 // ==>
-
-} // insertTermValidateObject()

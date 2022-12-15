@@ -14,6 +14,11 @@ const utils = require('./utils');
 const dictionary = require('./dictionary');             // Dictionary functions.
 const {checkEnum} = require("./utils");                 // Utility functions.
 
+//
+// Types.
+//
+const ValidationReport = require('../models/ValidationReport')
+
 
 /******************************************************************************
  * Public functions
@@ -1277,6 +1282,11 @@ function validateObjectTypes(theBlock, theValue, theReport)
 function validateObjectRequired(theBlock, theValue, theReport)
 {
     //
+    // Init local storage.
+    //
+    const requiredPropertyName = 'required'
+
+    //
     // Check required.
     //
     if(theBlock.hasOwnProperty(K.term.dataRuleRequired)) {
@@ -1295,7 +1305,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
              if(_.intersection(keys, set) !== 1) {
                 theReport.status = K.error.kMSG_REQUIRED_ONE_PROPERTY
                  theReport.status["value"] = theValue[0][theValue[1]]
-                 theReport.status["set"] = set
+                 theReport.status[requiredPropertyName] = set
 
                 return false                                                    // ==>
             }
@@ -1309,7 +1319,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             if(_.intersection(keys, set) > 1) {
                 theReport.status = K.error.kMSG_REQUIRED_ONE_NONE_PROPERTY
                 theReport.status["value"] = theValue[0][theValue[1]]
-                theReport.status["set"] = set
+                theReport.status[requiredPropertyName] = set
 
                 return false                                                    // ==>
             }
@@ -1323,7 +1333,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             if(_.intersection(keys, set) === 0) {
                 theReport.status = K.error.kMSG_REQUIRED_ANY_PROPERTY
                 theReport.status["value"] = theValue[0][theValue[1]]
-                theReport.status["set"] = set
+                theReport.status[requiredPropertyName] = set
 
                 return false                                                    // ==>
             }
@@ -1345,7 +1355,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
                 if(_.intersection(keys, element) > 1) {
                     theReport.status = K.error.kMSG_REQUIRED_MORE_ONE_SELECTION
                     theReport.status["value"] = theValue[0][theValue[1]]
-                    theReport.status["set"] = element
+                    theReport.status[requiredPropertyName] = element
 
                     return false                                                // ==>
                 }
@@ -1360,7 +1370,7 @@ function validateObjectRequired(theBlock, theValue, theReport)
             if(_.intersection(keys, set).length !== set.length) {
                 theReport.status = K.error.kMSG_REQUIRED_ALL_SELECTION
                 theReport.status["value"] = theValue[0][theValue[1]]
-                theReport.status["set"] = set
+                theReport.status[requiredPropertyName] = set
 
                 return false                                                    // ==>
             }
@@ -1483,6 +1493,278 @@ function validateRegexp(theBlock, theValue, theReport)
 
 } // validateRegexp()
 
+
+//
+// Functions.
+//
+
+/**
+ * Validate descriptor.
+ * @param theDescriptor {String}: Descriptor.
+ * @param theValue: Descriptor value parent.
+ * @param theIndex {String}: Value property name.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
+ */
+function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_639_3_eng')
+{
+    //
+    // Init report.
+    //
+    let report = new ValidationReport(theDescriptor)
+
+    //
+    // Validate descriptor.
+    //
+    const valid = validateDescriptor(
+        theDescriptor,
+        [theValue, theIndex],
+        report
+    )
+
+    //
+    // Move leaf descriptor in status on error.
+    //
+    if(!valid) {
+        if(report.hasOwnProperty("status")) {
+            if(report.hasOwnProperty("current")) {
+                report.status["descriptor"] = report["current"]
+            }
+        }
+    }
+
+    //
+    // Delete leaf descriptor from report.
+    //
+    if(report.hasOwnProperty("current")) {
+        delete report["current"]
+    }
+
+    //
+    // Convert ignored to set.
+    //
+    if(report.ignored.length > 0) {
+        report.ignored = [...new Set(report.ignored)]
+    } else {
+        delete report.ignored
+    }
+
+    //
+    // Remove resolved if empty.
+    //
+    if(report.hasOwnProperty("resolved")) {
+        if(Object.keys(report.resolved).length === 0) {
+            delete report.resolved
+        }
+    }
+
+    //
+    // Set language.
+    //
+    setLanguage(report, theLanguage)
+
+    return report                                                               // ==>
+
+} // checkDescriptor()
+
+/**
+ * Check definition.
+ * @param theDefinition {String}: Data definition section.
+ * @param theValue: Descriptor value parent.
+ * @param theIndex {String}: Value property name.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
+ */
+function checkDefinition(theDefinition, theValue, theIndex, theLanguage = 'iso_639_3_eng')
+{
+    //
+    // Init report.
+    //
+    let report = new ValidationReport()
+
+    //
+    // Validate definition.
+    //
+    const valid = validateDataBlock(
+        theDefinition,
+        [theValue, theIndex],
+        report
+    )
+
+    //
+    // Move leaf descriptor in status on error.
+    //
+    if(!valid) {
+        if(report.hasOwnProperty("status")) {
+            if(report.hasOwnProperty("current")) {
+                report.status["descriptor"] = report["current"]
+            }
+        }
+    }
+
+    //
+    // Delete leaf descriptor from report.
+    //
+    if(report.hasOwnProperty("current")) {
+        delete report["current"]
+    }
+
+    //
+    // Convert ignored to set.
+    //
+    if(report.ignored.length > 0) {
+        report.ignored = [...new Set(report.ignored)]
+    } else {
+        delete report.ignored
+    }
+
+    //
+    // Remove resolved if empty.
+    //
+    if(report.hasOwnProperty("resolved")) {
+        if(Object.keys(report.resolved).length === 0) {
+            delete report.resolved
+        }
+    }
+
+    //
+    // Set language.
+    //
+    setLanguage(report, theLanguage)
+
+    return report                                                               // ==>
+
+} // checkDefinition()
+
+/**
+ * Check object.
+ * @param theValue: Object value.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
+ */
+function checkObject(theValue, theLanguage = 'iso_639_3_eng')
+{
+    //
+    // Init local storage.
+    //
+    let result = {}
+
+    //
+    // Iterate object properties.
+    //
+    for(const property in theValue) {
+
+        //
+        // Validate current descriptor.
+        //
+        let report = checkDescriptor(property, theValue, property, theLanguage)
+
+        //
+        // Remove top level descriptor from report.
+        //
+        if(report.hasOwnProperty("descriptor")) {
+            delete report["descriptor"]
+        }
+
+        //
+        // Add to result.
+        // Note the clone: if not we get the last element for all.
+        //
+        result[property] = JSON.parse(JSON.stringify(report))
+    }
+
+    return result                                                               // ==>
+
+} // checkObject()
+
+/**
+ * Check objects.
+ * @param theValue: Array of objects.
+ * @param theLanguage {String}: Response language enum, defaults to english.
+ * @return {Object}: The validation status object.
+ */
+function checkObjects(theValue, theLanguage = 'iso_639_3_eng')
+{
+    //
+    // Init local storage.
+    //
+    let report = {
+        valid: [],
+        warnings: [],
+        errors: []
+    }
+
+    //
+    // Iterate array.
+    //
+    for(let i = 0; i < theValue.length; i++) {
+
+        //
+        // Init local storage.
+        //
+        let issues = []
+        let error = false
+
+        //
+        // Iterate object properties.
+        //
+        let status = checkObject(theValue[i], theLanguage)
+
+        //
+        // Handle all OK.
+        //
+        if(_.isEmpty(status)) {
+            status = K.error.kMSG_OK
+        }
+
+        //
+        // Parse status.
+        //
+        for(const item of Object.values(status)) {
+            if(item.status.code !== 0) {
+                issues.push(item.status)
+                if(item.status.code !== 1) {
+                    error = true
+                }
+            }
+        }
+
+        //
+        // Handle errors.
+        //
+        if(issues.length > 0) {
+            let notice = {
+                value: theValue[i],
+                status: issues
+            }
+
+            if(error) {
+                report.errors.push(notice)
+            } else {
+                report.warnings.push(notice)
+            }
+        } else {
+            report.valid.push(theValue[i])
+        }
+    }
+
+    //
+    // Cleanup report.
+    //
+    if(report.valid.length === 0) {
+        delete report.valid
+    }
+    if(report.warnings.length === 0) {
+        delete report.warnings
+    }
+    if(report.errors.length === 0) {
+        delete report.errors
+    }
+
+    return report                                                               // ==>
+
+} // checkObjects()
+
 /**
  * Set default language if necessary
  * The function will set the status message in the required language,
@@ -1546,5 +1828,9 @@ module.exports = {
     validateTimestamp,
     validateString,
 
+    checkDescriptor,
+    checkDefinition,
+    checkObject,
+    checkObjects,
     setLanguage
 }

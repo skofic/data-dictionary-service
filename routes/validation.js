@@ -166,7 +166,7 @@ router.post(
             - \`property\`: missing required property, in case of incorrect data definition.
             - \`block\`: data definition section.
             - \`type\`: unimplemented or invalid data type, or data definition section name.
-            - \`set\`: list of required properties, in case one is missing.
+            - \`required\`: list of required properties, in case one is missing.
             - \`range\`: valid range, in the case of out of range values.
             - \`regexp\`: regular expression, in case a string does not match.
             
@@ -281,7 +281,7 @@ router.post(
             - \`property\`: missing required property, in case of incorrect data definition.
             - \`block\`: data definition section.
             - \`type\`: unimplemented or invalid data type, or data definition section name.
-            - \`set\`: list of required properties, in case one is missing.
+            - \`required\`: list of required properties, in case one is missing.
             - \`range\`: valid range, in the case of out of range values.
             - \`regexp\`: regular expression, in case a string does not match.
             
@@ -392,7 +392,7 @@ router.post(
             - \`property\`: missing required property, in case of incorrect data definition.
             - \`block\`: data definition section.
             - \`type\`: unimplemented or invalid data type, or data definition section name.
-            - \`set\`: list of required properties, in case one is missing.
+            - \`required\`: list of required properties, in case one is missing.
             - \`range\`: valid range, in the case of out of range values.
             - \`regexp\`: regular expression, in case a string does not match.
             
@@ -534,7 +534,7 @@ function doCheckDescriptor(theRequest, theResponse)
     //
     // Perform validation.
     //
-    let report = checkDescriptor(
+    let report = Utils.checkDescriptor(
         theRequest.body.descriptor,
         theRequest.body,
         "value",
@@ -572,7 +572,7 @@ function doCheckDefinition(theRequest, theResponse)
     //
     // Perform validation.
     //
-    let report = checkDefinition(
+    let report = Validation.checkDefinition(
         theRequest.body.definition,
         theRequest.body,
         "value",
@@ -604,7 +604,17 @@ function doCheckObject(theRequest, theResponse)
     //
     // Parse provided object.
     //
-    let report = checkObject(theRequest.body.value, theRequest.body.language)
+    let report = Validation.checkObject(theRequest.body.value, theRequest.body.language)
+
+    //
+    // Check for errors.
+    //
+    for(const item of Object.values(report)) {
+        if((item.status.code !== 0) && (item.status.code !== 1)) {
+            theResponse.status(400)
+            break
+        }
+    }
 
     theResponse.send({
         "value": theRequest.body.value,
@@ -621,264 +631,17 @@ function doCheckObject(theRequest, theResponse)
 function doCheckObjects(theRequest, theResponse)
 {
     //
-    // Init local storage.
+    // Check objects.
     //
-    let report = {
-        valid: [],
-        warnings: [],
-        errors: []
-    }
+    const report = Validation.checkObjects(theRequest.body.value, theRequest.body.language)
 
     //
-    // Iterate array.
+    // Handle errors.
     //
-    for(let i = 0; i < theRequest.body.value.length; i++) {
-
-        //
-        // Init local storage.
-        //
-        let issues = []
-        let error = false
-
-        //
-        // Iterate object properties.
-        //
-        let status = checkObject(theRequest.body.value[i], theRequest.body.language)
-
-        //
-        // Handle all OK.
-        //
-        if(_.isEmpty(status)) {
-            status = K.error.kMSG_OK
-        }
-
-        //
-        // Parse status.
-        //
-        for(const item of Object.values(status)) {
-            if(item.status.code !== 0) {
-                issues.push(item.status)
-                if(item.status.code !== 1) {
-                    error = true
-                }
-            }
-        }
-
-        //
-        // Handle errors.
-        //
-        if(issues.length > 0) {
-            let notice = {
-                value: theRequest.body.value[i],
-                status: issues
-            }
-
-            if(error) {
-                report.errors.push(notice)
-            } else {
-                report.warnings.push(notice)
-            }
-        } else {
-            report.valid.push(theRequest.body.value[i])
-        }
-    }
-
-    //
-    // Cleanup report.
-    //
-    if(report.valid.length === 0) {
-        delete report.valid
-    }
-    if(report.warnings.length === 0) {
-        delete report.warnings
-    }
-    if(report.errors.length === 0) {
-        delete report.errors
+    if(report.hasOwnProperty('errors')) {
+        theResponse.status(400)
     }
 
     theResponse.send(report)                                                    // ==>
 
 } // doCheckObjects()
-
-
-//
-// Functions.
-//
-
-/**
- * Validate descriptor.
- * @param theDescriptor {String}: Descriptor.
- * @param theValue: Descriptor value parent.
- * @param theIndex {String}: Value property name.
- * @param theLanguage {String}: Response language enum, defaults to english.
- * @return {Object}: The validation status object.
- */
-function checkDescriptor(theDescriptor, theValue, theIndex, theLanguage = 'iso_639_3_eng')
-{
-    //
-    // Init report.
-    //
-    let report = new ValidationReport(theDescriptor)
-
-    //
-    // Validate descriptor.
-    //
-    const valid = Validation.validateDescriptor(
-        theDescriptor,
-        [theValue, theIndex],
-        report
-    )
-
-    //
-    // Move leaf descriptor in status on error.
-    //
-    if(!valid) {
-        if(report.hasOwnProperty("status")) {
-            if(report.hasOwnProperty("current")) {
-                report.status["descriptor"] = report["current"]
-            }
-        }
-    }
-
-    //
-    // Delete leaf descriptor from report.
-    //
-    if(report.hasOwnProperty("current")) {
-        delete report["current"]
-    }
-
-    //
-    // Convert ignored to set.
-    //
-    if(report.ignored.length > 0) {
-        report.ignored = [...new Set(report.ignored)]
-    } else {
-        delete report.ignored
-    }
-
-    //
-    // Remove resolved if empty.
-    //
-    if(report.hasOwnProperty("resolved")) {
-        if(Object.keys(report.resolved).length === 0) {
-            delete report.resolved
-        }
-    }
-
-    //
-    // Set language.
-    //
-    Validation.setLanguage(report, theLanguage)
-
-    return report                                                               // ==>
-
-} // checkDescriptor()
-
-/**
- * Validate definition.
- * @param theDefinition {String}: Data definition section.
- * @param theValue: Descriptor value parent.
- * @param theIndex {String}: Value property name.
- * @param theLanguage {String}: Response language enum, defaults to english.
- * @return {Object}: The validation status object.
- */
-function checkDefinition(theDefinition, theValue, theIndex, theLanguage = 'iso_639_3_eng')
-{
-    //
-    // Init report.
-    //
-    let report = new ValidationReport()
-
-    //
-    // Validate definition.
-    //
-    const valid = Validation.validateDataBlock(
-        theDefinition,
-        [theValue, theIndex],
-        report
-    )
-
-    //
-    // Move leaf descriptor in status on error.
-    //
-    if(!valid) {
-        if(report.hasOwnProperty("status")) {
-            if(report.hasOwnProperty("current")) {
-                report.status["descriptor"] = report["current"]
-            }
-        }
-    }
-
-    //
-    // Delete leaf descriptor from report.
-    //
-    if(report.hasOwnProperty("current")) {
-        delete report["current"]
-    }
-
-    //
-    // Convert ignored to set.
-    //
-    if(report.ignored.length > 0) {
-        report.ignored = [...new Set(report.ignored)]
-    } else {
-        delete report.ignored
-    }
-
-    //
-    // Remove resolved if empty.
-    //
-    if(report.hasOwnProperty("resolved")) {
-        if(Object.keys(report.resolved).length === 0) {
-            delete report.resolved
-        }
-    }
-
-    //
-    // Set language.
-    //
-    Validation.setLanguage(report, theLanguage)
-
-    return report                                                               // ==>
-
-} // checkDefinition()
-
-/**
- * Validate object.
- * @param theValue: Object value.
- * @param theLanguage {String}: Response language enum, defaults to english.
- * @return {Object}: The validation status object.
- */
-function checkObject(theValue, theLanguage = 'iso_639_3_eng')
-{
-    //
-    // Init local storage.
-    //
-    let result = {}
-
-    //
-    // Iterate object properties.
-    //
-    for(const property in theValue) {
-
-        //
-        // Validate current descriptor.
-        //
-        let report = checkDescriptor(property, theValue, property, theLanguage)
-
-        //
-        // Remove top level descriptor from report.
-        //
-        if(report.hasOwnProperty("descriptor")) {
-            delete report["descriptor"]
-        }
-
-        //
-        // Add to result.
-        //
-        result[property] = report
-    }
-
-    return result                                                               // ==>
-
-} // checkObject()
