@@ -5,6 +5,7 @@
 //
 const _ = require('lodash');                            // Lodash library.
 const aql = require('@arangodb').aql;					// AQL queries.
+const crypto = require('@arangodb/crypto')              // Cryptographic utilities.
 const errors = require('@arangodb').errors;             // ArangoDB errors.
 const status = require('statuses');                     // Status codes.
 
@@ -323,6 +324,29 @@ function getDescriptor(theKey, theReport = false)
 } // getDescriptor()
 
 /**
+ * Return edge key.
+ * This function will return the edge _key using the provided parameters.
+ * @param theSubject {String}: The `_from` document handle.
+ * @param thePredicate {String}: The predicate global identifier.
+ * @param theObject {String}: The `_to` document handle.
+ * @return {String}: The edge _key.
+ */
+function getEdgeKey(theSubject, thePredicate, theObject)
+{
+    const key =
+        crypto.md5(
+            theSubject
+          + K.token.tok
+          + thePredicate
+          + K.token.tok
+          + theObject
+        )
+
+    return key                                                                  // ==>
+
+} // getEdgeKey()
+
+/**
  * Report resolved enumeration.
  * The function will add the provided descriptor/value pair
  * to the resolved section of the provided report.
@@ -479,6 +503,7 @@ module.exports = {
     getDocument,
     getTerm,
     getDescriptor,
+    getEdgeKey,
 
     reportResolved,
 

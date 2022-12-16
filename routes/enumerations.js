@@ -11,6 +11,7 @@ const aql = require('@arangodb').aql
 // Application constants.
 //
 const K = require('../utils/constants')
+const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
 const Dictionary = require("../utils/dictionary");
 
@@ -1095,22 +1096,21 @@ function doAddEnums(request, response)
     //
     // Get edges to add.
     //
-    const edges =
-        K.db._query( aql`
-            LET edges = (
-                FOR item IN ${data.items}
-                RETURN {
-                    _key: MD5(CONCAT(item, '\t', ${'_predicate_enum-of'}, '\t', ${`terms/${data.parent}`})),
-                    _from: item,
-                    _to: ${`terms/${data.parent}`},
-                    _predicate: ${'_predicate_enum-of'},
-                    _path: [${`terms/${data.root}`}]
-                }
-            )
-            
-            FOR edge IN edges
-            RETURN edge
-        `).toArray()
+    const edges = data.items.map(item => {
+
+        const root = data.root
+        const subject = `${K.collection.term.name}/${item}`
+        const predicate = K.term.predicateEnum
+        const object = `${K.collection.term.name}/${data.parent}`
+
+        return {
+            _key: Utils.getEdgeKey(subject, predicate, object),
+            _from: subject,
+            _to: object,
+            _predicate: predicate,
+            _path: [ root ]
+        }
+    })
 
     response.status(500)
     response.send(edges)
