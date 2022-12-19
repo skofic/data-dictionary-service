@@ -621,6 +621,15 @@ module.exports = Object.freeze({
                 iso_639_3_fra: "Description dans la langue de default manque.",
                 iso_639_3_esp: "Falta descripción en el idioma de base."
             }
+        },
+        kMSG_ERROR_MISSING_TERM_REFS: {
+            code: 39,
+            message: {
+                iso_639_3_eng: "The following referenced terms do not exist: @@@.",
+                iso_639_3_ita: "Riferimenti invalidi. I seguenti termini non esistono: @@@.",
+                iso_639_3_fra: "Références invalides. Les termes suivants n'existent pas: @@@.",
+                iso_639_3_esp: "Los siguientes términos referenciados no existen: @@@e."
+            }
         }
     }
 

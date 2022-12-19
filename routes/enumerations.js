@@ -1089,7 +1089,12 @@ function doAddEnums(request, response)
     //
     const missing = getMissingKeys(data)
     if(missing.length > 0) {
-        response.throw(400, `The following terms are missing: ${missing.join(", ")}`)
+
+        const message =
+            K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
+                .replace('@@@', missing.join(", "))
+
+        response.throw(400, message)
         return                                                                  // ==>
     }
 
@@ -1138,7 +1143,8 @@ function getMissingKeys(theData)
     //
     // Collect keys.
     //
-    const terms = theData.items.concat([theData.root, theData.parent])
+    const terms = Array.from(new Set(theData.items.concat([theData.root, theData.parent])))
+        // theData.items.concat([theData.root, theData.parent])
 
     //
     // Assert all terms exist.
