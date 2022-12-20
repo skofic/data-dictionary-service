@@ -6,6 +6,17 @@
 const dd = require('dedent');
 const joi = require('joi');
 const aql = require('@arangodb').aql
+const status = require('statuses')
+const errors = require('@arangodb').errors
+
+//
+// Error codes.
+//
+const ARANGO_CONFLICT = errors.ERROR_ARANGO_CONFLICT.code;
+const ARANGO_NOT_FOUND = errors.ERROR_ARANGO_DOCUMENT_NOT_FOUND.code
+const ARANGO_DUPLICATE = errors.ERROR_ARANGO_UNIQUE_CONSTRAINT_VIOLATED.code
+const HTTP_NOT_FOUND = status('not found');
+const HTTP_CONFLICT = status('conflict');
 
 //
 // Application constants.
@@ -836,11 +847,21 @@ router.post(
             options for the *parent* node.
          `
     )
-    .response(200, joi.object(), dd
+    .response(
+        200,
+        joi.object({
+            inserted: joi.number(),
+            updated: joi.number(),
+            existing: joi.number()
+        }),
+        dd
         `
-            **Inserted enumerations**
+            **Operations count**
             
-            The service will return the newly inserted term.
+            The service will return an object containign the following properties:
+            - inserted: The number of inserted edges.
+            - updated: The number of existing edges to which the root has been added to their path.
+            - existing: The number of existing edges that include subject, object predicate and path.
         `
     )
     .response(400, joi.object(), dd
@@ -867,13 +888,6 @@ router.post(
             **Unauthorised user**
             
             The service will return this code if the current user is not a dictionary user.
-        `
-    )
-    .response(409, ErrorModel, dd
-        `
-            **Edge exists**
-            
-            The service will return this code if an edge matches an already existing entry.
         `
     )
 
@@ -1081,7 +1095,6 @@ function doAddEnums(request, response)
     // Init local storage.
     //
     const data = request.body
-    const collection_terms = K.db._collection(K.collection.term.name)
     const collection_edges = K.db._collection(K.collection.schema.name)
 
     //
@@ -1099,26 +1112,73 @@ function doAddEnums(request, response)
     }
 
     //
-    // Get edges to add.
+    // Create list of expected edges.
     //
-    const edges = data.items.map(item => {
+    const edges = []
+    const result = {inserted: 0, updated: 0, existing: 0}
+    data.items.forEach(item => {
 
-        const root = data.root
+        //
+        // Init local identifiers.
+        //
+        const root = `${K.collection.term.name}/${data.root}`
         const subject = `${K.collection.term.name}/${item}`
         const predicate = K.term.predicateEnum
         const object = `${K.collection.term.name}/${data.parent}`
+        const key = Utils.getEdgeKey(subject, predicate, object)
 
-        return {
-            _key: Utils.getEdgeKey(subject, predicate, object),
-            _from: subject,
-            _to: object,
-            _predicate: predicate,
-            _path: [ root ]
+        //
+        // Check if it exists.
+        //
+        try {
+            const found = collection_edges.document(key)
+            if(found._path.includes(root)) {
+                result.existing += 1
+            } else {
+                result.updated += 1
+                edges.push({
+                    _key: key,
+                    _from: subject,
+                    _to: object,
+                    _predicate: predicate,
+                    _path: found._path.concat([root])
+                })
+            }
+        } catch (error) {
+
+            //
+            // Handle unexpected errors.
+            //
+            if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
+                response.throw(500, error.message)
+                return                                                          // ==>
+            }
+
+            //
+            // Insert edge.
+            //
+            result.inserted += 1
+            edges.push({
+                _key: key,
+                _from: subject,
+                _to: object,
+                _predicate: predicate,
+                _path: [ root ]
+            })
         }
     })
 
-    response.status(500)
-    response.send(edges)
+    //
+    // Perform query.
+    //
+    K.db._query( aql`
+        FOR item in ${edges}
+            INSERT item
+            INTO ${collection_edges}
+            OPTIONS { overwriteMode: "update", keepNull: false, mergeObjects: false }
+    `)
+
+    response.send(result)
 
 } // doAddEnums()
 
@@ -1144,7 +1204,7 @@ function getMissingKeys(theData)
     // Collect keys.
     //
     const terms = Array.from(new Set(theData.items.concat([theData.root, theData.parent])))
-        // theData.items.concat([theData.root, theData.parent])
+    // theData.items.concat([theData.root, theData.parent])
 
     //
     // Assert all terms exist.
@@ -1159,3 +1219,36 @@ function getMissingKeys(theData)
     return terms.filter(x => !found.includes(x))                                // ==>
 
 } // getMissingKeys()
+
+/**
+ * Return edge matching keys.
+ * This function will return the list of edge documents that match the provided list of keys.
+ * @param theKeys {Array<String>}: OList of edge keys.
+ * @return {Object}: Dictionary with matching keys as key and edge documents as value.
+ */
+function getMatchingKeys(theKeys)
+{
+    //
+    // Get matching edges.
+    //
+    const found =
+        K.db._query( aql`
+            FOR edge IN ${K.db._collection(K.collection.schema.name)}
+                FILTER edge._key IN ${theKeys}
+            RETURN edge
+        `).toArray()
+
+    //
+    // Prepare dictionary.
+    //
+    const result = {}
+    found.forEach(edge => {
+        delete edge._id
+        delete edge._rev
+
+        result[edge._key] = edge
+    })
+
+    return result                                                               // ==>
+
+} // getMatchingKeys()
