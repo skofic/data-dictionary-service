@@ -604,12 +604,12 @@ function doCheckObject(theRequest, theResponse)
     //
     // Check for errors.
     //
-    for(const item of Object.values(report)) {
-        if((item.status.code !== 0) && (item.status.code !== 1)) {
-            theResponse.status(400)
-            break
-        }
-    }
+    // for(const item of Object.values(report)) {
+    //     if((item.status.code !== 0) && (item.status.code !== 1)) {
+    //         theResponse.status(400)
+    //         break
+    //     }
+    // }
 
     theResponse.send({
         "value": theRequest.body.value,
@@ -633,9 +633,9 @@ function doCheckObjects(theRequest, theResponse)
     //
     // Handle errors.
     //
-    if(report.hasOwnProperty('errors')) {
-        theResponse.status(400)
-    }
+    // if(report.hasOwnProperty('errors')) {
+    //     theResponse.status(400)
+    // }
 
     theResponse.send(report)                                                    // ==>
 
