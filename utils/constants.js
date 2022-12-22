@@ -199,6 +199,10 @@ module.exports = Object.freeze({
         anyObject: "_any-object",
 
         predicateEnum: "_predicate_enum-of",
+        predicateProperty: "_predicate_property-of",
+        predicateField: "_predicate_field-of",
+        predicateSection: "_predicate_section-of",
+        predicateBridge: "_predicate_bridge-of",
         regexp: "_regexp"
     },
 
@@ -629,6 +633,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Riferimenti invalidi. I seguenti termini non esistono: @@@.",
                 iso_639_3_fra: "Références invalides. Les termes suivants n'existent pas: @@@.",
                 iso_639_3_esp: "Los siguientes términos referenciados no existen: @@@e."
+            }
+        },
+        kMSG_NOT_DESCRIPTORS: {
+            code: 40,
+            message: {
+                iso_639_3_eng: "The following are not descriptors: @@@.",
+                iso_639_3_ita: "I riferimenti che seguono non si riferiscono a descrittori: @@@.",
+                iso_639_3_fra: "Les références qui suivent ne sont pas des descripteurs: @@@.",
+                iso_639_3_esp: "Los siguientes no son descriptors: @@@."
             }
         }
     }

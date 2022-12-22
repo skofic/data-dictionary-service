@@ -21,6 +21,20 @@ const GraphPathsModel = joi.array().items(joi.object({
 	edges: joi.array().items(joi.object()),
 	weights: joi.array().items(joi.number())
 }))
+const AddChildrenProperties = joi.object({
+	parent: joi.string().required(),
+	items: joi.array().items(joi.string()).required()
+})
+const AddChildren = joi.object({
+	root: joi.string().required(),
+	parent: joi.string().required(),
+	items: joi.array().items(joi.string()).required()
+})
+const AddChildrenResponse = joi.object({
+	inserted: joi.number(),
+	updated: joi.number(),
+	existing: joi.number()
+})
 
 
 module.exports = {
@@ -28,5 +42,8 @@ module.exports = {
 	StringModel,
 	StringArrayModel,
 	TermsArrayModel,
-	GraphPathsModel
+	GraphPathsModel,
+	AddChildrenProperties,
+	AddChildren,
+	AddChildrenResponse
 }
