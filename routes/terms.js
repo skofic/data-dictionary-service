@@ -315,7 +315,7 @@ router.get(
 
 /**
  * Get terms dictionary
- * This service can be used to retrieve a dictionary of ters.
+ * This service can be used to retrieve a dictionary of terms.
  */
 router.post(
 	'dict/:lang',
@@ -380,7 +380,7 @@ router.post(
 router.post(
 	'key',
 	(request, response) => {
-		const roles = [K.environment.role.admin]
+		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
 			doSelectTermKeys(request, response)
 		}
@@ -485,7 +485,7 @@ router.post(
 router.post(
 	':lang',
 	(request, response) => {
-		const roles = [K.environment.role.admin]
+		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
 			doSelectTerms(request, response)
 		}
@@ -572,6 +572,67 @@ router.post(
             **List of terms**
             
             The service will return the list of matching terms.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Update term
+ * This service can be used to update a term.
+ */
+router.patch(
+	':key',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doUpdateTerm(request, response)
+		}
+	},
+	'term-update'
+)
+	.summary('Update term')
+	.description(dd
+		`
+            **Update a term**
+             
+            ***In order to use this service, the current user must have the \`dict\` role.***
+             
+            This service can be used to update a term. You provide the term key in the URL and the fields \
+            to be updated in the request body.
+            
+            The service will return the updated term object.
+        `
+	)
+	.pathParam('key', Models.StringModel, "Term key")
+	.body(joi.object(), dd
+		`
+            **Service parameters**
+            
+            The body should contain an object holding the properties that will be updated. \
+            The following rules will be followed:
+            - To delete a field pass \`null\`.
+            - Arrays must be provided complete.
+            - Objects are merged: object properties are added or replaced.
+        `
+	)
+	.response(200, joi.object(), dd
+		`
+            **Updated term**
+            
+            The service will return the updated term object.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -893,6 +954,62 @@ function doSelectTermKeys(request, response)
 
 } // doSelectTermKeys()
 
+/**
+ * Update term.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doUpdateTerm(request, response)
+{
+	//
+	// Try query.
+	//
+	try
+	{
+		//
+		// Check update properties.
+		//
+		if(checkUpdateProperties(request.pathParams.key, request, response)) {
+
+			//
+			// Update term.
+			//
+			const result =
+				K.db._query( aql`
+                    UPDATE ${request.pathParams.key}
+                    WITH ${request.body}
+                    IN ${collection}
+                    OPTIONS {
+                        keepNull: false,
+                        mergeObjects: true
+                    }
+                    RETURN NEW
+                `)
+
+			response.send(result)                                               // ==>
+		}
+		else {
+			response.throw(400, "Invalid update body.")                      // ==>
+		}
+	}
+	catch (error)
+	{
+		if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			response.throw(
+				HTTP_NOT_FOUND,
+				K.error.kMSG_TERM_NOT_FOUND.message[module.context.configuration.language]
+			)                                                                   // ==>
+		}
+		else if (error.isArangoError && error.errorNum === ARANGO_CONFLICT) {
+			throw httpError(HTTP_CONFLICT, error.message);
+		}
+		else {
+			response.throw(500, error.message)                               // ==>
+		}
+	}
+
+} // doUpdateTerm()
+
 
 //
 // Utility functions.
@@ -1056,3 +1173,47 @@ function insertTermCheckInfo(term, request, response)
 	return true                                                                 // ==>
 
 } // insertTermCheckInfo()
+
+/**
+ * Check update properties.
+ * @param term: Term object.
+ * @param request: API request.
+ * @param response: API response.
+ * @return {Boolean}: `true` means correct, `false` means error: bail out.
+ */
+function checkUpdateProperties(term, request, response)
+{
+	//
+	// Remove unnecessary top level properties.
+	//
+	const properties = ["_id", "_key", "_rev"]
+	for(const property of properties) {
+		if(term.hasOwnProperty(property)) {
+			delete term[property]
+		}
+	}
+
+	//
+	// Handle code section.
+	//
+	if(term.hasOwnProperty(K.term.codeBlock)) {
+
+	}
+
+	//
+	// Handle data section.
+	//
+	if(term.hasOwnProperty(K.term.dataBlock)) {
+
+	}
+
+	//
+	// Handle rule section.
+	//
+	if(term.hasOwnProperty(K.term.ruleBlock)) {
+
+	}
+
+	return true                                                                 // ==>
+
+} // checkUpdateProperties()
