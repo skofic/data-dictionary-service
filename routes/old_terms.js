@@ -114,32 +114,32 @@ router.put(':key', function (req, res) {
 `);
 
 
-router.patch(':key', function (req, res) {
-  const key = req.pathParams.key;
-  const patchData = req.body;
-  let term;
-  try {
-    old_terms.update(key, patchData);
-    term = old_terms.document(key);
-  } catch (e) {
-    if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-      throw httpError(HTTP_NOT_FOUND, e.message);
-    }
-    if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
-      throw httpError(HTTP_CONFLICT, e.message);
-    }
-    throw e;
-  }
-  res.send(term);
-}, 'update')
-.pathParam('key', keySchema)
-.body(joi.object().description('The data to update the term with.'))
-.response(Term, 'The updated term.')
-.summary('Update a term')
-.description(dd`
-  Patches a term with the request body and
-  returns the updated document.
-`);
+// router.patch(':key', function (req, res) {
+//   const key = req.pathParams.key;
+//   const patchData = req.body;
+//   let term;
+//   try {
+//     old_terms.update(key, patchData);
+//     term = old_terms.document(key);
+//   } catch (e) {
+//     if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
+//       throw httpError(HTTP_NOT_FOUND, e.message);
+//     }
+//     if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
+//       throw httpError(HTTP_CONFLICT, e.message);
+//     }
+//     throw e;
+//   }
+//   res.send(term);
+// }, 'update')
+// .pathParam('key', keySchema)
+// .body(joi.object().description('The data to update the term with.'))
+// .response(Term, 'The updated term.')
+// .summary('Update a term')
+// .description(dd`
+//   Patches a term with the request body and
+//   returns the updated document.
+// `);
 
 
 router.delete(':key', function (req, res) {

@@ -643,6 +643,15 @@ module.exports = Object.freeze({
                 iso_639_3_fra: "Les références qui suivent ne sont pas des descripteurs: @@@.",
                 iso_639_3_esp: "Los siguientes no son descriptors: @@@."
             }
+        },
+        kMSG_CODE_IMMUTABLE: {
+            code: 41,
+            message: {
+                iso_639_3_eng: "The following '_code' properties cannot be added, modified or deleted: @@@.",
+                iso_639_3_ita: "Le seguenti proprietà '_code' non possono essere aggiunte, modificate o eliminate: @@@.",
+                iso_639_3_fra: "Les propriétés '_code' suivantes ne peuvent pas être ajoutées, modifiées ou supprimées: @@@.",
+                iso_639_3_esp: "Las siguientes propiedades '_code' no se pueden agregar, modificar o eliminar: @@@."
+            }
         }
     }
 

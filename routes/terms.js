@@ -962,51 +962,41 @@ function doSelectTermKeys(request, response)
 function doUpdateTerm(request, response)
 {
 	//
-	// Try query.
+	// Init local storage.
 	//
-	try
-	{
-		//
-		// Check update properties.
-		//
-		if(checkUpdateProperties(request.pathParams.key, request, response)) {
+	let term = {}
 
-			//
-			// Update term.
-			//
-			const result =
-				K.db._query( aql`
-                    UPDATE ${request.pathParams.key}
-                    WITH ${request.body}
-                    IN ${collection}
-                    OPTIONS {
-                        keepNull: false,
-                        mergeObjects: true
-                    }
-                    RETURN NEW
-                `)
+	//
+	// Load old record.
+	//
+	try {
+		term = JSON.parse(JSON.stringify(collection.document(request.pathParams.key)))
 
-			response.send(result)                                               // ==>
-		}
-		else {
-			response.throw(400, "Invalid update body.")                      // ==>
-		}
-	}
-	catch (error)
-	{
+	} catch (error) {
 		if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
 			response.throw(
 				HTTP_NOT_FOUND,
 				K.error.kMSG_TERM_NOT_FOUND.message[module.context.configuration.language]
 			)                                                                   // ==>
 		}
-		else if (error.isArangoError && error.errorNum === ARANGO_CONFLICT) {
-			throw httpError(HTTP_CONFLICT, error.message);
-		}
 		else {
 			response.throw(500, error.message)                               // ==>
 		}
 	}
+
+	//
+	// Update properties.
+	//
+	term = mergeObjects(term, request.body)
+
+	//
+	// Remove null properties.
+	//
+
+	//
+	//
+
+	response.send(term)                                                         // ==>
 
 } // doUpdateTerm()
 
@@ -1175,45 +1165,21 @@ function insertTermCheckInfo(term, request, response)
 } // insertTermCheckInfo()
 
 /**
- * Check update properties.
- * @param term: Term object.
- * @param request: API request.
- * @param response: API response.
- * @return {Boolean}: `true` means correct, `false` means error: bail out.
+ * Merge two objects
+ * @param theOld {Object}: The original object.
+ * @param theNew {Object}: The updated properties.
+ * @return {Object}: The metìrged object.
  */
-function checkUpdateProperties(term, request, response)
-{
-	//
-	// Remove unnecessary top level properties.
-	//
-	const properties = ["_id", "_key", "_rev"]
-	for(const property of properties) {
-		if(term.hasOwnProperty(property)) {
-			delete term[property]
-		}
+function mergeObjects(theOld, theNew) {
+	const merged = {
+		...theOld,
+		...theNew
 	}
+	// for(const key of Object.keys(merged)) {
+	// 	if(typeof merged[key] === 'object' && merged[key] !== null) {
+	// 		merged[key] = mergeObjects(theOld[key], theNew[key])
+	// 	}
+	// }
 
-	//
-	// Handle code section.
-	//
-	if(term.hasOwnProperty(K.term.codeBlock)) {
-
-	}
-
-	//
-	// Handle data section.
-	//
-	if(term.hasOwnProperty(K.term.dataBlock)) {
-
-	}
-
-	//
-	// Handle rule section.
-	//
-	if(term.hasOwnProperty(K.term.ruleBlock)) {
-
-	}
-
-	return true                                                                 // ==>
-
-} // checkUpdateProperties()
+	return merged                                                               // ==>
+}
