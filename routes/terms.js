@@ -28,6 +28,7 @@ const TermInsert = require('../models/term_insert')
 const TermsInsert = require('../models/terms_insert')
 const TermDisplay = require('../models/term_display')
 const TermSelection = require('../models/term_selection')
+const {isObject} = require("../utils/utils");
 const keySchema = joi.string().required()
 	.description('The key of the document')
 
@@ -1166,20 +1167,39 @@ function insertTermCheckInfo(term, request, response)
 
 /**
  * Merge two objects
- * @param theOld {Object}: The original object.
- * @param theNew {Object}: The updated properties.
- * @return {Object}: The metìrged object.
+ * @param theTarget {Object}: The original object.
+ * @param theUpdates {Object}: The updated properties.
+ * @return {Object}: The merged object.
  */
-function mergeObjects(theOld, theNew) {
-	const merged = {
-		...theOld,
-		...theNew
-	}
-	// for(const key of Object.keys(merged)) {
-	// 	if(typeof merged[key] === 'object' && merged[key] !== null) {
-	// 		merged[key] = mergeObjects(theOld[key], theNew[key])
-	// 	}
-	// }
+function mergeObjects(theTarget = {}, theUpdates = {})
+{
+	//
+	// Ensure both are objects.
+	//
+	if(isObject(theTarget) && isObject(theUpdates)) {
 
-	return merged                                                               // ==>
-}
+		//
+		// Clone both objects.
+		//
+		const copyTarget = JSON.parse(JSON.stringify(theTarget))
+		const copyUpdates = JSON.parse(JSON.stringify(theUpdates))
+
+		//
+		// Iterate properties to be applied.
+		//
+		Object.keys(copyUpdates).forEach(key => {
+
+			//
+			// Recurse objects.
+			//
+			copyTarget[key] = (isObject(copyUpdates[key]))
+								  ? mergeObjects(copyTarget[key], copyUpdates[key])
+								  : copyUpdates[key]
+		})
+
+		return copyTarget                                                 // ==>
+	}
+
+	return theTarget                                                         // ==>
+
+} // mergeObjects()
