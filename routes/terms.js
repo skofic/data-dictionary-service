@@ -793,7 +793,7 @@ function doInsertTerms(request, response)
                     overwriteMode: "conflict"
                 }
             RETURN NEW
-        `).toArray();
+        `).toArray()
 
 		response.send(result)                                                   // ==>
 	}
@@ -991,13 +991,60 @@ function doUpdateTerm(request, response)
 	term = mergeObjects(term, request.body)
 
 	//
-	// Remove null properties.
+	// Validate object.
 	//
+	const report = Validation.checkObject(term)
 
 	//
+	// Clean report.
 	//
+	for(const item of Object.keys(report)) {
+		if(report[item].status.code === 0 || report[item].status.code === 1) {
+			delete report[item]
+		}
+	}
 
-	response.send(term)                                                         // ==>
+	//
+	// Handle errors.
+	//
+	if(Object.keys(report).length > 0) {
+		response.status(400)
+		response.send({ report: report, value: term })                     // ==>
+	}
+
+	//
+	// Save term.
+	//
+	else {
+		try
+		{
+			//
+			// Replace term.
+			//
+			const result =
+				K.db._query( aql`
+					REPLACE ${term} IN ${collection}
+					OPTIONS { ignoreRevs: false }
+					RETURN NEW
+                `)
+
+			response.send(result)                                               // ==>
+		}
+		catch (error)
+		{
+			//
+			// Duplicate record
+			if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
+				response.throw(
+					409,
+					K.error.kMSG_ERROR_CONFLICT.message[module.context.configuration.language]
+				)                                                               // ==>
+			}
+			else {
+				response.throw(500, error.message)                           // ==>
+			}
+		}
+	}
 
 } // doUpdateTerm()
 
@@ -1167,6 +1214,8 @@ function insertTermCheckInfo(term, request, response)
 
 /**
  * Merge two objects
+ * The updated properties will be added or replace corresponding properties in the target.
+ * Updated properties with a null value will be removed from the target if there.
  * @param theTarget {Object}: The original object.
  * @param theUpdates {Object}: The updated properties.
  * @return {Object}: The merged object.
@@ -1190,16 +1239,28 @@ function mergeObjects(theTarget = {}, theUpdates = {})
 		Object.keys(copyUpdates).forEach(key => {
 
 			//
+			// Remove property.
+			//
+			if(copyUpdates[key] === null) {
+				if(copyTarget.hasOwnProperty(key)) {
+					delete copyTarget[key]
+				}
+			}
+
+			//
 			// Recurse objects.
 			//
-			copyTarget[key] = (isObject(copyUpdates[key]))
-								  ? mergeObjects(copyTarget[key], copyUpdates[key])
-								  : copyUpdates[key]
+			else {
+				copyTarget[key] = (isObject(copyUpdates[key]))
+					? mergeObjects(copyTarget[key], copyUpdates[key])
+					: copyUpdates[key]
+			}
 		})
 
-		return copyTarget                                                 // ==>
+		return copyTarget                                                       // ==>
+
 	}
 
-	return theTarget                                                         // ==>
+	return theTarget                                                            // ==>
 
 } // mergeObjects()
