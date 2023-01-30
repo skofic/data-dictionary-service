@@ -1493,6 +1493,91 @@ function validateRegexp(theBlock, theValue, theReport)
 
 } // validateRegexp()
 
+/**
+ * Validate value changes
+ * Given two terms, this function will check if value changes are allowed.
+ * The function will return an object containing all invalid changes.
+ * Note that top level sections will not be checked: in other words,
+ * if you remove the code section of a term, this will not be checked,
+ * both objects must have the top level section.
+ * @param theOriginal {Object}: Old term.
+ * @param theReplaced {Object}: New term
+ */
+function validateTermChanges(theOriginal,theReplaced)
+{
+    //
+    // Init local storage.
+    //
+    const report = {}
+
+    //
+    // Handle code section.
+    //
+    if(theOriginal.hasOwnProperty(K.term.codeBlock) && theReplaced.hasOwnProperty(K.term.codeBlock))
+    {
+        //
+        // Init local storage.
+        //
+        let block = {}
+        let property = ''
+
+        //
+        // Handle namespace.
+        //
+        property = '_nid'
+        if( (theOriginal.hasOwnProperty(property) && (!theReplaced.hasOwnProperty(property))) ||
+            (theReplaced.hasOwnProperty(property) && (!theOriginal.hasOwnProperty(property))) ||
+            theOriginal[property] !== theReplaced[property] ) {
+            block[property] = theReplaced[K.term.codeBlock][property]
+        }
+
+        //
+        // Handle local identifier.
+        // Note that missing local identifier should be handled elsewhere.
+        //
+        property = '_lid'
+        if( theOriginal.hasOwnProperty(property) &&
+            theReplaced.hasOwnProperty(property) &&
+            theOriginal[property] !== theReplaced[property] ) {
+            block[property] = theReplaced[K.term.codeBlock][property]
+        }
+
+        //
+        // Handle regular expressions.
+        //
+        property = '_regexp'
+        if( theOriginal.hasOwnProperty(property) &&
+            theReplaced.hasOwnProperty(property) &&
+            theOriginal[property] !== theReplaced[property] ) {
+            block[property] = theReplaced[K.term.codeBlock][property]
+        }
+
+        //
+        // Handle errors.
+        //
+        if(Object.keys(block).length > 0) {
+            property[K.term.codeBlock] = JSON.parse(JSON.stringify(block))
+        }
+    }
+
+    //
+    // Handle data section.
+    //
+    if(theOriginal.hasOwnProperty(K.term.dataBlock)) {
+
+    }
+
+    //
+    // Handle rule section.
+    //
+    if(theOriginal.hasOwnProperty(K.term.ruleBlock)) {
+
+    }
+
+    return report                                                               // ==>
+
+} // validateTermChanges()
+
 
 //
 // Functions.
