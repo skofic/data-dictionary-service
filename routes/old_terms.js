@@ -86,32 +86,32 @@ router.get(':key', function (req, res) {
 `);
  */
 
-router.put(':key', function (req, res) {
-  const key = req.pathParams.key;
-  const term = req.body;
-  let meta;
-  try {
-    meta = old_terms.replace(key, term);
-  } catch (e) {
-    if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
-      throw httpError(HTTP_NOT_FOUND, e.message);
-    }
-    if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
-      throw httpError(HTTP_CONFLICT, e.message);
-    }
-    throw e;
-  }
-  Object.assign(term, meta);
-  res.send(term);
-}, 'replace')
-.pathParam('key', keySchema)
-.body(Term, 'The data to replace the term with.')
-.response(Term, 'The new term.')
-.summary('Replace a term')
-.description(dd`
-  Replaces an existing term with the request body and
-  returns the new document.
-`);
+// router.put(':key', function (req, res) {
+//   const key = req.pathParams.key;
+//   const term = req.body;
+//   let meta;
+//   try {
+//     meta = old_terms.replace(key, term);
+//   } catch (e) {
+//     if (e.isArangoError && e.errorNum === ARANGO_NOT_FOUND) {
+//       throw httpError(HTTP_NOT_FOUND, e.message);
+//     }
+//     if (e.isArangoError && e.errorNum === ARANGO_CONFLICT) {
+//       throw httpError(HTTP_CONFLICT, e.message);
+//     }
+//     throw e;
+//   }
+//   Object.assign(term, meta);
+//   res.send(term);
+// }, 'replace')
+// .pathParam('key', keySchema)
+// .body(Term, 'The data to replace the term with.')
+// .response(Term, 'The new term.')
+// .summary('Replace a term')
+// .description(dd`
+//   Replaces an existing term with the request body and
+//   returns the new document.
+// `);
 
 
 // router.patch(':key', function (req, res) {
