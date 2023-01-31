@@ -142,6 +142,17 @@ module.exports = Object.freeze({
     ],
 
     //
+    // Modifications enumeration.
+    //
+    changes : {
+        miss: null,         // Property missing from original and update.
+        same: 'same',       // Property exists in both, or property value is same in both.
+        add: 'added',       // Property was added.
+        del: 'deleted',     // Property was deleted.
+        mod: 'modified'     // Property values are different.
+    },
+
+    //
     // Terms.
     //
     term : {

@@ -1497,82 +1497,87 @@ function validateRegexp(theBlock, theValue, theReport)
  * Validate value changes
  * Given two terms, this function will check if value changes are allowed.
  * The function will return an object containing all invalid changes.
- * Note that top level sections will not be checked: in other words,
- * if you remove the code section of a term, this will not be checked,
- * both objects must have the top level section.
+ * This function will be called before the standard term validation.
+ * The function will be used primarily to check term updates, so top level
+ * sections can only be added, not deleted.
  * @param theOriginal {Object}: Old term.
- * @param theReplaced {Object}: New term
+ * @param theReplaced {Object}: New term.
+ * @return {Object}: Invalid properties (leaf nodes and missing top level sections).
  */
 function validateTermChanges(theOriginal,theReplaced)
 {
     //
     // Init local storage.
     //
+    let prop = ''
+    let block = {}
+    let section = ''
     const report = {}
+
+    //
+    // Handle key.
+    //
+    if( theOriginal.hasOwnProperty('_key') &&
+        theReplaced.hasOwnProperty('_key') &&
+        theOriginal._key !== theReplaced._key ) {
+        report['_key'] = theReplaced._key
+    }
 
     //
     // Handle code section.
     //
-    if(theOriginal.hasOwnProperty(K.term.codeBlock) && theReplaced.hasOwnProperty(K.term.codeBlock))
-    {
-        //
-        // Init local storage.
-        //
-        let block = {}
-        let property = ''
+    section = K.term.codeBlock
+    if(theOriginal.hasOwnProperty(section)) {
 
         //
-        // Handle namespace.
+        // Prevent deleting section.
         //
-        property = '_nid'
-        if( (theOriginal.hasOwnProperty(property) && (!theReplaced.hasOwnProperty(property))) ||
-            (theReplaced.hasOwnProperty(property) && (!theOriginal.hasOwnProperty(property))) ||
-            theOriginal[property] !== theReplaced[property] ) {
-            block[property] = theReplaced[K.term.codeBlock][property]
+        if( (!theReplaced.hasOwnProperty(section)) ||
+            (theReplaced.hasOwnProperty(section) && theReplaced[section] === null) ) {
+            report[section] = {}
         }
 
         //
-        // Handle local identifier.
-        // Note that missing local identifier should be handled elsewhere.
+        // Check contents.
         //
-        property = '_lid'
-        if( theOriginal.hasOwnProperty(property) &&
-            theReplaced.hasOwnProperty(property) &&
-            theOriginal[property] !== theReplaced[property] ) {
-            block[property] = theReplaced[K.term.codeBlock][property]
-        }
+        else
+        {
+            //
+            // Check namespace (_nid).
+            //
+            prop = '_nid'
+            block = {}
 
-        //
-        // Handle regular expressions.
-        //
-        property = '_regexp'
-        if( theOriginal.hasOwnProperty(property) &&
-            theReplaced.hasOwnProperty(property) &&
-            theOriginal[property] !== theReplaced[property] ) {
-            block[property] = theReplaced[K.term.codeBlock][property]
-        }
+            // Has namespace.
+            if(theOriginal.hasOwnProperty(prop) || theReplaced.hasOwnProperty(prop)) {
 
-        //
-        // Handle errors.
-        //
-        if(Object.keys(block).length > 0) {
-            property[K.term.codeBlock] = JSON.parse(JSON.stringify(block))
-        }
-    }
+                // Deleted.
+                if(theOriginal.hasOwnProperty(prop) && (!theReplaced.hasOwnProperty(prop))) {
+                    block[prop] = null
+                }
 
-    //
-    // Handle data section.
-    //
-    if(theOriginal.hasOwnProperty(K.term.dataBlock)) {
+                // Added.
+                else if(theReplaced.hasOwnProperty(prop) && (!theOriginal.hasOwnProperty(prop))) {
+                    block[prop] = theReplaced[prop]
+                }
 
-    }
+                // Changed.
+                else if(theOriginal[prop] !== theReplaced[prop]) {
+                    block[prop] = theReplaced[prop]
+                }
 
-    //
-    // Handle rule section.
-    //
-    if(theOriginal.hasOwnProperty(K.term.ruleBlock)) {
+            } // Has namespace.
 
-    }
+            //
+            // Handle errors.
+            //
+            if(Object.keys(block).length > 0) {
+                report[section] = JSON.parse(JSON.stringify(block))
+            }
+
+        } // Checked code section contents.
+
+    } // Original has code section.
 
     return report                                                               // ==>
 
@@ -1851,6 +1856,105 @@ function checkObjects(theValue, theLanguage = 'iso_639_3_eng')
 } // checkObjects()
 
 /**
+ * Check term property
+ *
+ * This function is used when updating or replacing a term:
+ * it will assert whether a specific leaf (scalar) property
+ * has been added, deleted, modified, or is missing from both terms.
+ *
+ * Note: the function will also check if the property was deleted using a `null` value.
+ * !!!: Beware of passing object properties: the results will be undefined.
+ *
+ * The function returns the following `K.changes` codes:
+ * - `miss`: Missing in both terms.
+ * - `same`: Section is in both terms (we ignore section contents).
+ * - `add`: Added.
+ * - `del`: Deleted.
+ * - `mod`: Modified.
+ *
+ * @param theOriginal {Object}: Original property container.
+ * @param theReplaced {Object}: Updated property container.
+ * @param theProperty {String}: Property name.
+ * @return {K.changes}: Return code {K.changes}.
+ */
+function checkImmutableProperty(theOriginal, theReplaced, theProperty)
+{
+    //
+    // Check both have property.
+    //
+    if( theOriginal.hasOwnProperty(theProperty) &&
+        theReplaced.hasOwnProperty(theProperty) ) {
+
+        //
+        // Handle equal.
+        // For objects it will pass same if both are the same instance.
+        // If both deleted (null value) we assume missing.
+        //
+        if(theOriginal[theProperty] === theReplaced[theProperty]) {
+
+            //
+            // Handle both null.
+            //
+            if(theReplaced[theProperty] === null) {
+                return K.changes.miss                                           // ==>
+            }
+
+            return K.changes.same                                               // ==>
+        }
+
+        // MUST BE DIFFERENT
+
+        //
+        // Skip any delete command (null).
+        // For objects it will always return modified.
+        //
+        if( theOriginal[theProperty] !== null &&
+            theReplaced[theProperty] !== null ) {
+            return K.changes.mod                                                // ==>
+        }
+
+        // ONE IS NULL
+
+        //
+        // Check if updated is null.
+        //
+        if(theReplaced[theProperty] === null) {
+            return K.changes.del                                                // ==>
+        }
+
+        // ORIGINAL IS NULL - Should not occur.
+
+        return K.changes.add                                                    // ==>
+
+    } // Both have property.
+
+    // ONE IS MISSING
+
+    //
+    // Check if at least one has the property.
+    //
+    if( theOriginal.hasOwnProperty(theProperty) ||
+        theReplaced.hasOwnProperty(theProperty) ) {
+
+        //
+        // Original has property.
+        // Updated is not there.
+        //
+        if(theOriginal.hasOwnProperty(theProperty)) {
+            return (theOriginal[theProperty] === null)
+                ? K.changes.miss                                                // ==>
+                : K.changes.del                                                 // ==>
+        }
+
+        return K.changes.add                                                    // ==>
+
+    } // At least one has property.
+
+    return K.changes.miss                                                       // ==>
+
+} // checkImmutableProperty()
+
+/**
  * Set default language if necessary
  * The function will set the status message in the required language,
  * the logic works as follows:
@@ -1917,5 +2021,6 @@ module.exports = {
     checkDefinition,
     checkObject,
     checkObjects,
+    checkImmutableProperty,
     setLanguage
 }

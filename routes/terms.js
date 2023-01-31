@@ -965,13 +965,13 @@ function doUpdateTerm(request, response)
 	//
 	// Init local storage.
 	//
-	let term = {}
+	let original = {}
 
 	//
 	// Load old record.
 	//
 	try {
-		term = JSON.parse(JSON.stringify(collection.document(request.pathParams.key)))
+		original = JSON.parse(JSON.stringify(collection.document(request.pathParams.key)))
 
 	} catch (error) {
 		if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
@@ -988,12 +988,31 @@ function doUpdateTerm(request, response)
 	//
 	// Update properties.
 	//
-	term = mergeObjects(term, request.body)
+	const updated = mergeObjects(original, request.body)
+
+	/* *******
+	 * TEST SECTION
+	 */
+
+	const old = original._code
+	const mod = updated._code
+	const test = {
+		result: Validation.checkImmutableProperty(old, mod, 'pippo'),
+		old: original,
+		new: updated
+	}
+
+	response.send(test)
+	return
+
+	/* *******
+	 * TEST SECTION END
+	 */
 
 	//
 	// Validate object.
 	//
-	const report = Validation.checkObject(term)
+	const report = Validation.checkObject(updated)
 
 	//
 	// Clean report.
@@ -1009,7 +1028,7 @@ function doUpdateTerm(request, response)
 	//
 	if(Object.keys(report).length > 0) {
 		response.status(400)
-		response.send({ report: report, value: term })                     // ==>
+		response.send({ report: report, value: original })                     // ==>
 	}
 
 	//
@@ -1023,7 +1042,7 @@ function doUpdateTerm(request, response)
 			//
 			const result =
 				K.db._query( aql`
-					REPLACE ${term} IN ${collection}
+					REPLACE ${updated} IN ${collection}
 					OPTIONS { ignoreRevs: false }
 					RETURN NEW
                 `)
