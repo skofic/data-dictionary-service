@@ -990,14 +990,17 @@ function doUpdateTerm(request, response)
 	//
 	const updated = mergeObjects(original, request.body)
 
+	//
+	// Check code section.
+	//
+
+
 	/* *******
 	 * TEST SECTION
 	 */
 
-	const old = original._code
-	const mod = updated._code
 	const test = {
-		result: Validation.checkImmutableProperty(old, mod, 'pippo'),
+		result: Validation.validateTermChanges(original, updated),
 		old: original,
 		new: updated
 	}

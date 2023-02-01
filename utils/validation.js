@@ -1509,9 +1509,7 @@ function validateTermChanges(theOriginal,theReplaced)
     //
     // Init local storage.
     //
-    let prop = ''
-    let block = {}
-    let section = ''
+    let valid = true
     const report = {}
 
     //
@@ -1524,64 +1522,317 @@ function validateTermChanges(theOriginal,theReplaced)
     }
 
     //
-    // Handle code section.
+    // Check code section.
     //
-    section = K.term.codeBlock
-    if(theOriginal.hasOwnProperty(section)) {
+    if(!validateCodeSectionChanges(theOriginal, theReplaced, report)) {
+        valid = false
+    }
 
-        //
-        // Prevent deleting section.
-        //
-        if( (!theReplaced.hasOwnProperty(section)) ||
-            (theReplaced.hasOwnProperty(section) && theReplaced[section] === null) ) {
-            report[section] = {}
-        }
-
-        //
-        // Check contents.
-        //
-        else
-        {
-            //
-            // Check namespace (_nid).
-            //
-            prop = '_nid'
-            block = {}
-
-            // Has namespace.
-            if(theOriginal.hasOwnProperty(prop) || theReplaced.hasOwnProperty(prop)) {
-
-                // Deleted.
-                if(theOriginal.hasOwnProperty(prop) && (!theReplaced.hasOwnProperty(prop))) {
-                    block[prop] = null
-                }
-
-                // Added.
-                else if(theReplaced.hasOwnProperty(prop) && (!theOriginal.hasOwnProperty(prop))) {
-                    block[prop] = theReplaced[prop]
-                }
-
-                // Changed.
-                else if(theOriginal[prop] !== theReplaced[prop]) {
-                    block[prop] = theReplaced[prop]
-                }
-
-            } // Has namespace.
-
-            //
-            // Handle errors.
-            //
-            if(Object.keys(block).length > 0) {
-                report[section] = JSON.parse(JSON.stringify(block))
-            }
-
-        } // Checked code section contents.
-
-    } // Original has code section.
+    //
+    // Check code section.
+    //
+    if(!validateDataSectionChanges(theOriginal, theReplaced, report)) {
+        valid = false
+    }
 
     return report                                                               // ==>
 
 } // validateTermChanges()
+
+/**
+ * Validate code section changes
+ * It will first check if the section was deleted or changed type,
+ * then it will check the section's properties.
+ * The function will not check the validity of the term,
+ * it will just check the validity of the value changes:
+ * this means that after this check the updated term should still be validated.
+ * @param theOriginal {Object}: Existing code section.
+ * @param theReplaced {Object}: Updated code section.
+ * @param theReport {Object}: Report object receiving eventual invalid modified properties.
+ * @return {Boolean}: true means valid or missing in both, false means there were invalid modifications.
+ */
+function validateCodeSectionChanges(theOriginal,theReplaced, theReport)
+{
+    //
+    // Init local storage.
+    //
+    let original = theOriginal
+    let replaced = theReplaced
+
+    //
+    // Check section.
+    // If both are missing the section (improbable), skip check;
+    // if the section was deleted or replaced with a value which is not an object
+    // signal error by returning an empty code section.
+    //
+    switch(checkImmutableProperty(original, replaced, K.term.codeBlock))
+    {
+        case K.changes.miss:    // !!! Will have to be intercepted by the term validator.
+            return true                                                         // ==>
+
+        case K.changes.del:     // Cannot delete the section.
+        case K.changes.mod:     // Section type changed.
+            theReport[K.term.codeBlock] = {}
+            return false                                                        // ==>
+
+        case K.changes.add:     // All terms should have the section.
+        case K.changes.same:    // The section exists, its contents checked below.
+            break
+    }
+
+    //
+    // Init local storage.
+    //
+    let block = {}
+    let valid = true
+
+    //
+    // Point to section.
+    //
+    original = theOriginal[K.term.codeBlock]
+    replaced = theReplaced[K.term.codeBlock]
+
+    //
+    // Check immutable properties.
+    //
+    for(const property of ["_nid", "_lid", "_gid"]) {
+        switch(checkImmutableProperty(original, replaced, property))
+        {
+            case K.changes.add:     // Cannot add the property.
+            case K.changes.del:     // Cannot remove the property.
+                block[property] = null
+                valid = false
+                break
+
+            case K.changes.mod:     // Cannot modify the property.
+                block[property] = replaced[property]
+                valid = false
+                break
+
+            case K.changes.same:    // No changes.
+            case K.changes.miss:    // !!! Property is missing: may be invalid...
+                break
+        }
+    }
+
+    //
+    // Check official identifiers list.
+    //
+    switch(checkImmutableProperty(original, replaced, '_aid'))
+    {
+        case K.changes.add:     // Was added: check.
+        case K.changes.mod:     // Was modified: check.
+            if(utils.isArray(replaced['_aid'])) {
+                if(replaced.hasOwnProperty('_lid') && (!replaced['_aid'].includes(replaced['_lid']))) {
+                    block['_aid'] = replaced['_aid']
+                    valid = false
+                }
+            } else {
+                block['_aid'] = replaced['_aid']
+                valid = false
+            }
+            break
+
+        case K.changes.del:     // Cannot remove the property.
+            block['_aid'] = null
+            valid = false
+            break
+
+        case K.changes.same:    // No changes.
+        case K.changes.miss:    // !!! Property is missing: should be invalid...
+            break
+    }
+
+    //
+    // Collect errors.
+    //
+    if(Object.keys(block).length > 0) {
+        theReport[K.term.codeBlock] = block
+    }
+
+    return valid                                                                // ==>
+
+} // validateCodeSectionChanges()
+
+/**
+ * Validate data section changes
+ * It will first check if the section was deleted or changed type,
+ * then it will check the section's properties.
+ * The function will not check the validity of the term,
+ * it will just check the validity of the value changes:
+ * this means that after this check the updated term should still be validated.
+ * Value change checks are not exhaustive, we just assert that type and kind do not change.
+ * @param theOriginal {Object}: Existing data section.
+ * @param theReplaced {Object}: Updated data section.
+ * @param theReport {Object}: Report object receiving eventual invalid modified properties.
+ * @return {Boolean}: true means valid or missing, false means there were invalid modifications.
+ */
+function validateDataSectionChanges(theOriginal,theReplaced, theReport)
+{
+    //
+    // Init local storage.
+    //
+    const section = K.term.dataBlock
+
+    //
+    // Check section.
+    // If both are missing the section (improbable), skip check;
+    // if the section was deleted or replaced with a value which is not an object
+    // signal error by returning an empty code section.
+    //
+    switch(checkImmutableProperty(theOriginal, theReplaced, section))
+    {
+        case K.changes.miss:    // Skip further checks.
+            return true                                                         // ==>
+
+        case K.changes.del:     // Cannot delete the section.
+        case K.changes.mod:     // Section type changed.
+            theReport[section] = {}
+            return false                                                        // ==>
+
+        case K.changes.add:     // Has become a descriptor.
+        case K.changes.same:    // The section exists, its contents checked below.
+            break
+    }
+
+    //
+    // Init local storage.
+    //
+    let block = {}
+
+    //
+    // Parse data section.
+    //
+    let valid = parseDataSectionChanges(theOriginal[section], theReplaced[section], block)
+
+    //
+    // Collect errors.
+    //
+    if(Object.keys(block).length > 0) {
+        theReport[section] = block
+    }
+
+    return valid                                                                // ==>
+
+} // validateDataSectionChanges()
+
+/**
+ * Validate scalar data section changes
+ * The function will check whether changes in the scalar data section are valid.
+ * It will only assert that type is not changed, and that there are not deleted kinds.
+ * @param theOriginal {Object}: Existing scalar section.
+ * @param theReplaced {Object}: Updated scalar section.
+ * @param theReport {Object}: Report object receiving eventual invalid modified properties.
+ * @return {Boolean}: true means valid or missing, false means there were invalid modifications.
+ */
+function validateScalarSectionChanges(theOriginal, theUpdated, theReport)
+{
+    //
+    // Init local storage.
+    //
+    let valid = true
+
+    //
+    // Check type.
+    //
+    switch(checkImmutableProperty(theOriginal, theUpdated, '_type'))
+    {
+        case K.changes.del:     // Cannot remove the property.
+            theReport['_type'] = null
+            valid = false
+            break
+
+        case K.changes.add:     // Cannot add the property.
+        case K.changes.mod:     // Cannot modify the property.
+            theReport['_type'] = theUpdated['_type']
+            valid = false
+            break
+
+        case K.changes.same:    // No changes.
+        case K.changes.miss:    // !!! Property is missing: may be invalid...
+            break
+    }
+
+    //
+    // Check official identifiers list.
+    //
+    switch(checkImmutableProperty(theOriginal, theUpdated, '_kind'))
+    {
+        case K.changes.add:     // Was added: cannot .
+            theReport['_kind'] = theUpdated['_kind']
+            valid = false
+            break
+
+        case K.changes.mod:     // Was modified: check.
+            if(utils.isArray(theOriginal['_kind']) && utils.isArray(theUpdated['_kind'])) {
+                if(!theUpdated['_kind'].every(element => theOriginal['_kind'].includes(element))) {
+                    theReport['_kind'] = theUpdated['_kind']
+                    valid = false
+                }
+            } else {
+                theReport['_kind'] = theUpdated['_kind']
+                valid = false
+            }
+            break
+
+        case K.changes.del:     // Cannot remove the property.
+            theReport['_kind'] = null
+            valid = false
+            break
+
+        case K.changes.same:    // No changes.
+        case K.changes.miss:    // No changes.
+            break
+    }
+
+    return valid                                                                // ==>
+
+} // validateScalarSectionChanges()
+
+/**
+ * Parse data section changes
+ * This function will parse the data section and apply the relevant
+ * checking function to each level of the section.
+ * @param theOriginal {Object}: Existing data scalar section.
+ * @param theReplaced {Object}: Updated data scalar section.
+ * @param theReport {Object}: Report object receiving eventual invalid modified properties.
+ * @return {Boolean}: true means valid or missing, false means there were invalid modifications.
+ */
+function parseDataSectionChanges(theOriginal, theReplaced, theReport)
+{
+    //
+    // Init local storage.
+    //
+    let block = {}
+    let section = ''
+
+    //
+    // Check scalar data section.
+    // Note that adding or deleting the section will return the same report error.
+    //
+    section = '_scalar'
+    switch(checkImmutableProperty(theOriginal, theReplaced, section))
+    {
+        case K.changes.miss:    // Is not scalar.
+            break                                                               // ==>
+
+        case K.changes.add:     // Cannot add scalar section.
+        case K.changes.del:     // Cannot remove.
+        case K.changes.mod:     // Section type changed.
+            theReport[section] = {}
+            return false                                                        // ==>
+
+        case K.changes.same:    // The section exists, its contents checked below.
+            if(!validateScalarSectionChanges(theOriginal[section], theReplaced[section], block)) {
+                theReport[section] = block
+                return false                                                    // ==>
+            }
+            break                                                               // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // parseDataSectionChanges()
 
 
 //
@@ -1880,22 +2131,39 @@ function checkObjects(theValue, theLanguage = 'iso_639_3_eng')
 function checkImmutableProperty(theOriginal, theReplaced, theProperty)
 {
     //
+    // Init local storage.
+    //
+    let copyOriginal = null
+    let copyReplaced = null
+
+    //
     // Check both have property.
     //
     if( theOriginal.hasOwnProperty(theProperty) &&
-        theReplaced.hasOwnProperty(theProperty) ) {
+        theReplaced.hasOwnProperty(theProperty) )
+    {
+        //
+        // Handle arrays.
+        //
+        if(utils.isArray(theOriginal[theProperty]) && utils.isArray(theReplaced[theProperty])) {
+            copyOriginal = theOriginal[theProperty].toString()
+            copyReplaced = theReplaced[theProperty].toString()
+        } else {
+            copyOriginal = theOriginal[theProperty]
+            copyReplaced = theReplaced[theProperty]
+        }
 
         //
         // Handle equal.
         // For objects it will pass same if both are the same instance.
         // If both deleted (null value) we assume missing.
         //
-        if(theOriginal[theProperty] === theReplaced[theProperty]) {
-
+        if(copyOriginal === copyReplaced)
+        {
             //
             // Handle both null.
             //
-            if(theReplaced[theProperty] === null) {
+            if(copyReplaced === null) {
                 return K.changes.miss                                           // ==>
             }
 
@@ -1908,8 +2176,18 @@ function checkImmutableProperty(theOriginal, theReplaced, theProperty)
         // Skip any delete command (null).
         // For objects it will always return modified.
         //
-        if( theOriginal[theProperty] !== null &&
-            theReplaced[theProperty] !== null ) {
+        if( copyOriginal !== null &&
+            copyReplaced !== null )
+        {
+            //
+            // Handle objects.
+            // We cannot compare objects, we only need to know
+            // if they are added or deleted: so we return same by default.
+            //
+            if(utils.isObject(copyOriginal) && utils.isObject(copyReplaced)) {
+                return K.changes.same                                           // ==>
+            }
+
             return K.changes.mod                                                // ==>
         }
 
@@ -1918,7 +2196,7 @@ function checkImmutableProperty(theOriginal, theReplaced, theProperty)
         //
         // Check if updated is null.
         //
-        if(theReplaced[theProperty] === null) {
+        if(copyReplaced === null) {
             return K.changes.del                                                // ==>
         }
 
@@ -1934,8 +2212,8 @@ function checkImmutableProperty(theOriginal, theReplaced, theProperty)
     // Check if at least one has the property.
     //
     if( theOriginal.hasOwnProperty(theProperty) ||
-        theReplaced.hasOwnProperty(theProperty) ) {
-
+        theReplaced.hasOwnProperty(theProperty) )
+    {
         //
         // Original has property.
         // Updated is not there.
@@ -2016,11 +2294,11 @@ module.exports = {
     validateNumber,
     validateTimestamp,
     validateString,
+    validateTermChanges,
 
     checkDescriptor,
     checkDefinition,
     checkObject,
     checkObjects,
-    checkImmutableProperty,
     setLanguage
 }
