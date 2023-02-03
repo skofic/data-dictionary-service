@@ -389,10 +389,10 @@ router.post(
 	},
 	'graph-add-bridge'
 )
-	.summary('Add bridges')
+	.summary('Add bridge')
 	.description(dd
 		`
-            **Add bridges**
+            **Add bridge**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              

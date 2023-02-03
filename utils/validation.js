@@ -1558,7 +1558,6 @@ function validateCodeSectionChanges(theOriginal,theReplaced, theReport)
     //
     const section = K.term.codeBlock
     let block = {}
-    let valid = true
 
     //
     // Check section.
@@ -1573,8 +1572,8 @@ function validateCodeSectionChanges(theOriginal,theReplaced, theReport)
 
         case K.changes.del:     // Cannot delete the section.
         case K.changes.mod:     // Section type changed.
-            valid = false
-            break
+            theReport[section] = block
+            return false                                                        // ==>
 
         case K.changes.add:     // All terms should have the section.
         case K.changes.same:    // The section exists, its contents checked below.
@@ -1582,12 +1581,9 @@ function validateCodeSectionChanges(theOriginal,theReplaced, theReport)
     }
 
     //
-    // Handle errors.
+    // Init local storage.
     //
-    if(!valid) {
-        theReport[section] = block
-        return false                                                            // ==>
-    }
+    let valid = true
 
     //
     // Point to section.
@@ -1701,21 +1697,17 @@ function validateDataSectionChanges(theOriginal,theReplaced, theReport)
     //
     // Init local storage.
     //
-    let block = {}
+    const block = {}
 
     //
     // Parse data section.
     //
-    let valid = parseDataSectionChanges(theOriginal[section], theReplaced[section], block)
-
-    //
-    // Collect errors.
-    //
-    if(Object.keys(block).length > 0) {
+    if(!parseDataSectionChanges(theOriginal[section], theReplaced[section], block)) {
         theReport[section] = block
+        return false                                                            // ==>
     }
 
-    return valid                                                                // ==>
+    return true                                                                 // ==>
 
 } // validateDataSectionChanges()
 
@@ -1768,12 +1760,10 @@ function validateScalarSectionChanges(theOriginal, theReplaced, theReport)
     // Init local storage.
     //
     const section = '_scalar'
-    let valid = true
-    let block = {}
 
     //
     // Check section.
-    // If both are missing the section (improbable), skip check;
+    // If both are missing the section skip check;
     // if the section was deleted or replaced with a value which is not an object
     // signal error by returning an empty code section.
     //
@@ -1784,24 +1774,22 @@ function validateScalarSectionChanges(theOriginal, theReplaced, theReport)
 
         case K.changes.del:     // Cannot delete the section.
         case K.changes.mod:     // Section type changed.
-            valid = false
-            break
+            theReport[section] = {}
+            return false                                                        // ==>
 
         case K.changes.add:     // Cannot add section.
-            block = theReplaced[section]
-            break
+            theReport[section] = theReplaced[section]
+            return false                                                        // ==>
 
         case K.changes.same:    // The section exists, its contents checked below.
             break
     }
 
     //
-    // Handle errors.
+    // Init local storage.
     //
-    if(!valid) {
-        theReport[section] = block
-        return false                                                            // ==>
-    }
+    let valid = true
+    let block = {}
 
     //
     // Point to section.
@@ -1867,7 +1855,6 @@ function validateScalarSectionChanges(theOriginal, theReplaced, theReport)
     //
     if(!valid) {
         theReport[section] = block
-        return false                                                            // ==>
     }
 
     return valid                                                                // ==>
@@ -1885,17 +1872,14 @@ function validateScalarSectionChanges(theOriginal, theReplaced, theReport)
  */
 function validateArraySectionChanges(theOriginal, theReplaced, theReport)
 {
-    return true
     //
     // Init local storage.
     //
-    const section = '_scalar'
-    let valid = true
-    let block = {}
+    const section = '_array'
 
     //
     // Check section.
-    // If both are missing the section (improbable), skip check;
+    // If both are missing the section skip check;
     // if the section was deleted or replaced with a value which is not an object
     // signal error by returning an empty code section.
     //
@@ -1906,93 +1890,31 @@ function validateArraySectionChanges(theOriginal, theReplaced, theReport)
 
         case K.changes.del:     // Cannot delete the section.
         case K.changes.mod:     // Section type changed.
-            valid = false
-            break
+            theReport[section] = {}
+            return false                                                        // ==>
 
         case K.changes.add:     // Cannot add section.
-            block = theReplaced[section]
-            break
+            theReport[section] = theReplaced[section]
+            return false                                                        // ==>
 
         case K.changes.same:    // The section exists, its contents checked below.
             break
     }
 
     //
-    // Handle errors.
+    // Init local storage.
     //
-    if(!valid) {
+    let block = {}
+
+    //
+    // Recurse data section.
+    //
+    if(!parseDataSectionChanges(theOriginal[section], theReplaced[section], block)) {
         theReport[section] = block
         return false                                                            // ==>
     }
 
-    //
-    // Point to section.
-    //
-    const original = theOriginal[section]
-    const replaced = theReplaced[section]
-
-    //
-    // Check type.
-    //
-    switch(checkImmutableProperty(original, replaced, '_type'))
-    {
-        case K.changes.del:     // Cannot remove the property.
-            block['_type'] = null
-            valid = false
-            break
-
-        case K.changes.add:     // Cannot add the property.
-        case K.changes.mod:     // Cannot modify the property.
-            block['_type'] = replaced['_type']
-            valid = false
-            break
-
-        case K.changes.same:    // No changes.
-        case K.changes.miss:    // !!! Property is missing: may be invalid...
-            break
-    }
-
-    //
-    // Check official identifiers list.
-    //
-    switch(checkImmutableProperty(original, replaced, '_kind'))
-    {
-        case K.changes.add:     // Was added: cannot .
-            block['_kind'] = replaced['_kind']
-            valid = false
-            break
-
-        case K.changes.mod:     // Was modified: check.
-            if(utils.isArray(original['_kind']) && utils.isArray(replaced['_kind'])) {
-                if(!replaced['_kind'].every(element => original['_kind'].includes(element))) {
-                    block['_kind'] = replaced['_kind']
-                    valid = false
-                }
-            } else {
-                block['_kind'] = replaced['_kind']
-                valid = false
-            }
-            break
-
-        case K.changes.del:     // Cannot remove the property.
-            block['_kind'] = null
-            valid = false
-            break
-
-        case K.changes.same:    // No changes.
-        case K.changes.miss:    // No changes.
-            break
-    }
-
-    //
-    // Handle errors.
-    //
-    if(!valid) {
-        theReport[section] = block
-        return false                                                            // ==>
-    }
-
-    return valid                                                                // ==>
+    return true                                                                 // ==>
 
 } // validateArraySectionChanges()
 
