@@ -1748,6 +1748,13 @@ function parseDataSectionChanges(theOriginal, theReplaced, theReport)
         return false                                                    // ==>
     }
 
+    //
+    // Check set section.
+    //
+    if(!validateDictSectionChanges(theOriginal, theReplaced, theReport)) {
+        return false                                                    // ==>
+    }
+
     return true                                                                 // ==>
 
 } // parseDataSectionChanges()
@@ -1837,7 +1844,7 @@ function validateScalarSectionChanges(theOriginal, theReplaced, theReport)
 
         case K.changes.mod:     // Was modified: check.
             if(utils.isArray(original['_kind']) && utils.isArray(replaced['_kind'])) {
-                if(!replaced['_kind'].every(element => original['_kind'].includes(element))) {
+                if(!original['_kind'].every(element => replaced['_kind'].includes(element))) {
                     block['_kind'] = replaced['_kind']
                     valid = false
                 }
@@ -1965,7 +1972,7 @@ function validateSetSectionChanges(theOriginal, theReplaced, theReport)
     let block = {}
 
     //
-    // Recurse data section.
+    // Handle set scalar data section.
     //
     if(!validateSetScalarSectionChanges(theOriginal[section], theReplaced[section], block)) {
         theReport[section] = block
@@ -1975,6 +1982,66 @@ function validateSetSectionChanges(theOriginal, theReplaced, theReport)
     return true                                                                 // ==>
 
 } // validateSetSectionChanges()
+
+/**
+ * Validate set data dictionary changes
+ * The function will check whether the dictionary section has been deleted or changed,
+ * then it will parse the underlining structure.
+ * @param theOriginal {Object}: Existing parent section.
+ * @param theReplaced {Object}: Updated parent section.
+ * @param theReport {Object}: Report object receiving eventual invalid modified properties.
+ * @return {Boolean}: true means valid or missing, false means there were invalid modifications.
+ */
+function validateDictSectionChanges(theOriginal, theReplaced, theReport)
+{
+    //
+    // Init local storage.
+    //
+    let block = {}
+    const section = '_dict'
+
+    //
+    // Check section.
+    // If both are missing the section skip check;
+    // if the section was deleted or replaced with a value which is not an object
+    // signal error by returning an empty code section.
+    //
+    switch(checkImmutableProperty(theOriginal, theReplaced, section))
+    {
+        case K.changes.miss:    // Skip further checks.
+            return true                                                         // ==>
+
+        case K.changes.add:     // Cannot add section.
+        case K.changes.del:     // Cannot delete the section.
+        case K.changes.mod:     // Section type changed.
+            theReport[section] = {}
+            return false                                                        // ==>
+
+        case K.changes.same:    // The section exists, its contents checked below.
+            break
+    }
+
+    //
+    // Handle dictionary key data section.
+    //
+    block = {}
+    if(!validateDictKeySectionChanges(theOriginal[section], theReplaced[section], block)) {
+        theReport[section] = block
+        return false                                                            // ==>
+    }
+
+    //
+    // Handle dictionary data data section.
+    //
+    block = {}
+    if(!validateDictValueSectionChanges(theOriginal[section], theReplaced[section], block)) {
+        theReport[section] = block
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateDictSectionChanges()
 
 /**
  * Validate set scalar data section changes
@@ -2059,7 +2126,7 @@ function validateSetScalarSectionChanges(theOriginal, theReplaced, theReport)
 
         case K.changes.mod:     // Was modified: check.
             if(utils.isArray(original[property]) && utils.isArray(replaced[property])) {
-                if(!replaced[property].every(element => original[property].includes(element))) {
+                if(!original[property].every(element => replaced[property].includes(element))) {
                     block[property] = replaced[property]
                     valid = false
                 }
@@ -2089,6 +2156,168 @@ function validateSetScalarSectionChanges(theOriginal, theReplaced, theReport)
     return valid                                                                // ==>
 
 } // validateSetScalarSectionChanges()
+
+/**
+ * Validate dictionary key data section changes
+ * The function will check whether the dictionary key section has been deleted or changed,
+ * then it will parse the underlining structure.
+ * @param theOriginal {Object}: Existing parent section.
+ * @param theReplaced {Object}: Updated parent section.
+ * @param theReport {Object}: Report object receiving eventual invalid modified properties.
+ * @return {Boolean}: true means valid or missing, false means there were invalid modifications.
+ */
+function validateDictKeySectionChanges(theOriginal, theReplaced, theReport)
+{
+    //
+    // Init local storage.
+    //
+    const section = '_dict_key'
+
+    //
+    // Check section.
+    //
+    switch(checkImmutableProperty(theOriginal, theReplaced, section))
+    {
+        case K.changes.miss:    // Must have section.
+        case K.changes.add:     // Cannot add section.
+        case K.changes.del:     // Cannot delete the section.
+        case K.changes.mod:     // Section type changed.
+            theReport[section] = {}
+            return false                                                        // ==>
+
+        case K.changes.same:    // The section exists, its contents checked below.
+            break
+    }
+
+    //
+    // Init local storage.
+    //
+    let property = ''
+    let valid = true
+    let block = {}
+
+    //
+    // Point to section.
+    //
+    const original = theOriginal[section]
+    const replaced = theReplaced[section]
+
+    //
+    // Check type.
+    //
+    property = '_type_key'
+    switch(checkImmutableProperty(original, replaced, property))
+    {
+        case K.changes.del:     // Cannot remove the property.
+            block[property] = null
+            valid = false
+            break
+
+        case K.changes.add:     // Cannot add the property.
+        case K.changes.mod:     // Cannot modify the property.
+            block[property] = replaced[property]
+            valid = false
+            break
+
+        case K.changes.same:    // No changes.
+        case K.changes.miss:    // !!! Property is missing: may be invalid...
+            break
+    }
+
+    //
+    // Check official identifiers list.
+    //
+    property = '_kind'
+    switch(checkImmutableProperty(original, replaced, property))
+    {
+        case K.changes.add:     // Was added: cannot .
+            block[property] = replaced[property]
+            valid = false
+            break
+
+        case K.changes.mod:     // Was modified: check.
+            if(utils.isArray(original[property]) && utils.isArray(replaced[property])) {
+                if(!original[property].every(element => replaced[property].includes(element))) {
+                    block[property] = replaced[property]
+                    valid = false
+                }
+            } else {
+                block[property] = replaced[property]
+                valid = false
+            }
+            break
+
+        case K.changes.del:     // Cannot remove the property.
+            block[property] = null
+            valid = false
+            break
+
+        case K.changes.same:    // No changes.
+        case K.changes.miss:    // No changes.
+            break
+    }
+
+    //
+    // Handle errors.
+    //
+    if(!valid) {
+        theReport[section] = block
+    }
+
+    return valid                                                                // ==>
+
+} // validateDictKeySectionChanges()
+
+/**
+ * Validate dictionary value section changes
+ *
+ * @param theOriginal {Object}: Existing data section.
+ * @param theReplaced {Object}: Updated data section.
+ * @param theReport {Object}: Report object receiving eventual invalid modified properties.
+ * @return {Boolean}: true means valid or missing, false means there were invalid modifications.
+ */
+function validateDictValueSectionChanges(theOriginal,theReplaced, theReport)
+{
+    //
+    // Init local storage.
+    //
+    const section = '_dict_value'
+
+    //
+    // Check section.
+    // If both are missing the section (improbable), skip check;
+    // if the section was deleted or replaced with a value which is not an object
+    // signal error by returning an empty code section.
+    //
+    switch(checkImmutableProperty(theOriginal, theReplaced, section))
+    {
+        case K.changes.miss:    // Must have section.
+        case K.changes.add:     // Cannot add section.
+        case K.changes.del:     // Cannot delete the section.
+        case K.changes.mod:     // Section type changed.
+            theReport[section] = {}
+            return false                                                        // ==>
+
+        case K.changes.same:    // The section exists, its contents checked below.
+            break
+    }
+
+    //
+    // Init local storage.
+    //
+    const block = {}
+
+    //
+    // Parse data section.
+    //
+    if(!parseDataSectionChanges(theOriginal[section], theReplaced[section], block)) {
+        theReport[section] = block
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateDictValueSectionChanges()
 
 /**
  * Validate descriptor.
