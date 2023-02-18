@@ -991,26 +991,17 @@ function doUpdateTerm(request, response)
 	const updated = mergeObjects(original, request.body)
 
 	//
-	// Check code section.
+	// Validate changes.
 	//
-
-
-	/* *******
-	 * TEST SECTION
-	 */
-
-	const test = {
-		result: Validation.validateTermChanges(original, updated),
-		old: original,
-		new: updated
+	const result = Validation.validateTermChanges(original, updated)
+	if(Object.keys(result).length > 0) {
+		response.status(400)
+		response.send({
+			status: K.error.kMSG_BAD_TERM_UPDATE.message[module.context.configuration.language],
+			data: result
+		})
+		return                                                                  // ==>
 	}
-
-	response.send(test)
-	return
-
-	/* *******
-	 * TEST SECTION END
-	 */
 
 	//
 	// Validate object.
@@ -1034,8 +1025,8 @@ function doUpdateTerm(request, response)
 		response.send({ report: report, value: original })                     // ==>
 	}
 
-	//
-	// Save term.
+		//
+		// Save term.
 	//
 	else {
 		try
@@ -1050,7 +1041,10 @@ function doUpdateTerm(request, response)
 					RETURN NEW
                 `)
 
-			response.send(result)                                               // ==>
+			response.send({
+				status: "OK", //K.error.kMSG_OK.message[module.context.configuration.language],
+				data: result._documents[0]
+			})                                                                  // ==>
 		}
 		catch (error)
 		{
@@ -1269,8 +1263,8 @@ function mergeObjects(theTarget = {}, theUpdates = {})
 				}
 			}
 
-			//
-			// Recurse objects.
+				//
+				// Recurse objects.
 			//
 			else {
 				copyTarget[key] = (isObject(copyUpdates[key]))

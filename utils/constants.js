@@ -663,7 +663,16 @@ module.exports = Object.freeze({
                 iso_639_3_fra: "Les propriétés '_code' suivantes ne peuvent pas être ajoutées, modifiées ou supprimées: @@@.",
                 iso_639_3_esp: "Las siguientes propiedades '_code' no se pueden agregar, modificar o eliminar: @@@."
             }
+        },
+        kMSG_BAD_TERM_UPDATE: {
+            code: 42,
+            message: {
+                iso_639_3_eng: "Invalid update value.",
+                iso_639_3_ita: "Valore di aggiornamento non valido.",
+                iso_639_3_fra: "Valeur de mise à jour invalide.",
+                iso_639_3_esp: "Valor de actualización no válido."
+            }
         }
     }
 
-});
+})
