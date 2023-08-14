@@ -40,7 +40,7 @@ function getAllEnumerationKeys(theRoot)
             FOR edge IN ${edges}
                 FILTER ${path} IN edge._path
                 FILTER edge._predicate == "_predicate_enum-of"
-            RETURN DOCUMENT(edge._from)._key
+            RETURN PARSE_IDENTIFIER(edge._from).key
         `).toArray();
 
     return result;                                                              // ==>
@@ -70,7 +70,7 @@ function getPropertyNames(theRoot)
             FOR edge IN ${edges}
                 FILTER ${path} IN edge._path
                 FILTER edge._predicate == "_predicate_property-of"
-            RETURN DOCUMENT(edge._from)._key
+            RETURN PARSE_IDENTIFIER(edge._from).key
         `).toArray();
 
     return result;                                                              // ==>
