@@ -655,14 +655,19 @@ function getRequiredDescriptors(theCodes)
     const result =
         K.db._query( aql`
             WITH ${terms}
-            RETURN (
-                FOR root IN ${list}
-                    FOR vertex, edge IN 1..10
-                        OUTBOUND root
-                        ${links}
-                        FILTER edge._predicate == "_predicate_requires"
-                    RETURN vertex
-            )
+            LET required = (
+                RETURN (
+                    UNIQUE(
+                        FOR root IN ${list}
+                            FOR vertex, edge IN 1..10
+                                OUTBOUND root
+                                ${links}
+                                FILTER edge._predicate == "_predicate_requires"
+                            RETURN vertex._id
+                    )
+                )
+            )[0]
+            RETURN DOCUMENT(required) 
         `).toArray()[0]
 
     return result                                                               // ==>
@@ -692,16 +697,18 @@ function getRequiredDescriptorKeys(theCodes)
         K.db._query( aql`
             WITH ${terms}
             RETURN (
-                FOR root IN ${list}
-                    FOR vertex, edge IN 1..10
-                        OUTBOUND root
-                        ${links}
-                        FILTER edge._predicate == "_predicate_requires"
-                    RETURN vertex._key
+                UNIQUE(
+                    FOR root IN ${list}
+                        FOR vertex, edge IN 1..10
+                            OUTBOUND root
+                            ${links}
+                            FILTER edge._predicate == "_predicate_requires"
+                        RETURN vertex._key
+                )
             )
-        `).toArray()
+        `).toArray()[0]
 
-    return result[0]                                                            // ==>
+    return result                                                               // ==>
 
 } // getRequiredDescriptorKeys()
 
