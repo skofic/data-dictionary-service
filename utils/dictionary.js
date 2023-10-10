@@ -633,6 +633,78 @@ function checkEnumsByCodes(theCodes, thePath)
 
 } // checkEnumsByCodes()
 
+/**
+ * Return required descriptors associated to provided descriptors list.
+ * The function will return the list of descriptors
+ * required by the provided list of descriptor global identifiers.
+ * @param theCodes {Array<String>}: List of descriptor global identifiers.
+ * @return {Array<Object>}: List of descriptors required by the provided list of descriptors.
+ */
+function getRequiredDescriptors(theCodes)
+{
+    //
+    // Init local storage.
+    //
+    const terms = K.db._collection(K.collection.term.name)
+    const links = K.db._collection(K.collection.links.name)
+    const list = theCodes.map( item => { return `${K.collection.term.name}/${item}`})
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            WITH ${terms}
+            RETURN (
+                FOR root IN ${list}
+                    FOR vertex, edge IN 1..10
+                        OUTBOUND root
+                        ${links}
+                        FILTER edge._predicate == "_predicate_requires"
+                    RETURN vertex
+            )
+        `).toArray()[0]
+
+    return result                                                               // ==>
+
+} // getRequiredDescriptors()
+
+/**
+ * Return required descriptors associated to provided descriptors list.
+ * The function will return the list of descriptor global identifiers
+ * required by the provided list of descriptor global identifiers.
+ * @param theCodes {Array<String>}: List of descriptor global identifiers.
+ * @return {Array<String>}: List of descriptors required by the provided list of descriptors.
+ */
+function getRequiredDescriptorKeys(theCodes)
+{
+    //
+    // Init local storage.
+    //
+    const terms = K.db._collection(K.collection.term.name)
+    const links = K.db._collection(K.collection.links.name)
+    const list = theCodes.map( item => { return `${K.collection.term.name}/${item}`})
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            WITH ${terms}
+            RETURN (
+                FOR root IN ${list}
+                    FOR vertex, edge IN 1..10
+                        OUTBOUND root
+                        ${links}
+                        FILTER edge._predicate == "_predicate_requires"
+                    RETURN vertex._key
+            )
+        `).toArray()
+
+    return result[0]                                                            // ==>
+
+} // getRequiredDescriptorKeys()
+
 
 module.exports = {
     getAllEnumerations,
@@ -640,6 +712,9 @@ module.exports = {
 
     getProperties,
     getPropertyNames,
+
+    getRequiredDescriptors,
+    getRequiredDescriptorKeys,
 
     matchEnumerationTerm,
     matchEnumerationTermKey,

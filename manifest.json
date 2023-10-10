@@ -79,6 +79,12 @@
             "required": true,
             "default": "edges"
         },
+        "collectionLink": {
+            "description": "Links collection name",
+            "type": "string",
+            "required": true,
+            "default": "links"
+        },
         "collectionTopo": {
             "description": "Topography collection name",
             "type": "string",

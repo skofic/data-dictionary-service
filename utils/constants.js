@@ -86,6 +86,20 @@ module.exports = Object.freeze({
                 }
             ]
         },
+        links: {
+            name: module.context.configuration.collectionLink,
+            type: 'E',
+            index: [
+                {
+                    type: 'persistent',
+                    fields: ['_predicate'],
+                    deduplicate: true,
+                    estimates: true,
+                    name: "idx-schema-predicate",
+                    unique: false
+                }
+            ]
+        },
         topo: {
             name: module.context.configuration.collectionTopo,
             type: 'E',
