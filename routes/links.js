@@ -113,7 +113,7 @@ You can try providing \`chr_EffPopSize\` to get the list of additional descripto
  * of descriptors. Only the required descriptors will be returned.
  */
 router.post(
-	'required',
+	'required/terms',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
@@ -122,7 +122,7 @@ router.post(
 	},
 	'get-required-descriptors'
 )
-	.summary('Get list of required descriptors')
+	.summary('Get list of required descriptor terms')
 	.description(dd
 		`
 **Return list of required descriptors**
