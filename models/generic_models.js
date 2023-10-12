@@ -11,7 +11,7 @@ const joi = require('joi')
 const DefaultLanguageTokenModel = joi.string().default(module.context.configuration.language)
 const StringModel = joi.string().required()
 const LevelsModel = joi.number().integer().greater(0).required()
-const TreeModel = joi.object()
+const TreeModel = joi.array().items(joi.object())
 const StringArrayModel = joi.array().items(joi.string())
 const TermsArrayModel = joi.array().items(joi.object({
 	_key: joi.string(),

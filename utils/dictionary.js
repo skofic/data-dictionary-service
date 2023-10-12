@@ -150,6 +150,117 @@ function getProperties(theRoot)
 } // getProperties()
 
 /**
+ * Return the list of properties belonging to the provided object descriptor.
+ * This function expects a string representing an object descriptor global identifier,
+ * and will return the list of all descriptor terms that are connected to the provided descriptor.
+ * @param theRoot {String}: The global identifier of the object descriptor.
+ * @param theLevels {Number}: Number of levels to traverse.
+ * @return {Object}: The list of properties belonging to the provided descriptor.
+ */
+function getPropertyKeys(theRoot, theLevels)
+{
+    //
+    // Init local storage.
+    //
+    const terms = K.db._collection(K.collection.term.name)
+    const edges = K.db._collection(K.collection.schema.name)
+    const path = K.collection.term.name + '/' + theRoot;
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            WITH ${terms}
+            LET tree = (
+                MERGE_RECURSIVE(
+                    FOR vertex, edge IN 0..${theLevels}
+                        INBOUND ${path}
+                        ${edges}
+                    
+                        OPTIONS {
+                            "order": "bfs",
+                            "uniqueVertices": "path"
+                        }
+                        
+                        FILTER edge._predicate IN ["_predicate_property-of", "_predicate_bridge-of" ]
+                        
+                        COLLECT parent = PARSE_IDENTIFIER(edge._to).key, predicate = edge._predicate
+                        INTO children
+                    
+                    RETURN {
+                        [parent]: {
+                            [predicate]: UNIQUE(children[*].vertex._key)
+                        }
+                    }
+                )
+            )
+            
+            RETURN HAS(tree, ${theRoot}) ? tree : []
+        `).toArray();
+
+    return result;                                                              // ==>
+
+} // getPropertyKeys()
+
+/**
+ * Return the list of properties belonging to the provided object descriptor.
+ * This function expects a string representing an object descriptor global identifier,
+ * and will return the list of all descriptor terms that are connected to the provided descriptor.
+ * @param theRoot {String}: The global identifier of the object descriptor.
+ * @param theLevels {Number}: Number of levels to traverse.
+ * @return {Object}: The list of properties belonging to the provided descriptor.
+ */
+function getEnumerationKeys(theRoot, theLevels)
+{
+    //
+    // Init local storage.
+    //
+    const terms = K.db._collection(K.collection.term.name)
+    const edges = K.db._collection(K.collection.schema.name)
+    const path = K.collection.term.name + '/' + theRoot;
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            WITH ${terms}
+            LET tree = (
+                MERGE_RECURSIVE(
+                    FOR vertex, edge IN 0..${theLevels}
+                        INBOUND ${path}
+                        ${edges}
+            
+                        PRUNE ${path} NOT IN edge._path
+                    
+                        OPTIONS {
+                            "order": "bfs",
+                            "uniqueVertices": "path"
+                        }
+                        
+                        FILTER edge._predicate IN ["_predicate_enum-of", "_predicate_bridge-of" ]
+                        FILTER ${path} IN edge._path
+                        
+                        COLLECT parent = PARSE_IDENTIFIER(edge._to).key, predicate = edge._predicate
+                        INTO children
+                    
+                    RETURN {
+                        [parent]: {
+                            [predicate]: UNIQUE(children[*].vertex._key)
+                        }
+                    }
+                )
+            )
+            
+            RETURN HAS(tree, ${theRoot}) ? tree : []
+        `).toArray();
+
+    return result;                                                              // ==>
+
+} // getEnumerationKeys()
+
+/**
  * Return the list of terms matching the provided global identifier code
  * in the enumeration identified by the provided root term global identifier.
  * @param thePath {String}: Global identifier of enumeration root term.
@@ -718,6 +829,8 @@ module.exports = {
     getAllEnumerationKeys,
 
     getProperties,
+    getPropertyKeys,
+    getEnumerationKeys,
     getPropertyNames,
 
     getRequiredDescriptors,

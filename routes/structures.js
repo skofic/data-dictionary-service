@@ -103,6 +103,72 @@ router.get(
     )
 
 /**
+ * Return object properties tree.
+ * This service will return the structure tree for the object corresponding
+ * to the provided global identifier, the tree will feature the property global
+ * identifiers and the tree depth will cover the provided levels.
+ */
+router.get(
+    'tree/keys/:path/:levels',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            getPropertyKeys(request, response)
+        }
+    },
+    'tree-struct-keys'
+)
+    .summary('Return tree of object property names')
+    .description(dd
+        `
+            **Properties tree**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            Structures are tree graphs representing the properties that belong to a specific \
+            object descriptor. \
+            At the root of the graph is the term that represents the root property descriptor, \
+            the descriptor properties that belong to this root are connected through the graph, \
+            the service will return all property names connected to the provided root term.
+            
+            The service expects the global identifier of the root property as a path parameter, \
+            and will return the tree of all property names belonging to that structure. \
+            These elements will be returned as the global identifiers of the descriptor terms.
+            
+            You can try providing \`_scalar\`, which represents a scalar value container: \
+            this will return the list of properties that belong to that descriptor, \
+            and that can be used to define a scalar data type.
+        `
+    )
+    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
+    .pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
+    .response(200, Models.TreeModel, dd
+        `
+            **Structure tree of property global identifiers**
+            
+            The service will return a structure tree whose elements are the global identifiers \\
+            of the structure properties.
+            
+            This list includes all properties that are *usually* connected to the parent descriptor, \\
+            by *usually* we mean the properties that we expect to find in the object.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
+
+/**
  * Return all object properties.
  * The service will return all the properties of the provided object descriptor glonal identifier.
  * No hierarchy is maintained and only valid enumeration elements are selected.
@@ -206,3 +272,19 @@ function getProperties(request, response)
     response.send(result);                                                      // ==>
 
 } // getProperties()
+
+/**
+ * Get all property names belonging to provided term.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function getPropertyKeys(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = Dictionary.getPropertyKeys(request.pathParams.path, request.pathParams.levels);
+
+    response.send(result);                                                      // ==>
+
+} // getPropertyKeys()

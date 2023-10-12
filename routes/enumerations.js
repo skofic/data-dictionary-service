@@ -109,6 +109,65 @@ router.get(
     )
 
 /**
+ * Return enumeration tree.
+ * This service will return the structure tree for the enumeration corresponding
+ * to the provided global identifier, the tree will feature the property global
+ * identifiers and the tree depth will cover the provided levels.
+ */
+router.get(
+    'tree/keys/:path/:levels',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            getTreeEnumerationKeys(request, response)
+        }
+    },
+    'tree-enum-keys'
+)
+    .summary('Return enumeration keys tree')
+    .description(dd
+        `
+            **Enumeration tree**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
+            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
+            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
+            
+            The service expects the global identifier of the enumeration root as a path \
+            parameter, and will return the tree of the enumeration graph. \
+            These elements will be returned as the global identifiers of the enumeration terms.
+            
+            You can try providing \`_type\`: this will return the *tree* of *data type identifiers*.
+        `
+    )
+    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
+    .response(200, Models.TreeModel, dd
+        `
+            **Enumeration graph tree**
+            
+            The service will return a structure tree whose elements are the global identifiers \
+            of the enumeration graph, this will include hierarchical information
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
+
+/**
  * Return all enumeration terms by path.
  * The service will return all the enumeration elements of an enumeration type:
  * provide the enumeration type root, the language and the service will return the array of terms.
@@ -819,6 +878,22 @@ function getAllEnumerationKeys(request, response)
     response.send(result);                                                      // ==>
 
 } // getAllEnumerations()
+
+/**
+ * Get all property names belonging to provided term.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function getTreeEnumerationKeys(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = Dictionary.getEnumerationKeys(request.pathParams.path, request.pathParams.levels);
+
+    response.send(result);                                                      // ==>
+
+} // getTreeEnumerationKeys()
 
 /**
  * Get all enumerations belonging to provided term.
