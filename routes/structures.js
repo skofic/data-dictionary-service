@@ -11,6 +11,7 @@ const createRouter = require('@arangodb/foxx/router');
 // Application constants.
 //
 const K = require('../utils/constants')
+const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
 const Dictionary = require("../utils/dictionary");
 
@@ -103,72 +104,6 @@ router.get(
     )
 
 /**
- * Return object properties tree.
- * This service will return the structure tree for the object corresponding
- * to the provided global identifier, the tree will feature the property global
- * identifiers and the tree depth will cover the provided levels.
- */
-router.get(
-    'tree/keys/:path/:levels',
-    (request, response) => {
-        const roles = [K.environment.role.read]
-        if(Session.hasPermission(request, response, roles)) {
-            getPropertyKeys(request, response)
-        }
-    },
-    'tree-struct-keys'
-)
-    .summary('Return tree of object property names')
-    .description(dd
-        `
-            **Properties tree**
-            
-            ***To use this service, the current user must have the \`read\` role.***
-            
-            Structures are tree graphs representing the properties that belong to a specific \
-            object descriptor. \
-            At the root of the graph is the term that represents the root property descriptor, \
-            the descriptor properties that belong to this root are connected through the graph, \
-            the service will return all property names connected to the provided root term.
-            
-            The service expects the global identifier of the root property as a path parameter, \
-            and will return the tree of all property names belonging to that structure. \
-            These elements will be returned as the global identifiers of the descriptor terms.
-            
-            You can try providing \`_scalar\`, which represents a scalar value container: \
-            this will return the list of properties that belong to that descriptor, \
-            and that can be used to define a scalar data type.
-        `
-    )
-    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
-    .pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
-    .response(200, Models.TreeModel, dd
-        `
-            **Structure tree of property global identifiers**
-            
-            The service will return a structure tree whose elements are the global identifiers \\
-            of the structure properties.
-            
-            This list includes all properties that are *usually* connected to the parent descriptor, \\
-            by *usually* we mean the properties that we expect to find in the object.
-        `
-    )
-    .response(401, ErrorModel, dd
-        `
-            **No user registered**
-            
-            There is no active session.
-        `
-    )
-    .response(403, ErrorModel, dd
-        `
-            **User unauthorised**
-            
-            The current user is not authorised to perform the operation.
-        `
-    )
-
-/**
  * Return all object properties.
  * The service will return all the properties of the provided object descriptor glonal identifier.
  * No hierarchy is maintained and only valid enumeration elements are selected.
@@ -236,6 +171,99 @@ router.get(
         `
     )
 
+/**
+ * Return object property structures.
+ *
+ * This service will break down the structures dependency of the provided root element,
+ * the provided global identifier, traversing the structure up to the provided number of levels.
+ *
+ * The service will return an object containing a series of properties: each property represents
+ * a sub-structure with a property representing a predicate, this predicate contains an array
+ * representing the property names belonging to the structure's root property. The predicate
+ * can have two values: `_predicate_property-of` indicates a concrete property,
+ * `_predicate_bridge-of` represents a bridge to a structure data type. Note that, due to the
+ * mechanism of the data dictionary, you may find data types rather data structures in this array.
+ *
+ * This result was going to be processed by a dedicated function, however, representing a graph
+ * using a tree can get complicated and this part was abandoned, for now.
+ */
+router.get(
+    'tree/keys/:path/:levels',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            getPropertyKeys(request, response)
+        }
+    },
+    'tree-struct-keys'
+)
+    .summary('Return tree of object property names')
+    .description(dd
+        `
+            **List of property structures**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            Structures are a graph of connected descriptor terms, by convention a structure \
+            can have only a single level: this service allows you to traverse the graph and \
+            retrieve the list of single level structures traversing the desired number of \
+            levels.
+            
+            The service expects the global identifier of the root property as a path parameter, \
+            and the number of levels to traverse.
+            
+            You can try providing \`_scalar\`, which represents a scalar value container: \
+            this will return the list of properties that belong to that descriptor, \
+            and that can be used to define a scalar data type.
+            
+            *Note: Currently there is a single predicate that represents a bridge to another \
+            enumeration or structure, also, a term can be both a structure and an enumeration: \
+            this means that, to date, it is not possible to discriminate bridged terms \
+            being enumerations or structures, do please consider this service as in progress.*
+        `
+    )
+    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
+    .pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
+    .response(200, Models.TreeModel, dd
+        `
+            **List of property structures.**
+            
+            The service will return a structure whose properties represent the property \
+            names of the structures that compose the root struture down to the provided \
+            number of levels. Each sub-structure is as follows:
+            
+            - Root: property name.
+            - Child (will have a single child property): the predicate.
+            - Child value: an array containing the list of child properties.
+            
+            Predicate \`_predicate_property-of\` will contain the list of sub-structures \
+            or leaf nodes belonging to the current root.
+            Predicate \`_predicate_bridge-of\` will contain the single global identifier \
+            of the term that represents the type of the root. Due to the fact that the \
+            bridge predicate is unique for enumerations and structures, and due to the fact \
+            that terms can be both enumerations and structures, you might have here elements \
+            that are not structures, but enumerations. This is the reason that we consider \
+            this service as *in progress*.
+
+            This list includes all properties that are *usually* connected to the parent \
+            descriptor, by *usually* we mean the properties that we expect to find in the object.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+
+            The current user is not authorised to perform the operation.
+        `
+    )
+
 
 //
 // Functions.
@@ -284,7 +312,6 @@ function getPropertyKeys(request, response)
     // Query database.
     //
     const result = Dictionary.getPropertyKeys(request.pathParams.path, request.pathParams.levels);
-
-    response.send(result);                                                      // ==>
+    response.send(result)
 
 } // getPropertyKeys()

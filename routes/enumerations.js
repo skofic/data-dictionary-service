@@ -110,9 +110,23 @@ router.get(
 
 /**
  * Return enumeration tree.
- * This service will return the structure tree for the enumeration corresponding
- * to the provided global identifier, the tree will feature the property global
- * identifiers and the tree depth will cover the provided levels.
+ *
+ * This service will break down the structures dependency of the provided root element,
+ * the provided global identifier, traversing the enumeration tree up to the provided number
+ * of levels.
+ *
+ * The service will return an object containing a series of expanded edges, each edge is
+ * represented by a structure whose root property is the \`_to\`, which features a child
+ * property that is the edge predicate, and the edge predicate value is an array of term
+ * global identifiers representing the enumerations pointing to the root term.
+ *
+ * The predicate can have two values: `_predicate_enum-of` indicates a concrete enumeration,
+ * `_predicate_bridge-of` represents a bridge to an enumeration data type. Note that, due to the
+ * mechanism of the data dictionary, you may find structure types rather enumerations in this
+ * array.
+ *
+ * This result was going to be processed by a dedicated function, however, representing a graph
+ * using a tree can get complicated and this part was abandoned, for now.
  */
 router.get(
     'tree/keys/:path/:levels',
@@ -127,29 +141,48 @@ router.get(
     .summary('Return enumeration keys tree')
     .description(dd
         `
-            **Enumeration tree**
+            **List of enumeration hierarchies**
             
             ***To use this service, the current user must have the \`read\` role.***
             
-            Enumerations are *graphs* that represent *controlled vocabularies* whose *elements* are *terms*. \
-            At the *root* of the *graph* is a term that represents the *type* or *definition* of this \
-            *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
+            Enumerations are a graph of connected enumeration terms, this service allows \
+            you to traverse the enumeration graph and retrieve the list of single tree branches \
+            traversing the desired number of graph levels.
             
-            The service expects the global identifier of the enumeration root as a path \
-            parameter, and will return the tree of the enumeration graph. \
-            These elements will be returned as the global identifiers of the enumeration terms.
+            The service expects the global identifier of the root enumeration as a path \
+            parameter, and the number of levels to traverse.
             
-            You can try providing \`_type\`: this will return the *tree* of *data type identifiers*.
+            You can try providing \`_type\`, this will return the *tree* of *data type \
+            identifiers*.
+            
+            *Note: Currently there is a single predicate that represents a bridge to another \
+            enumeration or structure, also, a term can be both a structure and an enumeration: \
+            this means that, to date, it is not possible to discriminate bridged terms \
+            being enumerations or structures, do please consider this service as in progress.*
         `
     )
     .pathParam('path', Models.StringModel, "Enumeration root global identifier")
     .pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
     .response(200, Models.TreeModel, dd
         `
-            **Enumeration graph tree**
+            **List of enumeration trees.**
             
-            The service will return a structure tree whose elements are the global identifiers \
-            of the enumeration graph, this will include hierarchical information
+            The service will return a structure whose properties represent the enumeration \
+            tree roots of the root enumeration, traversing the provided number of levels. \
+            Each sub-structure is as follows:
+            
+            - Root: enumeration name.
+            - Child (will have a single child property): the predicate.
+            - Child value: an array containing the list of child enumerations.
+            
+            Predicate \`_predicate_enum-of\` will contain the list of leaf nodes belonging \
+            to the current root enumeration.
+            Predicate \`_predicate_bridge-of\` will contain the single global identifier \
+            of the term that represents the type of the root. Due to the fact that the \
+            bridge predicate is unique for enumerations and structures, and due to the fact \
+            that terms can be both enumerations and structures, you might have here elements \
+            that are not structures, but enumerations. This is the reason that we consider \
+            this service as *in progress*.
         `
     )
     .response(401, ErrorModel, dd

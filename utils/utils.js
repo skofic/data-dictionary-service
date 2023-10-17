@@ -336,10 +336,10 @@ function getEdgeKey(theSubject, thePredicate, theObject)
     const key =
         crypto.md5(
             theSubject
-          + K.token.tok
-          + thePredicate
-          + K.token.tok
-          + theObject
+            + K.token.tok
+            + thePredicate
+            + K.token.tok
+            + theObject
         )
 
     return key                                                                  // ==>

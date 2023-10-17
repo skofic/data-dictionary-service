@@ -177,10 +177,9 @@ function getPropertyKeys(theRoot, theLevels)
                     FOR vertex, edge IN 0..${theLevels}
                         INBOUND ${path}
                         ${edges}
-                    
+                        
                         OPTIONS {
-                            "order": "bfs",
-                            "uniqueVertices": "path"
+                            "order": "bfs"
                         }
                         
                         FILTER edge._predicate IN ["_predicate_property-of", "_predicate_bridge-of" ]
@@ -235,8 +234,7 @@ function getEnumerationKeys(theRoot, theLevels)
                         PRUNE ${path} NOT IN edge._path
                     
                         OPTIONS {
-                            "order": "bfs",
-                            "uniqueVertices": "path"
+                            "order": "bfs"
                         }
                         
                         FILTER edge._predicate IN ["_predicate_enum-of", "_predicate_bridge-of" ]
