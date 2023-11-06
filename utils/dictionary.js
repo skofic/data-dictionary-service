@@ -3,13 +3,13 @@
 //
 // Import frameworks.
 //
-const aql = require('@arangodb').aql;					// AQL queries.
+const aql = require('@arangodb').aql;
 
 //
 // Application.
 //
-const K = require( './constants' );					    // Application constants.
-const utils = require('../utils/utils');                // Utility functions.
+const K = require( './constants' )  // Application constants.
+const utils = require('../utils/utils')                     // Utility functions.
 
 /**
  * dictionary.js
@@ -45,7 +45,44 @@ function getAllEnumerationKeys(theRoot)
 
     return result;                                                              // ==>
 
-} // getAllEnumerations()
+} // getAllEnumerationKeys()
+
+/**
+ * Return the list of enumeration keys given a list of roots.
+ *
+ * This function expects a a list of strings each representing an enumeration
+ * root type, and will return the list of all resulting controlled vocabulary
+ * elements as term global identifiers.
+ *
+ * The returned list is the flattened list of all term global identifiers,
+ * no hierarchical information is returned.
+ *
+ * @param theKind {String}: List of root enumeration global identifiers.
+ * @return {Array}: The flattened controlled vocabulary.
+ */
+function getAllKindEnumerationKeys(theKind)
+{
+    //
+    // Init local storage.
+    //
+    const edges = K.db._collection(K.collection.schema.name)
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            FOR root IN ${theKind}
+                LET handle = CONCAT_SEPARATOR("/", ${K.collection.term.name}, root)
+                FOR edge IN ${edges}
+                    FILTER handle IN edge._path
+                    FILTER edge._predicate == ${K.term.predicateEnum}
+                RETURN PARSE_IDENTIFIER(edge._from).key
+        `).toArray();
+
+    return result                                                               // ==>
+
+} // getAllKindEnumerationKeys()
 
 /**
  * Return the list of property names given their parent.
@@ -203,14 +240,19 @@ function getPropertyKeys(theRoot, theLevels)
 } // getPropertyKeys()
 
 /**
- * Return the list of properties belonging to the provided object descriptor.
- * This function expects a string representing an object descriptor global identifier,
- * and will return the list of all descriptor terms that are connected to the provided descriptor.
- * @param theRoot {String}: The global identifier of the object descriptor.
+ * Return the list of enumeration trees belonging to the provided enumeration type.
+ *
+ * This function expects a term global identifier that represents an enumeration type
+ * and a value representing the number of levels to traverse.
+ * The function will return a list of structures representing the branches that comprise
+ * the enumeration tree. Each branch contains the root element, the predicate and the
+ * child elements of the controlled vocabulary corresponding to the provided enumeration type.
+ *
+ * @param theRoot {String}: The global identifier of the enumeration root.
  * @param theLevels {Number}: Number of levels to traverse.
- * @return {Object}: The list of properties belonging to the provided descriptor.
+ * @return {Array(Object)}: The list of enumerations belonging to the provided enumeration type.
  */
-function getEnumerationKeys(theRoot, theLevels)
+function getEnumerationDescriptorKeys(theRoot, theLevels)
 {
     //
     // Init local storage.
@@ -256,7 +298,71 @@ function getEnumerationKeys(theRoot, theLevels)
 
     return result;                                                              // ==>
 
-} // getEnumerationKeys()
+} // getEnumerationDescriptorKeys()
+
+/**
+ * Return the list of enumeration trees belonging to the provided descriptor _kind.
+ *
+ * The function expects the _kind property of an enumeration descriptor and a value
+ * representing the number of levels to traverse. It will return an array of objects
+ * each representing the enumeration tree of the corresponding _kind item.
+ * Each element of the branch is a structure comprising the branch vertex, the
+ * predicate and the vertex children elements.
+ *
+ * @param theKind {Array(String))}: The list of elements in the descriptor _kind.
+ * @param theLevels {Number}: Number of levels to traverse.
+ * @return {Array(Object))}: The list of enumeration trees.
+ */
+function getEnumerationDescriptorTrees(theKind, theLevels)
+{
+    //
+    // Init local storage.
+    //
+    const terms = K.db._collection(K.collection.term.name)
+    const edges = K.db._collection(K.collection.schema.name)
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            WITH ${terms}
+            
+            FOR root IN ${theKind}
+                LET handle = CONCAT_SEPARATOR("/", "terms", root)
+                
+                LET tree = (
+                    MERGE_RECURSIVE(
+                        FOR vertex, edge IN 0..${theLevels}
+                            INBOUND handle
+                            ${edges}
+                
+                            PRUNE handle NOT IN edge._path
+                        
+                            OPTIONS {
+                                "order": "bfs"
+                            }
+                            
+                            FILTER edge._predicate IN ["_predicate_enum-of", "_predicate_bridge-of" ]
+                            FILTER handle IN edge._path
+                            
+                            COLLECT parent = PARSE_IDENTIFIER(edge._to).key, predicate = edge._predicate
+                            INTO children
+                        
+                        RETURN {
+                            [parent]: {
+                                [predicate]: UNIQUE(children[*].vertex._key)
+                            }
+                        }
+                    )
+                )
+                
+            RETURN HAS(tree, root) ? tree : []
+        `).toArray();
+
+    return result;                                                              // ==>
+
+} // getEnumerationDescriptorTrees()
 
 /**
  * Return the list of terms matching the provided global identifier code
@@ -821,18 +927,87 @@ function getRequiredDescriptorKeys(theCodes)
 
 } // getRequiredDescriptorKeys()
 
+/**
+ * Return enumeration descriptor _kind property.
+ *
+ * The function will return the _kind property of the provided _data block.
+ * The function will only consider scalar, set and array data shapes.
+ * If the resulting scalar data type is not an enumeration, the function will
+ * return an empty array, otherwise the function will return the list of the
+ * _kind elements.
+ *
+ * @param theData {Object}: The descriptor _data block.
+ * @return {Array<String>}: List of descriptor _kind elements.
+ */
+function getDescriptorEnumKind(theData)
+{
+    let scalar, block, type
+
+    //
+    // Handle scalar.
+    //
+    if(theData.hasOwnProperty(K.term.dataBlockScalar) ||
+        theData.hasOwnProperty(K.term.dataBlockSetScalar))
+    {
+        //
+        // Save block identifiers.
+        //
+        if(theData.hasOwnProperty(K.term.dataBlockScalar)) {
+            scalar = theData[K.term.dataBlockScalar]
+            type = K.term.dataType
+        } else {
+            scalar = theData[K.term.dataBlockSetScalar]
+            type = K.term.dataSetType
+        }
+
+        //
+        // Check type.
+        //
+        if(scalar.hasOwnProperty(type)) {
+            if(scalar[type] === K.term.dataTypeEnum) {
+                if(scalar.hasOwnProperty(K.term.dataKind)) {
+                    return scalar[K.term.dataKind]                              // ==>
+                }
+            }
+        }
+
+    } // Found scalar block.
+
+    //
+    // Handle set.
+    //
+    else if(theData.hasOwnProperty(K.term.dataBlockSet)) {
+        return getDescriptorEnumKind(theData[K.term.dataBlockSet])              // ==>
+    }
+
+    //
+    // Handle array.
+    //
+    else if(theData.hasOwnProperty(K.term.dataBlockArray)) {
+        return getDescriptorEnumKind(theData[K.term.dataBlockArray])            // ==>
+    }
+
+    return []                                                                   // ==>
+
+} // getDescriptorEnumKind()
+
 
 module.exports = {
     getAllEnumerations,
     getAllEnumerationKeys,
 
+    getAllKindEnumerationKeys,
+    getEnumerationDescriptorKeys,
+    getEnumerationDescriptorTrees,
+
     getProperties,
     getPropertyKeys,
-    getEnumerationKeys,
     getPropertyNames,
 
     getRequiredDescriptors,
     getRequiredDescriptorKeys,
+
+    getDescriptorEnumKind,
 
     matchEnumerationTerm,
     matchEnumerationTermKey,

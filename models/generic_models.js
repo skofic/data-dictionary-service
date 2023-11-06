@@ -16,6 +16,7 @@ const TreeModel = joi.array().items(joi.object({
 		predicate: joi.array().items("sub-properties or one single structure data type.")
 	}
 }))
+const ArrayModel = joi.array().items(joi.any())
 const StringArrayModel = joi.array().items(joi.string())
 const TermsArrayModel = joi.array().items(joi.object({
 	_key: joi.string(),
@@ -48,6 +49,7 @@ module.exports = {
 	StringModel,
 	LevelsModel,
 	TreeModel,
+	ArrayModel,
 	StringArrayModel,
 	TermsArrayModel,
 	GraphPathsModel,

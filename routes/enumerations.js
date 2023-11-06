@@ -922,7 +922,11 @@ function getTreeEnumerationKeys(request, response)
     //
     // Query database.
     //
-    const result = Dictionary.getEnumerationKeys(request.pathParams.path, request.pathParams.levels);
+    const result =
+        Dictionary.getEnumerationDescriptorKeys(
+            request.pathParams.path,
+            request.pathParams.levels
+        )
 
     response.send(result);                                                      // ==>
 
