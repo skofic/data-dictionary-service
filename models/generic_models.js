@@ -43,10 +43,10 @@ const AddChildrenResponse = joi.object({
 	existing: joi.number()
 })
 const DescriptorQualifications = joi.object({
-	classes: joi.array(),
-	domains: joi.array(),
-	tags: joi.array(),
-	subjects: joi.array()
+	classes: joi.array().items(joi.string()),
+	domains: joi.array().items(joi.string()),
+	tags: joi.array().items(joi.string()),
+	subjects: joi.array().items(joi.string())
 })
 
 
