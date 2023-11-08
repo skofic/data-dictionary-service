@@ -58,7 +58,7 @@ function getAllEnumerationKeys(theRoot)
  * no hierarchical information is returned.
  *
  * @param theKind {String}: List of root enumeration global identifiers.
- * @return {Array}: The flattened controlled vocabulary.
+ * @return {Array(String)}: The flattened controlled vocabulary.
  */
 function getAllKindEnumerationKeys(theKind)
 {
@@ -83,6 +83,88 @@ function getAllKindEnumerationKeys(theKind)
     return result                                                               // ==>
 
 } // getAllKindEnumerationKeys()
+
+/**
+ * Return the list of enumeration term objects given a list of roots.
+ *
+ * This function expects a a list of strings each representing an enumeration
+ * root type, and will return the list of all resulting controlled vocabulary
+ * elements as term objects.
+ *
+ * The returned list is the flattened list of all term objects,
+ * no hierarchical information is returned.
+ *
+ * @param theKind {String}: List of root enumeration global identifiers.
+ * @return {Array(Object)}: The flattened controlled vocabulary.
+ */
+function getAllKindEnumerationTerms(theKind)
+{
+    //
+    // Init local storage.
+    //
+    const edges = K.db._collection(K.collection.schema.name)
+
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            FOR root IN ${theKind}
+                LET handle = CONCAT_SEPARATOR("/", ${K.collection.term.name}, root)
+                FOR edge IN ${edges}
+                    FILTER handle IN edge._path
+                    FILTER edge._predicate == ${K.term.predicateEnum}
+                RETURN DOCUMENT(edge._from)
+        `).toArray();
+
+    return result                                                               // ==>
+
+} // getAllKindEnumerationTerms()
+
+/**
+ * Return the aggregated qualification keys of a list of descriptors.
+ *
+ * This function expects a a list of descriptor global identifiers
+ * and will return the aggregated class, domain, tag and subject keys
+ * of the provided list of descriptors.
+ *
+ * The returned list is the flattened list of all term objects,
+ * no hierarchical information is returned.
+ *
+ * @param theDescriptors {Array(String)}: List of descriptor global identifiers.
+ * @return {Object}: The aggregated descriptor qualifications.
+ */
+function getDescriptorQualificationKeys(theDescriptors)
+{
+    //
+    // Init local storage.
+    //
+    const terms = K.db._collection(K.collection.term.name)
+
+    //
+    // Query descriptors.
+    //
+    const result =
+        K.db._query( aql`
+            FOR doc IN ${terms}
+                FILTER doc._key IN ${theDescriptors}
+                FILTER HAS(doc,'_data')
+                
+                COLLECT AGGREGATE classes = UNIQUE(doc._data._class),
+                                  domains = UNIQUE(doc._data._domain),
+                                  tags = UNIQUE(doc._data._tag),
+                                  subjects = UNIQUE(doc._data._subject)
+            RETURN {
+                classes: REMOVE_VALUE(classes, null),
+                domains: REMOVE_VALUE(FLATTEN(domains), null),
+                tags: UNIQUE(REMOVE_VALUE(FLATTEN(tags), null)),
+                subjects: REMOVE_VALUE(subjects, null)
+            }
+        `).toArray();
+
+    return result                                                               // ==>
+
+} // getDescriptorQualificationKeys()
 
 /**
  * Return the list of property names given their parent.
@@ -997,6 +1079,9 @@ module.exports = {
     getAllEnumerationKeys,
 
     getAllKindEnumerationKeys,
+    getAllKindEnumerationTerms,
+    getDescriptorQualificationKeys,
+
     getEnumerationDescriptorKeys,
     getEnumerationDescriptorTrees,
 

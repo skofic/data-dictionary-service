@@ -49,12 +49,12 @@ router.tag('Descriptors');
 //
 
 /**
- * Return descriptor enumerations.
+ * Return descriptor enumeration keys.
  *
  * The service will return the flattened list of enumeration term global identifiers
  * belonging to the provided descriptor global identifier.
  *
- * the returned list represents the flattened enumeration structure without hierarchy.
+ * The returned list represents the flattened enumeration structure without hierarchy.
  */
 router.get(
 	'enum/key/:key',
@@ -64,7 +64,7 @@ router.get(
 			getDescriptorEnumKeys(request, response)
 		}
 	},
-	'kind'
+	'all-enum-keys'
 )
 	.summary('Return descriptor enumerations')
 	.description(dd
@@ -91,6 +91,83 @@ router.get(
             
             The service will return the *list* of elements comprising the descriptor's associated \
             controlled vocabulary as global identifiers.
+        `
+	)
+	.response(204, Models.ArrayModel, dd
+		`
+            **The descriptor is not an enumeration**
+            
+            The service will return this status when the provided descriptor does not \
+            resolve as a controlled vocabulary. In this case the returned value will be \
+            an empty array.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No user registered**
+            
+            There is no active session.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+	)
+	.response(404, ErrorModel, dd
+		`
+            **Not found**
+            
+            Either the descriptor was not found, or it was not a descriptor.
+        `
+	)
+
+/**
+ * Return descriptor enumeration terms.
+ *
+ * The service will return the flattened list of enumeration term objects
+ * belonging to the provided descriptor global identifier.
+ *
+ * The returned list represents the flattened enumeration structure without hierarchy.
+ */
+router.get(
+	'enum/term/:key/:lang',
+	(request, response) => {
+		const roles = [K.environment.role.read]
+		if(Session.hasPermission(request, response, roles)) {
+			getDescriptorEnumTerms(request, response)
+		}
+	},
+	'all-enum-terms'
+)
+	.summary('Return flattened list of all enumeration terms')
+	.description(dd
+		`
+            **Get descriptor enumeration terms**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            The service expects the *global identifier* of an enumeration descriptor in the \
+            \`key\` path parameter, and will return the descriptor's  controlled vocabulary. \
+            The vocabulary elements will be the term objects.
+            
+            If the term does not exist, or if the term is not a descriptor, the service will fail.
+            The descriptor's data shape must be scalar, array or set, and its scalar data type \
+            must be an enumeration. If that is not the case, the service will return an empty array.
+            
+            You can try providing \`_type\`: this will return the flattened elements of its controlled vocabulary.
+        `
+	)
+	.pathParam('key', Models.StringModel, "Descriptor global identifier")
+	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
+	.response(200, Models.TermsArrayModel, dd
+		`
+            **Controlled vocabulary element term object**
+            
+            The service will return the *list* of elements comprising the descriptor's \
+            associated controlled vocabulary as term objects.
         `
 	)
 	.response(204, Models.ArrayModel, dd
@@ -235,6 +312,69 @@ router.get(
         `
 	)
 
+/**
+ * Return class, domains, tags and subjects of the provided descriptors list.
+ *
+ * The service expects a list of descriptor global identifiers and will return
+ * the list of domains and tags belonging to the provided descriptors.
+ *
+ * The service will skip any provided term that does not have the _data block.
+ */
+router.post(
+	'qual/keys',
+	(request, response) => {
+		const roles = [K.environment.role.read]
+		if(Session.hasPermission(request, response, roles)) {
+			getDescriptorQualificationKeys(request, response)
+		}
+	},
+	'qual-list-keys'
+)
+	.summary('Get descriptor qualifications')
+	.description(dd
+		`
+            **Get class, domains, tags and subjects**
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            The service expects a list of descriptor global identifiers and will return \
+            the list of classes, domains, tags and subjects associated with the provided \
+            descriptors list.
+            
+            The service will skip any element of the provided list that does not have \
+            the _data block.
+        `
+	)
+	.body(Models.StringArrayModel, dd
+		`
+            **Descriptors list**
+            
+            Provide a list of descriptor term global identifiers.
+        `
+	)
+	.response(200, Models.DescriptorQualifications, dd
+		`
+            **Qualifications record**
+            
+            The service will return a dictionary whose keys correspond to the descriptor \
+            qualification properties whose the values represent the aggregated qualifications.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No user registered**
+            
+            There is no active session.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+	)
+
 
 //
 // Functions.
@@ -278,6 +418,43 @@ function getDescriptorEnumKeys(request, response)
 } // getDescriptorEnumKeys()
 
 /**
+ * Get descriptor enumeration terms.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function getDescriptorEnumTerms(request, response)
+{
+	//
+	// Get descriptor.
+	//
+	const descriptor = request.pathParams.key
+
+	//
+	// Get term.
+	//
+	try {
+		const term = db._document(K.collection.term.name + '/' + descriptor)
+		if(term.hasOwnProperty(K.term.dataBlock)) {
+			const kind = Dictionary.getDescriptorEnumKind(term._data)
+			if(kind.length > 0) {
+				response.send(Dictionary.getAllKindEnumerationTerms(kind))                                           // ==>
+			} else {
+				response.status(204)
+				response.send([])
+			}
+		} else {
+			throw httpError(HTTP_NOT_FOUND, `Term ${descriptor} is not a descriptor`)  // ==>
+		}
+	} catch (error) {
+		if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			throw httpError(HTTP_NOT_FOUND, `Term ${descriptor} not found`)            // ==>
+		}
+		throw error
+	}
+
+} // getDescriptorEnumTerms()
+
+/**
  * Get descriptor enumeration trees.
  * @param request: API request.
  * @param response: API response.
@@ -311,3 +488,30 @@ function getDescriptorEnumTrees(request, response)
 	}
 
 } // getDescriptorEnumTrees()
+
+/**
+ * Get descriptor qualification keys.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function getDescriptorQualificationKeys(request, response)
+{
+	//
+	// Get descriptors.
+	//
+	const descriptors = request.body
+
+	//
+	// Get qualifications.
+	//
+	try {
+		const result = Dictionary.getDescriptorQualificationKeys(descriptors)
+		response.send(result)                                                   // ==>
+	} catch (error) {
+		if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			throw httpError(HTTP_NOT_FOUND, `Term ${descriptor} not found`)            // ==>
+		}
+		throw error
+	}
+
+} // getDescriptorQualificationKeys()

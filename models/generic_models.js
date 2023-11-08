@@ -42,6 +42,12 @@ const AddChildrenResponse = joi.object({
 	updated: joi.number(),
 	existing: joi.number()
 })
+const DescriptorQualifications = joi.object({
+	classes: joi.array(),
+	domains: joi.array(),
+	tags: joi.array(),
+	subjects: joi.array()
+})
 
 
 module.exports = {
@@ -55,5 +61,6 @@ module.exports = {
 	GraphPathsModel,
 	AddChildrenProperties,
 	AddChildren,
-	AddChildrenResponse
+	AddChildrenResponse,
+	DescriptorQualifications
 }
