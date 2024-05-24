@@ -1,4 +1,4 @@
-# Data Dictionary Service
+# Data Dictionary Services
 
 This repository contains the [ArangoDB](https://www.arangodb.com) [Foxx micro service](https://www.arangodb.com/docs/stable/foxx.html) to manage and use the data dictionary.
 
