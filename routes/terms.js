@@ -253,7 +253,6 @@ router.post(
  * This service will return the term corresponding to the provided key.
  */
 router.get(
-	':key/:lang',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
@@ -283,8 +282,8 @@ router.get(
              you will get the English language ISO entry with names in all available languages.
         `
 	)
-	.pathParam('key', keySchema, "Term global identifier")
-	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
+	.queryParam('key', keySchema, "Term global identifier")
+	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
 	.response(200, TermDisplay, dd
 		`
             **Term record**
@@ -819,13 +818,13 @@ function doGetTermByKey(request, response)
 		//
 		// Get term.
 		//
-		const term = collection.document(request.pathParams.key)
+		const term = collection.document(request.queryParams.key)
 
 		//
 		// Select language.
 		//
-		if(request.pathParams.lang !== '@') {
-			Utils.termLanguage(term, request.pathParams.lang)
+		if(request.queryParams.lang !== '@') {
+			Utils.termLanguage(term, request.queryParams.lang)
 		}
 
 		response.send(term)                                                     // ==>
