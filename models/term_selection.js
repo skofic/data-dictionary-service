@@ -15,7 +15,7 @@ module.exports = {
 		term_type: joi.string(),
 		_nid: joi.string(),
 		_lid: joi.string(),
-		_gis: joi.string(),
+		_gid: joi.string(),
 		_aid: joi.array().items(joi.string()),
 		_title: joi.object(),
 		_definition: joi.object(),
