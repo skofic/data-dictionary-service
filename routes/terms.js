@@ -158,72 +158,6 @@ router.post(
 	)
 
 /**
- * Delete term.
- * This service will delete the term matching the provided key.
- * @param request: API request.
- * @param response: API response.
- */
-router.delete(
-	'delete',
-	(request, response) => {
-		const roles = [K.environment.role.dict]
-		if(Session.hasPermission(request, response, roles)) {
-			doDeleteTerm(request, response)
-		}
-	},
-	'term-delete'
-)
-	.summary('Delete term')
-	.description(dd
-		`
-            **Delete a term**
-             
-            ***In order to use this service, the current user must have the \`dict\` role.***
-             
-            This service can be used to remove the term matching the provided \
-            path query parameter \`key\`. The value should correspond to the \`_gid\` \
-            property in the code section,which corresponds to the record \`_key\`.
-            
-            **Deleting a term from the data dictionary can have serious consequences, \
-            from breaking the integrity of the data dictionary to removing metadata \
-            referencing data in other collections or databases. So only use this service \
-            if you know what you are doing and you are absolutely sure you want to do it.**
-            
-            **One safe way to try the service is to create a new term and then delete it.**
-        `
-	)
-	.queryParam('key', keySchema, "Term global identifier")
-	.response(200, joi.object(), dd
-		`
-            **Deleted term identifiers**
-            
-            The service will return the attributes \`_id\`, \`_key\` and \`_rev\` \
-            of the deleted record.
-        `
-	)
-	.response(401, ErrorModel, dd
-		`
-            **No current user**
-            
-            The service will return this code if no user is currently logged in.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **Unauthorised user**
-            
-            The service will return this code if the current user is not a dictionary user.
-        `
-	)
-	.response(404, joi.object(), dd
-		`
-            **Term not found**
-            
-            The provided \`key\` does not correspond to any existing terms.
-        `
-	)
-
-/**
  * Insert terms.
  * This service will insert the list of term objects provided in the body.
  * @param request: API request.
@@ -324,6 +258,141 @@ router.post(
             **Term exists**
             
             The service will return this code if the term matches an already existing entry.
+        `
+	)
+
+/**
+ * Delete term.
+ * This service will delete the term matching the provided key.
+ * @param request: API request.
+ * @param response: API response.
+ */
+router.delete(
+	'delete',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDeleteTerm(request, response)
+		}
+	},
+	'term-delete'
+)
+	.summary('Delete term')
+	.description(dd
+		`
+            **Delete a term**
+             
+            ***In order to use this service, the current user must have the \`dict\` role.***
+             
+            This service can be used to remove the term matching the provided \
+            path query parameter \`key\`. The value should correspond to the \`_gid\` \
+            property in the code section, which corresponds to the record \`_key\`.
+            
+            **Deleting a term from the data dictionary can have serious consequences, \
+            from breaking the integrity of the data dictionary to removing metadata \
+            referencing data in other collections or databases. So only use this service \
+            if you know what you are doing and you are absolutely sure you want to do it.**
+            
+            **One safe way to try the service is to create a new term and then delete it.**
+        `
+	)
+	.queryParam('key', keySchema, "Term global identifier")
+	.response(200, joi.object(), dd
+		`
+            **Deleted term identifiers**
+            
+            The service will return the attributes \`_id\`, \`_key\` and \`_rev\` \
+            of the deleted record.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+	.response(404, joi.object(), dd
+		`
+            **Term not found**
+            
+            The provided \`key\` does not correspond to any existing terms.
+        `
+	)
+
+/**
+ * Delete terms.
+ * This service will delete the terms matching the provided keys.
+ * @param request: API request.
+ * @param response: API response.
+ */
+router.delete(
+	'delete/many',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDeleteTerms(request, response)
+		}
+	},
+	'terms-delete'
+)
+	.summary('Delete terms')
+	.description(dd
+		`
+            **Delete terms**
+             
+            ***In order to use this service, the current user must have the \`dict\` role.***
+             
+            This service can be used to remove the terms matching the provided \
+            list of global identifiers in the body. \
+            The value should correspond to the \`_gid\` \
+            property in the code section, which corresponds to the record \`_key\`.
+            
+            **Deleting a term from the data dictionary can have serious consequences, \
+            from breaking the integrity of the data dictionary to removing metadata \
+            referencing data in other collections or databases. So only use this service \
+            if you know what you are doing and you are absolutely sure you want to do it.**
+            
+            **One safe way to try the service is to create a new term and then delete it.**
+        `
+	)
+	.body(joi.array().items(joi.string()).required(), dd
+		`
+            **Service parameters**
+            
+            The service body expects an array of term global identifiers.
+       `
+	)
+	.response(200, joi.object({
+		deleted: joi.number(),
+		ignored: joi.number()
+	}), dd
+		`
+            **Operation statistics**
+            
+            The service will return the number of deleted records \
+            and the number of ignored keys.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
         `
 	)
 
@@ -852,6 +921,31 @@ function doDeleteTerm(request, response)
 	}
 
 } // doDeleteTerm()
+
+/**
+ * Delete terms.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doDeleteTerms(request, response)
+{
+	//
+	// Init local storage.
+	//
+	const keys = request.body
+
+	///
+	// Delete the record.
+	///
+	try {
+		const meta = collection.removeByKeys(keys)
+		response.send(meta)                                                    // ==>
+
+	} catch (error) {
+		response.throw(500, error.message)                                  // ==>
+	}
+
+} // doDeleteTerms()
 
 /**
  * Insert terms.
