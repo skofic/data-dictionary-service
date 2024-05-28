@@ -168,69 +168,37 @@ router.delete(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doInsertTerm(request, response)
+			doDeleteTerm(request, response)
 		}
 	},
-	'term-insert'
+	'term-delete'
 )
-	.summary('Create term')
+	.summary('Delete term')
 	.description(dd
 		`
-            **Create a term**
+            **Delete a term**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              
-            This service can be used to create a new term of any kind: descriptor, structure type, \
-            namespace and all other types of terms.
+            This service can be used to remove the term matching the provided \
+            path query parameter \`key\`. The value should correspond to the \`_gid\` \
+            property in the code section,which corresponds to the record \`_key\`.
             
-            You provide the term in the request body, the service will validate the entry \
-            and, if correct, will insert the record.
+            **Deleting a term from the data dictionary can have serious consequences, \
+            from breaking the integrity of the data dictionary to removing metadata \
+            referencing data in other collections or databases. So only use this service \
+            if you know what you are doing and you are absolutely sure you want to do it.**
+            
+            **One safe way to try the service is to create a new term and then delete it.**
         `
 	)
-	.body(TermInsert, dd
-		`
-            **Service parameters**
-            
-            The service body expects the term object.
-            
-            It is required to have at least the \`_code\` and \`_info\` data blocks.
-            
-            The \`_code\` block is required to have at least the \`_lid\`. \
-            The global identifier will be set, and overwritten, by the service. \
-            The list of official identifiers will also be set if missing.
-            
-            The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
-            the other properties are only provided as placeholders, delete them if not needed. \
-            Remember that all elements, except \`_provider\`, are dictionaries with the language \
-            code as the dictionary key and the text as the dictionary value, you will have to \
-            provide by default the entry in the default language (\`language\` entry in the service settings).
-            
-            The \`_data\` section and the \`_rule\` section are provided as placeholders, \
-            delete them if not needed. You are responsible for their contents.
-            
-            The document key will be automatically set, and overwritten, by the service.
-            
-            *Be aware that if you provide a local identifier in an enumeration field, \
-            the service will attempt to resolve it into a global identifier*.
-         `
-	)
+	.queryParam('key', keySchema, "Term global identifier")
 	.response(200, joi.object(), dd
 		`
-            **Inserted term**
+            **Deleted term identifiers**
             
-            The service will return the newly inserted term.
-        `
-	)
-	.response(400, joi.object(), dd
-		`
-            **Invalid parameter**
-            
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+            The service will return the attributes \`_id\`, \`_key\` and \`_rev\` \
+            of the deleted record.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -247,11 +215,11 @@ router.delete(
             The service will return this code if the current user is not a dictionary user.
         `
 	)
-	.response(409, ErrorModel, dd
+	.response(404, joi.object(), dd
 		`
-            **Term exists**
+            **Term not found**
             
-            The service will return this code if the term matches an already existing entry.
+            The provided \`key\` does not correspond to any existing terms.
         `
 	)
 
@@ -869,7 +837,7 @@ function doDeleteTerm(request, response)
 	// Delete the record.
 	///
 	try {
-		const meta = users.remove(key)
+		const meta = collection.remove(key)
 		response.send(meta)                                                    // ==>
 
 	} catch (error) {
