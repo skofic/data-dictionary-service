@@ -21,20 +21,5 @@ let messages = []
 //
 messages = messages.concat(App.createCollections())
 
-//
-// Create data directories.
-//
-messages = messages.concat(App.createDirectories())
-
-//
-// Create authentication file.
-//
-messages = messages.concat(App.createAuthSettings())
-
-//
-// Create users.
-//
-messages = messages.concat(App.createDefaultUsers())
-
 
 module.exports = messages

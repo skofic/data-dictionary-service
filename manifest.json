@@ -108,18 +108,6 @@
             "type": "string",
             "required": true,
             "default": "settings"
-        },
-        "collectionError": {
-            "description": "Errors collection name",
-            "type": "string",
-            "required": true,
-            "default": "errors"
-        },
-        "collectionLog": {
-            "description": "Logs collection name",
-            "type": "string",
-            "required": true,
-            "default": "logs"
         }
     },
     "tests": [

@@ -35,6 +35,7 @@ const keySchema = joi.string().required()
 //
 // Collections.
 //
+const view = K.db._view(K.view.term.name)
 const collection = K.db._collection(K.collection.term.name)
 
 //
@@ -58,6 +59,12 @@ router.tag('Terms')
 // Services.
 //
 
+/**
+ * Insert term.
+ * This service will insert the term provided in the body.
+ * @param request: API request.
+ * @param response: API response.
+ */
 router.post(
 	'insert',
 	(request, response) => {
@@ -150,6 +157,110 @@ router.post(
         `
 	)
 
+/**
+ * Delete term.
+ * This service will delete the term matching the provided key.
+ * @param request: API request.
+ * @param response: API response.
+ */
+router.delete(
+	'delete',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doInsertTerm(request, response)
+		}
+	},
+	'term-insert'
+)
+	.summary('Create term')
+	.description(dd
+		`
+            **Create a term**
+             
+            ***In order to use this service, the current user must have the \`dict\` role.***
+             
+            This service can be used to create a new term of any kind: descriptor, structure type, \
+            namespace and all other types of terms.
+            
+            You provide the term in the request body, the service will validate the entry \
+            and, if correct, will insert the record.
+        `
+	)
+	.body(TermInsert, dd
+		`
+            **Service parameters**
+            
+            The service body expects the term object.
+            
+            It is required to have at least the \`_code\` and \`_info\` data blocks.
+            
+            The \`_code\` block is required to have at least the \`_lid\`. \
+            The global identifier will be set, and overwritten, by the service. \
+            The list of official identifiers will also be set if missing.
+            
+            The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
+            the other properties are only provided as placeholders, delete them if not needed. \
+            Remember that all elements, except \`_provider\`, are dictionaries with the language \
+            code as the dictionary key and the text as the dictionary value, you will have to \
+            provide by default the entry in the default language (\`language\` entry in the service settings).
+            
+            The \`_data\` section and the \`_rule\` section are provided as placeholders, \
+            delete them if not needed. You are responsible for their contents.
+            
+            The document key will be automatically set, and overwritten, by the service.
+            
+            *Be aware that if you provide a local identifier in an enumeration field, \
+            the service will attempt to resolve it into a global identifier*.
+         `
+	)
+	.response(200, joi.object(), dd
+		`
+            **Inserted term**
+            
+            The service will return the newly inserted term.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided term is invalid:
+            - Parameter error: if the error is caught at the level of the parameter, \
+              the service will return a standard error.
+            - Validation error: if it is a validation error, the service will return an \
+              object with two properties: \`report\` will contain the status report and \
+              \`value\` will contain the provided term.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+	.response(409, ErrorModel, dd
+		`
+            **Term exists**
+            
+            The service will return this code if the term matches an already existing entry.
+        `
+	)
+
+/**
+ * Insert terms.
+ * This service will insert the list of term objects provided in the body.
+ * @param request: API request.
+ * @param response: API response.
+ */
 router.post(
 	'insert/many',
 	(request, response) => {
@@ -251,6 +362,8 @@ router.post(
 /**
  * Get term by key
  * This service will return the term corresponding to the provided key.
+ * @param request: API request.
+ * @param response: API response.
  */
 router.get(
 	(request, response) => {
@@ -315,10 +428,14 @@ router.get(
 
 /**
  * Get terms dictionary
- * This service can be used to retrieve a dictionary of terms.
+ * This service can be used to return a list of terms.
+ * The matched terms will be returned as a dictionary
+ * whose key is the term `_key` and value the term object.
+ * @param request: API request.
+ * @param response: API response.
  */
 router.post(
-	'dict/:lang',
+	'many',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
@@ -327,7 +444,7 @@ router.post(
 	},
 	'term-dictionary'
 )
-	.summary('Get terms dictionary')
+	.summary('Terms by key')
 	.description(dd
 		`
             **Get a dictionary of terms**
@@ -342,7 +459,7 @@ router.post(
              you want the term descriptions returned. To return all available languages pass \`@\`.
         `
 	)
-	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
+	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
 	.body(joi.array().items(joi.string()).required(), dd
 		`
             **Service parameters**
@@ -376,6 +493,8 @@ router.post(
 /**
  * Get list of term keys
  * This service can be used to get a selected list of term keys.
+ * @param request: API request.
+ * @param response: API response.
  */
 router.post(
 	'key',
@@ -479,11 +598,12 @@ router.post(
 	)
 
 /**
- * Get list of terms
+ * Query list of terms
  * This service can be used to get a selected list of terms.
+ * @param request: API request.
+ * @param response: API response.
  */
 router.post(
-	':lang',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
@@ -492,7 +612,7 @@ router.post(
 	},
 	'term-list'
 )
-	.summary('Query terms')
+	.summary('Query term objects')
 	.description(dd
 		`
             **Get a list of terms**
@@ -538,7 +658,7 @@ router.post(
             \`{"start": 0, "limit": 10, "_data": ["_scalar"], "_type": ["_type_string_enum"], "_kind": ["geo_datum"]}\`
         `
 	)
-	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
+	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
 	.body(TermSelection, dd
 		`
             **Service parameters**
@@ -592,9 +712,10 @@ router.post(
 /**
  * Update term
  * This service can be used to update a term.
+ * @param request: API request.
+ * @param response: API response.
  */
 router.patch(
-	':key',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
@@ -616,7 +737,7 @@ router.patch(
             The service will return the updated term object.
         `
 	)
-	.pathParam('key', Models.StringModel, "Term key")
+	.queryParam('key', Models.StringModel, "Term key")
 	.body(joi.object(), dd
 		`
             **Service parameters**
@@ -731,6 +852,38 @@ function doInsertTerm(request, response)
 	}
 
 } // doInsertTerm()
+
+/**
+ * Delete term.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doDeleteTerm(request, response)
+{
+	//
+	// Init local storage.
+	//
+	const key = request.queryParams.key
+
+	///
+	// Delete the record.
+	///
+	try {
+		const meta = users.remove(key)
+		response.send(meta)                                                    // ==>
+
+	} catch (error) {
+		if(error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
+			response.throw(
+				404,
+				K.error.kMSG_TERM_NOT_FOUND.message[module.context.configuration.language]
+			)                                                                   // ==>
+		} else {
+			response.throw(500, error.message)                               // ==>
+		}
+	}
+
+} // doDeleteTerm()
 
 /**
  * Insert terms.
@@ -863,9 +1016,9 @@ function doDictionaryTerms(request, response)
 		//
 		// Select language.
 		//
-		if(request.pathParams.lang !== '@') {
+		if(request.queryParams.lang !== '@') {
 			for(let i = 0; i < terms.documents.length; i++) {
-				Utils.termLanguage(terms.documents[i], request.pathParams.lang)
+				Utils.termLanguage(terms.documents[i], request.queryParams.lang)
 			}
 		}
 
@@ -918,9 +1071,9 @@ function doSelectTerms(request, response)
 	// Handle output language.
 	// Note that
 	//
-	if(request.pathParams.lang !== '@') {
+	if(request.queryParams.lang !== '@') {
 		for(let i = 0; i < result.length; i++) {
-			Utils.termLanguage(result[i], request.pathParams.lang)
+			Utils.termLanguage(result[i], request.queryParams.lang)
 		}
 	}
 
@@ -970,7 +1123,7 @@ function doUpdateTerm(request, response)
 	// Load old record.
 	//
 	try {
-		original = JSON.parse(JSON.stringify(collection.document(request.pathParams.key)))
+		original = JSON.parse(JSON.stringify(collection.document(request.queryParams.key)))
 
 	} catch (error) {
 		if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {

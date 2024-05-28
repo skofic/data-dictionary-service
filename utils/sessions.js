@@ -26,11 +26,6 @@ const Session = sessionsMiddleware({						    // Middleware.
 	})
 })
 
-// const Session = sessionsMiddleware({
-// 	storage: K.db._collection(K.collection.session.name),
-// 	transport: 'cookie'
-// })
-
 /**
  * Has permission
  *

@@ -53,7 +53,7 @@ router.tag('Enumerated types');
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get(
-    'all/keys/:path',
+    'all/keys',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -80,7 +80,7 @@ router.get(
             You can try providing \`_type\`: this will return the *list* of *data type identifiers*.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
     .response(200, Models.StringArrayModel, dd
         `
             **List of enumeration global identifiers**
@@ -129,7 +129,7 @@ router.get(
  * using a tree can get complicated and this part was abandoned, for now.
  */
 router.get(
-    'tree/keys/:path/:levels',
+    'tree/keys',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -161,8 +161,8 @@ router.get(
             being enumerations or structures, do please consider this service as in progress.*
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('levels', Models.LevelsModel, "Maximum tree depth level")
     .response(200, Models.TreeModel, dd
         `
             **List of enumeration trees.**
@@ -207,7 +207,7 @@ router.get(
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get(
-    'all/terms/:path/:lang',
+    'all/terms',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -238,8 +238,8 @@ router.get(
             in *all available languages*.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
     .response(200, Models.TermsArrayModel, dd
         `
             **List of enumeration terms**
@@ -284,7 +284,7 @@ router.get(
  * corresponding to the provided path.
  */
 router.get(
-    'code/terms/:path/:code',
+    'code/terms',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -324,8 +324,8 @@ router.get(
             is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration identifier or code")
     .response(200, Models.TermsArrayModel, dd
         `
             **List of matched terms**
@@ -359,7 +359,7 @@ router.get(
  * corresponding to the provided path.
  */
 router.get(
-    'lid/terms/:path/:code',
+    'lid/terms',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -400,8 +400,8 @@ router.get(
             matched, this service expects only preferred local identifiers.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration local identifier")
     .response(200, Models.TermsArrayModel, dd
         `
             **List of matched terms**
@@ -438,7 +438,7 @@ router.get(
  * corresponding to the provided path.
  */
 router.get(
-    'gid/terms/:path/:code',
+    'gid/terms',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -478,8 +478,8 @@ router.get(
             is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration global identifier")
     .response(200, Models.TermsArrayModel, dd
         `
             **List of matched terms**
@@ -521,7 +521,7 @@ router.get(
  * to the first term element matching the provided code.
  */
 router.get(
-    'code/path/:path/:code',
+    'code/path',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -560,8 +560,8 @@ router.get(
             is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration identifier or code")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration identifier or code")
     .response(200, Models.GraphPathsModel, dd
         `
             **Path to matched term**
@@ -598,7 +598,7 @@ router.get(
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
 router.get(
-    'lid/path/:path/:code',
+    'lid/path',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -639,8 +639,8 @@ router.get(
             matched, this service expects only preferred local identifiers.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration local identifier")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration local identifier")
     .response(200, Models.GraphPathsModel, dd
         `
             **Path to matched term**
@@ -677,7 +677,7 @@ router.get(
  * that matches the provided local identifier in the enumeration corresponding to the provided path.
  */
 router.get(
-    'gid/path/:path/:code',
+    'gid/path',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -717,8 +717,8 @@ router.get(
             this term is the preferred choice for the actual match, which is \`iso_639_1_en\`.
         `
     )
-    .pathParam('path', Models.StringModel, "Enumeration root global identifier")
-    .pathParam('code', Models.StringModel, "Target enumeration global identifier")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration global identifier")
     .response(200, Models.GraphPathsModel, dd
         `
             **Path to matched term**
@@ -757,7 +757,7 @@ router.get(
  * and the values will be the matched preferred enumeration keys or false if unmatched.
  */
 router.post(
-    'check/keys/:path',
+    'check/keys',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -788,6 +788,7 @@ router.post(
             enumeration and for the last element, that we assume doesn't match, \`false\`.
         `
     )
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
     .body(Models.StringArrayModel, dd
         `
             **Service parameters**
@@ -828,7 +829,7 @@ router.post(
  * and the values will be the matched preferred enumeration keys or false if unmatched.
  */
 router.post(
-    'check/codes/:path',
+    'check/codes',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -859,6 +860,7 @@ router.post(
             enumeration and for the last element, that we assume doesn't match, \`false\`.
         `
     )
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
     .body(Models.StringArrayModel, dd
         `
             **Service parameters**
@@ -906,7 +908,7 @@ function getAllEnumerationKeys(request, response)
     //
     // Query database.
     //
-    const result = Dictionary.getAllEnumerationKeys(request.pathParams.path);
+    const result = Dictionary.getAllEnumerationKeys(request.queryParams.path);
 
     response.send(result);                                                      // ==>
 
@@ -924,8 +926,8 @@ function getTreeEnumerationKeys(request, response)
     //
     const result =
         Dictionary.getEnumerationDescriptorKeys(
-            request.pathParams.path,
-            request.pathParams.levels
+            request.queryParams.path,
+            request.queryParams.levels
         )
 
     response.send(result);                                                      // ==>
@@ -944,8 +946,8 @@ function getAllEnumerations(request, response)
     //
     const result =
         Dictionary.getAllEnumerations(
-            request.pathParams.path,
-            request.pathParams.lang
+            request.queryParams.path,
+            request.queryParams.lang
         )
 
     response.send(result);                                                      // ==>
@@ -963,8 +965,8 @@ function matchEnumerationCode(request, response)
     // Query database.
     //
     const result = Dictionary.matchEnumerationCodeTerm(
-        request.pathParams.path,
-        request.pathParams.code
+        request.queryParams.path,
+        request.queryParams.code
     )
 
     response.send(result);                                                      // ==>
@@ -982,8 +984,8 @@ function matchEnumerationIdentifier(request, response)
     // Query database.
     //
     const result = Dictionary.matchEnumerationIdentifierTerm(
-        request.pathParams.path,
-        request.pathParams.code
+        request.queryParams.path,
+        request.queryParams.code
     )
 
     response.send(result);                                                      // ==>
@@ -1001,8 +1003,8 @@ function matchEnumerationGlobalIdentifier(request, response)
     // Query database.
     //
     const result = Dictionary.matchEnumerationTerm(
-        request.pathParams.path,
-        request.pathParams.code
+        request.queryParams.path,
+        request.queryParams.code
     )
 
     response.send(result);                                                      // ==>
@@ -1020,8 +1022,8 @@ function matchEnumerationCodePath(request, response)
     // Query database.
     //
     const result = Dictionary.matchEnumerationCodePath(
-        request.pathParams.path,
-        request.pathParams.code
+        request.queryParams.path,
+        request.queryParams.code
     )
 
     response.send(result);                                                      // ==>
@@ -1039,8 +1041,8 @@ function matchEnumerationIdentifierPath(request, response)
     // Query database.
     //
     const result = Dictionary.matchEnumerationIdentifierPath(
-        request.pathParams.path,
-        request.pathParams.code
+        request.queryParams.path,
+        request.queryParams.code
     )
 
     response.send(result);                                                      // ==>
@@ -1058,8 +1060,8 @@ function matchEnumerationTermPath(request, response)
     // Query database.
     //
     const result = Dictionary.matchEnumerationTermPath(
-        request.pathParams.path,
-        request.pathParams.code
+        request.queryParams.path,
+        request.queryParams.code
     )
 
     response.send(result);                                                      // ==>
@@ -1078,7 +1080,7 @@ function doCheckEnumsByKeys(request, response)
     //
     const result = Dictionary.checkEnumsByKeys(
         request.body,
-        request.pathParams.path
+        request.queryParams.path
     )
 
     response.send(result);                                                      // ==>
@@ -1097,7 +1099,7 @@ function doCheckEnumsByCodes(request, response)
     //
     const result = Dictionary.checkEnumsByCodes(
         request.body,
-        request.pathParams.path
+        request.queryParams.path
     )
 
     response.send(result);                                                      // ==>

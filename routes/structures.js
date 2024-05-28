@@ -40,7 +40,7 @@ router.tag('Structured types');
  * No hierarchy is maintained and only valid properties are selected.
  */
 router.get(
-    'all/keys/:path',
+    'all/keys',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -71,7 +71,7 @@ router.get(
             and that can be used to define a scalar data type.
         `
     )
-    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
+    .queryParam('path', Models.StringModel, "Object descriptor global identifier")
     .response(200, Models.StringArrayModel, dd
         `
             **List of structure property names**
@@ -109,7 +109,7 @@ router.get(
  * No hierarchy is maintained and only valid enumeration elements are selected.
  */
 router.get(
-    'all/terms/:path',
+    'all/terms',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -140,7 +140,7 @@ router.get(
             and that can be used to define a scalar data type.
         `
     )
-    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
+    .queryParam('path', Models.StringModel, "Object descriptor global identifier")
     .response(200, Models.TermsArrayModel, dd
         `
             **List of structure properties**
@@ -188,7 +188,7 @@ router.get(
  * using a tree can get complicated and this part was abandoned, for now.
  */
 router.get(
-    'tree/keys/:path/:levels',
+    'tree/keys',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -222,8 +222,8 @@ router.get(
             being enumerations or structures, do please consider this service as in progress.*
         `
     )
-    .pathParam('path', Models.StringModel, "Object descriptor global identifier")
-    .pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
+    .queryParam('path', Models.StringModel, "Object descriptor global identifier")
+    .queryParam('levels', Models.LevelsModel, "Maximum tree depth level")
     .response(200, Models.TreeModel, dd
         `
             **List of property structures.**
@@ -279,7 +279,7 @@ function getPropertyNames(request, response)
     //
     // Query database.
     //
-    const result = Dictionary.getPropertyNames(request.pathParams.path);
+    const result = Dictionary.getPropertyNames(request.queryParams.path);
 
     response.send(result);                                                      // ==>
 
@@ -295,7 +295,7 @@ function getProperties(request, response)
     //
     // Query database.
     //
-    const result = Dictionary.getProperties(request.pathParams.path);
+    const result = Dictionary.getProperties(request.queryParams.path);
 
     response.send(result);                                                      // ==>
 
@@ -311,7 +311,7 @@ function getPropertyKeys(request, response)
     //
     // Query database.
     //
-    const result = Dictionary.getPropertyKeys(request.pathParams.path, request.pathParams.levels);
+    const result = Dictionary.getPropertyKeys(request.queryParams.path, request.queryParams.levels);
     response.send(result)
 
 } // getPropertyKeys()

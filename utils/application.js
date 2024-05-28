@@ -17,40 +17,9 @@ const crypto = require('@arangodb/crypto')  // Cryptographic functions.
 //
 // Application.
 //
-const K = require( './constants' )          // Application constants.
-const Auth = require('./auth')      		// Authentication functions.
+const K = require( './constants' )  // Application constants.
+const Auth = require('./auth')                          // Authentication functions.
 
-
-/**
- * Initialise directories
- *
- * This method will initialise root level directories.
- *
- * @return {Array<String>}: List of directories parsed.
- */
-function createDirectories()
-{
-    //
-    // Init local storage.
-    //
-    let messages = []
-
-    //
-    // Iterate directories.
-    //
-    for(const item of K.directory) {
-        const path = module.context.basePath + fs.pathSeparator + item
-        if( ! fs.isDirectory( path ) ) {
-            fs.makeDirectory( path )
-            messages.push(`Directory ${item} created.`)
-        } else {
-            messages.push(`Directory ${item} exists.`)
-        }
-    }
-
-    return messages                                                             // ==>
-
-}	// createDirectories()
 
 /**
  * Initialise collections
@@ -69,7 +38,18 @@ function createCollections()
     //
     // Iterate collections.
     //
-    for (const key of Object.keys(K.collection)) {
+    for (const key of Object.keys(K.collection))
+    {
+        ///
+        // Skip authentication collections.
+        ///
+        switch(key)
+        {
+            case 'user':
+            case 'session':
+            case 'settings':
+                continue
+        }
 
         //
         // Handle missing collection.
@@ -77,6 +57,9 @@ function createCollections()
         const name = K.collection[key].name
         const type = K.collection[key].type
 
+        ///
+        // Handle missing collections.
+        ///
         if (!K.db._collection(name)) {
             if (type === 'D') {
                 K.db._createDocumentCollection(name)
@@ -101,303 +84,33 @@ function createCollections()
         }
     }
 
+    ///
+    // Iterate views.
+    ///
+    for (const [key, value] of Object.entries(K.view))
+    {
+        ///
+        // Create if not there.
+        ///
+        if (K.db._view(value.name) === null) {
+            db._createView(value.name, value.type, value.properties)
+
+            messages.push(`View ${value.name} created.`)
+        }
+
+        //
+        // Handle existing collection.
+        //
+        else {
+            messages.push(`View ${value.name} already exists. Leaving it untouched.`)
+        }
+    }
+
     return messages                                                             // ==>
 
 }	// createCollections()
 
-/**
- * Create authentication file
- *
- * This method will create and initialise the authentication file, which resides
- * in the data directory. If the file exists the method will return false; if it
- * doesn't exist, the method will create it, initialise the administrator, user
- * and cookies authentication data.
- *
- * The contained object is structured as follows:
- *
- * 	admin:	An object containing the system administrator codes.
- * 		key:	The token key.
- * 		code:	The code.
- * 		pass:	The password.
- * 	user:	An object containing the user codes.
- * 		key:	The token key.
- * 		code:	The code.
- * 		pass:	The password.
- * 	cookie:	An object containing the cookie codes.
- * 		key:	The cookie secret.
- *
- * The user codes are all 16 character long, the cookie secret is 48 characters.
- *
- * The method will return an object indexed by the authentication data key with as
- * value a boolean indicating whether the element was created.
- *
- * Note: the method must not throw or fail.
- *
- * @param doRefresh {Boolean}: To refresh data pass `true`.
- * @return {Array<String>}: List of operations.
- */
-function createAuthSettings(doRefresh = false)
-{
-    //
-    // Init local storage.
-    //
-    let auth = {}
-    let save = false
-    let messages = []
-    const collection = K.db._collection(K.collection.settings.name)
-
-    //
-    // Get authentication record.
-    //
-    try
-    {
-        //
-        // Read settings.
-        //
-        auth = collection.document(K.environment.auth)
-    }
-    catch
-    {
-        //
-        // Assume record not found.
-        //
-        save = true
-        auth = { _key: K.environment.auth }
-    }
-
-    //
-    // Handle admin authentication.
-    //
-    if( doRefresh || (! auth.hasOwnProperty( 'admin' )) )
-    {
-        save = true
-        auth['admin'] = {
-            key: crypto.genRandomAlphaNumbers( 16 ),
-            code: crypto.genRandomAlphaNumbers( 16 ),
-            pass: crypto.genRandomAlphaNumbers( 16 )
-        }
-        messages.push("Added/refreshed administration authentication settings.")
-    } else {
-        messages.push("Administration authentication settings exist.")
-    }
-
-    //
-    // Handle user authentication.
-    //
-    if( doRefresh || (! auth.hasOwnProperty( 'user' )) )
-    {
-        save = true
-        auth['user'] = {
-            key: crypto.genRandomAlphaNumbers( 16 ),
-            code: crypto.genRandomAlphaNumbers( 16 ),
-            pass: crypto.genRandomAlphaNumbers( 16 )
-        }
-        messages.push("Added/refreshed user authentication settings.")
-    } else {
-        messages.push("User authentication settings exist.")
-    }
-
-    //
-    // Handle cookie authentication.
-    //
-    if( doRefresh || (! auth.hasOwnProperty( 'cookie' )) )
-    {
-        save = true
-        auth.cookie = {
-            key: crypto.genRandomAlphaNumbers( 48 )
-        }
-        messages.push("Added/refreshed cookie secret.")
-    } else {
-        messages.push("Cookie secret exists.")
-    }
-
-    //
-    // Refresh/create file.
-    //
-    if( doRefresh || save ) {
-        collection.save(auth)
-    }
-
-    return messages                                                             // ==>
-
-}	// createAuthSettings
-
-/**
- * Initialise default users
- *
- * This method will create the admin and user users.
- * The default password can be found in the manifest file
- * in the configurations section.
- *
- * Users are composed as follows:
- * - username: Username or code.
- * - role: An array of roles.
- * - auth:  Authentication record containing method used to generate the hash, random salt used to generate the hash and the hash string.
- * - default: A boolean indicating whether it is a default user.
- *
- * Roles are the following:
- * - admin: Can manage users.
- * - dict: Can manage the data dictionary.
- * - read: Can use the data dictionary.
- *
- * The default property is automatically managed.
- *
- * @return {Array<String>}: List of users parsed.
- */
-function createDefaultUsers()
-{
-    let messages = []
-    const users = db._collection(K.collection.user.name)
-
-    //
-    // Create administrator user.
-    //
-    if (!users.firstExample({username: module.context.configuration.adminCode})) {
-        users.save({
-            username: module.context.configuration.adminCode,
-            role: [K.environment.role.admin],
-            auth: Auth.Module.create(module.context.configuration.adminPass),
-            default: true
-        })
-        messages.push(`Created ${module.context.configuration.adminCode} user.`)
-    } else {
-        messages.push(`User ${module.context.configuration.adminCode} exists.`)
-    }
-
-    return messages                                                             // ==>
-
-}	// createDefaultUsers()
-
-/**
- * Delete default users.
- *
- * This function will delete the default users:
- * - admin: Administrator.
- * - manager: Dictionary manager.
- * - user: Dictionary user.
- *
- * As the users are deleted, the function will also delete the corresponding sessions.
- *
- * The actual usernames are stored in the manifest configuration section.
- *
- * @return {Array<String>}: List of users parsed.
- */
-function deleteDefaultUsers()
-{
-    let messages = []
-
-    //
-    // Init local storage.
-    //
-    const usersCollection = K.db._collection(K.collection.user.name)
-
-    //
-    // Load default users.
-    //
-    const defaultUsers =
-        K.db._query( aql`
-            FOR user IN ${usersCollection}
-                FILTER user.default == true
-            RETURN user
-        `).toArray()
-
-    //
-    // Delete users.
-    //
-    defaultUsers.forEach(user => {
-        messages.push(deleteUser(user._key, user.username))
-    })
-
-    return messages                                                             // ==>
-
-} // deleteDefaultUsers()
-
-/**
- * Delete created users.
- *
- * This function will delete the created users.
- * Created users are users other than default users.
- *
- * As the users are deleted, the function will also delete the corresponding sessions.
- *
- * @return {Array<String>}: List of users parsed.
- */
-function deleteCreatedUsers()
-{
-    let messages = []
-
-    //
-    // Init local storage.
-    //
-    const usersCollection = K.db._collection(K.collection.user.name)
-
-    //
-    // Load default users.
-    //
-    const defaultUsers =
-        K.db._query( aql`
-            FOR user IN ${usersCollection}
-                FILTER user.default == false
-            RETURN user
-        `).toArray()
-
-    //
-    // Iterate users.
-    //
-    defaultUsers.forEach(user => {
-        messages.push(deleteUser(user._key, user.username))
-    })
-
-    return messages                                                             // ==>
-
-} // deleteCreatedUsers()
-
-/**
- * Delete user.
- *
- * This function will delete the user corresponding to the provided key.
- *
- * As the users are deleted, the function will also delete the corresponding sessions.
- *
- * @param theKey {String}: User _key.
- * @param theCode {String}: Username.
- * @return {String}: Deleted username, if existing.
- */
-function deleteUser(theKey, theCode = 'anonymous')
-{
-    //
-    // Init local storage.
-    //
-    const usersCollection = K.db._collection(K.collection.user.name)
-    const sessionsCollection = K.db._collection(K.collection.session.name)
-
-    //
-    // Delete user.
-    //
-    K.db._query( aql`
-            REMOVE ${theKey} IN ${usersCollection}
-        `)
-
-    //
-    // Delete open sessions.
-    //
-    K.db._query( aql`
-            FOR session IN ${sessionsCollection}
-                FILTER session.uid == ${theKey}
-                REMOVE session._key IN ${sessionsCollection}
-        `)
-
-    return `Deleted user ${theCode}.`                                           // ==>
-
-} // deleteUser()
-
 
 module.exports = {
-    createDirectories,
-    createCollections,
-    createAuthSettings,
-    createDefaultUsers,
-    deleteDefaultUsers,
-    deleteCreatedUsers,
-    deleteUser
+    createCollections
 }

@@ -70,7 +70,7 @@ module.exports = Object.freeze({
                     unique: false,
                     sparse: true
                 }
-            ]
+            ],
         },
         schema: {
             name: module.context.configuration.collectionEdge,
@@ -114,10 +114,6 @@ module.exports = Object.freeze({
                 }
             ]
         },
-        error: {
-            name: module.context.configuration.collectionError,
-            type: 'D'
-        },
         user: {
             name: module.context.configuration.collectionUser,
             type: 'D',
@@ -139,10 +135,147 @@ module.exports = Object.freeze({
         settings: {
             name: module.context.configuration.collectionSettings,
             type: 'D'
-        },
-        log: {
-            name: module.context.configuration.collectionLog,
-            type: 'D'
+        }
+    },
+
+    ///
+    // Views.
+    ///
+    view: {
+        term: {
+            "name": "VIEW_TERM",
+            "type": "arangosearch",
+            "properties": {
+                "links": {
+                    "terms": {
+                        "analyzers": [
+                            "identity"
+                        ],
+                        "fields": {
+                            "_data": {
+                                "fields": {
+                                    "_domain": {},
+                                    "_tag": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    },
+                                    "_dict": {
+                                        "fields": {
+                                            "_dict_key": {
+                                                "fields": {
+                                                    "_class": {}
+                                                }
+                                            },
+                                            "_dict_value": {
+                                                "fields": {
+                                                    "_class": {}
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "_class": {},
+                                    "_subject": {}
+                                }
+                            },
+                            "_info": {
+                                "fields": {
+                                    "_definition": {
+                                        "fields": {
+                                            "iso_639_3_eng": {
+                                                "analyzers": [
+                                                    "text_en",
+                                                    "identity"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "_description": {
+                                        "fields": {
+                                            "iso_639_3_eng": {
+                                                "analyzers": [
+                                                    "text_en",
+                                                    "identity"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "_provider": {
+                                        "analyzers": [
+                                            "text_en",
+                                            "identity"
+                                        ]
+                                    },
+                                    "_title": {
+                                        "fields": {
+                                            "iso_639_3_eng": {
+                                                "analyzers": [
+                                                    "text_en",
+                                                    "identity"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "_notes": {
+                                        "fields": {
+                                            "iso_639_3_eng": {
+                                                "analyzers": [
+                                                    "text_en",
+                                                    "identity"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "_examples": {
+                                        "fields": {
+                                            "iso_639_3_eng": {
+                                                "analyzers": [
+                                                    "text_en",
+                                                    "identity"
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "_code": {
+                                "fields": {
+                                    "_nid": {},
+                                    "_pid": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    },
+                                    "_aid": {},
+                                    "_gid": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    },
+                                    "_lid": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    },
+                                    "_name": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "includeAllFields": false,
+                        "storeValues": "id",
+                        "trackListPositions": false
+                    }
+                }
+            }
         }
     },
 
