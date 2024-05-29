@@ -72,8 +72,9 @@ router.post(
             Enumerations are controlled vocabularies that can have several nested levels.
             
             The service expects the graph root global identifier, the \
-            parent global identifier and its children global identifiers. The *child* elements \
-            will be considered *valid enumeration options* of the *parent* node within the *root* graph.
+            parent global identifier and its children global identifiers in the request body. \
+            The *child* elements will be considered *valid enumeration options* of the \
+            *parent* node within the *root* graph.
         `
 	)
 	.body(Models.AddChildren, dd
@@ -101,19 +102,14 @@ router.post(
             The service will return an object containign the following properties:
             - inserted: The number of inserted edges.
             - updated: The number of existing edges to which the root has been added to their path.
-            - existing: The number of existing edges that include subject, object predicate and path.
+            - existing: The number of already existing edges that include subject, object predicate and path.
         `
 	)
 	.response(400, joi.object(), dd
 		`
-            **Invalid parameter**
-            
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+            **Invalid reference**
+
+            The service will return this code any of the provided term references are invalid.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -169,7 +165,7 @@ router.post(
             - \`root\`: The global identifier of the term that represents the *form*.
             - \`parent\`: The global identifier of the term that represents either the form \
               itself, or the container section for the list of fields.
-            - \`items\`: A set of term global identifiers, each representing a descriptor, \
+            - \`items\`: A set of term global identifiers, *each representing a descriptor*, \
               that represent the data input fields.
         `
 	)
@@ -185,14 +181,9 @@ router.post(
 	)
 	.response(400, joi.object(), dd
 		`
-            **Invalid parameter**
-            
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+            **Invalid reference**
+
+            The service will return this code any of the provided term references are invalid.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -313,7 +304,12 @@ router.post(
             ***In order to use this service, the current user must have the \`dict\` role.***
              
             This service can be used to add a set of child sections to a parent \
-            node in a specific graph path.
+            node in a specific graph path. *Sections* are used to create \
+            *non-functional groups of elements* that can be used as subdivisions \
+            for display purposes, such as sections in a list of child enumeration \
+			elements, or sections in a form.
+			
+			 *This means that you should not add sections to a data structure*.
             
             The service expects the graph root global identifier, the \
             parent global identifier and its children sections global identifiers. \
@@ -420,7 +416,7 @@ router.post(
             - \`root\`: The global identifier of the term that represents the \
               graph type, root or path.
             - \`parent\`: The global identifier of the node that represents \
-              the perwnt of the relationdhip.
+              the parent of the relationdhip.
             - \`items\`: A set of term global identifiers, each representing a bridge node.
             
             The *root* represents the type or path of the graph.
