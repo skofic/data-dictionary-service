@@ -768,10 +768,11 @@ router.patch(
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              
-            This service can be used to update a term. You provide the term key in the URL and the fields \
-            to be updated in the request body.
+            This service can be used to update a term. You provide the term global identifier \
+            in the path query parameter \`key\` and the fields to be updated in the request body.
             
-            The service will return the updated term object.
+            The service will return the updated term object plus a property, \`status\` \
+            providing the operation outcome, \`OK\`.
         `
 	)
 	.queryParam('key', Models.StringModel, "Term key")
@@ -786,7 +787,7 @@ router.patch(
             - Objects are merged: object properties are added or replaced.
         `
 	)
-	.response(200, joi.object(), dd
+	.response(200, joi.object({"status": "OK"}), dd
 		`
             **Updated term**
             
@@ -807,6 +808,13 @@ router.patch(
             The service will return this code if the current user is not a dictionary user.
         `
 	)
+	.response(404, ErrorModel, dd
+	`
+            **Term not found**
+            
+            The service will return this code if the provided identifier has no match.
+        `
+)
 
 
 //
