@@ -74,7 +74,7 @@ router.get(
             *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
             
             The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
-            return the *flattened list* of *all enumeration elements* belonging to that *controlled vocabulary*.\
+            return the *flattened list* of *all enumeration elements* belonging to that *controlled vocabulary*. \
             These elements will be returned as the *global identifiers* of the *terms*.
             
             You can try providing \`_type\`: this will return the *list* of *data type identifiers*.
@@ -296,7 +296,7 @@ router.get(
     .summary('Return enumeration term by code')
     .description(dd
         `
-            **Get enumeration term by identifier**
+            **Get enumeration term by local identifier**
             
             ***To use this service, the current user must have the \`read\` role.***
             
@@ -304,7 +304,7 @@ router.get(
             At the root of the graph is a term that represents the type or definition of this \
             controlled vocabulary, this term represents the enumeration graph.
             
-            This service can be used to retrieve the terms matching a specific identifier \
+            This service can be used to retrieve the term matching a specific local identifier \
             in a specific enumeration graph. Provided the \`path\` parameter, which represents \
             the enumeration root element or enumeration type, and the \`code\` parameter, which \
             represents a term identifier you are trying to match, the service will traverse \
