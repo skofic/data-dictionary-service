@@ -309,7 +309,7 @@ router.post(
             for display purposes, such as sections in a list of child enumeration \
 			elements, or sections in a form.
 			
-			 *This means that you should not add sections to a data structure*.
+			*This means that you should not add sections to a data structure*.
             
             The service expects the graph root global identifier, the \
             parent global identifier and its children sections global identifiers. \
