@@ -57,7 +57,7 @@ router.tag('Descriptors');
  * The returned list represents the flattened enumeration structure without hierarchy.
  */
 router.get(
-	'enum/key/:key',
+	'enum/key',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
@@ -84,7 +84,7 @@ router.get(
             You can try providing \`_type\`: this will return the flattened elements of its controlled vocabulary.
         `
 	)
-	.pathParam('key', Models.StringModel, "Descriptor global identifier")
+	.queryParam('key', Models.StringModel, "Descriptor global identifier")
 	.response(200, Models.StringArrayModel, dd
 		`
             **Controlled vocabulary element global identifiers**
@@ -133,7 +133,7 @@ router.get(
  * The returned list represents the flattened enumeration structure without hierarchy.
  */
 router.get(
-	'enum/term/:key/:lang',
+	'enum/term',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
@@ -160,8 +160,8 @@ router.get(
             You can try providing \`_type\`: this will return the flattened elements of its controlled vocabulary.
         `
 	)
-	.pathParam('key', Models.StringModel, "Descriptor global identifier")
-	.pathParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
+	.queryParam('key', Models.StringModel, "Descriptor global identifier")
+	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
 	.response(200, Models.TermsArrayModel, dd
 		`
             **Controlled vocabulary element term object**
@@ -221,7 +221,7 @@ router.get(
  * scalar data type.
  */
 router.get(
-	'enum/tree/:key/:levels',
+	'enum/tree',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
@@ -257,8 +257,8 @@ router.get(
             being enumerations or structures, do please consider this service as in progress.*
         `
 	)
-	.pathParam('key', Models.StringModel, "Descriptor global identifier")
-	.pathParam('levels', Models.LevelsModel, "Maximum tree depth level")
+	.queryParam('key', Models.StringModel, "Descriptor global identifier")
+	.queryParam('levels', Models.LevelsModel, "Maximum tree depth level")
 	.response(200, Models.TreeModel, dd
 		`
             **Controlled vocabulary tree.**
@@ -390,7 +390,7 @@ function getDescriptorEnumKeys(request, response)
 	//
 	// Get descriptor.
 	//
-	const descriptor = request.pathParams.key
+	const descriptor = request.queryParams.key
 
 	//
 	// Get term.
@@ -427,7 +427,7 @@ function getDescriptorEnumTerms(request, response)
 	//
 	// Get descriptor.
 	//
-	const descriptor = request.pathParams.key
+	const descriptor = request.queryParams.key
 
 	//
 	// Get term.
@@ -464,8 +464,8 @@ function getDescriptorEnumTrees(request, response)
 	//
 	// Get term.
 	//
-	const descriptor = request.pathParams.key
-	const levels = request.pathParams.levels
+	const descriptor = request.queryParams.key
+	const levels = request.queryParams.levels
 
 	//
 	// Get term.
