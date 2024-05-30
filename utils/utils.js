@@ -175,6 +175,7 @@ function checkDescriptor(theKey, theReport = false)
 {
     //
     // Load term.
+    // Note that if term is not found, the status is already filled.
     //
     const term = getTerm(theKey, theReport)
     if(term === false) {

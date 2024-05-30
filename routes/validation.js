@@ -529,7 +529,7 @@ function doCheckDescriptor(theRequest, theResponse)
     //
     // Perform validation.
     //
-    let report = Utils.checkDescriptor(
+    let report = Validation.checkDescriptor(
         theRequest.body.descriptor,
         theRequest.body,
         "value",
