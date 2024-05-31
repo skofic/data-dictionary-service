@@ -89,7 +89,7 @@ router.post(
     },
     'descriptor'
 )
-    .summary('Validate value by descriptor global identifier')
+    .summary('Validate value by descriptor')
     .description(dd
         `
             **Validate a value associated to a descriptor**
