@@ -275,11 +275,6 @@ Graph nodes are all terms, the link between two nodes is called an edge and has 
 - `_to`: Reference of the relationship destination node term.
 - `_path`: An array containing the list of term references representing all the root nodes that use this relationship.
 
-There are two main edge collections that involved in this set of services, from the settings table:
-
-- `collectionEdge`: The edges that constitute forms, structures and controlled vocabularies.
-- `collectionLink`: The edges that create dependencies between terms.
-
 In order to use these services the current user must have the `dict` role, since all the current services change the structure of the dictionary.
 
 #### Add enumerations

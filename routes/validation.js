@@ -322,7 +322,7 @@ router.post(
     },
     'object'
 )
-    .summary('Validate object properties')
+    .summary('Validate object')
     .description(dd
         `
             **Validate object properties**
@@ -439,7 +439,7 @@ router.post(
     .summary('Validate list of objects')
     .description(dd
         `
-            **Validate a list of objects**
+            **Validate objects**
             
             *Use this service if you want to validate a list of objects.*
             
