@@ -1,0 +1,1375 @@
+{
+  "info": {
+    "name": "Dictionary API Document.paw",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "TERMS",
+      "item": [
+        {
+          "name": "Create term",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term.\n\nThe service expects the term object in the body.\n\nIt is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term record [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if the provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"iso_639_3_eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"iso_639_3_eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"iso_639_3_eng\": \"This term can be *safely deleted*.\"\n    }\n  }\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Create terms",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert/many",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert/many"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to create a list of new terms.\n\n*In order to create terms, the current user must have the `dict` role*.\n\nThis service can be used to create a set of new terms.\n\nWhen inserting the records, the operation is executed transactionally in an *all-or-nothing* fashion.\n\nThe service expects an array of term objects in the body.\n\nEach term is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term records [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if any provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n\t\t\"_type\": \"_type_string_enum\",\n\t\t\"_kind\": [\"_type\"]\n\t  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Update term",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?key=test",
+              "query": [
+                {
+                  "key": "key",
+                  "value": "test",
+                  "disabled": false,
+                  "description": "Term global identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. You provide the term *global identifier* in the *path query parameter* `key`, and the *fields to be updated* in the *request body*.\n\nIf the service is successful it will return the updated term record [`200`], plus a property, `status`, with the operation outcome, `OK`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Term not found**: the service will return this code if the provided identifier has no match.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"_info\": {\n    \"_title\": {\n     \"iso_639_3_eng\": \"Test term (modified)\"\n    }\n  }\n}\n"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Delete term",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/delete?key=test-01",
+              "query": [
+                {
+                  "key": "key",
+                  "value": "test-01",
+                  "disabled": false,
+                  "description": "Term global identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/delete"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to delete a term.\n\n*In order to delete a term, the current user must have the `dict` role*.\n\nThis service can be used to delete an existing term.\n\nThe service expects the term global identifier as a `key` path query parameter.\n\n**Deleting a term from the data dictionary can have serious consequences, from breaking the integrity of the data dictionary to removing metadata referencing data in other collections or databases. So only use this service if you know what you are doing and you are absolutely sure you want to do it.**\n\n**One safe way to try the service is to create a new term and then delete it.**\n\nIf the service is successful it will return the deleted term identifiers [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Term not found**: the service will return this code if the provided `key` does not match any terms.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Delete terms",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/delete/many",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/delete/many"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to delete a list of terms.\n\n*In order to delete terms, the current user must have the `dict` role*.\n\nThis service can be used to delete an list of terms.\n\nThis service can be used to remove the terms matching the provided list of global identifiers in the body. The value should correspond to the `_gid` property in the *code section*, which corresponds to the record `_key`.\n\n**Deleting a term from the data dictionary can have serious consequences, from breaking the integrity of the data dictionary to removing metadata referencing data in other collections or databases. So only use this service if you know what you are doing and you are absolutely sure you want to do it.**\n\n**One safe way to try the service is to create a new term and then delete it.**\n\nIf the service is successful it will return the number of deleted terms and the number of ignored keys [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "description": null
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\"test-01\",\"test-02\",\"INKNOWN TERM\"]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Get term by key",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?key=_type&lang=iso_639_3_eng",
+              "query": [
+                {
+                  "key": "key",
+                  "value": "_type",
+                  "disabled": false,
+                  "description": "Term global identifier."
+                },
+                {
+                  "key": "lang",
+                  "value": "iso_639_3_eng",
+                  "disabled": false,
+                  "description": "Language code for descriptions."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get a specific term.\n\n*In order to consult a term, the current user must have the `read` role*.\n\nThis service can be used to retrieve the term record matching the provided term global identifier.\n\nThe service expects two path query parameters:\n\n- `key`: It represents the term `_key`, or *global identifier*.\n- `lang`: The *language code* for the description texts; the field will be set with the default language, or pass `@` to get the result in all languages.\n\nIf the service is successful it will return the term record matching the provided global identifier [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Term not found**: the service will return this code if the provided term does not exist.\n- `500`: For other types of error.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "description": null
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\"start\":0,\"limit\":25,\"username\":\"test\",\"role\":[\"read\"],\"default\":false}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Get terms by key",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/many?lang=iso_639_3_eng",
+              "query": [
+                {
+                  "key": "lang",
+                  "value": "iso_639_3_eng",
+                  "disabled": false,
+                  "description": "Language code for descriptions."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/many"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get a list of terms.\n\n*In order to consult a term, the current user must have the `read` role*.\n\nThis service can be used to retrieve the term records matching the provided list of term global identifiers.\n\nThe service expects a path query parameter, `lang`, the *language code* for the description texts; the field will be set with the default language, or pass `@` to get the result in all languages.\n\nThe service expects the list of term global identifiers to be provided in the body as an array.\n\nIf the service is successful, [`200`], it will return a key/value dictionary in which the key represents the provided term global identifier and the value the matched term record. If the identifier is not matched, the value will be `null`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[ \"_type\", \"_code\", \"UNKNOWN\" ]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Query term keys",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/key",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/key"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Query terms returning keys.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of term global identifiers according to a selection criteria.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching term global identifiers [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Query term records",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?lang=iso_639_3_eng",
+              "query": [
+                {
+                  "key": "lang",
+                  "value": "iso_639_3_eng",
+                  "disabled": false,
+                  "description": "Language code for multi-language strings."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Query terms returning records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of terms according to a selection criteria.\n\nThe service expects the language code for descriptions in the path query parameter `lang`: the titles and descriptions of the terms will be returned in that language, or they will be returned unaltered if the language code doesn't match any entry, or if you provide `@`.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching terms [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "GRAPHS",
+      "item": [
+        {
+          "name": "Add enumerations",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/enum",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/enum"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to add elements to an enumeration.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a set of *child enumerations* to a *parent node* in a specific *graph path*.\n\n*Enumerations* are *controlled vocabularies* that can have several *nested levels*.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the enumeration type, root or path.\n- `parent`: The global identifier of the term that represents the parent of the enumeration elements.\n- `items`: An array of term global identifiers, each representing an enumeration.\n\nThe `root` represents the type or name of the graph.\nThe `parent` represents a node in the graph, at any level, to which the provided enumeration options belong.\nThe `items` represent the identifiers of the terms that represent valid enumeration options for the parent node.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-01\",\n    \"test-02\"\n  ]\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Add fields",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/field",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/field"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to to add fields to a form.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a set of *child fields* to a *parent node* in a specific *graph path*.\n\nA *graph* of *fields* represents a *form* in which you may have *sections* containing a set of *descriptors* representing *data input fields*.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the form.\n- `parent`: The global identifier of the term that represents either the form itself, or the container section for the list of fields.\n- `items`: A set of term global identifiers, *each representing a descriptor*, that represent the data input fields.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"count\",\n    \"species\"\n  ]\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Add properties",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/property",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/property"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to to add properties to a structure type.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a *set of properties* to an *object structure type*.\n\n*Object structures* are represented by a *term* that *holds* the *list of restrictions and constraints* the *structure should obey*. This term represents the *object type*. The graph is a *one level tree* where the *children* are all the *properties* that the object type *parent* might *feature*. This list is only indicative, it should be used as a suggestion of which properties to set in the object. The constraints will be listed in the rule (`_rule`) section of the object type term. Note that, by design, an object type can only have *one level*, which means that if an object contains another object, there must be a type at both levels.\n\nThe service expects the following parameters in the request body:\n\n- `parent`: The global identifier of the object type term; *must be a descriptor of type object*, `_type_object`.\n- `items`: An array of term global identifiers, *each representing a descriptor*, that represent the data input fields.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"parent\": \"test-02\",\n  \"items\": [\n    \"count\",\n    \"species\"\n  ]\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Add sections",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/section",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/section"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to to add sections to an enumeration.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a set of *child sections* to a *parent node* in a specific *graph path*. The child elements will be considered *sections of the parent node within the root graph*.\n\n*Sections* are used to create *non-functional groups of elements* that can be used as subdivisions *for display purposes*, such as *sections* in a list of child enumeration elements, or sections in a form. *This means that you should not add sections to a data structure*.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the enumeration type, root or path.\n- `parent`: The global identifier of the term that represents the parent of the section elements.\n- `items`: An array of term global identifiers, each representing a section.\n\nThe `root` represents the type or name of the graph.\nThe `parent` represents a node in the graph, at any level, to which the provided sections belong.\nThe `items` represent the identifiers of the terms that represent sections of the parent node.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-02\"\n  ]\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Add bridge",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/bridge",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/bridge"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to to add sections to an enumeration.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a *set of child aliases* to a *parent node* in a specific *graph path*.\n\nA *bridge* is a *connection between two nodes* which *does not identify* as an *enumeration*, *property*, *field* or other *significant predicate*. When evaluating bridge predicates, the traversal will skip the element connected by the bridge predicate and resume searching for significant predicates. Such connections are used to connect a new root to the graph of an existing one, or to point to a preferred choice.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the enumeration type, root or path.\n- `parent`: The global identifier of the term that represents the parent of the relationship.\n- `items`: An array of term global identifiers, each representing a bridge node.\n\nThe `root` represents the type or name of the graph.\nThe `parent` represents the parent node in the relationships.\nThe `items` represent the nodes that will be ignored during graph traversals.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-03\"\n  ]\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "ENUMERATED TYPES",
+      "item": [
+        {
+          "name": "Enumeration path flat list of keys ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/keys?path=_predicate",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "_predicate",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration flattened list of element global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the global identifier of that term as the query path parameter, `path`.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided path parameter. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration path flat list of terms ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/terms?path=_type",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "_type",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration flattened list of element records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term records* belonging to the *provided graph path term global identifier*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the global identifier of that term as the query path parameter, `path`.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided path parameter. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term records. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration keys tree ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/tree/keys?path=_type&levels=10",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "_type",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "levels",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Number of levels to traverse in the tree."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/tree/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration tree of element global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the following path query parameters:\n\n- `path`: the term global identifier of the graph root node.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `path` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration term by code ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/terms?path=iso_639_1&code=en",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "code",
+                  "value": "en",
+                  "disabled": false,
+                  "description": "Enumeration element local identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration term record matching the provided code.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *code* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If the service is successful, [`200`], it will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration path by code ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/path?path=iso_639_1&code=en",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "code",
+                  "value": "en",
+                  "disabled": false,
+                  "description": "Enumeration element local identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/path"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration term by local identifier ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/terms?path=iso_639_1&code=eng",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "code",
+                  "value": "eng",
+                  "disabled": false,
+                  "description": "Enumeration element local identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration term record matching the provided local identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *local identifier* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element local identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration path by local identifier ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/path?path=iso_639_1&code=eng",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "code",
+                  "value": "eng",
+                  "disabled": false,
+                  "description": "Enumeration element local identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/path"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration path from root to matching local identifier element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *local identifier*\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element local identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided code. If there is a match, [`200`], the service will return the path starting from the enumeration root element to the term whose `_lid` property contains a match for the identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration term by global identifier ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/terms?path=iso_639_1&code=iso_639_1_en",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "code",
+                  "value": "iso_639_1_en",
+                  "disabled": false,
+                  "description": "Enumeration element global identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration term record matching the provided global identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *preferred term* record matching the provided *global identifier* in the *enumeration graph* defined by the provided *root element*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element global identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term belongs to the provided path**.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Enumeration path by global identifier ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/path?path=iso_639_1&code=iso_639_3_eng",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "code",
+                  "value": "iso_639_3_eng",
+                  "disabled": false,
+                  "description": "Enumeration element global identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/path"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration path from root to matching global identifier element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *global identifier*\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element global identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided code. If there is a match, [`200`], the service will return the path starting from the enumeration root element to the term whose `_gid` property contains a match for the identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Check enumeration element global identifiers ",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/keys?path=iso_639_1",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service if you want to check if a list of term global identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term global identifiers* matching the provided *global identifier* in a specific *enumeration graph*.\n\nThe service expects the enumeration graph root term global identifier in the `path` path query parameter and the array of global identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided identifier. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "description": null
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\"iso_639_1_en\",\"iso_639_1_fr\",\"UNKNOWN\"]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Check enumeration element local identifiers ",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/codes?path=iso_639_1",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration root term global identfier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/codes"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter and the list of term local identifiers to match as an array in the request body.\n\nThis service can be used to retrieve the *term global identifiers* matching the provided *global identifier* in a specific *enumeration graph*.\n\nThe service expects the enumeration graph root term global identifier in the `path` path query parameter and the array of local identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  \"en\",\n  \"fr\",\n  \"UNKNOWN\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "STRUCTURED TYPES",
+      "item": [
+        {
+          "name": "Structure flat list of property keys",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/keys?path=_scalar",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "_scalar",
+                  "disabled": false,
+                  "description": "Structure term global identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get a structure's flattened list of property global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at *all levels of the graph*. Also, only items representing actual properties of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Structure flat list of property records",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/terms?path=_scalar",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "_scalar",
+                  "disabled": false,
+                  "description": "Structure term global identifier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get a structure's flattened list of property records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at all levels of the graph. Also, only items representing active elements of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Structure keys tree",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/tree/keys?path=_scalar&levels=10",
+              "query": [
+                {
+                  "key": "path",
+                  "value": "_scalar",
+                  "disabled": false,
+                  "description": "Structure term global identifier."
+                },
+                {
+                  "key": "levels",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Number of levels to traverse."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/tree/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the list of tree branches comprising the structure.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the following path query parameters:\n\n- `path`: the term global identifier of the graph root node.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `path` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "LINKED TYPES",
+      "item": [
+        {
+          "name": "Required descriptor keys",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/keys",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the flattened list of required properties.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *descriptors* required by the provided *list* of *property* global identifiers.\n\nIn *linked descriptor graphs* it is possible to *link* a *first descriptor* to *one or more other descriptors*, signalling that whenever the *first descriptor* is is used in a dataset, one is *required* to also *include* the *linked required descriptors* along with it. This is useful to have the complete list of variables that should be included in a dataset.\n\n*Note that the structure is recursive, so selected required descriptors might, in turn, require other descriptors*.\n\nThe service expects an *array* of *term global identifiers* in the *request body* that represent the *main descriptors selection*. If the service is successful, [`200`], it will return the *additional descriptors* that *must be added* to the *provided list*, in the form of *term global identifiers*.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[ \"chr_EffPopSize\" ]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Required descriptor records",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/terms",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the flattened list of required properties.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *descriptors* required by the provided *list* of *property* global identifiers.\n\nIn *linked descriptor graphs* it is possible to *link* a *first descriptor* to *one or more other descriptors*, signalling that whenever one *includes the first descriptor* in a dataset, it is *required* to also *include* the *linked required descriptors* along with it. This is useful when selecting the variables to be included in a dataset: by probing the linked descriptor graph with the selected variables we can have the complete list of variables that should be included in the dataset.\n\n*Note that the structure is recursive, so selected required descriptors might, in turn, require other descriptors*.\n\nThe service expects an *array* of *term global identifiers* in the *request body* that represent the *main descriptors selection*. If the service is successful, [`200`], it will return the *additional descriptors* that *must be added* to the *provided list*, in the form of *term records*.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[ \"chr_EffPopSize\" ]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "DESCRIPTOR TYPES",
+      "item": [
+        {
+          "name": "Descriptor enumeration flat list of keys ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/key?key=test-02",
+              "query": [
+                {
+                  "key": "key",
+                  "value": "test-02",
+                  "disabled": false,
+                  "description": "Enumeration descriptor term global identfier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/key"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the flattened list of elements of the provided descriptor enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term global identifiers* belonging to the *provided descriptor enumeration*, this implies that the *provided descriptor must be a controlled vocabulary*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the global identifier of the descriptor as the query path parameter, `key`.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided descriptor. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `204`: **Not an enumeration**: the service will return this code if the provided descriptor is not an enumeration.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Not a descriptor**: the service will return this code if the provided term is not a descriptor.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Descriptor enumeration flat list of records ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/term?key=_type",
+              "query": [
+                {
+                  "key": "key",
+                  "value": "_type",
+                  "disabled": false,
+                  "description": "Enumeration descriptor term global identfier."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/term"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the flattened list of elements of the provided descriptor enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term records* belonging to the *provided descriptor enumeration*, this implies that the *provided descriptor must be a controlled vocabulary*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the following path query parameters:\n\n- `key`: The descriptor global identifier.\n- `lang`: The language code for the description texts; the field will be set with the default language, or pass `@` to get the result in all languages.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided descriptor. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `204`: **Not an enumeration**: the service will return this code if the provided descriptor is not an enumeration.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Not a descriptor**: the service will return this code if the provided term is not a descriptor.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Descriptor enumeration tree of keys ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/tree?key=_type&levels=10",
+              "query": [
+                {
+                  "key": "key",
+                  "value": "_type",
+                  "disabled": false,
+                  "description": "Enumeration descriptor term global identfier."
+                },
+                {
+                  "key": "levels",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Number of levels to traverse."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/tree"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get an enumeration tree of element global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided descriptor enumeration*, this implies that the *provided descriptor must be a controlled vocabulary*..\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the following path query parameters:\n\n- `key`: the descriptor global identifier.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `key` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `204`: **Not an enumeration**: the service will return this code if the provided descriptor is not an enumeration.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Not a descriptor**: the service will return this code if the provided term is not a descriptor.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Descriptor categories ",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/qual/keys",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/qual/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the summary of qualifications for the provided list of descriptors.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects a *list of descriptor global identifiers* in the *request body* and will return the list of *classes*, *domains*, *tags* and *subjects* associated with the *provided descriptors list*.\n\nIf the service is successful, [`200`], it will return the following structure:\n\n- `classes`: List of class, `_class`, entries featured by the provided list of descriptors.\n- `domains`: List of domain, `_domain`, entries featured by the provided list of descriptors.\n- `tags`: List of tag, `_tag`, entries featured by the provided list of descriptors.\n- `subjects`: List of subject, `_subject`, entries featured by the provided list of descriptors.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[ \"chr_EffPopSize\" ]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "VALIDATION",
+      "item": [
+        {
+          "name": "Validate value by descriptor",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to check a data value matched to a descriptor.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta**.\n\nThis service can be used to *check* if a *data value* matches the *rules* of a *descriptor*. The value will be validated against the data definition associated with the descriptor and the service will return an object describing the status of the validation and eventual additional information describing the outcome.\n\nOptionally, it is possible to indicate in which language the status message should be returned.\n\nThe service expects the following properties in the request body:\n\n- `descriptor`: The descriptor global identifier.\n- `value`: The value to be tested against the descriptor's data definition.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe first two parameters are required, the last parameter is optional.\n\nThe `language` code is used to select the language of the status message:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return the following properties:\n\n- `descriptor`: The provided descriptor global identifier.\n- `value`: The tested value.\n- `result`: The status, including the code and message.\n\nWarning and error reports are objects with two elements:\n\n- `value`: The data element value.\n- `status`: The list of status messages one per property.\n\nEach data element is processed separately: if the data is valid, the data element will be stored in the `valid` report property; if there is at least one error, the data element and all the corresponding status reports will be stored in the `errors` report property; if there is at least one warning, the data element and all the corresponding status reports will be stored in the `warnings` report property.\n\nThe returned value, `value`, may be different than the provided value, because enumerations\ncan be resolved: if the enumeration code is not a term global identifier, the full\nenumeration graph will be traversed and the first element whose local identifier matches the provided\nvalue will be considered the valid choice. Try entering `_type` as descriptor and `string` as the\nvalue: you will see that the value will be resolved to the full code value, `_type_string`.\n\nThe `status` objects indicate the outcome of the validation, they record any warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\nAdditional properties may be included in the result, depending on the eventual error, or in the event\nthat an enumeration was resolved:\n\n- `resolved`: It is an object whose properties represent the unresolved enumeration terms. Try entering `_type` as descriptor and `string` as the value: the top level `value` will hold the resolved value, while the `value` array in this object will hold the provided enumeration code.\n- `ignored`: It is an object whose properties represent the descriptors that were not recognised.\nUnknown descriptors will not be validated, this is not considered an error, but such descriptors will\nbe logged, so that it is possible to catch eventual errors. Try entering `UNKNOWN` as descriptor.\n- `error`: In the event of unexpected database errors, this property will host the specific error message generated by the database engine.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "description": null
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\"descriptor\":\"_type\",\"value\":\"string\",\"language\":\"all\"}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Validate value by data definition",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/definition",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/definition"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to check a data value matched to a descriptor data definition.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta**.\n\nThis service can be used to *check* if a *data value* matches the provided *data definition*.\n\nThe service expects the following properties in the request body:\n\n- `definition`: The `_data` section of a descriptor term record.\n- `value`: The value to be tested against the data definition.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe first two parameters are required, the last parameter is optional.\n\nThe `definition` parameter is an object that represents the `_data` section\nof a descriptor term. You can use this to test data definitions against values.\n\nThe `language` code is used to select the language of the status messages:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return the following properties:\n\n- `definition`: The provided `_data` section of a descriptor.\n- `value`: The tested value.\n- `result`: The status, including the code and message.\n\nThe returned value, `value`, may be different than the provided value, because enumerations\ncan be resolved: if the enumeration code is not a term global identifier, the full\nenumeration graph will be traversed and the first element whose local identifier matches the provided\nvalue will be considered the valid choice. Try entering `_type` as descriptor and `string` as the\nvalue: you will see that the value will be resolved to the full code value, `_type_string`.\n\nThe `status` objects indicate the outcome of the validation, they record any warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\nAdditional properties may be included in the result, depending on the eventual error, or in the event\nthat an enumeration was resolved:\n\n- `resolved`: It is an object whose properties represent the unresolved enumeration terms. Try entering `_type` as descriptor and `string` as the value: the top level `value` will hold the resolved value, while the `value` array in this object will hold the provided enumeration code.\n- `ignored`: It is an object whose properties represent the descriptors that were not recognised.\nUnknown descriptors will not be validated, this is not considered an error, but such descriptors will\nbe logged, so that it is possible to catch eventual errors. Try entering `UNKNOWN` as descriptor.\n- `error`: In the event of unexpected database errors, this property will host the specific error message generated by the database engine.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"definition\": {\n    \"_class\": \"_class_category\",\n    \"_scalar\": {\n      \"_type\": \"_type_string_enum\",\n      \"_kind\": [\n        \"_type\"\n      ]\n    }\n  },\n  \"value\": \"string\",\n  \"language\": \"all\"\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Validate object",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/object",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/object"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to check the provided object.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta**.\n\nThis service can be used to *check* the *properties* of the provided *object*. It will *scan all properties* and *validate* any property that *corresponds* to a *descriptor* of the *data dictionary*.\n\nThe service expects the following properties in the request body:\n\n- `value`: The object to be validated.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe `language` code is used to select the language of the status messages:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return two properties:\n\n- `value`: The tested value.\n- `result`: A *key/value dictionary* in which the key is the name of any property that was considered by the parser, and the value is a `status` property with the status of the operation.\n\nThe `status` objects indicate the outcome of the validation, they record any success, warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\nAdditional properties may be included in the result, depending on the eventual error, or in the event\nthat an enumeration was resolved:\n\n- `resolved`: It is an object whose properties represent the unresolved enumeration terms. Try entering `_type` as descriptor and `string` as the value: the top level `value` will hold the resolved value, while the `value` array in this object will hold the provided enumeration code.\n- `ignored`: It is an object whose properties represent the descriptors that were not recognised.\nUnknown descriptors will not be validated, this is not considered an error, but such descriptors will\nbe logged, so that it is possible to catch eventual errors. Try entering `UNKNOWN` as descriptor.\n- `error`: In the event of unexpected database errors, this property will host the specific error message generated by the database engine.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"value\": {\n    \"_code\": {\n      \"_lid\": \"test-01\",\n      \"_gid\": \"test-01\",\n      \"_aid\": [\n        \"test-01\"\n      ]\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    },\n    \"custom_value\": 42\n  },\n  \"language\": \"iso_639_3_eng\"\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Validate objects",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/objects",
+              "query": null,
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/objects"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to check a list provided objects.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta*+.\n\nThis service can be used to *check* the *properties* of the provided list of *objects*. It will *scan all properties* and *validate* any property that *corresponds* to an *element of the data dictionary*.\n\nThe service expects the following properties in the request body:\n\n- `value`: An array containing the objects to be validated.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe `language` code is used to select the language of the status messages:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return three properties:\n\n- `valid`: An array containing the list of valid objects.\n- `warnings`: An array containing the report for objects containing warnings, such as resolved values.\n- `errors`: An array containing the report for objects containing errors.\n\nThe elements returned for warnings and errors are structured as follows:\n\n- `value`: The tested value, with eventual resolved enumerations.\n- `status`: An array of status reports.\n\nThe `status` objects indicate the outcome of the validation, they record any warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"value\": [\n    {\n      \"_code\": {\n        \"_lid\": \"test-01\",\n        \"_gid\": \"test-01\",\n        \"_aid\": [\n          \"test-01\"\n        ]\n      },\n      \"_info\": {\n        \"_title\": {\n          \"iso_639_3_eng\": \"Test term 1\"\n        }\n      },\n      \"_data\": {\n        \"_scalar\": {\n          \"_type\": \"_type_object\"\n        }\n      }\n    },\n    {\n      \"_code\": {\n        \"_gid\": \"test-01\",\n        \"_aid\": [\n          \"test-01\"\n        ]\n      }\n    },\n    {\n      \"_type\": \"UNKNOWN\"\n    },\n    {\n      \"CUSTOM\": \"VALUE\"\n    },\n    {\n      \"_type\": \"string\"\n    }\n  ],\n  \"language\": \"iso_639_3_eng\"\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    }
+  ]
+}
