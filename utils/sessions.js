@@ -3,6 +3,7 @@
 //
 // Includes.
 //
+const crypto = require('@arangodb/crypto')
 const sessionsMiddleware = require("@arangodb/foxx/sessions")
 const cookieTransport = require('@arangodb/foxx/sessions/transports/cookie');
 
@@ -51,6 +52,13 @@ const Session = sessionsMiddleware({						    // Middleware.
  */
 function hasPermission(theRequest, theResponse, theRoles = [])
 {
+	///
+	// Check magic words.
+	///
+	if(crypto.md5(module.context.configuration.bypassAuthentication) === "e6e1704a8c4489f84a146103cd6b7d23") {
+		return true                                                             // ==>
+	}
+
 	//
 	// Handle public services.
 	//

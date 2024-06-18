@@ -90,6 +90,12 @@
             "type": "string",
             "required": true,
             "default": "settings"
+        },
+        "bypassAuthentication": {
+            "description": "Bypass authentication",
+            "type": "password",
+            "required": true,
+            "default": "you have to guess it..."
         }
     },
     "tests": [
