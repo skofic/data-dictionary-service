@@ -78,10 +78,18 @@ module.exports = Object.freeze({
             index: [
                 {
                     type: 'persistent',
-                    fields: ['_path[*]', '_predicate'],
+                    fields: ['_predicate', '_path[*]'],
                     deduplicate: true,
                     estimates: true,
-                    name: "idx-schema-path-predicate",
+                    name: "idx_path_predicate",
+                    unique: false
+                },
+                {
+                    type: 'persistent',
+                    fields: ['_from', '_predicate', '_path[*]'],
+                    deduplicate: true,
+                    estimates: true,
+                    name: "idx_from_predicate_path",
                     unique: false
                 }
             ]
