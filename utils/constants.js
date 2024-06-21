@@ -160,35 +160,48 @@ module.exports = Object.freeze({
                             "identity"
                         ],
                         "fields": {
-                            "_data": {
+                            "_code": {
                                 "fields": {
-                                    "_domain": {},
-                                    "_tag": {
+                                    "_nid": {},
+                                    "_lid": {
                                         "analyzers": [
                                             "identity",
                                             "text_en"
                                         ]
                                     },
-                                    "_dict": {
-                                        "fields": {
-                                            "_dict_key": {
-                                                "fields": {
-                                                    "_class": {}
-                                                }
-                                            },
-                                            "_dict_value": {
-                                                "fields": {
-                                                    "_class": {}
-                                                }
-                                            }
-                                        }
+                                    "_gid": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
                                     },
-                                    "_class": {},
-                                    "_subject": {}
+                                    "_aid": {},
+                                    "_pid": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    },
+                                    "_name": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    }
                                 }
                             },
                             "_info": {
                                 "fields": {
+                                    "_title": {
+                                        "fields": {
+                                            "iso_639_3_eng": {
+                                                "analyzers": [
+                                                    "text_en",
+                                                    "identity"
+                                                ]
+                                            }
+                                        }
+                                    },
                                     "_definition": {
                                         "fields": {
                                             "iso_639_3_eng": {
@@ -209,13 +222,7 @@ module.exports = Object.freeze({
                                             }
                                         }
                                     },
-                                    "_provider": {
-                                        "analyzers": [
-                                            "text_en",
-                                            "identity"
-                                        ]
-                                    },
-                                    "_title": {
+                                    "_examples": {
                                         "fields": {
                                             "iso_639_3_eng": {
                                                 "analyzers": [
@@ -235,45 +242,87 @@ module.exports = Object.freeze({
                                             }
                                         }
                                     },
-                                    "_examples": {
+                                    "_url": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    },
+                                    "_citation": {
+                                        "analyzers": [
+                                            "identity",
+                                            "text_en"
+                                        ]
+                                    },
+                                    "_provider": {
+                                        "analyzers": [
+                                            "text_en",
+                                            "identity"
+                                        ]
+                                    }
+                               }
+                            },
+                            "_data": {
+                                "fields": {
+                                    "_subject": {},
+                                    "_class": {},
+                                    "_domain": {},
+                                    "_tag": {},
+                                    "_scalar": {
                                         "fields": {
-                                            "iso_639_3_eng": {
+                                            "_type": {},
+                                            "_kind": {},
+                                            "_format": {},
+                                            "_unit": {},
+                                            "_unit-name": {
                                                 "analyzers": [
-                                                    "text_en",
-                                                    "identity"
+                                                    "identity",
+                                                    "text_en"
                                                 ]
+                                            },
+                                            "_unit-symbol": {
+                                                "analyzers": [
+                                                    "identity",
+                                                    "text_en"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "_array": {},
+                                    "_set": {},
+                                    "_dict": {
+                                        "fields": {
+                                            "_dict_key": {
+                                                "fields": {
+                                                    "_class": {}
+                                                }
+                                            },
+                                            "_dict_value": {
+                                                "fields": {
+                                                    "_class": {}
+                                                }
                                             }
                                         }
                                     }
                                 }
                             },
-                            "_code": {
+                            "_rule": {
                                 "fields": {
-                                    "_nid": {},
-                                    "_pid": {
-                                        "analyzers": [
-                                            "identity",
-                                            "text_en"
-                                        ]
+                                    "_required": {
+                                        "fields": {
+                                            "_selection-descriptors_any": {},
+                                            "_selection-descriptors_one": {},
+                                            "_selection-descriptors_all": {}
+                                        }
                                     },
-                                    "_aid": {},
-                                    "_gid": {
-                                        "analyzers": [
-                                            "identity",
-                                            "text_en"
-                                        ]
-                                    },
-                                    "_lid": {
-                                        "analyzers": [
-                                            "identity",
-                                            "text_en"
-                                        ]
-                                    },
-                                    "_name": {
-                                        "analyzers": [
-                                            "identity",
-                                            "text_en"
-                                        ]
+                                    "_banned": {},
+                                    "_computed": {},
+                                    "_recomended": {
+                                        "fields": {
+                                            "_selection-descriptors_any": {},
+                                            "_selection-descriptors_one": {},
+                                            "_selection-descriptors_all": {}
+                                        }
                                     }
                                 }
                             }
