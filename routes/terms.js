@@ -1296,6 +1296,8 @@ function doUpdateTerm(request, response)
  * @param request: API request.
  * @param response: API response.
  * @return {Array<Aql>}: Query elements.
+ *
+ * >>>>> TODO: Here and in all services change all queries so use views.
  */
 function termsSelectionQuery(request, response)
 {
