@@ -151,7 +151,7 @@ module.exports = Object.freeze({
     ///
     view: {
         term: {
-            "name": "VIEW_TERM",
+            "name": module.context.configuration.viewTerm,
             "type": "arangosearch",
             "properties": {
                 "links": {

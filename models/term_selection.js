@@ -12,16 +12,19 @@ module.exports = {
 		// Describe the attributes with joi here
 		start: joi.number().integer().min(0).default(0).required(),
 		limit: joi.number().integer().min(0).default(25).required(),
-		term_type: joi.string(),
+		term_type: joi.string().valid('descriptor', 'structure'),
 		_nid: joi.string(),
 		_lid: joi.string(),
 		_gid: joi.string(),
+		_name: joi.string(),
+		_pid: joi.string(),
 		_aid: joi.array().items(joi.string()),
-		_title: joi.object(),
-		_definition: joi.object(),
-		_data: joi.array().items(joi.string()),
-		_type: joi.array().items(joi.string()),
-		_kind: joi.array().items(joi.string())
+		_title: joi.string(),
+		_definition: joi.string(),
+		_description: joi.string(),
+		_examples: joi.string(),
+		_notes: joi.string(),
+		_provider: joi.string()
 	},
 
 	forClient(obj) {

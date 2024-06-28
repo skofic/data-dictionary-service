@@ -91,6 +91,12 @@
             "required": true,
             "default": "settings"
         },
+        "viewTerm": {
+            "description": "Term view name",
+            "type": "string",
+            "required": true,
+            "default": "VIEW_TERM"
+        },
         "bypassAuthentication": {
             "description": "Bypass authentication",
             "type": "password",

@@ -562,31 +562,31 @@ router.post(
             The request body contains an object that can be used to select from a set of properties:
             - \`start\`: Start position in results.
             - \`limit\`: Number of elements to be returned.
-            - \`term_type\`: Select descriptors, structure types or any.
+            - \`term_type\`: Select descriptors or structure types.
             - \`_nid\`: Term namespace.
             - \`_lid\`: Term local identifier.
             - \`_gid\`: Term global identifier.
+            - \`_name\`: Term name.
             - \`_aid\`: Extended local identifiers.
+            - \`_pid\`: Used local identifiers.
             - \`_title\`: Term label or title.
             - \`_definition\`: Term definition.
-            - \`_data\`: The data shape, for descriptors.
-            - \`_type\`: The data tupe, for scalar descriptors.
-            - \`_kind\`: The data kind for scalar descriptors.
+            - \`_description\`: Term definition.
+            - \`_examples\`: Term definition.
+            - \`_notes\`: Term definition.
+            - \`_provider\`: Term definition.
             
             To search for the first 10 descriptors that have a namespace that starts with \`iso\` \
             you can enter:
             \`{"start": 0, "limit": 10, "term_type": "descriptor", "_nid": "iso%"}\`
             
-            To search for the first 10 terms whose title is \`Italy\` in English and \`Italia\` in Italian \
+            To search for the first 10 terms whose title contains the tokens \`section\` and \`data\` \
             you can enter:
-            \`{"start": 0, "limit": 10, "_title": {"iso_639_3_eng": "Italy", "iso_639_3_ita": "Italia"}}\`
+            \`{"start": 0, "limit": 10, "_title": "section data"}\`
             
-            To search for the first 10 terms whose definition contain \`Republic\` in English you can enter:
-            \`{"start": 0, "limit": 10, "_definition": {"iso_639_3_eng": "%Republic%"}}\`
-            
-            To search for the first 10 scalar descriptors whose values must be elements of the \
-            \`geo_datum\` controlled vocabulary, you can enter:
-            \`{"start": 0, "limit": 10, "_data": ["_scalar"], "_type": ["_type_string_enum"], "_kind": ["geo_datum"]}\`
+            To search for the first 10 terms whose definition contains the token \`republic\` \
+            you can enter:
+            \`{"start": 0, "limit": 10, "_definition": "republic"}\`
         `
 	)
 	.body(TermSelection, dd
@@ -594,25 +594,27 @@ router.post(
             **Service parameters**
             
             The service body expects an object with the following properties:
-            - \`term_type\`: Set \`descriptor\` or \`structure\`.
-            - \`_nid\`: The namespace global ientifier (*string*).
-            - \`_lid\`: The term local ientifier (*string*).
-            - \`_gid\`: The term global ientifier (*string*).
-            - \`_aid\`: List of local identifiers, any match counts.
-            - \`_title\`: An object whose property name must be a language code and whose value \
-              is a pattern that should match the term title in that language (*string*). \
-              You can add more language codes if you want.
-            - \`_definition\`: An object whose property name must be a language code and whose value \
-              is a pattern that should match the term definition in that language (*string*). \
-              You can add more language codes if you want.
-            - \`_data\`: A list of data shapes, \`_scalar\`, \`_array\`, \`_set\` and \`_dict\` \
-              are the allowed values. Any match selects.
-            - \`_type\`: A list of data types, if \`_scalar\` was indicated in \`_data\`.
-            - \`_kind\`: A list of data types, if \`_scalar\` was indicated in \`_data\`.
+            - \`start\`: Start position in results, provide an integer greater or equal to 0.
+            - \`limit\`: Number of elements to be returned, provide an integer.
+            - \`term_type\`: Set \`descriptor\` or \`structure\`, omit for any term type.
+            - \`_nid\`: The namespace global ientifier, wildcard match.
+            - \`_lid\`: The term local ientifier, wildcard match.
+            - \`_gid\`: The term global ientifier, wildcard match.
+            - \`_name\`: The term name, wildcard match.
+            - \`_aid\`: List of local identifiers, exact match.
+            - \`_pid\`: Provider identifiers, wildcard match.
+            - \`_title\`: Term title, rovide a string with space delimited tokens.
+            - \`_definition\`: Term definition, rovide a string with space delimited tokens.
+            - \`_description\`: Term description, rovide a string with space delimited tokens.
+            - \`_examples\`: Term examples, rovide a string with space delimited tokens.
+            - \`_notes\`: Term notes, rovide a string with space delimited tokens.
+            - \`_provider\`: Term provider, rovide a string with space delimited tokens.
             
-            For all *string* fields the supported wildcards are \`_\` to match a single arbitrary character, \
+            For all *wildcard match* fields the supported wildcards are \`_\` to match a single arbitrary character, \
             and \`%\` to match any number of arbitrary characters. Literal % and _ need to be escaped \
             with a backslash. Backslashes need to be escaped themselves.
+            
+            For all *token match* fields provide a string with space delimited tokens.
             
             Any selector can be omitted, except \`start\` and \`limit\`.
         `
@@ -669,35 +671,34 @@ router.post(
             of the terms will be returned in that language, or they will be returned unaltered if \
             the language code doesn't match any entry, or if you provide \`@\`.
             
-            The request body contains an object that can be used to select from a set of properties:
-            - \`start\`: Start position in results.
-            - \`limit\`: Number of elements to be returned.
-            - \`term_type\`: Select descriptors, structure types or any.
-            - \`_nid\`: Term namespace.
-            - \`_lid\`: Term local identifier.
-            - \`_gid\`: Term global identifier.
-            - \`_aid\`: Extended local identifiers.
-            - \`_title\`: Term label or title.
-            - \`_definition\`: Term definition.
-            - \`_data\`: The data shape, for descriptors.
-            - \`_type\`: The data tupe, for scalar descriptors.
-            - \`_kind\`: The data kind for scalar descriptors.
+            The service body expects an object with the following properties:
+            - \`start\`: Start position in results, provide an integer greater or equal to 0.
+            - \`limit\`: Number of elements to be returned, provide an integer.
+            - \`term_type\`: Set \`descriptor\` or \`structure\`, omit for any term type.
+            - \`_nid\`: The namespace global ientifier, wildcard match.
+            - \`_lid\`: The term local ientifier, wildcard match.
+            - \`_gid\`: The term global ientifier, wildcard match.
+            - \`_name\`: The term name, wildcard match.
+            - \`_aid\`: List of local identifiers, exact match.
+            - \`_pid\`: Provider identifiers, wildcard match.
+            - \`_title\`: Term title, rovide a string with space delimited tokens.
+            - \`_definition\`: Term definition, rovide a string with space delimited tokens.
+            - \`_description\`: Term description, rovide a string with space delimited tokens.
+            - \`_examples\`: Term examples, rovide a string with space delimited tokens.
+            - \`_notes\`: Term notes, rovide a string with space delimited tokens.
+            - \`_provider\`: Term provider, rovide a string with space delimited tokens.
             
             To search for the first 10 descriptors that have a namespace that starts with \`iso\` \
             you can enter:
             \`{"start": 0, "limit": 10, "term_type": "descriptor", "_nid": "iso%"}\`
             
-            To search for the first 10 terms whose title is \`Italy\` in English and \`Italia\` in Italian \
+            To search for the first 10 terms whose title contains the tokens \`section\` and \`data\` \
             you can enter:
-            \`{"start": 0, "limit": 10, "_title": {"iso_639_3_eng": "Italy", "iso_639_3_ita": "Italia"}}\`
-            Try setting the language code parameter to French (\`iso_639_3_fra\`).
+            \`{"start": 0, "limit": 10, "_title": "section data"}\`
             
-            To search for the first 10 terms whose definition contain \`Republic\` in English you can enter:
-            \`{"start": 0, "limit": 10, "_definition": {"iso_639_3_eng": "%Republic%"}}\`
-            
-            To search for the first 10 scalar descriptors whose values must be elements of the \
-            \`geo_datum\` controlled vocabulary, you can enter:
-            \`{"start": 0, "limit": 10, "_data": ["_scalar"], "_type": ["_type_string_enum"], "_kind": ["geo_datum"]}\`
+            To search for the first 10 terms whose definition contains the token \`republic\` \
+            you can enter:
+            \`{"start": 0, "limit": 10, "_definition": "republic"}\`
         `
 	)
 	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
@@ -706,25 +707,27 @@ router.post(
             **Service parameters**
             
             The service body expects an object with the following properties:
-            - \`term_type\`: Set \`descriptor\` or \`structure\`.
-            - \`_nid\`: The namespace global ientifier (*string*).
-            - \`_lid\`: The term local ientifier (*string*).
-            - \`_gid\`: The term global ientifier (*string*).
-            - \`_aid\`: List of local identifiers, any match counts.
-            - \`_title\`: An object whose property name must be a language code and whose value \
-              is a pattern that should match the term title in that language (*string*). \
-              You can add more language codes if you want.
-            - \`_definition\`: An object whose property name must be a language code and whose value \
-              is a pattern that should match the term definition in that language (*string*). \
-              You can add more language codes if you want.
-            - \`_data\`: A list of data shapes, \`_scalar\`, \`_array\`, \`_set\` and \`_dict\` \
-              are the allowed values. Any match selects.
-            - \`_type\`: A list of data types, if \`_scalar\` was indicated in \`_data\`.
-            - \`_kind\`: A list of data types, if \`_scalar\` was indicated in \`_data\`.
+            - \`start\`: Start position in results, provide an integer greater or equal to 0.
+            - \`limit\`: Number of elements to be returned, provide an integer.
+            - \`term_type\`: Set \`descriptor\` or \`structure\`, omit for any term type.
+            - \`_nid\`: The namespace global ientifier, wildcard match.
+            - \`_lid\`: The term local ientifier, wildcard match.
+            - \`_gid\`: The term global ientifier, wildcard match.
+            - \`_name\`: The term name, wildcard match.
+            - \`_aid\`: List of local identifiers, exact match.
+            - \`_pid\`: Provider identifiers, wildcard match.
+            - \`_title\`: Term title, rovide a string with space delimited tokens.
+            - \`_definition\`: Term definition, rovide a string with space delimited tokens.
+            - \`_description\`: Term description, rovide a string with space delimited tokens.
+            - \`_examples\`: Term examples, rovide a string with space delimited tokens.
+            - \`_notes\`: Term notes, rovide a string with space delimited tokens.
+            - \`_provider\`: Term provider, rovide a string with space delimited tokens.
             
-            For all *string* fields the supported wildcards are \`_\` to match a single arbitrary character, \
+            For all *wildcard match* fields the supported wildcards are \`_\` to match a single arbitrary character, \
             and \`%\` to match any number of arbitrary characters. Literal % and _ need to be escaped \
             with a backslash. Backslashes need to be escaped themselves.
+            
+            For all *token match* fields provide a string with space delimited tokens.
             
             Any selector can be omitted, except \`start\` and \`limit\`.
         `
@@ -1173,6 +1176,9 @@ function doSelectTermKeys(request, response)
 	//
 	query.push(aql`RETURN item._key`)
 
+	// response.send(aql.join(query))
+	// return
+
 	//
 	// Perform query.
 	//
@@ -1309,6 +1315,98 @@ function termsSelectionQuery(request, response)
 	//
 	// Init local storage.
 	//
+	const query = []
+	const clauses = []
+	const language = module.context.configuration.language
+
+	//
+	// Term type.
+	//
+	if(request.body.hasOwnProperty('term_type')) {
+		switch(request.body.term_type) {
+			case 'descriptor':
+				clauses.push(aql`EXISTS(item._data)`)
+				break;
+			case 'structure':
+				clauses.push(aql`EXISTS(item._rule)`)
+				break;
+		}
+	}
+
+	//
+	// Term scalar codes.
+	//
+	for(const tok of ['_nid', '_lid', '_gid', '_name', '_pid']) {
+		if(request.body.hasOwnProperty(tok)) {
+			clauses.push(
+				aql`ANALYZER(
+					LIKE(item._code.${tok},
+					LOWER(${request.body[tok]})
+				), "text_en")`)
+		}
+	}
+
+	//
+	// List of official codes.
+	//
+	if(request.body.hasOwnProperty('_aid')) {
+		clauses.push(aql`item._code._aid IN ${request.body._aid}`)
+	}
+
+	//
+	// Term descriptions.
+	//
+	for(const tok of ['_title', '_definition', '_description', '_examples', '_notes']) {
+		if(request.body.hasOwnProperty(tok)) {
+			const value = request.body[tok]
+			clauses.push(aql`ANALYZER(item._info.${tok}.${language} IN TOKENS(${value}, "text_en"), "text_en")`)
+		}
+	}
+
+	///
+	// Term provider.
+	///
+	if(request.body.hasOwnProperty('_provider')) {
+		clauses.push(aql`ANALYZER(item._info._provider IN TOKENS(${request.body._provider}, "text_en"), "text_en")`)
+	}
+
+	///
+	// Add query FOR.
+	///
+	query.push(aql`FOR item IN ${view_reference}`)
+
+	///
+	// Put AND between query clauses.
+	///
+	if(clauses.length > 0) {
+		query.push(aql`SEARCH`)
+		query.push(aql.join(clauses, ' AND '))
+	}
+
+	//
+	// Close query.
+	//
+	query.push(aql`SORT item._key ASC`)
+	query.push(aql`LIMIT ${request.body.start}, ${request.body.limit}`)
+
+	return query                                                                // ==>
+
+} // termsSelectionQuery()
+
+/**
+ * Prepare terms selection query.
+ * >>>>> OLD VERSION <<<<<<
+ * @param request: API request.
+ * @param response: API response.
+ * @return {Array<Aql>}: Query elements.
+ *
+ * >>>>> TODO: Here and in all services change all queries so use views.
+ */
+function termsSelectionQueryOld(request, response)
+{
+	//
+	// Init local storage.
+	//
 	const query = [aql`FOR item IN ${collection}`]
 
 	//
@@ -1380,7 +1478,7 @@ function termsSelectionQuery(request, response)
 
 	return query                                                                // ==>
 
-} // termsSelectionQuery()
+} // termsSelectionQueryOld()
 
 /**
  * Prepare term code section.
