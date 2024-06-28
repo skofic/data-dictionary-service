@@ -35,8 +35,13 @@ const keySchema = joi.string().required()
 //
 // Collections.
 //
-const view = K.db._view(K.view.term.name)
+const view_object = K.db._view(K.view.term.name)
 const collection = K.db._collection(K.collection.term.name)
+const view_reference = {
+	isArangoCollection: true,
+	name: () => view_object.name()
+}
+
 
 //
 // Constants.
