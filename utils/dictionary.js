@@ -162,14 +162,15 @@ function getDescriptorQualificationKeys(theDescriptors)
                 tags: UNIQUE(REMOVE_VALUE(FLATTEN(tags), null)),
                 subjects: REMOVE_VALUE(subjects, null)
             }
-        `).toArray();
+        `).toArray()
 
     return result                                                               // ==>
 
-} // getDescriptorQualificationKeys()
+} // getPropertyNames()
 
 /**
  * Return the list of property names given their parent.
+ * OLD VERSION
  * This function expects a string representing a data structure descriptor global identifier,
  * and will return the list of all property names that follow the path of the provided descriptor.
  * @param theRoot {String}: The global identifier of the structure root.
@@ -239,9 +240,9 @@ function getAllEnumerations(theRoot, theLanguage)
 } // getAllEnumerations()
 
 /**
- * Return the list of properties belonging to the provided object descriptor.
- * This function expects a string representing an object descriptor global identifier,
- * and will return the list of all descriptor terms that are connected to the provided descriptor.
+ * Return the list of property descriptors belonging to the provided object structure.
+ * This function expects a string representing an object structure type,
+ * It will return the list of all descriptor terms that are belong to the provided type.
  * @param theRoot {String}: The global identifier of the object descriptor.
  * @return {Array}: The list of properties belonging to the provided descriptor.
  */
@@ -263,7 +264,7 @@ function getProperties(theRoot)
             RETURN DOCUMENT(edge._from)
         `).toArray();
 
-    return result;                                                              // ==>
+    return result                                                              // ==>
 
 } // getProperties()
 

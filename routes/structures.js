@@ -49,32 +49,27 @@ router.get(
     },
     'all-struct-keys'
 )
-    .summary('Return flattened list of object property names')
+    .summary('Return object structure rules section')
     .description(dd
         `
             **Get all property names**
             
             ***To use this service, the current user must have the \`read\` role.***
             
-            Structures are tree graphs representing the properties that belong to a specific \
-            object descriptor. \
-            At the root of the graph is the term that represents the root property descriptor, \
-            the descriptor properties that belong to this root are connected through the graph, \
-            the service will return all property names connected to the provided root term.
+            Structure types are used to select which object properties are required, \
+            forbidden or recommended, this information is stored in the \`_rule\` section \
+            of the term representing the object type. \
             
-            The service expects the global identifier of the root property as a path parameter, \
-            and will return the flattened list of all property names belonging to that structure. \
-            These elements will be returned as the global identifiers of the descriptor terms.
+            The service expects the global identifier of the term representing the \
+            object type as a path parameter.
             
-            You can try providing \`_scalar\`, which represents a scalar value container: \
-            this will return the list of properties that belong to that descriptor, \
-            and that can be used to define a scalar data type.
+            You can try providing \`_scalar\`, which represents a scalar value container.
         `
     )
-    .queryParam('path', Models.StringModel, "Object descriptor global identifier")
+    .queryParam('path', Models.StringModel, "Object type global identifier")
     .response(200, Models.StringArrayModel, dd
         `
-            **List of structure property names**
+            **List of required, forbidden and recommended property names**
             
             The service will return the names of all the properties belonging to the \
             indicated path. The properties are represented by the global identifier \
