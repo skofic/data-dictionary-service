@@ -208,20 +208,25 @@ The request body contains an object that can be used to select from a set of pro
 
 - `start`: Start position in results.
 - `limit`: Number of elements to be returned.
-- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.
-- `_nid`: Term *namespace*.
-- `_lid`: Term *local identifier*.
-- `_gid`: Term *global identifier*.
-- `_aid`: List of *extended local identifiers*.
-- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.
-- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.
-- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.
-- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.
-- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.
+- `term_type`: Set `descriptor` for *descriptors*, `structure` for *structure types* or omit for *any type*.
+- `_nid`: Term *namespace*, wildcard match.
+- `_lid`: Term *local identifier*,wildcard match.
+- `_gid`: Term *global identifier*, wildcard match.
+- `_name`: Term *name*, wildcard match.
+- `_aid`: List of *extended local identifiers*, exact match.
+- `_pid`: List of *provider identifiers*, wildcard match.
+- `_title`: Term *label or title*, provide a string with space delimited tokens.
+- `_definition`: Term *definition*, provide a string with space delimited tokens.
+- `_description`: Term *description*, provide a string with space delimited tokens.
+- `_examples`: Term *usage examples*, provide a string with space delimited tokens.
+- `_notes`: Term *notes*, provide a string with space delimited tokens.
+- `_provider`: Term *provider*, provide a string with space delimited tokens.
 
-For all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.
+For all *wildcard match* strings the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.
 
-Any selector can be omitted, except start and limit.
+For all *token match* fields provide a *string* with *space delimited tokens*.
+
+Any selector can be omitted, except `start` and `limit`.
 
 If the service succeeds, [`200`], it will return the list of matching global identifiers.
 
@@ -239,22 +244,29 @@ Use this service to retrieve the term records matching the provided selection cr
 
 The request body contains an object that can be used to select from a set of properties:
 
+The request body contains an object that can be used to select from a set of properties:
+
 - `start`: Start position in results.
 - `limit`: Number of elements to be returned.
-- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.
-- `_nid`: Term *namespace*.
-- `_lid`: Term *local identifier*.
-- `_gid`: Term *global identifier*.
-- `_aid`: List of *extended local identifiers*.
-- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.
-- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.
-- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.
-- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.
-- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.
+- `term_type`: Set `descriptor` for *descriptors*, `structure` for *structure types* or omit for *any type*.
+- `_nid`: Term *namespace*, wildcard match.
+- `_lid`: Term *local identifier*,wildcard match.
+- `_gid`: Term *global identifier*, wildcard match.
+- `_name`: Term *name*, wildcard match.
+- `_aid`: List of *extended local identifiers*, exact match.
+- `_pid`: List of *provider identifiers*, wildcard match.
+- `_title`: Term *label or title*, provide a string with space delimited tokens.
+- `_definition`: Term *definition*, provide a string with space delimited tokens.
+- `_description`: Term *description*, provide a string with space delimited tokens.
+- `_examples`: Term *usage examples*, provide a string with space delimited tokens.
+- `_notes`: Term *notes*, provide a string with space delimited tokens.
+- `_provider`: Term *provider*, provide a string with space delimited tokens.
 
-For all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.
+For all *wildcard match* strings the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.
 
-Any selector can be omitted, except start and limit.
+For all *token match* fields provide a *string* with *space delimited tokens*.
+
+Any selector can be omitted, except `start` and `limit`.
 
 If the service succeeds, [`200`], it will return the list of matching term records.
 
@@ -270,10 +282,10 @@ This set of services can be used to create and manage graph relationships. The s
 
 Graph nodes are all terms, the link between two nodes is called an edge and has the following properties:
 
-- `_from`: Reference of the relationship source node term.
-- `_predicate`: Reference to a term that represents a specific relationship predicate.
-- `_to`: Reference of the relationship destination node term.
-- `_path`: An array containing the list of term references representing all the root nodes that use this relationship.
+- `_from`: Reference of the relationship *source* node term.
+- `_predicate`: Reference to a term that represents the *predicate* of the relationship.
+- `_to`: Reference of the relationship *destination* node term.
+- `_path`: An *array* containing the list of *term references* representing all the *root nodes* that use this relationship. These represent the *list of root nodes* that *share* the *current relationship*. 
 
 Predicates mainly follow a *many to one path*, meaning that in general the `_from` node is the *child*, and the `_to` node is the *parent*.
 
@@ -285,7 +297,7 @@ Use this service to add a set of child enumerations to a parent node in a specif
 
 *The current user must have the `dict` role*.
 
-Enumerations are controlled vocabularies structured as multi-level trees. This service implies that all added elements are enumerations, not sections or bridges.
+*Enumerations* are controlled vocabularies structured as multi-level trees. This service implies that all added elements are enumerations, not sections or bridges.
 
 The service expects the following object in the request body:
 
@@ -312,7 +324,7 @@ Use this service to add a set of child fields to a parent node in a specific gra
 
 *The current user must have the `dict` role*.
 
-A graph of fields represents a form in which you may have sections containing a set of descriptors representing data input fields. This service implies that all added elements are form input fields, not sections or bridges.
+A graph of fields represents a *form* in which you may have sections containing a set of descriptors representing data input fields. This service implies that all added elements are form input *fields*, not *sections* or *bridges*.
 
 The service expects the following object in the request body:
 
@@ -339,7 +351,7 @@ Use this service to add a set of properties to a parent node in a specific graph
 
 *The current user must have the `dict` role*.
 
-Object structures are one level tree graphs containing the structure of an object, the parent is a term representing an object type and the children are the descriptors representing the object's child properties. This service implies that all added elements are object properties, not sections or bridges.
+*Object structures* are one level tree graphs containing the structure of an object, the parent is a term representing an object type and the children are the descriptors representing the object's child properties. This service implies that all added elements are object properties, not sections or bridges.
 
 The service expects the following object in the request body:
 
@@ -392,7 +404,7 @@ Use this service to add a set of child aliases to a parent node in a specific gr
 
 *The current user must have the `dict` role*.
 
-A bridge is a connection between two nodes which does not identify as an enumeration, property, field or other significant predicate. When evaluating bridge predicates, the traversal will skip the element connected by the bridge predicate and resume searching for significant predicates. Such connections are used to connect a new root to the graph of an existing one, or to point to a preferred choice.
+A *bridge* is a connection between two nodes, or *predicate*, which *does not identify* as an *enumeration*, *property*, *field* or *other significant predicate*. When evaluating bridge predicates, the traversal will skip the element connected by the bridge predicate and resume searching for significant predicates. Such connections are used to connect a new root to the graph of an existing one, or to point to a preferred choice.
 
 The service expects the following object in the request body:
 

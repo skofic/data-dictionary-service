@@ -32,6 +32,17 @@ const Dictionary = require("../utils/dictionary");
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic");
 
+//
+// Collections.
+//
+const view_object = K.db._view(K.view.term.name)
+const collection_edge = K.db._collection(K.collection.schema.name)
+const collection_term = K.db._collection(K.collection.term.name)
+const view_reference = {
+    isArangoCollection: true,
+    name: () => view_object.name()
+}
+
 
 //
 // Instantiate router.

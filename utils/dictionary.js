@@ -11,6 +11,23 @@ const aql = require('@arangodb').aql;
 const K = require( './constants' )  // Application constants.
 const utils = require('../utils/utils')                     // Utility functions.
 
+///
+// Collections.
+///
+const collection_edges = K.db._collection(K.collection.schema.name)
+const collection_links = K.db._collection(K.collection.links.name)
+const collection_terms = K.db._collection(K.collection.term.name)
+
+///
+// Views.
+///
+const view_object_terms = K.db._view(K.view.term.name)
+const view_terms = {
+    isArangoCollection: true,
+    name: () => view_object_terms.name()
+}
+
+
 /**
  * dictionary.js
  *
@@ -29,7 +46,6 @@ function getAllEnumerationKeys(theRoot)
     //
     // Init local storage.
     //
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + theRoot;
 
     //
@@ -37,7 +53,7 @@ function getAllEnumerationKeys(theRoot)
     //
     const result =
         K.db._query( aql`
-            FOR edge IN ${edges}
+            FOR edge IN ${collection_edges}
                 FILTER ${path} IN edge._path
                 FILTER edge._predicate == "_predicate_enum-of"
             RETURN PARSE_IDENTIFIER(edge._from).key
@@ -63,18 +79,13 @@ function getAllEnumerationKeys(theRoot)
 function getAllKindEnumerationKeys(theKind)
 {
     //
-    // Init local storage.
-    //
-    const edges = K.db._collection(K.collection.schema.name)
-
-    //
     // Query schema.
     //
     const result =
         K.db._query( aql`
             FOR root IN ${theKind}
                 LET handle = CONCAT_SEPARATOR("/", ${K.collection.term.name}, root)
-                FOR edge IN ${edges}
+                FOR edge IN ${collection_edges}
                     FILTER handle IN edge._path
                     FILTER edge._predicate == ${K.term.predicateEnum}
                 RETURN PARSE_IDENTIFIER(edge._from).key
@@ -100,18 +111,13 @@ function getAllKindEnumerationKeys(theKind)
 function getAllKindEnumerationTerms(theKind)
 {
     //
-    // Init local storage.
-    //
-    const edges = K.db._collection(K.collection.schema.name)
-
-    //
     // Query schema.
     //
     const result =
         K.db._query( aql`
             FOR root IN ${theKind}
                 LET handle = CONCAT_SEPARATOR("/", ${K.collection.term.name}, root)
-                FOR edge IN ${edges}
+                FOR edge IN ${collection_edges}
                     FILTER handle IN edge._path
                     FILTER edge._predicate == ${K.term.predicateEnum}
                 RETURN DOCUMENT(edge._from)
@@ -137,18 +143,14 @@ function getAllKindEnumerationTerms(theKind)
 function getDescriptorQualificationKeys(theDescriptors)
 {
     //
-    // Init local storage.
-    //
-    const terms = K.db._collection(K.collection.term.name)
-
-    //
     // Query descriptors.
     //
     const result =
         K.db._query( aql`
-            FOR doc IN ${terms}
-                FILTER doc._key IN ${theDescriptors}
-                FILTER HAS(doc,'_data')
+            FOR doc IN ${view_terms}
+                SEARCH
+                    doc._key IN ${theDescriptors} AND
+                    EXISTS(doc._data)
                 
                 COLLECT AGGREGATE classes = UNIQUE(doc._data._class),
                                   domains = UNIQUE(doc._data._domain),
@@ -178,7 +180,6 @@ function getPropertyNames(theRoot)
     //
     // Init local storage.
     //
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + theRoot;
 
     //
@@ -186,7 +187,7 @@ function getPropertyNames(theRoot)
     //
     const result =
         K.db._query( aql`
-            FOR edge IN ${edges}
+            FOR edge IN ${collection_edges}
                 FILTER ${path} IN edge._path
                 FILTER edge._predicate == "_predicate_property-of"
             RETURN PARSE_IDENTIFIER(edge._from).key
@@ -209,7 +210,6 @@ function getAllEnumerations(theRoot, theLanguage)
     //
     // Init local storage.
     //
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + theRoot;
 
     //
@@ -217,7 +217,7 @@ function getAllEnumerations(theRoot, theLanguage)
     //
     const result =
         K.db._query( aql`
-            FOR edge IN ${edges}
+            FOR edge IN ${collection_edges}
                 FILTER ${path} IN edge._path
                 FILTER edge._predicate == "_predicate_enum-of"
             RETURN DOCUMENT(edge._from)
@@ -250,7 +250,6 @@ function getProperties(theRoot)
     //
     // Init local storage.
     //
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + theRoot;
 
     //
@@ -258,7 +257,7 @@ function getProperties(theRoot)
     //
     const result =
         K.db._query( aql`
-            FOR edge IN ${edges}
+            FOR edge IN ${collection_edges}
                 FILTER ${path} IN edge._path
                 FILTER edge._predicate == "_predicate_property-of"
             RETURN DOCUMENT(edge._from)
@@ -281,8 +280,6 @@ function getPropertyKeys(theRoot, theLevels)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + theRoot;
 
     //
@@ -290,12 +287,12 @@ function getPropertyKeys(theRoot, theLevels)
     //
     const result =
         K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             LET tree = (
                 MERGE_RECURSIVE(
                     FOR vertex, edge IN 0..${theLevels}
                         INBOUND ${path}
-                        ${edges}
+                        ${collection_edges}
                         
                         OPTIONS {
                             "order": "bfs"
@@ -339,8 +336,6 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + theRoot;
 
     //
@@ -348,12 +343,12 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
     //
     const result =
         K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             LET tree = (
                 MERGE_RECURSIVE(
                     FOR vertex, edge IN 0..${theLevels}
                         INBOUND ${path}
-                        ${edges}
+                        ${collection_edges}
             
                         PRUNE ${path} NOT IN edge._path
                     
@@ -398,17 +393,11 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
 function getEnumerationDescriptorTrees(theKind, theLevels)
 {
     //
-    // Init local storage.
-    //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
-
-    //
     // Query schema.
     //
     const result =
         K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             
             FOR root IN ${theKind}
                 LET handle = CONCAT_SEPARATOR("/", "terms", root)
@@ -417,7 +406,7 @@ function getEnumerationDescriptorTrees(theKind, theLevels)
                     MERGE_RECURSIVE(
                         FOR vertex, edge IN 0..${theLevels}
                             INBOUND handle
-                            ${edges}
+                            ${collection_edges}
                 
                             PRUNE handle NOT IN edge._path
                         
@@ -458,8 +447,6 @@ function matchEnumerationTerm(thePath, theTerm)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + thePath
     const target = K.collection.term.name + '/' + theTerm
     const predicate = K.term.predicateEnum
@@ -468,10 +455,10 @@ function matchEnumerationTerm(thePath, theTerm)
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       (edge._to == ${target} OR
@@ -502,8 +489,6 @@ function matchEnumerationTermKey(thePath, theTerm)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + thePath
     const target = K.collection.term.name + '/' + theTerm
     const predicate = K.term.predicateEnum
@@ -512,10 +497,10 @@ function matchEnumerationTermKey(thePath, theTerm)
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       (edge._to == ${target} OR
@@ -546,8 +531,6 @@ function matchEnumerationTermPath(thePath, theTerm)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const path = K.collection.term.name + '/' + thePath
     const target = K.collection.term.name + '/' + theTerm
     const predicate = K.term.predicateEnum
@@ -556,10 +539,10 @@ function matchEnumerationTermPath(thePath, theTerm)
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       (edge._to == ${target} OR
@@ -591,18 +574,16 @@ function matchEnumerationCodeKey(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const predicate = K.term.predicateEnum
 
     //
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       ${theCode} IN vertex._code._aid
@@ -632,18 +613,16 @@ function matchEnumerationCodeTerm(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const predicate = K.term.predicateEnum
 
     //
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       ${theCode} IN vertex._code._aid
@@ -673,18 +652,16 @@ function matchEnumerationCodePath(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const predicate = K.term.predicateEnum
 
     //
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 0..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       ${theCode} IN vertex._code._aid
@@ -713,18 +690,16 @@ function matchEnumerationIdentifierKey(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const predicate = K.term.predicateEnum
 
     //
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       vertex._code._lid == ${theCode}
@@ -753,18 +728,16 @@ function matchEnumerationIdentifierTerm(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const predicate = K.term.predicateEnum
 
     //
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       vertex._code._lid == ${theCode}
@@ -793,18 +766,16 @@ function matchEnumerationIdentifierPath(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const predicate = K.term.predicateEnum
 
     //
     // Query database.
     //
     const result = K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             FOR vertex, edge, path IN 1..10
                 INBOUND ${path}
-                ${edges}
+                ${collection_edges}
                 PRUNE ${path} IN edge._path AND
                       edge._predicate == ${predicate} AND
                       vertex._code._lid == ${theCode}
@@ -836,7 +807,6 @@ function checkEnumsByKeys(theKeys, thePath)
     //
     // Init local storage.
     //
-    const edges = K.db._collection(K.collection.schema.name)
     const targets = theKeys.map(item => `${K.collection.term.name}/${item}`)
     const path = `${K.collection.term.name}/${thePath}`
     const prefix = K.collection.term.name.length + 1
@@ -850,7 +820,7 @@ function checkEnumsByKeys(theKeys, thePath)
                 FOR term IN ${targets}
                 
                     LET selection = (
-                        FOR edge IN ${edges}
+                        FOR edge IN ${collection_edges}
                             FILTER ( edge._to == term OR
                                      edge._from == term )
                             FILTER edge._predicate == "_predicate_enum-of"
@@ -896,8 +866,6 @@ function checkEnumsByCodes(theCodes, thePath)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const edges = K.db._collection(K.collection.schema.name)
     const path = `${K.collection.term.name}/${thePath}`
 
     //
@@ -909,10 +877,10 @@ function checkEnumsByCodes(theCodes, thePath)
                 FOR code IN ${theCodes}
                 
                     LET selection = (
-                        FOR term IN ${terms}
-                            FILTER term._code._lid == code
+                        FOR term IN ${view_terms}
+                            SEARCH term._code._lid == code
                 
-                            FOR edge in ${edges}
+                            FOR edge in ${collection_edges}
                                 FILTER ( edge._to == term._id OR
                                          edge._from == term._id )
                                 FILTER edge._predicate == "_predicate_enum-of"
@@ -942,23 +910,21 @@ function getRequiredDescriptors(theCodes)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const links = K.db._collection(K.collection.links.name)
-    const list = theCodes.map( item => { return `${K.collection.term.name}/${item}`})
+     const list = theCodes.map( item => { return `${K.collection.term.name}/${item}`})
 
     //
     // Query schema.
     //
     const result =
         K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             LET required = (
                 RETURN (
                     UNIQUE(
                         FOR root IN ${list}
                             FOR vertex, edge IN 1..10
                                 OUTBOUND root
-                                ${links}
+                                ${collection_links}
                                 FILTER edge._predicate == "_predicate_requires"
                             RETURN vertex._id
                     )
@@ -983,8 +949,6 @@ function getRequiredDescriptorKeys(theCodes)
     //
     // Init local storage.
     //
-    const terms = K.db._collection(K.collection.term.name)
-    const links = K.db._collection(K.collection.links.name)
     const list = theCodes.map( item => { return `${K.collection.term.name}/${item}`})
 
     //
@@ -992,13 +956,13 @@ function getRequiredDescriptorKeys(theCodes)
     //
     const result =
         K.db._query( aql`
-            WITH ${terms}
+            WITH ${collection_terms}
             RETURN (
                 UNIQUE(
                     FOR root IN ${list}
                         FOR vertex, edge IN 1..10
                             OUTBOUND root
-                            ${links}
+                            ${collection_links}
                             FILTER edge._predicate == "_predicate_requires"
                         RETURN vertex._key
                 )

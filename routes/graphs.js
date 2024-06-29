@@ -32,6 +32,17 @@ const Dictionary = require("../utils/dictionary");
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic");
 
+//
+// Collections.
+//
+const view_object = K.db._view(K.view.term.name)
+const collection_edge = K.db._collection(K.collection.schema.name)
+const collection_term = K.db._collection(K.collection.term.name)
+const view_reference = {
+	isArangoCollection: true,
+	name: () => view_object.name()
+}
+
 
 //
 // Instantiate router.
@@ -478,7 +489,6 @@ function doAddEdges(request, response, predicate)
 	// Init local storage.
 	//
 	const data = request.body
-	const collection_edges = K.db._collection(K.collection.schema.name)
 
 	//
 	// Check for missing keys.
@@ -513,7 +523,7 @@ function doAddEdges(request, response, predicate)
 		// Check if it exists.
 		//
 		try {
-			const found = collection_edges.document(key)
+			const found = collection_edge.document(key)
 			if(found._path.includes(root)) {
 				result.existing += 1
 			} else {
@@ -556,7 +566,7 @@ function doAddEdges(request, response, predicate)
 	K.db._query( aql`
         FOR item in ${edges}
             INSERT item
-            INTO ${collection_edges}
+            INTO ${collection_edge}
             OPTIONS { overwriteMode: "update", keepNull: false, mergeObjects: false }
     `)
 
@@ -576,7 +586,6 @@ function doAddFields(request, response)
 	//
 	const data = request.body
 	const predicate = K.term.predicateField
-	const collection_edges = K.db._collection(K.collection.schema.name)
 
 	//
 	// Check for missing keys.
@@ -625,7 +634,7 @@ function doAddFields(request, response)
 		// Check if it exists.
 		//
 		try {
-			const found = collection_edges.document(key)
+			const found = collection_edge.document(key)
 			if(found._path.includes(root)) {
 				result.existing += 1
 			} else {
@@ -668,7 +677,7 @@ function doAddFields(request, response)
 	K.db._query( aql`
         FOR item in ${edges}
             INSERT item
-            INTO ${collection_edges}
+            INTO ${collection_edge}
             OPTIONS {
 	            overwriteMode: "update",
 	            keepNull: false,
@@ -692,7 +701,6 @@ function doAddProperties(request, response)
 	//
 	const data = request.body
 	const predicate = K.term.predicateProperty
-	const collection_edges = K.db._collection(K.collection.schema.name)
 
 	//
 	// Check for missing keys.
@@ -740,7 +748,7 @@ function doAddProperties(request, response)
 		// Check if it exists.
 		//
 		try {
-			const found = collection_edges.document(key)
+			const found = collection_edge.document(key)
 			if(found._path.includes(object)) {
 				result.existing += 1
 			} else {
@@ -783,7 +791,7 @@ function doAddProperties(request, response)
 	K.db._query( aql`
         FOR item in ${edges}
             INSERT item
-            INTO ${collection_edges}
+            INTO ${collection_edge}
             OPTIONS { overwriteMode: "update", keepNull: false, mergeObjects: false }
     `)
 
@@ -821,7 +829,7 @@ function getMissingKeys(theData)
 	//
 	const found =
 		K.db._query( aql`
-            LET terms = DOCUMENT(${K.db._collection(K.collection.term.name)}, ${terms})
+            LET terms = DOCUMENT(${collection_term}, ${terms})
             FOR term IN terms
             RETURN term._key
         `).toArray()
@@ -843,7 +851,7 @@ function getMatchingKeys(theKeys)
 	//
 	const found =
 		K.db._query( aql`
-            FOR edge IN ${K.db._collection(K.collection.schema.name)}
+            FOR edge IN ${collection_edge}
                 FILTER edge._key IN ${theKeys}
             RETURN edge
         `).toArray()

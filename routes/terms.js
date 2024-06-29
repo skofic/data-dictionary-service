@@ -597,13 +597,13 @@ router.post(
             - \`start\`: Start position in results, provide an integer greater or equal to 0.
             - \`limit\`: Number of elements to be returned, provide an integer.
             - \`term_type\`: Set \`descriptor\` or \`structure\`, omit for any term type.
-            - \`_nid\`: The namespace global ientifier, wildcard match.
+            - \`_nid\`: The namespace global identifier, wildcard match.
             - \`_lid\`: The term local ientifier, wildcard match.
             - \`_gid\`: The term global ientifier, wildcard match.
             - \`_name\`: The term name, wildcard match.
             - \`_aid\`: List of local identifiers, exact match.
             - \`_pid\`: Provider identifiers, wildcard match.
-            - \`_title\`: Term title, rovide a string with space delimited tokens.
+            - \`_title\`: Term title, provide a string with space delimited tokens.
             - \`_definition\`: Term definition, rovide a string with space delimited tokens.
             - \`_description\`: Term description, rovide a string with space delimited tokens.
             - \`_examples\`: Term examples, rovide a string with space delimited tokens.
@@ -710,13 +710,13 @@ router.post(
             - \`start\`: Start position in results, provide an integer greater or equal to 0.
             - \`limit\`: Number of elements to be returned, provide an integer.
             - \`term_type\`: Set \`descriptor\` or \`structure\`, omit for any term type.
-            - \`_nid\`: The namespace global ientifier, wildcard match.
+            - \`_nid\`: The namespace global identifier, wildcard match.
             - \`_lid\`: The term local ientifier, wildcard match.
             - \`_gid\`: The term global ientifier, wildcard match.
             - \`_name\`: The term name, wildcard match.
             - \`_aid\`: List of local identifiers, exact match.
             - \`_pid\`: Provider identifiers, wildcard match.
-            - \`_title\`: Term title, rovide a string with space delimited tokens.
+            - \`_title\`: Term title, provide a string with space delimited tokens.
             - \`_definition\`: Term definition, rovide a string with space delimited tokens.
             - \`_description\`: Term description, rovide a string with space delimited tokens.
             - \`_examples\`: Term examples, rovide a string with space delimited tokens.
