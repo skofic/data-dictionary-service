@@ -868,6 +868,7 @@ function checkEnumsByCodes(theCodes, thePath)
     // Init local storage.
     //
     const path = `${K.collection.term.name}/${thePath}`
+    const prefix = K.collection.term.name.length + 1
 
     //
     // Query schema.
@@ -895,7 +896,17 @@ function checkEnumsByCodes(theCodes, thePath)
                 ZIP(${theCodes}, result)
         `).toArray()
 
-    return result[0]                                                            // ==>
+    //
+    // Parse handles.
+    //
+    let dict = {}
+    for(const [key, value] of Object.entries(result[0])) {
+        dict[key] = (value !== null)
+            ? value.substring(prefix)
+            : false
+    }
+
+    return dict                                                                 // ==>
 
 } // checkEnumsByCodes()
 

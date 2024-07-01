@@ -4,7 +4,6 @@
 // Import frameworks.
 //
 const _ = require('lodash');                            // Lodash library.
-const aql = require('@arangodb').aql;					// AQL queries.
 
 //
 // Import resources.
