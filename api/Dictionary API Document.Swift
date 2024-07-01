@@ -23,6 +23,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -73,6 +74,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -127,6 +129,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -214,6 +217,10 @@ class MyRequestController {
         var request = URLRequest(url: URL)
         request.httpMethod = "DELETE"
 
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             if (error == nil) {
@@ -294,6 +301,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // JSON Body
 
@@ -353,6 +361,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // JSON Body
 
@@ -451,6 +460,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -537,10 +547,11 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
-        let bodyString = "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+        let bodyString = "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": \"type\",\n  \"_definition\": \"data type\"\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -591,10 +602,11 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
-        let bodyString = "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+        let bodyString = "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": \"type\",\n  \"_definition\": \"data type\"\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -677,6 +689,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -727,6 +740,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -777,6 +791,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -827,6 +842,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -877,6 +893,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -927,6 +944,10 @@ class MyRequestController {
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
+
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -1008,6 +1029,10 @@ class MyRequestController {
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
+
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -1091,6 +1116,10 @@ class MyRequestController {
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
 
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             if (error == nil) {
@@ -1172,6 +1201,10 @@ class MyRequestController {
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
+
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -1255,6 +1288,10 @@ class MyRequestController {
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
 
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             if (error == nil) {
@@ -1336,6 +1373,10 @@ class MyRequestController {
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
+
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -1419,6 +1460,10 @@ class MyRequestController {
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
 
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             if (error == nil) {
@@ -1501,6 +1546,10 @@ class MyRequestController {
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
 
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             if (error == nil) {
@@ -1582,6 +1631,10 @@ class MyRequestController {
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
+
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -1667,6 +1720,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // JSON Body
 
@@ -1761,255 +1815,12 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
         let bodyString = "[\n  \"en\",\n  \"fr\",\n  \"UNKNOWN\"\n]"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Structure flat list of property keys (GET http://localhost:8529/_db/EUFGIS/dict/struct/all/keys)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/struct/all/keys") else {return}
-        let URLParams = [
-            "path": "_scalar",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Structure flat list of property records (GET http://localhost:8529/_db/EUFGIS/dict/struct/all/terms)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/struct/all/terms") else {return}
-        let URLParams = [
-            "path": "_scalar",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Structure keys tree (GET http://localhost:8529/_db/EUFGIS/dict/struct/tree/keys)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/struct/tree/keys") else {return}
-        let URLParams = [
-            "path": "_scalar",
-            "levels": "10",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -2091,6 +1902,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -2141,6 +1953,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -2186,11 +1999,15 @@ class MyRequestController {
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/descr/enum/key") else {return}
         let URLParams = [
-            "key": "test-02",
+            "key": "_type",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
+
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -2272,6 +2089,10 @@ class MyRequestController {
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
+
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -2355,6 +2176,10 @@ class MyRequestController {
         var request = URLRequest(url: URL)
         request.httpMethod = "GET"
 
+        // Headers
+
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             if (error == nil) {
@@ -2435,6 +2260,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -2485,6 +2311,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // JSON Body
 
@@ -2539,6 +2366,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -2589,6 +2417,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 
@@ -2639,6 +2468,7 @@ class MyRequestController {
         // Headers
 
         request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
         // Body
 

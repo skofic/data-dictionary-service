@@ -30,6 +30,15 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -302,6 +311,15 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -505,6 +523,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -729,6 +756,15 @@
               "default": "application/json; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -948,7 +984,7 @@
       },
       "post": {
         "summary": "Query term records",
-        "description": "Query terms returning records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of terms according to a selection criteria.\n\nThe service expects the language code for descriptions in the path query parameter `lang`: the titles and descriptions of the terms will be returned in that language, or they will be returned unaltered if the language code doesn't match any entry, or if you provide `@`.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching terms [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+        "description": "Query terms returning records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of terms according to a selection criteria.\n\nThe service expects the language code for descriptions in the path query parameter `lang`: the titles and descriptions of the terms will be returned in that language, or they will be returned unaltered if the language code doesn't match any entry, or if you provide `@`.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*, wildcard match.\n- `_lid`: Term *local identifier*, wildcard match.\n- `_gid`: Term *global identifier*, wildcard match.\n- `_name`: Term *global identifier*, wildcard match.\n- `_aid`: List of *extended local identifiers*, exact match.\n- `_pid`: Term *global identifier*, wildcard match.\n- `_title`: Term *label or title*, provide a string with space delimited tokens.\n- `_definition`: Term *definition*, provide a string with space delimited tokens.\n- `_description`: Term *description*, provide a string with space delimited tokens.\n- `_examples`: Term *usage examples*, provide a string with space delimited tokens.\n- `_notes`: Term *notes*, provide a string with space delimited tokens.\n- `_provider`: Term *provider*, provide a string with space delimited tokens.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nFor all token match fields provide a string with space delimited tokens.\n\nAny selector can be omitted, except `start` and `limit`.\n\nIf the operation succeeds the service will return the list of matching terms [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
         "operationId": "48168825-24fe-41d9-97e8-ffc0479bc188",
         "parameters": [
           {
@@ -968,15 +1004,24 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
-          "description": "Query terms returning records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of terms according to a selection criteria.\n\nThe service expects the language code for descriptions in the path query parameter `lang`: the titles and descriptions of the terms will be returned in that language, or they will be returned unaltered if the language code doesn't match any entry, or if you provide `@`.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching terms [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+          "description": "Query terms returning records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of terms according to a selection criteria.\n\nThe service expects the language code for descriptions in the path query parameter `lang`: the titles and descriptions of the terms will be returned in that language, or they will be returned unaltered if the language code doesn't match any entry, or if you provide `@`.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*, wildcard match.\n- `_lid`: Term *local identifier*, wildcard match.\n- `_gid`: Term *global identifier*, wildcard match.\n- `_name`: Term *global identifier*, wildcard match.\n- `_aid`: List of *extended local identifiers*, exact match.\n- `_pid`: Term *global identifier*, wildcard match.\n- `_title`: Term *label or title*, provide a string with space delimited tokens.\n- `_definition`: Term *definition*, provide a string with space delimited tokens.\n- `_description`: Term *description*, provide a string with space delimited tokens.\n- `_examples`: Term *usage examples*, provide a string with space delimited tokens.\n- `_notes`: Term *notes*, provide a string with space delimited tokens.\n- `_provider`: Term *provider*, provide a string with space delimited tokens.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nFor all token match fields provide a string with space delimited tokens.\n\nAny selector can be omitted, except `start` and `limit`.\n\nIf the operation succeeds the service will return the list of matching terms [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
           "content": {
             "text/plain": {
               "schema": {
                 "type": "string",
-                "example": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+                "example": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": \"type\",\n  \"_definition\": \"data type\"\n}"
               }
             }
           },
@@ -1002,7 +1047,7 @@
                       },
                       "_rev": {
                         "type": "string",
-                        "example": "_h6UDHlK--E"
+                        "example": "_iEUc0BG--D"
                       },
                       "_code": {
                         "type": "object",
@@ -1043,7 +1088,7 @@
                           },
                           "_description": {
                             "type": "string",
-                            "example": "The *data type* defines the *type* that the *value* or *values* held by the *descriptor* should have. This type applies to the [scalar](_scalar.md) dimension of the *value*, this means that, in the case of an [array](_array.md) or [set](_set.md), the type *applies* to the list *elements*.\n\nThese are the possible values:\n\n- [Boolean](_type_boolean.md): *True* or *false* value. No other [data section](_data.md) properties are expected.\n- [Integer](_type_integer.md): *Numeric discrete* value. The [data section](_data.md) can include the following properties: [unit](_unit.md), [unit name](_unit-name.md), [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [Numeric](_type_number.md): *Numeric discrete* or *continuous* value; will be considered a *floating point number*. The [data section](_data.md) can include the following properties: [unit](_unit.md), [unit name](_unit-name.md), [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [Time-stamp](_type_number_timestamp.md): A [numeric](_type_number.md) Unix Timestamp, it is used to indicate a *precise moment in time*. The [data section](_data.md) can include the following properties: [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [String](_type_string.md): A *character* or *text* encoded in UTF-8. The [data section](_data.md) can include the following properties: [format](_format.md), [unit](_unit.md), [unit name](_unit-name.md) and [regular expression](_regexp.md).\n- [Key reference](_type_string_key.md): A [string](_type_string.md) representing the [global identifier](_gid.md) of a *document* from the *terms collection*. The [data section](_data.md) is *required* to include the [data kind](_kind.md) field which specifies the *kind of term*, these are the allowed choices:\n    - [Any term](_any-term.md): The value can reference *any term* in the *terms collection*.\n    - [Any enumeration](_any-enum.md): The value can reference *any term* *belonging* to a *controlled vocabulary*, this means that the *term* must be *referenced* in at least one *edge* with the [enumeration](_predicate_enum-of.md) [predicate](_predicate.md).\n    - [Any structure](_any-object.md): The value can reference *any term* that *defines* an *object data structure*: such terms must have the [rules section](_rule.md) property.\n    - [Any descriptor](_any-descriptor.md): The value can reference *any term* that *defines* a *descriptor*: such terms must have the [data section](_data.md) property.\n- [Document handle](_type_string_handle.md): A [string](_type_string.md) representing the [document handle](_id.md) of a *record* belonging to *any collection*. No other [data section](_data.md) properties are expected.\n- [Enumeration](_type_string_enum.md): A [string](_type_string.md) representing the [global identifier](_gid.md) of a *document* belonging to the *terms collection* that is part of a *controlled vocabulary*. The [data section](_data.md) can include the following properties: [format](_format.md), [unit](_unit.md), [unit name](_unit-name.md) and [regular expression](_regexp.md). In addition, the [data section](_data.md) *requires* the [data kind](_kind.md) field, that is *must* *specify* from which *controlled vocabulary* the value must be *chosen*.\n- [Object](_type_object.md): An *object data structure*. The [data section](_data.md) is required to contain the [data kind](_kind.md) field, and these are the allowed choices:\n    - *A [global identifier](_gid.md)*: It must be one or more [key references](_type_string_key.md) to *terms* that define a *data structure type*, the term *must include* the [rules section](_rule.md). This means that the value *must* be an *object* of *that type*.\n    - [Any structure](_any-object.md): The value can be an *object* of *any type*, but its *properties* will be *parsed* and *validated*. This means that only the *constraints* at the *object level* will be *ignored*.\n- [GeoJSON geometry](_type_object_geo-json.md): An *object data structure* representing a *geographic structure* encoded in the [GeoJSON](https://geojson.org) data format. No other [data section](_data.md) properties are expected.\n\nIf *this property* is *omitted*, it means that the *value* can be of *any scalar type*."
+                            "example": "The *data type* defines the *type* that the *value* or *values* held by the *descriptor* should have. This type applies to the [scalar](_scalar.md) dimension of the *value*, this means that, in the case of an [array](_array.md) or [set](_set.md), the type *applies* to the list *elements*.\n\nThese are the possible values:\n\n- [Boolean](_type_boolean.md): *True* or *false* value. No other [data section](_data.md) properties are expected.\n- [Integer](_type_integer.md): *Numeric discrete* value. The [data section](_data.md) can include the following properties: [unit](_unit.md), [unit name](_unit-name.md), [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [Numeric](_type_number.md): *Numeric discrete* or *continuous* value; will be considered a *floating point number*. The [data section](_data.md) can include the following properties: [unit](_unit.md), [unit name](_unit-name.md), [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [Time-stamp](_type_number_timestamp.md): A [numeric](_type_number.md) Unix Timestamp, it is used to indicate a *precise moment in time*. The [data section](_data.md) can include the following properties: [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [String](_type_string.md): A *character* or *text* encoded in UTF-8. The [data section](_data.md) can include the following properties: [format](_format.md), [unit](_unit.md), [unit name](_unit-name.md) and [regular expression](_regexp.md).\n- [Key reference](_type_string_key.md): A [string](_type_string.md) representing the [global identifier](_gid.md) of a *document* from the *terms collection*. The [data section](_data.md) is *required* to include the [data kind](_kind.md) field which specifies the *kind of term*, these are the allowed choices:\n    - [Any term](_any-term.md): The value can reference *any term* in the *terms collection*.\n    - [Any enumeration](_any-enum.md): The value can reference *any term* *belonging* to a *controlled vocabulary*, this means that the *term* must be *referenced* in at least one *edge* with the [enumeration](_predicate_enum-of.md) [predicate](_predicate.md).\n    - [Any structure](_any-object.md): The value can reference *any term* that *defines* an *object data structure*: such terms must have the [rules section](_rule.md) property.\n    - [Any descriptor](_any-descriptor.md): The value can reference *any term* that *defines* a *descriptor*: such terms must have the [data section](_data.md) property.\n- [Document handle](_type_string_handle.md): A [string](_type_string.md) representing the [document handle](_id.md) of a *record* belonging to *any collection*. No other [data section](_data.md) properties are expected.\n- [Enumeration](_type_string_enum.md): A [string](_type_string.md) representing the [global identifier](_gid.md) of a *document* belonging to the *terms collection* that is part of a *controlled vocabulary*. The [data section](_data.md) can include the following properties: [format](_format.md), [unit](_unit.md), [unit name](_unit-name.md) and [regular expression](_regexp.md). In addition, the [data section](_data.md) *requires* the [data kind](_kind.md) field, that is *must* *specify* from which *controlled vocabulary* the value must be *chosen*.\n- [Object](_type_object.md): An *object data structure*. The [data section](_data.md) is required to contain the [data kind](_kind.md) field, and these are the allowed choices:\n    - *A [global identifier](_gid.md)*: It must be one or more [key references](_type_string_key.md) to *terms* that define a *data structure type*, the term *must include* the [rules section](_rule.md). This means that the value *must* be an *object* of *that type*.\n    - [Any structure](_any-object.md): The value can be an *object* of *any type*, but its *properties* will be *parsed* and *validated*. This means that only the *constraints* at the *object level* will be *ignored*.\n- [GeoJSON geometry](_type_object_geojson.md): An *object data structure* representing a *geographic structure* encoded in the [GeoJSON](https://geojson.org) data format. No other [data section](_data.md) properties are expected.\n\nIf *this property* is *omitted*, it means that the *value* can be of *any scalar type*."
                           }
                         }
                       },
@@ -1105,7 +1150,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=6f9fb329021ecb10d035ca9619f3a6c759cb9062df34de2e62d7c168087fe537; expires=Thu, 06-Jun-2024 13:02:44 GMT; path=/, FOXXSID.sig=d0db6da45b434fd2ea92bde06e123f19351d416c9455d7583fd1e66381055ad7; expires=Thu, 06-Jun-2024 13:02:44 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Sat, 06-Jul-2024 20:40:07 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 06-Jul-2024 20:40:07 GMT; path=/"
                 }
               },
               "Server": {
@@ -1147,7 +1192,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "4672"
+                  "example": "4671"
                 }
               },
               "Connection": {
@@ -1182,6 +1227,15 @@
             "schema": {
               "type": "string",
               "default": "test-01",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -1320,6 +1374,15 @@
             "schema": {
               "type": "string",
               "default": "application/json; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -1472,6 +1535,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -1801,7 +1873,7 @@
     "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/terms/key/": {
       "post": {
         "summary": "Query term keys",
-        "description": "Query terms returning keys.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of term global identifiers according to a selection criteria.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching term global identifiers [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+        "description": "Query terms returning keys.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of term global identifiers according to a selection criteria.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*, wildcard match.\n- `_lid`: Term *local identifier*, wildcard match.\n- `_gid`: Term *global identifier*, wildcard match.\n- `_name`: Term *global identifier*, wildcard match.\n- `_aid`: List of *extended local identifiers*, exact match.\n- `_pid`: Term *global identifier*, wildcard match.\n- `_title`: Term *label or title*, provide a string with space delimited tokens.\n- `_definition`: Term *definition*, provide a string with space delimited tokens.\n- `_description`: Term *description*, provide a string with space delimited tokens.\n- `_examples`: Term *usage examples*, provide a string with space delimited tokens.\n- `_notes`: Term *notes*, provide a string with space delimited tokens.\n- `_provider`: Term *provider*, provide a string with space delimited tokens.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nFor all token match fields provide a string with space delimited tokens.\n\nAny selector can be omitted, except `start` and `limit`.\n\nIf the operation succeeds the service will return the list of matching term global identifiers [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
         "operationId": "8b218f57-ed35-4155-b003-7752d71588ba",
         "parameters": [
           {
@@ -1812,15 +1884,24 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
-          "description": "Query terms returning keys.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of term global identifiers according to a selection criteria.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching term global identifiers [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+          "description": "Query terms returning keys.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of term global identifiers according to a selection criteria.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*, wildcard match.\n- `_lid`: Term *local identifier*, wildcard match.\n- `_gid`: Term *global identifier*, wildcard match.\n- `_name`: Term *global identifier*, wildcard match.\n- `_aid`: List of *extended local identifiers*, exact match.\n- `_pid`: Term *global identifier*, wildcard match.\n- `_title`: Term *label or title*, provide a string with space delimited tokens.\n- `_definition`: Term *definition*, provide a string with space delimited tokens.\n- `_description`: Term *description*, provide a string with space delimited tokens.\n- `_examples`: Term *usage examples*, provide a string with space delimited tokens.\n- `_notes`: Term *notes*, provide a string with space delimited tokens.\n- `_provider`: Term *provider*, provide a string with space delimited tokens.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nFor all token match fields provide a string with space delimited tokens.\n\nAny selector can be omitted, except `start` and `limit`.\n\nIf the operation succeeds the service will return the list of matching term global identifiers [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
           "content": {
             "text/plain": {
               "schema": {
                 "type": "string",
-                "example": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+                "example": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": \"type\",\n  \"_definition\": \"data type\"\n}"
               }
             }
           },
@@ -1865,7 +1946,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=a4baa619dd416b45ca429a80533ad3208694f185ba622c4c2f3efd700382c4b6; expires=Wed, 05-Jun-2024 12:49:29 GMT; path=/, FOXXSID.sig=efd5d9eb1fc24d2762af4b0e0793d09afd2f7e3d089028659a01e33d31ba3677; expires=Wed, 05-Jun-2024 12:49:29 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:04 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:04 GMT; path=/"
                 }
               },
               "Server": {
@@ -1942,6 +2023,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -2090,6 +2180,15 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -2234,6 +2333,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -2382,6 +2490,15 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -2526,6 +2643,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -2674,6 +2800,15 @@
               "default": "_predicate",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -2722,7 +2857,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 14:56:01 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 14:56:01 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:34 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:34 GMT; path=/"
                 }
               },
               "Server": {
@@ -2801,6 +2936,15 @@
               "default": "_type",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -2830,7 +2974,7 @@
                       },
                       "_rev": {
                         "type": "string",
-                        "example": "_h7-3tMi--B"
+                        "example": "_iEiToGi--_"
                       },
                       "_code": {
                         "type": "object",
@@ -2902,7 +3046,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 13:49:34 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 13:49:34 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:38 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:38 GMT; path=/"
                 }
               },
               "Server": {
@@ -2944,7 +3088,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "10426"
+                  "example": "10421"
                 }
               },
               "Connection": {
@@ -2988,6 +3132,15 @@
             "schema": {
               "type": "string",
               "default": "_type",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -3050,7 +3203,7 @@
                               "type": "string"
                             },
                             "example": [
-                              "_type_object_geo-json"
+                              "_type_object_geojson"
                             ]
                           }
                         }
@@ -3103,7 +3256,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=53103fd837538bd73fb81503b269531a20fdcc2fba2229581f018727596da786; expires=Wed, 05-Jun-2024 16:10:26 GMT; path=/, FOXXSID.sig=999d30def9e76b0ae6fff858192613aff6dc031d184c9ecda0c132a917e4e326; expires=Wed, 05-Jun-2024 16:10:26 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:41 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:41 GMT; path=/"
                 }
               },
               "Server": {
@@ -3145,7 +3298,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "363"
+                  "example": "362"
                 }
               },
               "Connection": {
@@ -3191,6 +3344,15 @@
               "default": "iso_639_1",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -3220,7 +3382,7 @@
                       },
                       "_rev": {
                         "type": "string",
-                        "example": "_hsDoo8---E"
+                        "example": "_iEiTpQe--O"
                       },
                       "_code": {
                         "type": "object",
@@ -3578,7 +3740,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=53103fd837538bd73fb81503b269531a20fdcc2fba2229581f018727596da786; expires=Wed, 05-Jun-2024 16:49:29 GMT; path=/, FOXXSID.sig=999d30def9e76b0ae6fff858192613aff6dc031d184c9ecda0c132a917e4e326; expires=Wed, 05-Jun-2024 16:49:29 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:45 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:45 GMT; path=/"
                 }
               },
               "Server": {
@@ -3664,6 +3826,15 @@
             "schema": {
               "type": "string",
               "default": "iso_639_1",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -3760,7 +3931,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=53103fd837538bd73fb81503b269531a20fdcc2fba2229581f018727596da786; expires=Wed, 05-Jun-2024 17:01:17 GMT; path=/, FOXXSID.sig=999d30def9e76b0ae6fff858192613aff6dc031d184c9ecda0c132a917e4e326; expires=Wed, 05-Jun-2024 17:01:17 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:48 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:48 GMT; path=/"
                 }
               },
               "Server": {
@@ -3848,6 +4019,15 @@
               "default": "iso_639_1",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -3877,7 +4057,7 @@
                       },
                       "_rev": {
                         "type": "string",
-                        "example": "_h7-3ugu--h"
+                        "example": "_iEiTpQe--O"
                       },
                       "_code": {
                         "type": "object",
@@ -4235,7 +4415,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 14:18:52 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 14:18:52 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:51 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:51 GMT; path=/"
                 }
               },
               "Server": {
@@ -4321,6 +4501,15 @@
             "schema": {
               "type": "string",
               "default": "iso_639_1",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -4417,7 +4606,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 14:18:46 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 14:18:46 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:54 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:54 GMT; path=/"
                 }
               },
               "Server": {
@@ -4505,6 +4694,15 @@
               "default": "iso_639_1",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -4534,7 +4732,7 @@
                       },
                       "_rev": {
                         "type": "string",
-                        "example": "_h7-3ugu--h"
+                        "example": "_iEiTpQe--O"
                       },
                       "_code": {
                         "type": "object",
@@ -4892,7 +5090,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 14:25:28 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 14:25:28 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:56 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:56 GMT; path=/"
                 }
               },
               "Server": {
@@ -4978,6 +5176,15 @@
             "schema": {
               "type": "string",
               "default": "iso_639_1",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -5074,7 +5281,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 14:25:33 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 14:25:33 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:55:59 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:55:59 GMT; path=/"
                 }
               },
               "Server": {
@@ -5162,6 +5369,15 @@
               "default": "application/json; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -5227,7 +5443,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 14:40:17 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 14:40:17 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 12:56:03 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 12:56:03 GMT; path=/"
                 }
               },
               "Server": {
@@ -5315,6 +5531,15 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -5339,14 +5564,14 @@
                   "properties": {
                     "en": {
                       "type": "string",
-                      "example": "terms/iso_639_3_eng"
+                      "example": "iso_639_3_eng"
                     },
                     "fr": {
                       "type": "string",
-                      "example": "terms/iso_639_3_fra"
+                      "example": "iso_639_3_fra"
                     },
                     "UNKNOWN": {
-                      "nullable": true
+                      "type": "boolean"
                     }
                   }
                 }
@@ -5378,7 +5603,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 14:40:26 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 14:40:26 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:20:03 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:20:03 GMT; path=/"
                 }
               },
               "Server": {
@@ -5420,567 +5645,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "70"
-                }
-              },
-              "Connection": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "Close"
-                }
-              },
-              "X-Content-Type-Options": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "nosniff"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/struct/all/keys/": {
-      "get": {
-        "summary": "Structure flat list of property keys",
-        "description": "Use this service to get a structure's flattened list of property global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at *all levels of the graph*. Also, only items representing actual properties of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-        "operationId": "bf104737-6242-4bc8-a8df-641fcb3cec16",
-        "parameters": [
-          {
-            "name": "path",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "_scalar",
-              "description": ""
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Use this service to get a structure's flattened list of property global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at *all levels of the graph*. Also, only items representing actual properties of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-          "content": {
-            "text/plain": {}
-          },
-          "required": false
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "application/json; charset=utf-8"
-                }
-              },
-              "Pragma": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache"
-                }
-              },
-              "Content-Security-Policy": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "frame-ancestors 'self'; form-action 'self';"
-                }
-              },
-              "Set-Cookie": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "FOXXSID=8815a99fbde1364069b0cbe2798e1f84f408302f5fb1583a4099b8ef784db106; expires=Thu, 06-Jun-2024 06:42:04 GMT; path=/, FOXXSID.sig=61a0be2adbcde2c691039ec4b13828262e828495d7b4502dbdbb89570c69161c; expires=Thu, 06-Jun-2024 06:42:04 GMT; path=/"
-                }
-              },
-              "Server": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "ArangoDB"
-                }
-              },
-              "Expires": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0"
-                }
-              },
-              "Cache-Control": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
-                }
-              },
-              "X-Arango-Queue-Time-Seconds": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0.000000"
-                }
-              },
-              "Strict-Transport-Security": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "max-age=31536000 ; includeSubDomains"
-                }
-              },
-              "Content-Length": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "125"
-                }
-              },
-              "Connection": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "Close"
-                }
-              },
-              "X-Content-Type-Options": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "nosniff"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/struct/all/terms/": {
-      "get": {
-        "summary": "Structure flat list of property records",
-        "description": "Use this service to get a structure's flattened list of property records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at all levels of the graph. Also, only items representing active elements of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-        "operationId": "71d56a14-6d19-4e9d-b32f-8a344d82eaa1",
-        "parameters": [
-          {
-            "name": "path",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "_scalar",
-              "description": ""
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Use this service to get a structure's flattened list of property records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at all levels of the graph. Also, only items representing active elements of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-          "content": {
-            "text/plain": {}
-          },
-          "required": false
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "_key": {
-                        "type": "string",
-                        "example": "_type"
-                      },
-                      "_id": {
-                        "type": "string",
-                        "example": "terms/_type"
-                      },
-                      "_rev": {
-                        "type": "string",
-                        "example": "_h6UDHlK--E"
-                      },
-                      "_code": {
-                        "type": "object",
-                        "properties": {
-                          "_nid": {
-                            "type": "string",
-                            "example": ""
-                          },
-                          "_lid": {
-                            "type": "string",
-                            "example": "type"
-                          },
-                          "_gid": {
-                            "type": "string",
-                            "example": "_type"
-                          },
-                          "_aid": {
-                            "type": "string",
-                            "items": {
-                              "type": "string"
-                            },
-                            "example": [
-                              "type"
-                            ]
-                          }
-                        }
-                      },
-                      "_info": {
-                        "type": "object",
-                        "properties": {
-                          "_title": {
-                            "type": "object",
-                            "properties": {
-                              "iso_639_3_eng": {
-                                "type": "string",
-                                "example": "Data type"
-                              }
-                            }
-                          },
-                          "_definition": {
-                            "type": "object",
-                            "properties": {
-                              "iso_639_3_eng": {
-                                "type": "string",
-                                "example": "The data type of the descriptor's value."
-                              }
-                            }
-                          },
-                          "_description": {
-                            "type": "object",
-                            "properties": {
-                              "iso_639_3_eng": {
-                                "type": "string",
-                                "example": "The *data type* defines the *type* that the *value* or *values* held by the *descriptor* should have. This type applies to the [scalar](_scalar.md) dimension of the *value*, this means that, in the case of an [array](_array.md) or [set](_set.md), the type *applies* to the list *elements*.\n\nThese are the possible values:\n\n- [Boolean](_type_boolean.md): *True* or *false* value. No other [data section](_data.md) properties are expected.\n- [Integer](_type_integer.md): *Numeric discrete* value. The [data section](_data.md) can include the following properties: [unit](_unit.md), [unit name](_unit-name.md), [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [Numeric](_type_number.md): *Numeric discrete* or *continuous* value; will be considered a *floating point number*. The [data section](_data.md) can include the following properties: [unit](_unit.md), [unit name](_unit-name.md), [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [Time-stamp](_type_number_timestamp.md): A [numeric](_type_number.md) Unix Timestamp, it is used to indicate a *precise moment in time*. The [data section](_data.md) can include the following properties: [range](_range.md), [valid range](_valid-range.md) and [normal range](_normal-range.md).\n- [String](_type_string.md): A *character* or *text* encoded in UTF-8. The [data section](_data.md) can include the following properties: [format](_format.md), [unit](_unit.md), [unit name](_unit-name.md) and [regular expression](_regexp.md).\n- [Key reference](_type_string_key.md): A [string](_type_string.md) representing the [global identifier](_gid.md) of a *document* from the *terms collection*. The [data section](_data.md) is *required* to include the [data kind](_kind.md) field which specifies the *kind of term*, these are the allowed choices:\n    - [Any term](_any-term.md): The value can reference *any term* in the *terms collection*.\n    - [Any enumeration](_any-enum.md): The value can reference *any term* *belonging* to a *controlled vocabulary*, this means that the *term* must be *referenced* in at least one *edge* with the [enumeration](_predicate_enum-of.md) [predicate](_predicate.md).\n    - [Any structure](_any-object.md): The value can reference *any term* that *defines* an *object data structure*: such terms must have the [rules section](_rule.md) property.\n    - [Any descriptor](_any-descriptor.md): The value can reference *any term* that *defines* a *descriptor*: such terms must have the [data section](_data.md) property.\n- [Document handle](_type_string_handle.md): A [string](_type_string.md) representing the [document handle](_id.md) of a *record* belonging to *any collection*. No other [data section](_data.md) properties are expected.\n- [Enumeration](_type_string_enum.md): A [string](_type_string.md) representing the [global identifier](_gid.md) of a *document* belonging to the *terms collection* that is part of a *controlled vocabulary*. The [data section](_data.md) can include the following properties: [format](_format.md), [unit](_unit.md), [unit name](_unit-name.md) and [regular expression](_regexp.md). In addition, the [data section](_data.md) *requires* the [data kind](_kind.md) field, that is *must* *specify* from which *controlled vocabulary* the value must be *chosen*.\n- [Object](_type_object.md): An *object data structure*. The [data section](_data.md) is required to contain the [data kind](_kind.md) field, and these are the allowed choices:\n    - *A [global identifier](_gid.md)*: It must be one or more [key references](_type_string_key.md) to *terms* that define a *data structure type*, the term *must include* the [rules section](_rule.md). This means that the value *must* be an *object* of *that type*.\n    - [Any structure](_any-object.md): The value can be an *object* of *any type*, but its *properties* will be *parsed* and *validated*. This means that only the *constraints* at the *object level* will be *ignored*.\n- [GeoJSON geometry](_type_object_geo-json.md): An *object data structure* representing a *geographic structure* encoded in the [GeoJSON](https://geojson.org) data format. No other [data section](_data.md) properties are expected.\n\nIf *this property* is *omitted*, it means that the *value* can be of *any scalar type*."
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "_data": {
-                        "type": "object",
-                        "properties": {
-                          "_class": {
-                            "type": "string",
-                            "example": "_class_category"
-                          },
-                          "_scalar": {
-                            "type": "object",
-                            "properties": {
-                              "_type": {
-                                "type": "string",
-                                "example": "_type_string_enum"
-                              },
-                              "_kind": {
-                                "type": "string",
-                                "items": {
-                                  "type": "string"
-                                },
-                                "example": [
-                                  "_type"
-                                ]
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "application/json; charset=utf-8"
-                }
-              },
-              "Pragma": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache"
-                }
-              },
-              "Content-Security-Policy": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "frame-ancestors 'self'; form-action 'self';"
-                }
-              },
-              "Set-Cookie": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "FOXXSID=8815a99fbde1364069b0cbe2798e1f84f408302f5fb1583a4099b8ef784db106; expires=Thu, 06-Jun-2024 06:48:03 GMT; path=/, FOXXSID.sig=61a0be2adbcde2c691039ec4b13828262e828495d7b4502dbdbb89570c69161c; expires=Thu, 06-Jun-2024 06:48:03 GMT; path=/"
-                }
-              },
-              "Server": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "ArangoDB"
-                }
-              },
-              "Expires": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0"
-                }
-              },
-              "Cache-Control": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
-                }
-              },
-              "X-Arango-Queue-Time-Seconds": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0.000000"
-                }
-              },
-              "Strict-Transport-Security": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "max-age=31536000 ; includeSubDomains"
-                }
-              },
-              "Content-Length": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "21815"
-                }
-              },
-              "Connection": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "Close"
-                }
-              },
-              "X-Content-Type-Options": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "nosniff"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/struct/tree/keys/": {
-      "get": {
-        "summary": "Structure keys tree",
-        "description": "Use this service to get the list of tree branches comprising the structure.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the following path query parameters:\n\n- `path`: the term global identifier of the graph root node.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `path` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-        "operationId": "a82adb7e-7f4e-4fc9-861b-3751eed8f9c1",
-        "parameters": [
-          {
-            "name": "levels",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "10",
-              "description": ""
-            }
-          },
-          {
-            "name": "path",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "_scalar",
-              "description": ""
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Use this service to get the list of tree branches comprising the structure.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the following path query parameters:\n\n- `path`: the term global identifier of the graph root node.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `path` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-          "content": {
-            "text/plain": {}
-          },
-          "required": false
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "_normal-range": {
-                        "type": "object",
-                        "properties": {
-                          "_predicate_bridge-of": {
-                            "type": "string",
-                            "items": {
-                              "type": "string"
-                            },
-                            "example": [
-                              "_range"
-                            ]
-                          }
-                        }
-                      },
-                      "_range": {
-                        "type": "object",
-                        "properties": {
-                          "_predicate_property-of": {
-                            "type": "string",
-                            "items": {
-                              "type": "string"
-                            },
-                            "example": [
-                              "_min-range-inclusive",
-                              "_max-range-inclusive",
-                              "_min-range-exclusive",
-                              "_max-range-exclusive"
-                            ]
-                          }
-                        }
-                      },
-                      "_scalar": {
-                        "type": "object",
-                        "properties": {
-                          "_predicate_property-of": {
-                            "type": "string",
-                            "items": {
-                              "type": "string"
-                            },
-                            "example": [
-                              "_type",
-                              "_kind",
-                              "_format",
-                              "_unit",
-                              "_unit-name",
-                              "_unit-symbol",
-                              "_regexp",
-                              "_decimals",
-                              "_range",
-                              "_valid-range",
-                              "_normal-range"
-                            ]
-                          }
-                        }
-                      },
-                      "_valid-range": {
-                        "type": "object",
-                        "properties": {
-                          "_predicate_bridge-of": {
-                            "type": "string",
-                            "items": {
-                              "type": "string"
-                            },
-                            "example": [
-                              "_range"
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "application/json; charset=utf-8"
-                }
-              },
-              "Pragma": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache"
-                }
-              },
-              "Content-Security-Policy": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "frame-ancestors 'self'; form-action 'self';"
-                }
-              },
-              "Set-Cookie": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 15:22:19 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 15:22:19 GMT; path=/"
-                }
-              },
-              "Server": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "ArangoDB"
-                }
-              },
-              "Expires": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0"
-                }
-              },
-              "Cache-Control": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
-                }
-              },
-              "X-Arango-Queue-Time-Seconds": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0.000000"
-                }
-              },
-              "Strict-Transport-Security": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "max-age=31536000 ; includeSubDomains"
-                }
-              },
-              "Content-Length": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "399"
+                  "example": "59"
                 }
               },
               "Connection": {
@@ -6015,6 +5680,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -6070,7 +5744,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 15:30:20 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 15:30:20 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:23:01 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:23:01 GMT; path=/"
                 }
               },
               "Server": {
@@ -6112,7 +5786,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "74"
+                  "example": "91"
                 }
               },
               "Connection": {
@@ -6149,6 +5823,15 @@
               "default": "text/plain; charset=utf-8",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -6175,15 +5858,15 @@
                     "properties": {
                       "_key": {
                         "type": "string",
-                        "example": "chr_PropRepTrees"
+                        "example": "chr_MarkerType"
                       },
                       "_id": {
                         "type": "string",
-                        "example": "terms/chr_PropRepTrees"
+                        "example": "terms/chr_MarkerType"
                       },
                       "_rev": {
                         "type": "string",
-                        "example": "_h7-3tWq--B"
+                        "example": "_iEiToNy--C"
                       },
                       "_code": {
                         "type": "object",
@@ -6194,11 +5877,11 @@
                           },
                           "_lid": {
                             "type": "string",
-                            "example": "PropRepTrees"
+                            "example": "MarkerType"
                           },
                           "_gid": {
                             "type": "string",
-                            "example": "chr_PropRepTrees"
+                            "example": "chr_MarkerType"
                           },
                           "_pid": {
                             "type": "string",
@@ -6206,7 +5889,7 @@
                               "type": "string"
                             },
                             "example": [
-                              "PropRepTrees"
+                              "MarkerType"
                             ]
                           },
                           "_aid": {
@@ -6215,7 +5898,7 @@
                               "type": "string"
                             },
                             "example": [
-                              "PropRepTrees"
+                              "MarkerType"
                             ]
                           }
                         }
@@ -6228,7 +5911,25 @@
                             "properties": {
                               "iso_639_3_eng": {
                                 "type": "string",
-                                "example": "Proportion of reproductive trees"
+                                "example": "Type of Marker/Trait"
+                              }
+                            }
+                          },
+                          "_definition": {
+                            "type": "object",
+                            "properties": {
+                              "iso_639_3_eng": {
+                                "type": "string",
+                                "example": "Type of marker (SNP, SSR) used for calculation of genetic indices."
+                              }
+                            }
+                          },
+                          "_description": {
+                            "type": "object",
+                            "properties": {
+                              "iso_639_3_eng": {
+                                "type": "string",
+                                "example": "Type of marker used for calculation of genetic indices."
                               }
                             }
                           }
@@ -6239,7 +5940,7 @@
                         "properties": {
                           "_class": {
                             "type": "string",
-                            "example": "_class_quantity"
+                            "example": "_class_identifier"
                           },
                           "_domain": {
                             "type": "string",
@@ -6247,18 +5948,7 @@
                               "type": "string"
                             },
                             "example": [
-                              "chr_fore",
                               "chr_gent"
-                            ]
-                          },
-                          "_tag": {
-                            "type": "string",
-                            "items": {
-                              "type": "string"
-                            },
-                            "example": [
-                              "chr_tag_diversity",
-                              "chr_tag_vulnerability"
                             ]
                           },
                           "_scalar": {
@@ -6266,7 +5956,7 @@
                             "properties": {
                               "_type": {
                                 "type": "string",
-                                "example": "_type_number"
+                                "example": "_type_string"
                               }
                             }
                           }
@@ -6303,7 +5993,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 15:32:25 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 15:32:25 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:23:04 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:23:04 GMT; path=/"
                 }
               },
               "Server": {
@@ -6345,7 +6035,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "2954"
+                  "example": "3618"
                 }
               },
               "Connection": {
@@ -6379,7 +6069,16 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "default": "test-02",
+              "default": "_type",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -6430,7 +6129,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 15:36:23 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 15:36:23 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:03 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:03 GMT; path=/"
                 }
               },
               "Server": {
@@ -6472,7 +6171,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "208"
+                  "example": "207"
                 }
               },
               "Connection": {
@@ -6509,6 +6208,15 @@
               "default": "_type",
               "description": ""
             }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
           }
         ],
         "requestBody": {
@@ -6538,7 +6246,7 @@
                       },
                       "_rev": {
                         "type": "string",
-                        "example": "_h6UDHmm--D"
+                        "example": "_iEiToGi--_"
                       },
                       "_code": {
                         "type": "object",
@@ -6620,7 +6328,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=8815a99fbde1364069b0cbe2798e1f84f408302f5fb1583a4099b8ef784db106; expires=Thu, 06-Jun-2024 08:00:49 GMT; path=/, FOXXSID.sig=61a0be2adbcde2c691039ec4b13828262e828495d7b4502dbdbb89570c69161c; expires=Thu, 06-Jun-2024 08:00:49 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:11 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:11 GMT; path=/"
                 }
               },
               "Server": {
@@ -6662,7 +6370,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "11038"
+                  "example": "11033"
                 }
               },
               "Connection": {
@@ -6706,6 +6414,15 @@
             "schema": {
               "type": "string",
               "default": "10",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -6768,7 +6485,7 @@
                               "type": "string"
                             },
                             "example": [
-                              "_type_object_geo-json"
+                              "_type_object_geojson"
                             ]
                           }
                         }
@@ -6821,7 +6538,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 15:48:39 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 15:48:39 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:18 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:18 GMT; path=/"
                 }
               },
               "Server": {
@@ -6863,7 +6580,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "363"
+                  "example": "362"
                 }
               },
               "Connection": {
@@ -6898,6 +6615,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -6958,7 +6684,7 @@
                           "type": "string"
                         },
                         "example": [
-                          "chr_subject_stand"
+                          "chr_subject_target"
                         ]
                       }
                     }
@@ -6992,7 +6718,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 15:51:05 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 15:51:05 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:30 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:30 GMT; path=/"
                 }
               },
               "Server": {
@@ -7034,7 +6760,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "142"
+                  "example": "143"
                 }
               },
               "Connection": {
@@ -7069,6 +6795,15 @@
             "schema": {
               "type": "string",
               "default": "application/json; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -7194,7 +6929,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=8815a99fbde1364069b0cbe2798e1f84f408302f5fb1583a4099b8ef784db106; expires=Thu, 06-Jun-2024 10:17:15 GMT; path=/, FOXXSID.sig=61a0be2adbcde2c691039ec4b13828262e828495d7b4502dbdbb89570c69161c; expires=Thu, 06-Jun-2024 10:17:15 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:42 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:42 GMT; path=/"
                 }
               },
               "Server": {
@@ -7271,6 +7006,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -7406,7 +7150,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 16:01:18 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 16:01:18 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:46 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:46 GMT; path=/"
                 }
               },
               "Server": {
@@ -7483,6 +7227,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -7687,7 +7440,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 16:03:55 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 16:03:55 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:49 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:49 GMT; path=/"
                 }
               },
               "Server": {
@@ -7764,6 +7517,15 @@
             "schema": {
               "type": "string",
               "default": "text/plain; charset=utf-8",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
               "description": ""
             }
           }
@@ -7871,7 +7633,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=5bfd413d583522aaf79250ee76b5e1edad98684e8aa8363b3bb66e93e350a9c4; expires=Mon, 10-Jun-2024 16:08:21 GMT; path=/, FOXXSID.sig=1918ffa9edcdd569135fbb135551081f673861758014dd1a2626bc6e4b7780c0; expires=Mon, 10-Jun-2024 16:08:21 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Mon, 08-Jul-2024 13:24:53 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Mon, 08-Jul-2024 13:24:53 GMT; path=/"
                 }
               },
               "Server": {

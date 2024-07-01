@@ -275,12 +275,12 @@
               "port": null,
               "path": null
             },
-            "description": "Query terms returning keys.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of term global identifiers according to a selection criteria.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching term global identifiers [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+            "description": "Query terms returning keys.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of term global identifiers according to a selection criteria.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*, wildcard match.\n- `_lid`: Term *local identifier*, wildcard match.\n- `_gid`: Term *global identifier*, wildcard match.\n- `_name`: Term *global identifier*, wildcard match.\n- `_aid`: List of *extended local identifiers*, exact match.\n- `_pid`: Term *global identifier*, wildcard match.\n- `_title`: Term *label or title*, provide a string with space delimited tokens.\n- `_definition`: Term *definition*, provide a string with space delimited tokens.\n- `_description`: Term *description*, provide a string with space delimited tokens.\n- `_examples`: Term *usage examples*, provide a string with space delimited tokens.\n- `_notes`: Term *notes*, provide a string with space delimited tokens.\n- `_provider`: Term *provider*, provide a string with space delimited tokens.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nFor all token match fields provide a string with space delimited tokens.\n\nAny selector can be omitted, except `start` and `limit`.\n\nIf the operation succeeds the service will return the list of matching term global identifiers [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+              "raw": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": \"type\",\n  \"_definition\": \"data type\"\n}"
             },
             "auth": null
           },
@@ -312,12 +312,12 @@
               "port": null,
               "path": null
             },
-            "description": "Query terms returning records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of terms according to a selection criteria.\n\nThe service expects the language code for descriptions in the path query parameter `lang`: the titles and descriptions of the terms will be returned in that language, or they will be returned unaltered if the language code doesn't match any entry, or if you provide `@`.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*.\n- `_lid`: Term *local identifier*.\n- `_gid`: Term *global identifier*.\n- `_aid`: List of *extended local identifiers*.\n- `_title`: Term *label or title*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_definition`: Term *definition*. An object whose property name must be a language code and whose value is a pattern that should match the term title in that language (string). You can add more language codes if you want.\n- `_data`: A list of *data shapes*, `_scalar`, *scalar*; `_array`, *array*: `_set`, *unique array* and `_dict`, *key/value dictionary* are the allowed values. Any match selects.\n- `_type`: A list of *data types*, if `_scalar` was indicated in `_data`.\n- `_kind`: A list of *data kinds*, if `_scalar` was indicated in `_data`.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nAny selector can be omitted, except start and limit.\n\nIf the operation succeeds the service will return the list of matching terms [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
+            "description": "Query terms returning records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve a list of terms according to a selection criteria.\n\nThe service expects the language code for descriptions in the path query parameter `lang`: the titles and descriptions of the terms will be returned in that language, or they will be returned unaltered if the language code doesn't match any entry, or if you provide `@`.\n\nThe request body contains an object that can be used to select from a set of properties:\n\n- `start`: Start position in results.\n- `limit`: Number of elements to be returned.\n- `term_type`: Select `descriptor` for *descriptors*, `structure` for *structure types* or any other value for *all types*.\n- `_nid`: Term *namespace*, wildcard match.\n- `_lid`: Term *local identifier*, wildcard match.\n- `_gid`: Term *global identifier*, wildcard match.\n- `_name`: Term *global identifier*, wildcard match.\n- `_aid`: List of *extended local identifiers*, exact match.\n- `_pid`: Term *global identifier*, wildcard match.\n- `_title`: Term *label or title*, provide a string with space delimited tokens.\n- `_definition`: Term *definition*, provide a string with space delimited tokens.\n- `_description`: Term *description*, provide a string with space delimited tokens.\n- `_examples`: Term *usage examples*, provide a string with space delimited tokens.\n- `_notes`: Term *notes*, provide a string with space delimited tokens.\n- `_provider`: Term *provider*, provide a string with space delimited tokens.\n\nFor all string fields the supported wildcards are `_` to match a *single arbitrary character*, and `%` to match *any number of arbitrary characters*. Literal `%` and `_` need to be escaped with a backslash. Backslashes need to be escaped themselves.\n\nFor all token match fields provide a string with space delimited tokens.\n\nAny selector can be omitted, except `start` and `limit`.\n\nIf the operation succeeds the service will return the list of matching terms [`200`], if the operation fails:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For all other errors.\n",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": {\n    \"iso_639_3_eng\": \"% type\"\n  },\n  \"_definition\": {\n    \"iso_639_3_eng\": \"%data type%\"\n  },\n  \"_data\": [\n    \"_scalar\"\n  ],\n  \"_type\": [\n    \"_type_string_enum\"\n  ],\n  \"_kind\": [\n    \"_type\"\n  ]\n}"
+              "raw": "{\n  \"start\": 0,\n  \"limit\": 25,\n  \"term_type\": \"descriptor\",\n  \"_lid\": \"type\",\n  \"_gid\": \"_type\",\n  \"_aid\": [\n    \"type\"\n  ],\n  \"_title\": \"type\",\n  \"_definition\": \"data type\"\n}"
             },
             "auth": null
           },
@@ -917,118 +917,6 @@
       "response": []
     },
     {
-      "name": "STRUCTURED TYPES",
-      "item": [
-        {
-          "name": "Structure flat list of property keys",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/keys?path=_scalar",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "_scalar",
-                  "disabled": false,
-                  "description": "Structure term global identifier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/keys"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get a structure's flattened list of property global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at *all levels of the graph*. Also, only items representing actual properties of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Structure flat list of property records",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/terms?path=_scalar",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "_scalar",
-                  "disabled": false,
-                  "description": "Structure term global identifier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/all/terms"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get a structure's flattened list of property records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *properties* belonging to the provided *structure descriptor*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the *global identifier* of the *root property* as a *path query parameter*, `path`, if the service is successful, [`200`], it will return the flattened list of all the structure's properties belonging to the provided `path` parameter. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers residing at all levels of the graph. Also, only items representing active elements of the structure will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Structure keys tree",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/tree/keys?path=_scalar&levels=10",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "_scalar",
-                  "disabled": false,
-                  "description": "Structure term global identifier."
-                },
-                {
-                  "key": "levels",
-                  "value": "10",
-                  "disabled": false,
-                  "description": "Number of levels to traverse."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/struct/tree/keys"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the list of tree branches comprising the structure.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Structures* are *tree graphs* representing the *properties* that belong to a specific *object descriptor*. At the *root* of the graph is the *term* that represents the *type* or *definition* of this *object structure*.\n\nThe service expects the following path query parameters:\n\n- `path`: the term global identifier of the graph root node.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `path` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        }
-      ],
-      "protocolProfileBehavior": null,
-      "response": []
-    },
-    {
       "name": "LINKED TYPES",
       "item": [
         {
@@ -1103,11 +991,11 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/key?key=test-02",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/key?key=_type",
               "query": [
                 {
                   "key": "key",
-                  "value": "test-02",
+                  "value": "_type",
                   "disabled": false,
                   "description": "Enumeration descriptor term global identfier."
                 }
