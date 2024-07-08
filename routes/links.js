@@ -47,34 +47,95 @@ router.tag('Linked types');
 //
 
 /**
- * Return required descriptor keys of provided descriptors list.
- * The service will return the list of required descriptor keys of the provided list
- * of descriptors. Only the required descriptors will be returned.
+ * Return required indicator keys of provided descriptors list.
+ * The service will return the list of required indicator keys of the provided list
+ * of descriptors. Only the required indicator keys will be returned.
  */
 router.post(
-	'required/keys',
+	'required/indicator/keys',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			doGetRequiredDescriptorKeys(request, response)
+			doGetRequiredIndicatorKeys(request, response)
 		}
 	},
-	'get-required-descriptor-keys'
+	'get-required-indicator-keys'
 )
-	.summary('Get list of required descriptor keys')
+	.summary('Get list of required indicator keys')
 	.description(dd
 		`
-**Return list of required term keys**
+**Return list of required indicator keys**
 
-*Use this service if you want to get the full list of term keys of an initial selection.*
+*Use this service if you want to get the full list of indicator keys required by the provided descriptors list.*
 
 ***To use this service, the current user must have the \`read\` role.***
 
-The service expects a list of descriptor global identifiers. The service will return the list of additional descriptors required by the provided list.
+The service expects a list of descriptor global identifiers. The service will return the list of additional indicators required by the provided list.
 
-This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional descriptor global identifiers* that *must* be *included* in the *dataset*.
+This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional indicators global identifiers* that *must* be *included* in the *dataset*.
 
 The additional descriptors are variables such as date, identifiers and related variables that are required to make sense of the provided list of descriptors.
+
+You can try providing \`chr_EffPopSize\` to get the list of additional descriptors you should add to a dataset that features the \`chr_EffPopSize\` descriptor.        `
+	)
+	.body(Models.StringArrayModel, dd
+		`
+            **Service parameters**
+            
+            - \`body\`: The POST body should contain an array with the list of descriptor *global identifiers* to check.
+        `
+	)
+	.response(200, [joi.string()], dd
+		`
+            **Check status**
+            
+            The service will return a list of *descriptor global identifiers* to be added to the provided descriptors list.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No user registered**
+            
+            There is no active session.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+	)
+
+/**
+ * Return required metadata keys of provided descriptors list.
+ * The service will return the list of required metadata keys of the provided list
+ * of descriptors. Only the required metadata keys will be returned.
+ */
+router.post(
+	'required/metadata/keys',
+	(request, response) => {
+		const roles = [K.environment.role.read]
+		if(Session.hasPermission(request, response, roles)) {
+			doGetRequiredMetadataKeys(request, response)
+		}
+	},
+	'get-required-metadata-keys'
+)
+	.summary('Get list of required metadata keys')
+	.description(dd
+		`
+**Return list of required metadata keys**
+
+*Use this service if you want to get the full list of metadata keys required by the provided descriptors list.*
+
+***To use this service, the current user must have the \`read\` role.***
+
+The service expects a list of descriptor global identifiers. The service will return the list of additional metadata keys required by the provided list.
+
+This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional metadata global identifiers* that *must* be *included* in the *dataset*.
+
+The additional metadata descriptors are variables such as method, marker type and sample size that are required to make sense of the provided list of descriptors.
 
 You can try providing \`chr_EffPopSize\` to get the list of additional descriptors you should add to a dataset that features the \`chr_EffPopSize\` descriptor.        `
 	)
@@ -113,21 +174,82 @@ You can try providing \`chr_EffPopSize\` to get the list of additional descripto
  * of descriptors. Only the required descriptors will be returned.
  */
 router.post(
-	'required/terms',
+	'required/indicator/terms',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			doGetRequiredDescriptors(request, response)
+			doGetRequiredIndicators(request, response)
 		}
 	},
-	'get-required-descriptors'
+	'get-required-indicators'
 )
 	.summary('Get list of required descriptor terms')
 	.description(dd
 		`
 **Return list of required descriptors**
 
-*Use this service if you want to get the full list of terms of an initial selection.*
+*Use this service if you want to get the full list of indicators required by the provided descriptors list.*
+
+***To use this service, the current user must have the \`read\` role.***
+
+The service expects a list of descriptor global identifiers. The service will return the list of additional descriptors required by the provided list.
+
+This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional descriptor global identifiers* that *must* be *included* in the *dataset*.
+
+The additional descriptors are variables such as date, identifiers and related variables that are required to make sense of the provided list of descriptors.
+
+You can try providing \`chr_EffPopSize\` to get the list of additional descriptors you should add to a dataset that features the \`chr_EffPopSize\` descriptor.        `
+	)
+	.body(Models.StringArrayModel, dd
+		`
+            **Service parameters**
+            
+            - \`body\`: The POST body should contain an array with the list of descriptor *global identifiers* to check.
+        `
+	)
+	.response(200, joi.object(), dd
+		`
+            **Check status**
+            
+            The service will return a list of *descriptors* to be added to the provided descriptors list.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No user registered**
+            
+            There is no active session.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+	)
+
+/**
+ * Return required metadata terms of provided descriptors list.
+ * The service will return the list of required metadata terms of the provided list
+ * of descriptors. Only the required metadata terms will be returned.
+ */
+router.post(
+	'required/metadata/terms',
+	(request, response) => {
+		const roles = [K.environment.role.read]
+		if(Session.hasPermission(request, response, roles)) {
+			doGetRequiredMetadata(request, response)
+		}
+	},
+	'get-required-metadata'
+)
+	.summary('Get list of required metadata terms')
+	.description(dd
+		`
+**Return list of required metadata terms**
+
+*Use this service if you want to get the full list of metadata terms required by the provided descriptors list.*
 
 ***To use this service, the current user must have the \`read\` role.***
 
@@ -174,16 +296,17 @@ You can try providing \`chr_EffPopSize\` to get the list of additional descripto
 //
 
 /**
- * Return list of descriptors required by provided list of variables.
+ * Return list of indicators required by provided list of variables.
  * @param request: API request.
  * @param response: API response.
  */
-function doGetRequiredDescriptors(request, response)
+function doGetRequiredIndicators(request, response)
 {
 	//
 	// Query database.
 	//
 	const result = Dictionary.getRequiredDescriptors(
+		'_predicate_requires_indicator',
 		request.body
 	)
 
@@ -192,16 +315,55 @@ function doGetRequiredDescriptors(request, response)
 } // doGetRequiredDescriptors()
 
 /**
- * Return list of descriptor keys required by provided list of variables.
+ * Return list of indicator keys required by provided list of variables.
  * @param request: API request.
  * @param response: API response.
  */
-function doGetRequiredDescriptorKeys(request, response)
+function doGetRequiredIndicatorKeys(request, response)
 {
 	//
 	// Query database.
 	//
 	const result = Dictionary.getRequiredDescriptorKeys(
+		'_predicate_requires_indicator',
+		request.body
+	)
+
+	response.send(result);                                                      // ==>
+
+} // doGetRequiredDescriptorKeys()
+
+/**
+ * Return list of metadata descriptors required by provided list of variables.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doGetRequiredMetadata(request, response)
+{
+	//
+	// Query database.
+	//
+	const result = Dictionary.getRequiredDescriptors(
+		'_predicate_requires_metadata',
+		request.body
+	)
+
+	response.send(result);                                                      // ==>
+
+} // doGetRequiredDescriptors()
+
+/**
+ * Return list of metadata keys required by provided list of variables.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doGetRequiredMetadataKeys(request, response)
+{
+	//
+	// Query database.
+	//
+	const result = Dictionary.getRequiredDescriptorKeys(
+		'_predicate_requires_metadata',
 		request.body
 	)
 

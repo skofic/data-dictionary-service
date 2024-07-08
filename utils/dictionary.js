@@ -914,10 +914,11 @@ function checkEnumsByCodes(theCodes, thePath)
  * Return required descriptors associated to provided descriptors list.
  * The function will return the list of descriptors
  * required by the provided list of descriptor global identifiers.
+ * @param thePredicate {String}: Required indicators predicate global identifier.
  * @param theCodes {Array<String>}: List of descriptor global identifiers.
  * @return {Array<Object>}: List of descriptors required by the provided list of descriptors.
  */
-function getRequiredDescriptors(theCodes)
+function getRequiredDescriptors(thePredicate, theCodes)
 {
     //
     // Init local storage.
@@ -937,7 +938,7 @@ function getRequiredDescriptors(theCodes)
                             FOR vertex, edge IN 1..10
                                 OUTBOUND root
                                 ${collection_links}
-                                FILTER edge._predicate == "_predicate_requires"
+                                FILTER edge._predicate == ${thePredicate}
                             RETURN vertex._id
                     )
                 )
@@ -953,10 +954,11 @@ function getRequiredDescriptors(theCodes)
  * Return required descriptors associated to provided descriptors list.
  * The function will return the list of descriptor global identifiers
  * required by the provided list of descriptor global identifiers.
+ * @param thePredicate {String}: Required indicators predicate global identifier.
  * @param theCodes {Array<String>}: List of descriptor global identifiers.
  * @return {Array<String>}: List of descriptors required by the provided list of descriptors.
  */
-function getRequiredDescriptorKeys(theCodes)
+function getRequiredDescriptorKeys(thePredicate, theCodes)
 {
     //
     // Init local storage.
@@ -967,7 +969,7 @@ function getRequiredDescriptorKeys(theCodes)
     // Query schema.
     //
     const result =
-        K.db._query( aql`
+        K.db._query(aql`
             WITH ${collection_terms}
             RETURN (
                 UNIQUE(
@@ -975,11 +977,12 @@ function getRequiredDescriptorKeys(theCodes)
                         FOR vertex, edge IN 1..10
                             OUTBOUND root
                             ${collection_links}
-                            FILTER edge._predicate == "_predicate_requires"
+                            FILTER edge._predicate == ${thePredicate}
                         RETURN vertex._key
                 )
             )
-        `).toArray()[0]
+        `)
+            .toArray()[0]
 
     return result                                                               // ==>
 
