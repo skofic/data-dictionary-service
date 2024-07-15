@@ -500,6 +500,10 @@ function validateValue(theBlock, theValue, theReport)
         case K.term.dataTypeTimestamp:
             return validateTimestamp(theBlock, theValue, theReport)             // ==>
 
+        // Date.
+        case K.term.dataTypeDate:
+            return validateDate(theBlock, theValue, theReport)                  // ==>
+
         // String.
         case K.term.dataTypeString:
             return validateString(theBlock, theValue, theReport)                // ==>
@@ -688,6 +692,32 @@ function validateString(theBlock, theValue, theReport, doRegexp = true)
     return true                                                                 // ==>
 
 } // validateString()
+
+/**
+ * Validate string date value
+ * The function will return true if the reported value is a string date.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theValue: The value to test.
+ * @param theReport {ValidationReport}: The status report.
+ * @param doRegexp {Boolean}: If true it is a string (default), if false an enumeration.
+ * @returns {boolean}: true means valid.
+ */
+function validateDate(theBlock, theValue, theReport, doRegexp = true)
+{
+    //
+    // Assert string value.
+    //
+    if(!utils.isString(theValue[0][theValue[1]])) {
+        theReport.status = K.error.kMSG_NOT_STRING
+        theReport.status["value"] = theValue[0][theValue[1]]
+
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateDate()
 
 /**
  * Validate document term key

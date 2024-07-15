@@ -322,6 +322,7 @@ module.exports = Object.freeze({
         dataTypeNumber: "_type_number",
         dataTypeTimestamp: "_type_number_timestamp",
         dataTypeString: "_type_string",
+        dataTypeDate: "_type_string_date",
         dataTypeKey: "_type_string_key",
         dataTypeHandle: "_type_string_handle",
         dataTypeEnum: "_type_string_enum",
