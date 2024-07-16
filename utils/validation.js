@@ -689,7 +689,10 @@ function validateString(theBlock, theValue, theReport, doRegexp = true)
         return validateRegexp(theBlock, theValue, theReport)                    // ==>
     }
 
-    return true                                                                 // ==>
+    //
+    // Validate value range.
+    //
+    return validateStringRange(theBlock, theValue, theReport)                   // ==>
 
 } // validateString()
 
@@ -714,6 +717,21 @@ function validateDate(theBlock, theValue, theReport, doRegexp = true)
 
         return false                                                            // ==>
     }
+
+    ///
+    // Assert characters are all digits.
+    ///
+    if(!Boolean(theValue[0][theValue[1]].match(/^\d+$/))) {
+        theReport.status = K.error.kMSG_NOT_A_DIGIT
+        theReport.status["value"] = theValue[0][theValue[1]]
+
+        return false                                                            // ==>
+   }
+
+    //
+    // Validate value range.
+    //
+    return validateStringRange(theBlock, theValue, theReport)                         // ==>
 
     return true                                                                 // ==>
 
@@ -1483,6 +1501,80 @@ function validateRange(theBlock, theValue, theReport)
     return true                                                                 // ==>
 
 } // validateRange()
+
+/**
+ * Validate string range
+ * The function will return true if the value is within the valid range.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theValue {Array}: The value to test: [0] parent value, [1] index to value.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
+function validateStringRange(theBlock, theValue, theReport)
+{
+    //
+    // Check if we have a range.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataRangeStringValid)) {
+        const value = theValue[0][theValue[1]]
+        const range = theBlock[K.term.dataRangeStringValid]
+
+        //
+        // Minimum inclusive.
+        //
+        if(range.hasOwnProperty(K.term.dataRangeStringValidMinInc)) {
+            if(value < range[K.term.dataRangeStringValidMinInc]) {
+                theReport.status = K.error.kMSG_BELOW_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Minimum exclusive.
+        //
+        if(range.hasOwnProperty(K.term.dataRangeStringValidMinExc)) {
+            if(value <= range[K.term.dataRangeStringValidMinExc]) {
+                theReport.status = K.error.kMSG_BELOW_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Maximum inclusive.
+        //
+        if(range.hasOwnProperty(K.term.dataRangeStringValidMaxInc)) {
+            if(value > range[K.term.dataRangeStringValidMaxInc]) {
+                theReport.status = K.error.kMSG_OVER_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Maximum exclusive.
+        if(range.hasOwnProperty(K.term.dataRangeStringValidMaxExc)) {
+            if(value >= range[K.term.dataRangeStringValidMaxExc]) {
+                theReport.status = K.error.kMSG_OVER_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+    }
+
+    return true                                                                 // ==>
+
+} // validateStringRange()
 
 /**
  * Validate regular expression

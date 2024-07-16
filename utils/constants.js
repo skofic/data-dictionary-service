@@ -339,6 +339,12 @@ module.exports = Object.freeze({
         dataRangeValidMaxInc: "_max-range-inclusive",
         dataRangeValidMaxExc: "_max-range-exclusive",
 
+        dataRangeStringValid: "_valid-range_string",
+        dataRangeStringValidMinInc: "_min-range-inclusive_string",
+        dataRangeStringValidMinExc: "_min-range-exclusive_string",
+        dataRangeStringValidMaxInc: "_max-range-inclusive_string",
+        dataRangeStringValidMaxExc: "_max-range-exclusive_string",
+
         dataDictKeyType: "_type_key",
         dataDictionaryKey: "_dict_key",
         dataDictionaryValue: "_dict_value",
@@ -818,6 +824,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Valore di aggiornamento non valido.",
                 iso_639_3_fra: "Valeur de mise à jour invalide.",
                 iso_639_3_esp: "Valor de actualización no válido."
+            }
+        },
+        kMSG_NOT_A_DIGIT: {
+            code: 43,
+            message: {
+                iso_639_3_eng: "Invalid date: all characters must be digits.",
+                iso_639_3_ita: "Data non valida, tutti i caratteri devono essere cifre.",
+                iso_639_3_fra: "Date invalide, tous le charactères doivent être des chiffres.",
+                iso_639_3_esp: "Fecha no válida: todos los caracteres deben ser dígitos."
             }
         }
     }
