@@ -345,6 +345,12 @@ module.exports = Object.freeze({
         dataRangeStringValidMaxInc: "_max-range-inclusive_string",
         dataRangeStringValidMaxExc: "_max-range-exclusive_string",
 
+        dataRangeDateValid: "_valid-range_date",
+        dataRangeDateValidMinInc: "_min-range-inclusive_date",
+        dataRangeDateValidMinExc: "_min-range-exclusive_date",
+        dataRangeDateValidMaxInc: "_max-range-inclusive_date",
+        dataRangeDateValidMaxExc: "_max-range-exclusive_date",
+
         dataDictKeyType: "_type_key",
         dataDictionaryKey: "_dict_key",
         dataDictionaryValue: "_dict_value",
@@ -833,6 +839,15 @@ module.exports = Object.freeze({
                 iso_639_3_ita: "Data non valida, tutti i caratteri devono essere cifre.",
                 iso_639_3_fra: "Date invalide, tous le charactères doivent être des chiffres.",
                 iso_639_3_esp: "Fecha no válida: todos los caracteres deben ser dígitos."
+            }
+        },
+        kMSG_NOT_A_DATE: {
+            code: 44,
+            message: {
+                iso_639_3_eng: "Invalid date: expecting YYYYMMDD where month and day are optional.",
+                iso_639_3_ita: "Data non valida, previsto formato AAAAMMGG nel quale mese e giorno sono facoltativi.",
+                iso_639_3_fra: "Date invalide, prévu AAAAMMJJ où le mois et le jour sont facultatifs.",
+                iso_639_3_esp: "Fecha no válida: esperando AAAAMMDD donde el mes y el día son opcionales."
             }
         }
     }

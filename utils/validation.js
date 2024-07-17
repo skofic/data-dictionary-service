@@ -686,7 +686,9 @@ function validateString(theBlock, theValue, theReport, doRegexp = true)
     // Validate regular expression.
     //
     if(doRegexp) {
-        return validateRegexp(theBlock, theValue, theReport)                    // ==>
+        if(!validateRegexp(theBlock, theValue, theReport)) {
+            return false                                                        // ==>
+        }
     }
 
     //
@@ -719,21 +721,32 @@ function validateDate(theBlock, theValue, theReport, doRegexp = true)
     }
 
     ///
-    // Assert characters are all digits.
+    // Assert valid date characters.
     ///
-    if(!Boolean(theValue[0][theValue[1]].match(/^\d+$/))) {
+    if(Boolean(theValue[0][theValue[1]].match(/^\d+$/))) {
+        switch(theValue[0][theValue[1]].length) {
+            case 4:
+            case 6:
+            case 8:
+                break
+
+            default:
+                theReport.status = K.error.kMSG_NOT_A_DATE
+                theReport.status["value"] = theValue[0][theValue[1]]
+
+                return false                                                    // ==>
+        }
+    } else {
         theReport.status = K.error.kMSG_NOT_A_DIGIT
         theReport.status["value"] = theValue[0][theValue[1]]
 
         return false                                                            // ==>
-   }
+    }
 
     //
     // Validate value range.
     //
-    return validateStringRange(theBlock, theValue, theReport)                         // ==>
-
-    return true                                                                 // ==>
+    return validateDateRange(theBlock, theValue, theReport)                     // ==>
 
 } // validateDate()
 
@@ -1575,6 +1588,80 @@ function validateStringRange(theBlock, theValue, theReport)
     return true                                                                 // ==>
 
 } // validateStringRange()
+
+/**
+ * Validate date range
+ * The function will return true if the value is within the valid range.
+ * Array values are passed to this function individually.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theValue {Array}: The value to test: [0] parent value, [1] index to value.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
+function validateDateRange(theBlock, theValue, theReport)
+{
+    //
+    // Check if we have a range.
+    //
+    if(theBlock.hasOwnProperty(K.term.dataRangeDateValid)) {
+        const value = theValue[0][theValue[1]]
+        const range = theBlock[K.term.dataRangeDateValid]
+
+        //
+        // Minimum inclusive.
+        //
+        if(range.hasOwnProperty(K.term.dataRangeDateValidMinInc)) {
+            if(value < range[K.term.dataRangeDateValidMinInc]) {
+                theReport.status = K.error.kMSG_BELOW_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Minimum exclusive.
+        //
+        if(range.hasOwnProperty(K.term.dataRangeDateValidMinExc)) {
+            if(value <= range[K.term.dataRangeDateValidMinExc]) {
+                theReport.status = K.error.kMSG_BELOW_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Maximum inclusive.
+        //
+        if(range.hasOwnProperty(K.term.dataRangeDateValidMaxInc)) {
+            if(value > range[K.term.dataRangeDateValidMaxInc]) {
+                theReport.status = K.error.kMSG_OVER_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+
+        //
+        // Maximum exclusive.
+        if(range.hasOwnProperty(K.term.dataRangeDateValidMaxExc)) {
+            if(value >= range[K.term.dataRangeDateValidMaxExc]) {
+                theReport.status = K.error.kMSG_OVER_RANGE
+                theReport.status["value"] = value
+                theReport.status["range"] = range
+
+                return false                                                    // ==>
+            }
+        }
+    }
+
+    return true                                                                 // ==>
+
+} // validateDateRange()
 
 /**
  * Validate regular expression
