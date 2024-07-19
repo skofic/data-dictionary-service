@@ -326,6 +326,7 @@ module.exports = Object.freeze({
         dataTypeKey: "_type_string_key",
         dataTypeHandle: "_type_string_handle",
         dataTypeEnum: "_type_string_enum",
+        dataTypeStruct: "_type_struct",
         dataTypeObject: "_type_object",
         dataTypeGeoJson: "_type_object_geo-json",
 

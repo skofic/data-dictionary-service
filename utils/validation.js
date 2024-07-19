@@ -520,6 +520,10 @@ function validateValue(theBlock, theValue, theReport)
         case K.term.dataTypeEnum:
             return validateEnum(theBlock, theValue, theReport)                  // ==>
 
+        // Structure.
+        case K.term.dataTypeStruct:
+            return validateStruct(theBlock, theValue, theReport)                // ==>
+
         // Object.
         case K.term.dataTypeObject:
             return validateObject(theBlock, theValue, theReport)                // ==>
@@ -1125,6 +1129,31 @@ function validateEnumCode(theBlock, theValue, theReport)
  * @param theReport {ValidationReport}: The status report.
  * @returns {boolean}: true means valid.
  */
+function validateStruct(theBlock, theValue, theReport)
+{
+    //
+    // Assert value is structure.
+    // Global error: not an object.
+    //
+    if(!utils.isObject(theValue[0][theValue[1]])) {
+        theReport.status = K.error.kMSG_NOT_OBJECT
+        theReport.status["value"] = theValue[0][theValue[1]]
+
+        return false                                                            // ==>
+    }
+
+    return true                                                                 // ==>
+
+} // validateStruct()
+
+/**
+ * Validate object value
+ * The function will return true if the reported value is an object.
+ * @param theBlock {Object}: The dictionary data block.
+ * @param theValue: The value to test.
+ * @param theReport {ValidationReport}: The status report.
+ * @returns {boolean}: true means valid.
+ */
 function validateObject(theBlock, theValue, theReport)
 {
     //
@@ -1166,8 +1195,8 @@ function validateObject(theBlock, theValue, theReport)
         return validateObjectTypes(theBlock, theValue, theReport)               // ==>
     }
 
-    //
-    // Requires specific object types.
+        //
+        // Requires specific object types.
     //
     else {
 
