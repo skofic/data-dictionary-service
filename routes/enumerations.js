@@ -792,6 +792,12 @@ router.get(
             *name of the field*, belonging to the code section of the term, in which to match \
             the code in thew \`field\` query parameter.
             
+            Good choices for the \`field\` parameter are:
+            
+            - \`_lid\`: Local identifier.
+            - \`_aid\`: List of official codes.
+            - \`_pid\`: List of provider codes.
+            
             You can try providing:
             
             - \`_aid\` as the \`field\` parameter (list of official codes).
@@ -816,8 +822,6 @@ router.get(
             
             The service will return an array of global identifiers representing \
             enumeration elements, if there was no match, the array will be empty.
-            If there is more than one element in the array, it is probable that \
-            the enumerations graph may be corrupt.
         `
     )
     .response(401, ErrorModel, dd
