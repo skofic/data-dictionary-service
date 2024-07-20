@@ -605,6 +605,126 @@ function matchEnumerationCodeKey(thePath, theCode)
  * Return the list of terms whose identifiers match the provided code
  * in the enumeration identified by the provided root term global identifier.
  * @param thePath {String}: Global identifier of enumeration root term.
+ * @param theCode {String}: Identifier or code to match in field.
+ * @param theField {String}: Term code section field name.
+ * @return {Array}: List of matched terms.
+ */
+function traverseFieldKeys(thePath, theCode, theField)
+{
+    //
+    // Init local storage.
+    //
+    const path = K.collection.term.name + '/' + thePath
+    const predicate = K.term.predicateEnum
+
+    //
+    // Query database.
+    //
+    const result = K.db._query( aql`
+            WITH ${collection_terms}
+            FOR vertex, edge, path IN 1..10
+                INBOUND ${path}
+                ${collection_edges}
+                PRUNE ${path} IN edge._path AND
+                      edge._predicate == ${predicate} AND
+                      ${theCode} IN vertex._code._aid
+                OPTIONS {
+                    "uniqueVertices": "path"
+                }
+                FILTER ${path} IN edge._path AND
+                       edge._predicate == ${predicate} AND
+                       ${theCode} IN vertex._code.${theField}
+            RETURN vertex._key
+        `).toArray()
+
+    return result;                                                              // ==>
+
+} // traverseFieldKeys()
+
+/**
+ * Return the list of terms whose identifiers match the provided code
+ * in the enumeration identified by the provided root term global identifier.
+ * @param thePath {String}: Global identifier of enumeration root term.
+ * @param theCode {String}: Identifier or code to match in field.
+ * @param theField {String}: Term code section field name.
+ * @return {Array}: List of matched terms.
+ */
+function traverseFieldTerms(thePath, theCode, theField)
+{
+    //
+    // Init local storage.
+    //
+    const path = K.collection.term.name + '/' + thePath
+    const predicate = K.term.predicateEnum
+
+    //
+    // Query database.
+    //
+    const result = K.db._query( aql`
+            WITH ${collection_terms}
+            FOR vertex, edge, path IN 1..10
+                INBOUND ${path}
+                ${collection_edges}
+                PRUNE ${path} IN edge._path AND
+                      edge._predicate == ${predicate} AND
+                      ${theCode} IN vertex._code._aid
+                OPTIONS {
+                    "uniqueVertices": "path"
+                }
+                FILTER ${path} IN edge._path AND
+                       edge._predicate == ${predicate} AND
+                       ${theCode} IN vertex._code.${theField}
+            RETURN vertex
+        `).toArray()
+
+    return result;                                                              // ==>
+
+} // traverseFieldTerms()
+
+/**
+ * Return the path from the emumeration root element to the target node
+ * matching the provided code in the provided code section field.
+ * @param thePath {String}: Global identifier of enumeration root term.
+ * @param theCode {String}: Identifier or code to match in field.
+ * @param theField {String}: Term code section field name.
+ * @return {Array}: List of matched terms.
+ */
+function traverseFieldPath(thePath, theCode, theField)
+{
+    //
+    // Init local storage.
+    //
+    const path = K.collection.term.name + '/' + thePath
+    const predicate = K.term.predicateEnum
+
+    //
+    // Query database.
+    //
+    const result = K.db._query( aql`
+            WITH ${collection_terms}
+            FOR vertex, edge, path IN 0..10
+                INBOUND ${path}
+                ${collection_edges}
+                PRUNE ${path} IN edge._path AND
+                      edge._predicate == ${predicate} AND
+                      ${theCode} IN vertex._code._aid
+                OPTIONS {
+                    "uniqueVertices": "path"
+                }
+                FILTER ${path} IN edge._path AND
+                       edge._predicate == ${predicate} AND
+                       ${theCode} IN vertex._code.${theField}
+            RETURN path
+        `).toArray()
+
+    return result;                                                              // ==>
+
+} // traverseFieldPath()
+
+/**
+ * Return the list of terms whose identifiers match the provided code
+ * in the enumeration identified by the provided root term global identifier.
+ * @param thePath {String}: Global identifier of enumeration root term.
  * @param theCode {String}: Identifier or code to match in _aid list.
  * @return {Array}: List of matched terms.
  */
@@ -639,45 +759,6 @@ function matchEnumerationCodeTerm(thePath, theCode)
     return result;                                                              // ==>
 
 } // matchEnumerationCodeTerm()
-
-/**
- * Return the path from the emumeration root element to the target node
- * matching the provided code (_aid).
- * @param thePath {String}: Global identifier of enumeration root term.
- * @param theCode {String}: Identifier or code to match in _aid list.
- * @return {Array}: List of matched terms.
- */
-function matchEnumerationCodePath(thePath, theCode)
-{
-    //
-    // Init local storage.
-    //
-    const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
-
-    //
-    // Query database.
-    //
-    const result = K.db._query( aql`
-            WITH ${collection_terms}
-            FOR vertex, edge, path IN 0..10
-                INBOUND ${path}
-                ${collection_edges}
-                PRUNE ${path} IN edge._path AND
-                      edge._predicate == ${predicate} AND
-                      ${theCode} IN vertex._code._aid
-                OPTIONS {
-                    "uniqueVertices": "path"
-                }
-                FILTER ${path} IN edge._path AND
-                       edge._predicate == ${predicate} AND
-                       ${theCode} IN vertex._code._aid
-            RETURN path
-        `).toArray()
-
-    return result;                                                              // ==>
-
-} // matchEnumerationCodePath()
 
 /**
  * Get term global identifier matching provided local identifier in provided enumeration.
@@ -857,12 +938,13 @@ function checkEnumsByKeys(theKeys, thePath)
  * The function will return a dictionary whose keys correspond to the provided
  * identifiers and whose values correspond to the preferred enumeration key,
  * or false if there is a mismatch.
+ * @param theField {String}: Term code section field name.
  * @param theCodes {Array<String>}: List of local identifiers to check.
  * @param thePath {String}: Enumeration type key (path).
  * @return {Object}: Dictionary with provided codes as key and matched enumeration
  * as value, or false.
  */
-function checkEnumsByCodes(theCodes, thePath)
+function checkEnumsByCodes(theField, theCodes, thePath)
 {
     //
     // Init local storage.
@@ -880,7 +962,7 @@ function checkEnumsByCodes(theCodes, thePath)
                 
                     LET selection = (
                         FOR term IN ${view_terms}
-                            SEARCH term._code._lid == code
+                            SEARCH term._code.${theField} == code
                 
                             FOR edge in ${collection_edges}
                                 FILTER ( edge._to == term._id OR
@@ -921,7 +1003,7 @@ function checkEnumsByCodes(theCodes, thePath)
  * @return {Array}: List of matched enumeration element global identifiers.
  * as value, or false.
  */
-function doCheckEnumsByField(theCode, theField, theType)
+function doCheckEnumKeysByField(theCode, theField, theType)
 {
     //
     // Query schema.
@@ -943,7 +1025,45 @@ function doCheckEnumsByField(theCode, theField, theType)
 
     return result                                                               // ==>
 
-} // doCheckEnumsByField()
+} // doCheckEnumKeysByField()
+
+/**
+ * Return the enumeration element term records given the enumeration type,
+ * a code and the name of the field, where to match it, belonging o the term
+ * code section.
+ * The function will return an array of term records if there was a match.
+ * @param theCode {String}: The code to check.
+ * @param theField {String}: The code section property name.
+ * @param theType {String}: The global identifier of the enumeration type or path.
+ * @return {Array}: List of matched enumeration element global identifiers.
+ * as value, or false.
+ */
+function doCheckEnumTermsByField(theCode, theField, theType)
+{
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            LET terms = (
+              FOR term IN ${view_terms}
+                SEARCH term._code.${theField} == ${theCode}
+              RETURN CONCAT_SEPARATOR('/', ${K.collection.term.name}, term._key)
+            )
+            
+            FOR edge IN ${collection_edges}
+              FILTER edge._from IN terms
+              FILTER edge._predicate == ${K.term.predicateEnum}
+              FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge._path
+              
+              FOR doc IN ${collection_terms}
+                FILTER doc._id == edge._from
+              RETURN doc
+        `).toArray()
+
+    return result                                                               // ==>
+
+} // doCheckEnumTermsByField()
 
 /**
  * Return required descriptors associated to provided descriptors list.
@@ -1114,13 +1234,16 @@ module.exports = {
 
     matchEnumerationCodeKey,
     matchEnumerationCodeTerm,
-    matchEnumerationCodePath,
 
     matchEnumerationIdentifierKey,
     matchEnumerationIdentifierTerm,
     matchEnumerationIdentifierPath,
 
-    doCheckEnumsByField,
+    doCheckEnumKeysByField,
+    doCheckEnumTermsByField,
+    traverseFieldKeys,
+    traverseFieldTerms,
+    traverseFieldPath,
     checkEnumsByKeys,
     checkEnumsByCodes
 }

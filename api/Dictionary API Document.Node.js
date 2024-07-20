@@ -867,7 +867,7 @@
     console.log('BODY:', body);
 });
 
-// request Enumeration term by code  
+// request Get enumeration key by code, field and path 
 (function(callback) {
     'use strict';
         
@@ -876,7 +876,7 @@
     const httpOptions = {
         hostname: 'localhost',
         port: '8529',
-        path: '/_db/EUFGIS/dict/enum/code/terms?path=iso_639_1&code=en',
+        path: '/_db/EUFGIS/dict/enum/match/field/keys?field=_aid&code=en&type=iso_639_1',
         method: 'GET',
         headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };
@@ -918,7 +918,7 @@
     console.log('BODY:', body);
 });
 
-// request Enumeration path by code  
+// request Get enumeration term by code, field and path 
 (function(callback) {
     'use strict';
         
@@ -927,7 +927,7 @@
     const httpOptions = {
         hostname: 'localhost',
         port: '8529',
-        path: '/_db/EUFGIS/dict/enum/code/path?path=iso_639_1&code=en',
+        path: '/_db/EUFGIS/dict/enum/match/field/terms?field=_aid&code=en&type=iso_639_1',
         method: 'GET',
         headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };
@@ -969,7 +969,7 @@
     console.log('BODY:', body);
 });
 
-// request Enumeration term by local identifier  
+// request Get enumeration path by code, field and path  
 (function(callback) {
     'use strict';
         
@@ -978,7 +978,7 @@
     const httpOptions = {
         hostname: 'localhost',
         port: '8529',
-        path: '/_db/EUFGIS/dict/enum/lid/terms?path=iso_639_1&code=eng',
+        path: '/_db/EUFGIS/dict/enum/traverse/field/path?path=iso_639_1&code=en&field=_aid',
         method: 'GET',
         headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };
@@ -1071,57 +1071,6 @@
     console.log('BODY:', body);
 });
 
-// request Enumeration term by global identifier  
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/gid/terms?path=iso_639_1&code=iso_639_1_en',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
 // request Enumeration path by global identifier  
 (function(callback) {
     'use strict';
@@ -1132,57 +1081,6 @@
         hostname: 'localhost',
         port: '8529',
         path: '/_db/EUFGIS/dict/enum/gid/path?path=iso_639_1&code=iso_639_1_en',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Check enumeration element by code, field and path 
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/check/field?field=_aid&code=en&type=iso_639_1',
         method: 'GET',
         headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };
@@ -1284,7 +1182,7 @@
     const httpOptions = {
         hostname: 'localhost',
         port: '8529',
-        path: '/_db/EUFGIS/dict/enum/check/codes?path=iso_639_1',
+        path: '/_db/EUFGIS/dict/enum/check/codes?path=iso_639_1&field=_aid',
         method: 'POST',
         headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };

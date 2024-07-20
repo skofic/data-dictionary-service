@@ -782,7 +782,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 14:05:20 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 14:05:20 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:29:48 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:29:48 GMT; path=/"
                 }
               },
               "Server": {
@@ -971,7 +971,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 14:05:31 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 14:05:31 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:29:52 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:29:52 GMT; path=/"
                 }
               },
               "Server": {
@@ -1182,7 +1182,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 14:05:44 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 14:05:44 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:29:58 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:29:58 GMT; path=/"
                 }
               },
               "Server": {
@@ -1247,11 +1247,11 @@
         "security": []
       }
     },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/code/terms/": {
+    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/match/field/keys/": {
       "get": {
-        "summary": "Enumeration term by code ",
-        "description": "Use this service to get an enumeration term record matching the provided code.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *code* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If the service is successful, [`200`], it will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-        "operationId": "80528b25-e10e-4a42-92bf-d4e692197406",
+        "summary": "Get enumeration key by code, field and path",
+        "description": "Use this service to get the *global identifier* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term global identifiers that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+        "operationId": "47ca97a0-a3e5-4043-8e2f-cd6cf1af5c50",
         "parameters": [
           {
             "name": "code",
@@ -1263,7 +1263,16 @@
             }
           },
           {
-            "name": "path",
+            "name": "field",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "_aid",
+              "description": ""
+            }
+          },
+          {
+            "name": "type",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1282,7 +1291,161 @@
           }
         ],
         "requestBody": {
-          "description": "Use this service to get an enumeration term record matching the provided code.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *code* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If the service is successful, [`200`], it will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+          "description": "Use this service to get the *global identifier* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term global identifiers that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+          "content": {
+            "text/plain": {}
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "application/json; charset=utf-8"
+                }
+              },
+              "Pragma": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "frame-ancestors 'self'; form-action 'self';"
+                }
+              },
+              "Set-Cookie": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:32:40 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:32:40 GMT; path=/"
+                }
+              },
+              "Server": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "ArangoDB"
+                }
+              },
+              "Expires": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              },
+              "Cache-Control": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
+                }
+              },
+              "X-Arango-Queue-Time-Seconds": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0.000000"
+                }
+              },
+              "Strict-Transport-Security": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "max-age=31536000 ; includeSubDomains"
+                }
+              },
+              "Content-Length": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "17"
+                }
+              },
+              "Connection": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "Close"
+                }
+              },
+              "X-Content-Type-Options": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "nosniff"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/match/field/terms/": {
+      "get": {
+        "summary": "Get enumeration term by code, field and path",
+        "description": "Use this service to get the *term record* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term records that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+        "operationId": "dab5fd36-9b88-4e44-bb15-a56ce181ed96",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "description": ""
+            }
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "_aid",
+              "description": ""
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "iso_639_1",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cookie",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
+              "description": ""
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Use this service to get the *term record* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term records that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
           "content": {
             "text/plain": {}
           },
@@ -1666,7 +1829,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 14:05:48 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 14:05:48 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:35:31 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:35:31 GMT; path=/"
                 }
               },
               "Server": {
@@ -1731,10 +1894,10 @@
         "security": []
       }
     },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/code/path/": {
+    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/traverse/field/path/": {
       "get": {
-        "summary": "Enumeration path by code ",
-        "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+        "summary": "Get enumeration path by code, field and path ",
+        "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code* in the provided *field*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code value to match.\n- `field`: The element code section property name.\n\nThe field parameter can take two values: `_aid` corresponding to the *list of official term identifiers*, or `_pid` corresponding to the *list of provider identifiers*.\n\nThe service will traverse the enumeration graph until it finds a term whose code section field value matches the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
         "operationId": "2bc71a12-b535-4a75-81ca-4161770f607a",
         "parameters": [
           {
@@ -1743,6 +1906,15 @@
             "schema": {
               "type": "string",
               "default": "en",
+              "description": ""
+            }
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "_aid",
               "description": ""
             }
           },
@@ -1766,7 +1938,7 @@
           }
         ],
         "requestBody": {
-          "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+          "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code* in the provided *field*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code value to match.\n- `field`: The element code section property name.\n\nThe field parameter can take two values: `_aid` corresponding to the *list of official term identifiers*, or `_pid` corresponding to the *list of provider identifiers*.\n\nThe service will traverse the enumeration graph until it finds a term whose code section field value matches the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
           "content": {
             "text/plain": {}
           },
@@ -1857,7 +2029,7 @@
                 "description": "",
                 "schema": {
                   "type": "string",
-                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 14:06:02 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 14:06:02 GMT; path=/"
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:44:00 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:44:00 GMT; path=/"
                 }
               },
               "Server": {
@@ -1922,55 +2094,6 @@
         "security": []
       }
     },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/lid/terms/": {
-      "get": {
-        "summary": "Enumeration term by local identifier ",
-        "description": "Use this service to get an enumeration term record matching the provided local identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *local identifier* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element local identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-        "operationId": "3e993157-0b29-4be0-a29d-0caa8ee3b31b",
-        "parameters": [
-          {
-            "name": "code",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "eng",
-              "description": ""
-            }
-          },
-          {
-            "name": "path",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "iso_639_1",
-              "description": ""
-            }
-          },
-          {
-            "name": "Cookie",
-            "in": "header",
-            "schema": {
-              "type": "string",
-              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
-              "description": ""
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Use this service to get an enumeration term record matching the provided local identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *local identifier* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element local identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-          "content": {
-            "text/plain": {}
-          },
-          "required": false
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": []
-      }
-    },
     "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/lid/path/": {
       "get": {
         "summary": "Enumeration path by local identifier ",
@@ -2014,56 +2137,149 @@
         },
         "responses": {
           "200": {
-            "description": ""
-          }
-        },
-        "security": []
-      }
-    },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/gid/terms/": {
-      "get": {
-        "summary": "Enumeration term by global identifier ",
-        "description": "Use this service to get an enumeration term record matching the provided global identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *preferred term* record matching the provided *global identifier* in the *enumeration graph* defined by the provided *root element*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element global identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term belongs to the provided path**.",
-        "operationId": "85ab8c6e-3bc0-4df1-8470-cbad0ee73cb8",
-        "parameters": [
-          {
-            "name": "code",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "iso_639_1_en",
-              "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "vertices": {
+                        "type": "object",
+                        "items": {
+                          "type": "object"
+                        }
+                      },
+                      "edges": {
+                        "type": "object",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_key": {
+                              "type": "string"
+                            },
+                            "_id": {
+                              "type": "string"
+                            },
+                            "_from": {
+                              "type": "string"
+                            },
+                            "_to": {
+                              "type": "string"
+                            },
+                            "_rev": {
+                              "type": "string"
+                            },
+                            "_predicate": {
+                              "type": "string"
+                            },
+                            "_path": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "weights": {
+                        "type": "number",
+                        "items": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "application/json; charset=utf-8"
+                }
+              },
+              "Pragma": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "frame-ancestors 'self'; form-action 'self';"
+                }
+              },
+              "Set-Cookie": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:45:24 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:45:24 GMT; path=/"
+                }
+              },
+              "Server": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "ArangoDB"
+                }
+              },
+              "Expires": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              },
+              "Cache-Control": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
+                }
+              },
+              "X-Arango-Queue-Time-Seconds": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0.000000"
+                }
+              },
+              "Strict-Transport-Security": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "max-age=31536000 ; includeSubDomains"
+                }
+              },
+              "Content-Length": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "4027"
+                }
+              },
+              "Connection": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "Close"
+                }
+              },
+              "X-Content-Type-Options": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "nosniff"
+                }
+              }
             }
-          },
-          {
-            "name": "path",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "iso_639_1",
-              "description": ""
-            }
-          },
-          {
-            "name": "Cookie",
-            "in": "header",
-            "schema": {
-              "type": "string",
-              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
-              "description": ""
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Use this service to get an enumeration term record matching the provided global identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *preferred term* record matching the provided *global identifier* in the *enumeration graph* defined by the provided *root element*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element global identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term belongs to the provided path**.",
-          "content": {
-            "text/plain": {}
-          },
-          "required": false
-        },
-        "responses": {
-          "200": {
-            "description": ""
           }
         },
         "security": []
@@ -2260,160 +2476,6 @@
         "security": []
       }
     },
-    "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/check/field/": {
-      "get": {
-        "summary": "Check enumeration element by code, field and path",
-        "description": "Use this service to get the *global identifier* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term global identifiers that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-        "operationId": "47ca97a0-a3e5-4043-8e2f-cd6cf1af5c50",
-        "parameters": [
-          {
-            "name": "code",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "en",
-              "description": ""
-            }
-          },
-          {
-            "name": "field",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "_aid",
-              "description": ""
-            }
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": "iso_639_1",
-              "description": ""
-            }
-          },
-          {
-            "name": "Cookie",
-            "in": "header",
-            "schema": {
-              "type": "string",
-              "default": "FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb",
-              "description": ""
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Use this service to get the *global identifier* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term global identifiers that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-          "content": {
-            "text/plain": {}
-          },
-          "required": false
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "application/json; charset=utf-8"
-                }
-              },
-              "Pragma": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache"
-                }
-              },
-              "Content-Security-Policy": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "frame-ancestors 'self'; form-action 'self';"
-                }
-              },
-              "Set-Cookie": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 14:29:29 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 14:29:29 GMT; path=/"
-                }
-              },
-              "Server": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "ArangoDB"
-                }
-              },
-              "Expires": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0"
-                }
-              },
-              "Cache-Control": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
-                }
-              },
-              "X-Arango-Queue-Time-Seconds": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "0.000000"
-                }
-              },
-              "Strict-Transport-Security": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "max-age=31536000 ; includeSubDomains"
-                }
-              },
-              "Content-Length": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "17"
-                }
-              },
-              "Connection": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "Close"
-                }
-              },
-              "X-Content-Type-Options": {
-                "description": "",
-                "schema": {
-                  "type": "string",
-                  "example": "nosniff"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
     "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/check/keys/": {
       "post": {
         "summary": "Check enumeration element global identifiers ",
@@ -2464,7 +2526,113 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "iso_639_1_en": {
+                      "type": "string",
+                      "example": "iso_639_3_eng"
+                    },
+                    "iso_639_1_fr": {
+                      "type": "string",
+                      "example": "iso_639_3_fra"
+                    },
+                    "UNKNOWN": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "application/json; charset=utf-8"
+                }
+              },
+              "Pragma": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "frame-ancestors 'self'; form-action 'self';"
+                }
+              },
+              "Set-Cookie": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:45:55 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:45:55 GMT; path=/"
+                }
+              },
+              "Server": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "ArangoDB"
+                }
+              },
+              "Expires": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              },
+              "Cache-Control": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
+                }
+              },
+              "X-Arango-Queue-Time-Seconds": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0.000000"
+                }
+              },
+              "Strict-Transport-Security": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "max-age=31536000 ; includeSubDomains"
+                }
+              },
+              "Content-Length": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "79"
+                }
+              },
+              "Connection": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "Close"
+                }
+              },
+              "X-Content-Type-Options": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "nosniff"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -2473,9 +2641,18 @@
     "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/enum/check/codes/": {
       "post": {
         "summary": "Check enumeration element local identifiers ",
-        "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter and the list of term local identifiers to match as an array in the request body.\n\nThis service can be used to retrieve the *term global identifiers* matching the provided *global identifier* in a specific *enumeration graph*.\n\nThe service expects the enumeration graph root term global identifier in the `path` path query parameter and the array of local identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+        "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter, the code section field name in the `field` path query parameter and the list of term  identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose identifier matches the provided code in the provided field. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
         "operationId": "344e08dd-aa3a-4cc8-bbb3-be0543df0dca",
         "parameters": [
+          {
+            "name": "field",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "_aid",
+              "description": ""
+            }
+          },
           {
             "name": "path",
             "in": "query",
@@ -2505,7 +2682,7 @@
           }
         ],
         "requestBody": {
-          "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter and the list of term local identifiers to match as an array in the request body.\n\nThis service can be used to retrieve the *term global identifiers* matching the provided *global identifier* in a specific *enumeration graph*.\n\nThe service expects the enumeration graph root term global identifier in the `path` path query parameter and the array of local identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+          "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter, the code section field name in the `field` path query parameter and the list of term  identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose identifier matches the provided code in the provided field. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
           "content": {
             "text/plain": {
               "schema": {
@@ -2518,7 +2695,113 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "example": "iso_639_3_eng"
+                    },
+                    "fr": {
+                      "type": "string",
+                      "example": "iso_639_3_fra"
+                    },
+                    "UNKNOWN": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "application/json; charset=utf-8"
+                }
+              },
+              "Pragma": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "frame-ancestors 'self'; form-action 'self';"
+                }
+              },
+              "Set-Cookie": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "FOXXSID=null; expires=Sat, 27-Jul-2024 17:53:37 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 27-Jul-2024 17:53:37 GMT; path=/"
+                }
+              },
+              "Server": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "ArangoDB"
+                }
+              },
+              "Expires": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              },
+              "Cache-Control": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
+                }
+              },
+              "X-Arango-Queue-Time-Seconds": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0.000000"
+                }
+              },
+              "Strict-Transport-Security": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "max-age=31536000 ; includeSubDomains"
+                }
+              },
+              "Content-Length": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "59"
+                }
+              },
+              "Connection": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "Close"
+                }
+              },
+              "X-Content-Type-Options": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "nosniff"
+                }
+              }
+            }
           }
         },
         "security": []

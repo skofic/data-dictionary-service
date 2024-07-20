@@ -598,33 +598,39 @@
           "response": []
         },
         {
-          "name": "Enumeration term by code ",
+          "name": "Get enumeration key by code, field and path",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/terms?path=iso_639_1&code=en",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/keys?field=_aid&code=en&type=iso_639_1",
               "query": [
                 {
-                  "key": "path",
-                  "value": "iso_639_1",
+                  "key": "field",
+                  "value": "_aid",
                   "disabled": false,
-                  "description": "Enumeration root term global identfier."
+                  "description": "Name of the code section property on which to match the code."
                 },
                 {
                   "key": "code",
                   "value": "en",
                   "disabled": false,
-                  "description": "Enumeration element local identifier."
+                  "description": "The code value to be matched."
+                },
+                {
+                  "key": "type",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
                 }
               ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/terms"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/keys"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to get an enumeration term record matching the provided code.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *code* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If the service is successful, [`200`], it will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "description": "Use this service to get the *global identifier* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term global identifiers that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
             "header": [],
             "body": null,
             "auth": null
@@ -637,33 +643,39 @@
           "response": []
         },
         {
-          "name": "Enumeration path by code ",
+          "name": "Get enumeration term by code, field and path",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/path?path=iso_639_1&code=en",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/terms?field=_aid&code=en&type=iso_639_1",
               "query": [
                 {
-                  "key": "path",
-                  "value": "iso_639_1",
+                  "key": "field",
+                  "value": "_aid",
                   "disabled": false,
-                  "description": "Enumeration root term global identfier."
+                  "description": "Name of the code section property on which to match the code."
                 },
                 {
                   "key": "code",
                   "value": "en",
                   "disabled": false,
-                  "description": "Enumeration element local identifier."
+                  "description": "The code value to be matched."
+                },
+                {
+                  "key": "type",
+                  "value": "iso_639_1",
+                  "disabled": false,
+                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
                 }
               ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/code/path"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/terms"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code to match.\n\nThe service will traverse the enumeration graph until it finds a term whose identifiers list (`_aid` property) contains the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "description": "Use this service to get the *term record* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term records that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
             "header": [],
             "body": null,
             "auth": null
@@ -676,11 +688,11 @@
           "response": []
         },
         {
-          "name": "Enumeration term by local identifier ",
+          "name": "Get enumeration path by code, field and path ",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/terms?path=iso_639_1&code=eng",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/traverse/field/path?path=iso_639_1&code=en&field=_aid",
               "query": [
                 {
                   "key": "path",
@@ -690,19 +702,25 @@
                 },
                 {
                   "key": "code",
-                  "value": "eng",
+                  "value": "en",
                   "disabled": false,
                   "description": "Enumeration element local identifier."
+                },
+                {
+                  "key": "field",
+                  "value": "_aid",
+                  "disabled": false,
+                  "description": null
                 }
               ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/terms"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/traverse/field/path"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to get an enumeration term record matching the provided local identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term record* matching the provided *local identifier* in a specific *enumeration graph*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element local identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code* in the provided *field*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code value to match.\n- `field`: The element code section property name.\n\nThe field parameter can take two values: `_aid` corresponding to the *list of official term identifiers*, or `_pid` corresponding to the *list of provider identifiers*.\n\nThe service will traverse the enumeration graph until it finds a term whose code section field value matches the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
             "header": [],
             "body": null,
             "auth": null
@@ -754,45 +772,6 @@
           "response": []
         },
         {
-          "name": "Enumeration term by global identifier ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/terms?path=iso_639_1&code=iso_639_1_en",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                },
-                {
-                  "key": "code",
-                  "value": "iso_639_1_en",
-                  "disabled": false,
-                  "description": "Enumeration element global identifier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/terms"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration term record matching the provided global identifier.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *preferred term* record matching the provided *global identifier* in the *enumeration graph* defined by the provided *root element*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element global identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided identifier. If there is a match, [`200`], the service will return the matching term record.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term belongs to the provided path**.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
           "name": "Enumeration path by global identifier ",
           "request": {
             "method": "GET",
@@ -820,51 +799,6 @@
               "path": null
             },
             "description": "Use this service to get an enumeration path from root to matching global identifier element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *global identifier*\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element global identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided code. If there is a match, [`200`], the service will return the path starting from the enumeration root element to the term whose `_gid` property contains a match for the identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Check enumeration element by code, field and path",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/field?field=_aid&code=en&type=iso_639_1",
-              "query": [
-                {
-                  "key": "field",
-                  "value": "_aid",
-                  "disabled": false,
-                  "description": "Name of the code section property on which to match the code."
-                },
-                {
-                  "key": "code",
-                  "value": "en",
-                  "disabled": false,
-                  "description": "The code value to be matched."
-                },
-                {
-                  "key": "type",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/field"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the *global identifier* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term global identifiers that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
             "header": [],
             "body": null,
             "auth": null
@@ -925,13 +859,19 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/codes?path=iso_639_1",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/codes?path=iso_639_1&field=_aid",
               "query": [
                 {
                   "key": "path",
                   "value": "iso_639_1",
                   "disabled": false,
                   "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "field",
+                  "value": "_aid",
+                  "disabled": false,
+                  "description": "Term code section firld name."
                 }
               ],
               "protocol": null,
@@ -941,7 +881,7 @@
               "port": null,
               "path": null
             },
-            "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter and the list of term local identifiers to match as an array in the request body.\n\nThis service can be used to retrieve the *term global identifiers* matching the provided *global identifier* in a specific *enumeration graph*.\n\nThe service expects the enumeration graph root term global identifier in the `path` path query parameter and the array of local identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided identifier. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter, the code section field name in the `field` path query parameter and the list of term  identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose identifier matches the provided code in the provided field. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
             "header": [],
             "body": {
               "mode": "raw",
