@@ -806,8 +806,8 @@ router.get(
             
             You should get \`iso_639_3_eng\` as the result.
             This means that \`en\` is matched in the list of *official codes*,  \
-            \`_aid\`, of the *preferred enumeration element* belonging to the \
-            \`iso_639_1\` controlled vocabulary.
+            \`_aid\`, of the *preferred enumeration element*, \`iso_639_3_eng\` \
+            belonging to the \`iso_639_1\` controlled vocabulary.
         `
     )
     .queryParam('field', Models.StringModel,
