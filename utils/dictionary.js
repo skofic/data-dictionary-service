@@ -1020,7 +1020,7 @@ function doCheckEnumKeysByField(theCode, theField, theType)
               FILTER edge._from IN terms
               FILTER edge._predicate == ${K.term.predicateEnum}
               FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge._path
-            RETURN PARSE_KEY(edge._from)
+            RETURN PARSE_IDENTIFIER(edge._from)['key']
         `).toArray()
 
     return result                                                               // ==>
