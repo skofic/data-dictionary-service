@@ -911,6 +911,41 @@ function checkEnumsByCodes(theCodes, thePath)
 } // checkEnumsByCodes()
 
 /**
+ * Return the enumeration element global identifier given the enumeration type,
+ * a code and the name of the field, where to match it, belonging o the term
+ * code section.
+ * The function will return an array of global identifiers if there was a match.
+ * @param theCode {String}: The code to check.
+ * @param theField {String}: The code section property name.
+ * @param theType {String}: The global identifier of the enumeration type or path.
+ * @return {Array}: List of matched enumeration element global identifiers.
+ * as value, or false.
+ */
+function doCheckEnumsByField(theCode, theField, theType)
+{
+    //
+    // Query schema.
+    //
+    const result =
+        K.db._query( aql`
+            LET terms = (
+              FOR term IN ${view_terms}
+                SEARCH term._code.${theField} == ${theCode}
+              RETURN CONCAT_SEPARATOR('/', ${K.collection.term.name}, term._key)
+            )
+            
+            FOR edge IN ${collection_edges}
+              FILTER edge._from IN terms
+              FILTER edge._predicate == ${K.term.predicateEnum}
+              FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge._path
+            RETURN PARSE_KEY(edge._from)
+        `).toArray()
+
+    return result                                                               // ==>
+
+} // doCheckEnumsByField()
+
+/**
  * Return required descriptors associated to provided descriptors list.
  * The function will return the list of descriptors
  * required by the provided list of descriptor global identifiers.
@@ -1085,6 +1120,7 @@ module.exports = {
     matchEnumerationIdentifierTerm,
     matchEnumerationIdentifierPath,
 
+    doCheckEnumsByField,
     checkEnumsByKeys,
     checkEnumsByCodes
 }

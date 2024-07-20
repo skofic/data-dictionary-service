@@ -761,6 +761,81 @@ router.get(
     )
 
 /**
+ * Get enumeration element global identifier given _code field, value and enumeration type.
+ * The service will check if the provided code matches the provided field in terms
+ * and if any of the matched terms belong to the provided enumeration root global identifier.
+ * The service will return an array of matched enumeration elements.
+ */
+router.get(
+    'check/field',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckEnumsByField(request, response)
+        }
+    },
+    'check-enum-field-code'
+)
+    .summary('Check if code matches enumeration')
+    .description(dd
+        `
+            **Check if provided code matches an enumeration element**
+            
+            *Use this service if you want to check if a code belonging to a field in the \
+            code section of a term resolves into an enumeration element belonging to the \
+            graph whose root is the provided enumeration type global identifier.*
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            The service expects the *enumeration type term global identifier* as the \`type\` \
+            query parameter, the code provided as the \`code\` query parameter and the \
+            *name of the field*, belonging to the code section of the term, in which to match \
+            the code in thew \`field\` query parameter.
+            
+            You can try providing:
+            
+            - \`_aid\` as the \`field\` parameter (list of official codes).
+            - \`en\` as the \`code\` parameter.
+            - \`iso_639_1\` as the \`type\` parameter.
+            
+            You should get \`iso_639_3_eng\` as the result.
+            This means that \`en\` is matched in the list of *official codes*,  \
+            \`_aid\`, of the *preferred enumeration element* belonging to the \
+            \`iso_639_1\` controlled vocabulary.
+        `
+    )
+    .queryParam('field', Models.StringModel,
+        "Name of the code section property on which to match the code.")
+    .queryParam('code', Models.StringModel,
+        "The code value to be matched.")
+    .queryParam('type', Models.StringModel,
+        "Enumeration type or root global identifier to which the matched enumeration element must belong.")
+    .response(200, joi.object(), dd
+        `
+            **Check status**
+            
+            The service will return an array of global identifiers representing \
+            enumeration elements, if there was no match, the array will be empty.
+            If there is more than one element in the array, it is probable that \
+            the enumerations graph may be corrupt.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
+
+/**
  * Check if list of global identifiers belong to provided enumeration.
  * The service will check the provided list of term keys asserting whether they
  * belong to the provided enumeration. All parameters should be provided as term keys.
@@ -908,6 +983,7 @@ router.post(
 //
 // Functions.
 //
+
 
 /**
  * Get all enumeration keys belonging to provided term.
@@ -1116,3 +1192,24 @@ function doCheckEnumsByCodes(request, response)
     response.send(result);                                                      // ==>
 
 } // doCheckEnumsByCodes()
+
+/**
+ * Check if code section field and value correspond
+ * to an element of the provided enumeration root.
+ * @param request: API request.
+ * @param response: API response.
+ */
+function doCheckEnumsByField(request, response)
+{
+    //
+    // Query database.
+    //
+    const result = Dictionary.doCheckEnumsByField(
+        request.queryParams.code,
+        request.queryParams.field,
+        request.queryParams.type
+    )
+
+    response.send(result);                                                      // ==>
+
+} // doCheckEnumsByField()
