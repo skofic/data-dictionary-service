@@ -785,20 +785,20 @@ function validateKey(theBlock, theValue, theReport)
     }
 
     //
-    // Assert terms record key.
-    //
-    const term = utils.getTerm(theValue[0][theValue[1]], theReport)
-    if(term === false) {
-        theReport.status = K.error.kMSG_TERM_NOT_FOUND
-        theReport.status["value"] = theValue[0][theValue[1]]
-
-        return false                                                            // ==>
-    }
-
-    //
     // Handle data kind.
     //
     if(theBlock.hasOwnProperty(K.term.dataKind)) {
+
+        //
+        // Assert terms record key.
+        //
+        const term = utils.getTerm(theValue[0][theValue[1]], theReport)
+        if(term === false) {
+            theReport.status = K.error.kMSG_TERM_NOT_FOUND
+            theReport.status["value"] = theValue[0][theValue[1]]
+
+            return false                                                // ==>
+        }
 
         //
         // Ensure data kind is an array.
@@ -1195,8 +1195,8 @@ function validateObject(theBlock, theValue, theReport)
         return validateObjectTypes(theBlock, theValue, theReport)               // ==>
     }
 
-        //
-        // Requires specific object types.
+    //
+    // Requires specific object types.
     //
     else {
 
