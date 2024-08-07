@@ -1,7 +1,5 @@
 'use strict';
 
-// TODO: will test new validation.
-
 //
 // Imports.
 //
@@ -15,7 +13,8 @@ const joi = require('joi');
 const K = require( '../utils/constants' );
 const Utils = require("../utils/utils");
 const Session = require('../utils/sessions')
-const Validation = require("../utils/validation");
+const Validator = require('../library/Validator')
+const OldValidation = require("../utils/validation");
 
 //
 // Models.
@@ -71,6 +70,7 @@ const ValidationStatus = joi.object({
 //
 const createRouter = require('@arangodb/foxx/router');
 const ErrorModel = require("../models/error_generic");
+const Models = require("../models/generic_models");
 const router = createRouter();
 module.exports = router;
 router.tag('Validation services');
@@ -108,6 +108,140 @@ router.post(
             Optionally, it is possible to indicate in which language the status message should be returned.
         `
     )
+    .body(ValidateDescriptor, dd
+        `
+            **Service parameters**
+            
+            - \`descriptor\`: The descriptor global identifier.
+            - \`value\`: The value to be tested against the descriptor's data definition.
+            - \`language\`: The \`iso_396_3\` language for status messages.
+            
+            The first two parameters are *required*, the last parameter is *optional*.
+            
+            The \`language\` code is used to select the *language* of the *status message*:
+            - if the language code is \`all\`, the message will be returned in
+            *all available languages*,
+            - if the language code is *wrong*, or there is *no message in that language*,
+            the message will be returned in *English*.
+            
+            Language codes are in the form: \`iso_639_3_\` followed by the *three letter ISO language code*.
+            Use \`iso_639_3_eng\` for English.
+        `
+    )
+    .response(200, DescriptorReport, dd
+        `
+            **Validation status**
+            
+            The service will return three information items:
+            - \`valid\`: List of valid data elements.
+            - \`warnings\`: List of warning reports.
+            - \`errors\`: List of error reports.
+            
+            Warning and error reports are objects with two elements:
+            - \`value\`: The data element value.
+            - \`status\`: The list of status messages one per property.
+            
+            Each data element is processed separately: if the data is valid, the data element will \
+            be stored in the \`valid\` report property; if there is at least one error, the data element \
+            and all the corresponding status reports will be stored in the \`errors\` report property; \
+            if there is at least one warning, the data element and all the corresponding status reports \
+            will be stored in the \`warnings\` report property.
+            
+            The returned value, \`value\`, may be *different* than the provided value, because enumerations
+            can be *resolved*: if the enumeration code is *not* a *term global identifier*, the full
+            enumeration graph will be traversed and the first element whose local identifier matches the provided
+            value will be considered the valid choice. Try entering \`_type\` as descriptor and \`string\` as the
+            value: you will see that the value will be resolved to the full code value, \`_type_string\`.
+            
+            The \`status\` objects indicate the outcome of the validation, they record any warning or error.
+            This status has two default elements: a \`code\` that is a numeric code, \`0\` means success,
+            and a \`message\` string that describes the outcome. Depending on the eventual error, the status may
+            include other properties such as:
+            - \`value\`: the value that caused the error.
+            - \`descriptor\`: the descriptor involved in the error.
+            - \`elements\`: in case an array has too little or too much elements.
+            - \`property\`: missing required property, in case of incorrect data definition.
+            - \`block\`: data definition section.
+            - \`type\`: unimplemented or invalid data type, or data definition section name.
+            - \`required\`: list of required properties, in case one is missing.
+            - \`range\`: valid range, in the case of out of range values.
+            - \`regexp\`: regular expression, in case a string does not match.
+            
+            Additional properties may be included in the result, depending on the eventual error, or in the event
+            that an enumeration was resolved:
+            - \`resolved\`: It is an object whose properties represent the enumeration descriptors whose values
+            have been resolved, the values contain the original provided codes, while the \`value\` will contain the
+            resolved values. Try entering \`_type\` as descriptor and \`string\` as the value.
+            - \`ignored\`: It is an object whose properties represent the descriptors that were not recognised.
+            Unknown descriptors will not be validated, this is not considered an error, but such descriptors will
+            be logged, so that it is possible to catch eventual errors. Try entering \`UNKNOWN\` as descriptor.
+            - \`error\`: In the event of unexpected database errors, this property will host the specific \
+            error message generated by the database engine.
+        `
+    )
+    .response(401, ErrorModel, dd
+        `
+            **No user registered**
+            
+            There is no active session.
+        `
+    )
+    .response(403, ErrorModel, dd
+        `
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+    )
+
+/**
+ * Validate descriptor.
+ * The service will check whether the provided value corresponds to the provided
+ * descriptor.
+ */
+router.post(
+    'descriptor/value',
+    (request, response) => {
+        const roles = [K.environment.role.read]
+        if(Session.hasPermission(request, response, roles)) {
+            doCheckDescriptor(request, response)
+        }
+    },
+    'descriptor'
+)
+    .summary('Validate value by descriptor')
+    .description(dd
+        `
+            **Validate a value associated to a descriptor**
+            
+            *Use this service if you want to check if the value of a descriptor is correct.*
+            
+            ***To use this service, the current user must have the \`read\` role.***
+            
+            The service expects the descriptor and the other service flags as \
+            path query parameters, and the value to check in the body.
+            
+            The service will return the provided value including eventual \
+            resolved values and a report record describing the status of the \
+            validation.
+            
+            Optionally, it is possible to indicate in which language the status message should be returned.
+        `
+    )
+    .queryParam('cache', joi.boolean().default(true),
+        "Use cache. All resolved terms will be cached.")
+    .queryParam('miss', joi.boolean().default(true),
+        "Use cache also for missing items, if `cache` is `true`.")
+    .queryParam('terms', joi.boolean().default(false),
+        "Expect all descriptors to be terms.")
+    .queryParam('types', joi.boolean().default(false),
+        "Require explicit data types. Empty data sections will not be allowed.")
+    .queryParam('resolve', joi.boolean().default(false),
+        "Attempt to resolve values: provide the code and the validator will attempt to find it.")
+    .queryParam('resfld', joi.string().default(module.context.configuration.localIdentifier),
+        "Field to use when resolving enumerations, used if `resolve` is true.")
+    .queryParam('defns', joi.boolean().default(false),
+        "Allow referencing default namespace when creating objects.")
     .body(ValidateDescriptor, dd
         `
             **Service parameters**
@@ -519,37 +653,41 @@ router.post(
  * Perform validation of provided descriptor and value.
  *
  * The service will return an object with the following properties:
- * - descriptor: The descriptor name.
- * - value: The tested value, may be updated with resolved enumerations.
- * - result: The status of the validation.
+ * - value: The provided descriptor/value object.
+ * - report: An object containing the status of the validation.
  *
  * @param theRequest {Object}: Service request.
  * @param theResponse {Object}: Service response.
  */
 function doCheckDescriptor(theRequest, theResponse)
 {
+    ///
+    // Init local storage.
+    ///
+    const value = { [theRequest.body.descriptor]: theRequest.body.value }
+    const validator =
+        new Validator(
+            value,
+            '',
+            false,
+            theRequest.queryParams.cache,
+            theRequest.queryParams.miss,
+            theRequest.queryParams.terms,
+            theRequest.queryParams.types,
+            theRequest.queryParams.resolve,
+            theRequest.queryParams.defns,
+            theRequest.queryParams.resfld
+        )
+
     //
     // Perform validation.
     //
-    let report = Validation.checkDescriptor(
-        theRequest.body.descriptor,
-        theRequest.body,
-        "value",
-        theRequest.body.language
-    )
-
-    //
-    // Remove descriptor from report.
-    //
-    if(report.hasOwnProperty("descriptor")) {
-        delete report["descriptor"]
-    }
+    const status = validator.validate()
 
     theResponse.send({
-        "descriptor": theRequest.body.descriptor,
-        "value": theRequest.body["value"],
-        "result": report
-    })
+        'value': validator.value,
+        'report': validator.report
+    })                                                                  // ==>
 
 } // doCheckDescriptor()
 
@@ -569,7 +707,7 @@ function doCheckDefinition(theRequest, theResponse)
     //
     // Perform validation.
     //
-    let report = Validation.checkDefinition(
+    let report = OldValidation.checkDefinition(
         theRequest.body.definition,
         theRequest.body,
         "value",
@@ -601,7 +739,7 @@ function doCheckObject(theRequest, theResponse)
     //
     // Parse provided object.
     //
-    let report = Validation.checkObject(theRequest.body.value, theRequest.body.language)
+    let report = OldValidation.checkObject(theRequest.body.value, theRequest.body.language)
 
     //
     // Check for errors.
@@ -630,7 +768,7 @@ function doCheckObjects(theRequest, theResponse)
     //
     // Check objects.
     //
-    const report = Validation.checkObjects(theRequest.body.value, theRequest.body.language)
+    const report = OldValidation.checkObjects(theRequest.body.value, theRequest.body.language)
 
     //
     // Handle errors.

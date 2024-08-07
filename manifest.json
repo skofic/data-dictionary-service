@@ -102,6 +102,402 @@
             "type": "password",
             "required": true,
             "default": "you have to guess it..."
+        },
+        "sectionCode": {
+            "description": "Term codes section name key",
+            "type": "string",
+            "required": true,
+            "default": "_code"
+        },
+        "sectionInfo": {
+            "description": "Term information section name key",
+            "type": "string",
+            "required": true,
+            "default": "_info"
+        },
+        "sectionData": {
+            "description": "Term data section name key",
+            "type": "string",
+            "required": true,
+            "default": "_data"
+        },
+        "sectionRule": {
+            "description": "Term rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_rule"
+        },
+        "sectionRuleRequired": {
+            "description": "Required properties rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_required"
+        },
+        "selectionDescriptorsOne": {
+            "description": "Require one property from set rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_selection-descriptors_one"
+        },
+        "selectionDescriptorsOneNone": {
+            "description": "Require one or no properties from set rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_selection-descriptors_one-none"
+        },
+        "selectionDescriptorsAny": {
+            "description": "Require any properties from set rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_selection-descriptors_any"
+        },
+        "selectionDescriptorsAnyOne": {
+            "description": "Require one or no properties from each set rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_selection-descriptors_one-none-of"
+        },
+        "selectionDescriptorsAll": {
+            "description": "Require all properties from set rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_selection-descriptors_all"
+        },
+        "sectionRuleDefault": {
+            "description": "Default values rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_default-value"
+        },
+        "sectionRuleBanned": {
+            "description": "Banned properties rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_banned"
+        },
+        "sectionScalar": {
+            "description": "Term scalar data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_scalar"
+        },
+        "sectionSetScalar": {
+            "description": "Term set-scalar data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_set_scalar"
+        },
+        "sectionArray": {
+            "description": "Term array data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_array"
+        },
+        "sectionSet": {
+            "description": "Term set data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_set"
+        },
+        "sectionDict": {
+            "description": "Term dictionary data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_dict"
+        },
+        "sectionDictKey": {
+            "description": "Dictionary keys data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_dict_key"
+        },
+        "sectionDictValue": {
+            "description": "Dictionary values data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_dict_value"
+        },
+        "sectionPath": {
+            "description": "Term edge path section key",
+            "type": "string",
+            "required": true,
+            "default": "_path"
+        },
+        "predicate": {
+            "description": "Predicate descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate"
+        },
+        "predicateEnumeration": {
+            "description": "Enumeration predicate key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate_enum-of"
+        },
+        "namespaceIdentifier": {
+            "description": "Namespace identifier key",
+            "type": "string",
+            "required": true,
+            "default": "_nid"
+        },
+        "localIdentifier": {
+            "description": "Local identifier key",
+            "type": "string",
+            "required": true,
+            "default": "_lid"
+        },
+        "globalIdentifier": {
+            "description": "Global identifier key",
+            "type": "string",
+            "required": true,
+            "default": "_gid"
+        },
+        "officialIdentifiers": {
+            "description": "List of official identifiers key",
+            "type": "string",
+            "required": true,
+            "default": "_aid"
+        },
+        "providerIdentifiers": {
+            "description": "List of provider identifiers key",
+            "type": "string",
+            "required": true,
+            "default": "_pid"
+        },
+        "scalarType": {
+            "description": "Scalar data type descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_type"
+        },
+        "setScalarType": {
+            "description": "Scalar data type descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_set_type"
+        },
+        "keyScalarType": {
+            "description": "Scalar dictionary key type descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_type_key"
+        },
+        "typeBoolean": {
+            "description": "Boolean data type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_boolean"
+        },
+        "typeInteger": {
+            "description": "Integer data type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_integer"
+        },
+        "typeNumber": {
+            "description": "Number data type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_number"
+        },
+        "typeTypestamp": {
+            "description": "Timestamp data type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_number_timestamp"
+        },
+        "typeString": {
+            "description": "String data type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_string"
+        },
+        "typeKey": {
+            "description": "Term global identifier type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_string_key"
+        },
+        "typeHandle": {
+            "description": "Term handle type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_string_handle"
+        },
+        "typeEnum": {
+            "description": "Enumeration type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_string_enum"
+        },
+        "typeDate": {
+            "description": "Date type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_string_date"
+        },
+        "typeStruct": {
+            "description": "Structure type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_struct"
+        },
+        "typeObject": {
+            "description": "Structure type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_object"
+        },
+        "typeGeoJSON": {
+            "description": "GeoJSON object type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_object_geojson"
+        },
+        "rangeNumber": {
+            "description": "Numeric valid range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_valid-range"
+        },
+        "rangeNumberMinInclusive": {
+            "description": "Numeric minimum inclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_min-range-inclusive"
+        },
+        "rangeNumberMaxInclusive": {
+            "description": "Numeric maximum inclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_max-range-inclusive"
+        },
+        "rangeNumberMinExclusive": {
+            "description": "Numeric minimum exclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_min-range-exclusive"
+        },
+        "rangeNumberMaxExclusive": {
+            "description": "Numeric maximum exclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_max-range-exclusive"
+        },
+        "rangeString": {
+            "description": "String valid range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_valid-range_string"
+        },
+        "rangeStringMinInclusive": {
+            "description": "String minimum inclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_min-range-inclusive_string"
+        },
+        "rangeStringMaxInclusive": {
+            "description": "String maximum inclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_max-range-inclusive_string"
+        },
+        "rangeStringMinExclusive": {
+            "description": "String minimum exclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_min-range-exclusive_string"
+        },
+        "rangeStringMaxExclusive": {
+            "description": "String maximum exclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_max-range-exclusive_string"
+        },
+        "rangeDate": {
+            "description": "Date valid range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_valid-range_date"
+        },
+        "rangeDateMinInclusive": {
+            "description": "Date minimum inclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_min-range-inclusive_date"
+        },
+        "rangeDateMaxInclusive": {
+            "description": "Date maximum inclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_max-range-inclusive_date"
+        },
+        "rangeDateMinExclusive": {
+            "description": "Date minimum exclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_min-range-exclusive_date"
+        },
+        "rangeDateMaxExclusive": {
+            "description": "Date maximum exclusive range descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_max-range-exclusive_date"
+        },
+        "regularExpression": {
+            "description": "Regular expression descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_regexp"
+        },
+        "dataKind": {
+            "description": "Data kind descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_kind"
+        },
+        "anyTerm": {
+            "description": "Any term wildcard key",
+            "type": "string",
+            "required": true,
+            "default": "_any-term"
+        },
+        "anyEnum": {
+            "description": "Any enumeration element term wildcard key",
+            "type": "string",
+            "required": true,
+            "default": "_any-enum"
+        },
+        "anyDescriptor": {
+            "description": "Any descriptor term wildcard key",
+            "type": "string",
+            "required": true,
+            "default": "_any-descriptor"
+        },
+        "anyObject": {
+            "description": "Any object definition term wildcard key",
+            "type": "string",
+            "required": true,
+            "default": "_any-object"
+        },
+        "arrayElements": {
+            "description": "Allowed number of elements in array",
+            "type": "string",
+            "required": true,
+            "default": "_elements"
+        },
+        "arrayMinElements": {
+            "description": "Minimum allowed number of elements",
+            "type": "string",
+            "required": true,
+            "default": "_min-items"
+        },
+        "arrayMaxElements": {
+            "description": "Maximum allowed number of elements",
+            "type": "string",
+            "required": true,
+            "default": "_max-items"
         }
     },
     "tests": [
