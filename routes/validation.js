@@ -65,6 +65,17 @@ const ValidationStatus = joi.object({
     }))
 })
 
+const flagUseCache = joi.boolean().default(true)
+const flagUseCacheDescription =
+    "Use cache.\n" +
+    "All resolved terms will be cached and made available for all operations \
+    involving the current service."
+
+const flagCacheMissed = joi.boolean().default(true)
+const flagCacheMissedDescription =
+    "Cache also unresolved references.\n" +
+    "This option is only relevant if the *use cache* flag is set."
+
 //
 // Instantiate router.
 //
@@ -82,7 +93,7 @@ router.tag('Validation services');
  * descriptor.
  */
 router.post(
-    'descriptor',
+    'descriptor/value',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -100,14 +111,28 @@ router.post(
             
             ***To use this service, the current user must have the \`read\` role.***
             
-            The service expects the descriptor global identifier and the descriptor value.
-            The value will be validated against the data definition associated with the descriptor \
-            and the service will return an object describing the status of the validation and eventual \
-            additional information describing the outcome.
+            The service expects the descriptor and the other service flags as \
+            path query parameters, and the value to check in the body.
+            
+            The service will return the provided value including eventual \
+            resolved values and a report record describing the status of the \
+            validation.
             
             Optionally, it is possible to indicate in which language the status message should be returned.
         `
     )
+    .queryParam('cache', flagUseCache, flagUseCacheDescription)
+    .queryParam('miss', flagCacheMissed, flagCacheMissedDescription)
+    .queryParam('terms', joi.boolean().default(false),
+        "Expect all descriptors to be terms.")
+    .queryParam('types', joi.boolean().default(false),
+        "Require explicit data types. Empty data sections will not be allowed.")
+    .queryParam('resolve', joi.boolean().default(false),
+        "Attempt to resolve values: provide the code and the validator will attempt to find it.")
+    .queryParam('resfld', joi.string().default(module.context.configuration.localIdentifier),
+        "Field to use when resolving enumerations, used if `resolve` is true.")
+    .queryParam('defns', joi.boolean().default(false),
+        "Allow referencing default namespace when creating objects.")
     .body(ValidateDescriptor, dd
         `
             **Service parameters**
@@ -200,7 +225,7 @@ router.post(
  * descriptor.
  */
 router.post(
-    'descriptor/value',
+    'descriptor',
     (request, response) => {
         const roles = [K.environment.role.read]
         if(Session.hasPermission(request, response, roles)) {
@@ -218,30 +243,14 @@ router.post(
             
             ***To use this service, the current user must have the \`read\` role.***
             
-            The service expects the descriptor and the other service flags as \
-            path query parameters, and the value to check in the body.
-            
-            The service will return the provided value including eventual \
-            resolved values and a report record describing the status of the \
-            validation.
+            The service expects the descriptor global identifier and the descriptor value.
+            The value will be validated against the data definition associated with the descriptor \
+            and the service will return an object describing the status of the validation and eventual \
+            additional information describing the outcome.
             
             Optionally, it is possible to indicate in which language the status message should be returned.
         `
     )
-    .queryParam('cache', joi.boolean().default(true),
-        "Use cache. All resolved terms will be cached.")
-    .queryParam('miss', joi.boolean().default(true),
-        "Use cache also for missing items, if `cache` is `true`.")
-    .queryParam('terms', joi.boolean().default(false),
-        "Expect all descriptors to be terms.")
-    .queryParam('types', joi.boolean().default(false),
-        "Require explicit data types. Empty data sections will not be allowed.")
-    .queryParam('resolve', joi.boolean().default(false),
-        "Attempt to resolve values: provide the code and the validator will attempt to find it.")
-    .queryParam('resfld', joi.string().default(module.context.configuration.localIdentifier),
-        "Field to use when resolving enumerations, used if `resolve` is true.")
-    .queryParam('defns', joi.boolean().default(false),
-        "Allow referencing default namespace when creating objects.")
     .body(ValidateDescriptor, dd
         `
             **Service parameters**
@@ -664,11 +673,10 @@ function doCheckDescriptor(theRequest, theResponse)
     ///
     // Init local storage.
     ///
-    const value = { [theRequest.body.descriptor]: theRequest.body.value }
     const validator =
         new Validator(
-            value,
-            '',
+            theRequest.body.value,
+            theRequest.body.descriptor,
             false,
             theRequest.queryParams.cache,
             theRequest.queryParams.miss,
