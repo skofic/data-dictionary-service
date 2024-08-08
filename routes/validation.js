@@ -65,16 +65,64 @@ const ValidationStatus = joi.object({
     }))
 })
 
-const flagUseCache = joi.boolean().default(true)
-const flagUseCacheDescription =
+const ParamDescriptor = joi.string().default('')
+const ParamDescriptorDescription =
+    "Descriptor.\n" +
+    "Provide the global identifier of the descriptor associated with the \
+    provided value."
+
+const ParamUseCache = joi.boolean().default(true)
+const ParamUseCacheDescription =
     "Use cache.\n" +
     "All resolved terms will be cached and made available for all operations \
     involving the current service."
 
-const flagCacheMissed = joi.boolean().default(true)
-const flagCacheMissedDescription =
+const ParamCacheMissed = joi.boolean().default(true)
+const ParamCacheMissedDescription =
     "Cache also unresolved references.\n" +
     "This option is only relevant if the *use cache* flag is set."
+
+const ParamExpectTerms = joi.boolean().default(false)
+const ParamExpectTermsDescription =
+    "Expect all object properties to have descriptor term references.\n" +
+    "If this option is set, all object properties must belong to the data \
+    dictionary."
+
+const ParamExpectType = joi.boolean().default(false)
+const ParamExpectTypeDescription =
+    "Expect all data types to be set.\n" +
+    "If this option is set, it will not be allowed to have a data definition \
+    section without its type definition."
+
+const ParamResolve = joi.boolean().default(false)
+const ParamResolveDescription =
+    "Attempt to resolve unsuccessful term references.\n" +
+    "If this option is set, when a term reference is not resolved, the provided \
+    value will be tested against the terms code section property indicated in the \
+    *resfld* parameter: if there is a single match, the original value will be \
+    replaced by the matched global identifier. In this case the status code of the \
+    validation will be *zero*. But you must be aware that the original provided \
+    value is incorrect: you will need to use the value returned by the service, \
+    which contains the resolved values. Look for a property named *changes* in the \
+    status report, if present, there were resolved values."
+
+const ParamResolveField = joi.string().default(module.context.configuration.localIdentifier)
+const ParamResolveFieldDescription =
+    "Terms code section field to be probed when resolving term references.\n" +
+    "This option is relevant if the *resolve* flag was set. When resolving \
+    term references, provided non matching values will be tested against \
+    the descriptor global identifier provided in this parameter, which must \
+    belong to the code section of the term. By default this parameter is set \
+    to the *local identifier*, you could set it, for instance, to the *list \
+    of official identifiers* in order to have a larger choice."
+
+const ParamDefNamespace = joi.boolean().default(false)
+const ParamDefNamespaceDescription =
+    "Allow referencing default namespace.\n" +
+    "If this option is set, it will be possible to create terms that have the \
+    *default namespace* as their namespace. If the flag is not set, doing so \
+    will result in an error. Terms deriving directly from the default namespace \
+    are reserved for use by the dictionary engine."
 
 //
 // Instantiate router.
@@ -121,18 +169,14 @@ router.post(
             Optionally, it is possible to indicate in which language the status message should be returned.
         `
     )
-    .queryParam('cache', flagUseCache, flagUseCacheDescription)
-    .queryParam('miss', flagCacheMissed, flagCacheMissedDescription)
-    .queryParam('terms', joi.boolean().default(false),
-        "Expect all descriptors to be terms.")
-    .queryParam('types', joi.boolean().default(false),
-        "Require explicit data types. Empty data sections will not be allowed.")
-    .queryParam('resolve', joi.boolean().default(false),
-        "Attempt to resolve values: provide the code and the validator will attempt to find it.")
-    .queryParam('resfld', joi.string().default(module.context.configuration.localIdentifier),
-        "Field to use when resolving enumerations, used if `resolve` is true.")
-    .queryParam('defns', joi.boolean().default(false),
-        "Allow referencing default namespace when creating objects.")
+    .queryParam('descriptor', ParamDescriptor, ParamDescriptorDescription)
+    .queryParam('cache', ParamUseCache, ParamUseCacheDescription)
+    .queryParam('miss', ParamCacheMissed, ParamCacheMissedDescription)
+    .queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
+    .queryParam('types', ParamExpectType, ParamExpectTypeDescription)
+    .queryParam('resolve', ParamResolve, ParamResolveDescription)
+    .queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
     .body(ValidateDescriptor, dd
         `
             **Service parameters**

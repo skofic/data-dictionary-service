@@ -2420,8 +2420,8 @@ class Validator
 			// Validate object.
 			///
 			let status = true
-			Object.keys(value).some( (property) => {
-
+			Object.keys(value).some( (property) =>
+			{
 				///
 				// Resolve property.
 				///
