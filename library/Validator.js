@@ -340,11 +340,13 @@ class Validator
 		}
 
 		///
-		// Handle provided descriptor.
+		// Validate descriptor value.
 		///
-		return this.validateObject(
-			{ [this.term._key]: this.value }
-		)                                                               // ==>
+		this.value = { [this.term._key]: this.value }
+		const status = this.validateObject(this.value)
+		this.value = this.value[this.term._key]
+
+		return status                                                   // ==>
 
 	} // validate()
 
@@ -397,15 +399,24 @@ class Validator
 			///
 			// Init idle status report.
 			///
-			this.setStatusReport('kOK', key, null, index)
+			this.setStatusReport('kOK', '', null, index)
 
 			///
-			// Validate.
+			// Validate descriptor value.
 			///
-			const container = { [key]: this.value[index] }
-			if(!this.doValidateDataSection(container, key, section, index)) {
+			this.value[index] = { [this.term._key]: this.value[index] }
+			if(!this.validateObject(this.value[index], index)) {
 				status = false
 			}
+			this.value[index] = this.value[index][this.term._key]
+
+			// ///
+			// // Validate.
+			// ///
+			// const container = { [key]: this.value[index] }
+			// if(!this.doValidateDataSection(container, key, section, index)) {
+			// 	status = false
+			// }
 		})
 
 		return status                                                   // ==>
