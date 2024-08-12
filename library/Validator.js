@@ -199,6 +199,13 @@ class Validator
 		this.resolver = resolveCode
 
 		///
+		// Init counters.
+		///
+		this.valid = 0
+		this.warnings = 0
+		this.errors = 0
+
+		///
 		// Handle descriptor.
 		///
 		if(theTerm.length > 0)
@@ -299,7 +306,8 @@ class Validator
 	 * @param theLanguage {String}: Language code for report messages, defaults
 	 *                              to default language.
 	 *
-	 * @return {Boolean}: `true` means valid, `false` means error.
+	 * @return {Number}: `-1` means error, `0` means no errors and `1` means no
+	 *                   errors, but values were updated.
 	 */
 	validate(theLanguage = module.context.configuration.language)
 	{
@@ -312,7 +320,9 @@ class Validator
 		// Handle zipped data.
 		///
 		if(this.zip) {
-			return this.validateZipped()                                // ==>
+			return (this.validateZipped())
+				? this.reportStatus()                                   // ==>
+				: -1                                                    // ==>
 		}
 
 		///
@@ -324,14 +334,18 @@ class Validator
 			// Array of objects.
 			///
 			if(Validator.IsArray(this.value)) {
-				return this.validateObjects()                           // ==>
+				return (this.validateObjects())
+					? this.reportStatus()                               // ==>
+					: -1                                                // ==>
 			}
 
 			///
 			// Object.
 			///
 			if(Validator.IsObject(this.value)) {
-				return this.validateObject(this.value)                  // ==>
+				return (this.validateObject(this.value))
+					? this.reportStatus()                               // ==>
+					: -1                                                // ==>
 			}
 
 			throw new Error(
@@ -346,7 +360,9 @@ class Validator
 		const status = this.validateObject(this.value)
 		this.value = this.value[this.term._key]
 
-		return status                                                   // ==>
+		return (status)
+			? this.reportStatus()                                       // ==>
+			: -1                                                        // ==>
 
 	} // validate()
 
@@ -410,13 +426,18 @@ class Validator
 			}
 			this.value[index] = this.value[index][this.term._key]
 
-			// ///
-			// // Validate.
-			// ///
-			// const container = { [key]: this.value[index] }
-			// if(!this.doValidateDataSection(container, key, section, index)) {
-			// 	status = false
-			// }
+			///
+			// Update counters.
+			///
+			if(this.report[index].status.code === 0) {
+				if(this.report[index].hasOwnProperty('changes')) {
+					this.warnings++
+				} else {
+					this.valid++
+				}
+			} else {
+				this.errors++
+			}
 		})
 
 		return status                                                   // ==>
@@ -459,9 +480,20 @@ class Validator
 			///
 			// Handle object.
 			///
-			if(Validator.IsObject(value)) {
+			if(Validator.IsObject(value))
+			{
+				///
+				// Validate.
+				///
 				if(!this.validateObject(this.value[index], index)) {
 					status = false
+					this.errors++
+				} else {
+					if(this.report[index].hasOwnProperty('changes')) {
+						this.warnings++
+					} else {
+						this.valid++
+					}
 				}
 			}
 			else
@@ -3640,6 +3672,65 @@ class Validator
 	 * STATIC UTILITY METHODS
 	 */
 
+
+	/**
+	 * reportStatus
+	 *
+	 * This method will return `-1` if the current report contains an error,
+	 * `0` if the current report does not contain errors or resolved values and
+	 * `1` if the current report indicates resolved values, but no error.
+	 *
+	 * When parsing multiple reports, any error will trigger `-1` and any
+	 * updated value will trigger `1`. The parsing will exit on first error.
+	 *
+	 * @return {Number}: `-1` error, `0` valid and `1` valid but updated values.
+	 */
+	reportStatus()
+	{
+		///
+		// Assert array.
+		///
+		if(Validator.IsArray(this.report))
+		{
+			///
+			// Iterate reports.
+			///
+			let status = 0
+
+			///
+			// Iterate reports.
+			///
+			this.report.some( (report) => {
+				if(report.status.code !== 0) {
+					status = -1
+					return true
+				} else if(report.hasOwnProperty('changes')) {
+					status = 1
+					return false
+				}
+			})
+
+			return status                                               // ==>
+
+		} // Report is an array.
+
+		///
+		// Handle error.
+		///
+		if(this.report.status.code !== 0) {
+			return -1                                                   // ==>
+		}
+
+		///
+		// Handle updated values.
+		///
+		if(this.report.hasOwnProperty('changes')) {
+			return 1                                                    // ==>
+		}
+
+		return 0                                                        // ==>
+
+	} // reportStatus()
 
 	/**
 	 * IsBoolean

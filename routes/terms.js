@@ -17,7 +17,8 @@ const createRouter = require('@arangodb/foxx/router')
 const K = require("../utils/constants")
 const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
-const Validation = require("../utils/validation")
+// const Validation = require("../utils/validation")
+const Validator = require("../library/Validator")
 
 //
 // Models.
@@ -840,69 +841,114 @@ function doInsertTerm(request, response)
 	// Init local storage.
 	//
 	const term = request.body
+	const validator =
+		new Validator(
+			term,
+			'',
+			false,
+			true,
+			true,
+			false,
+			false,
+			false,
+			false,
+			module.context.configuration.localIdentifier
+		)
 
 	//
 	// Init code section.
 	//
 	insertTermPrepareCode(term, request, response)
 
-	//
-	// Check information section.
-	//
-	if (!insertTermCheckInfo(term, request, response)) {
-		return                                                                  // ==>
-	}
+	///
+	// Validate term.
+	///
+	const report = validator.validate()
 
-	//
-	// Validate object.
-	//
-	const report = Validation.checkObject(term)
+	// //
+	// // Check information section.
+	// //
+	// if (!insertTermCheckInfo(term, request, response)) {
+	// 	return                                                                  // ==>
+	// }
 
-	//
-	// Clean report.
-	//
-	for(const item of Object.keys(report)) {
-		if(report[item].status.code === 0 || report[item].status.code === 1) {
-			delete report[item]
-		}
-	}
-
-	//
-	// Handle errors.
-	//
-	if(Object.keys(report).length > 0) {
-		response.status(400)
-		response.send({ report: report, value: term })                          // ==>
-	}
-
+	///
+	// Insert term.
+	///
+	try
+	{
 		//
-		// Save term.
-	//
-	else {
-		try
-		{
-			//
-			// Insert.
-			//
-			const meta = collection.save(term)
+		// Insert.
+		//
+		const meta = collection.save(term)
 
-			response.send(Object.assign(meta, term))                            // ==>
+		response.send(Object.assign(meta, term))                            // ==>
+	}
+	catch (error)
+	{
+		//
+		// Duplicate record
+		if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
+			response.throw(
+				409,
+				K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
+			)                                                               // ==>
 		}
-		catch (error)
-		{
-			//
-			// Duplicate record
-			if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
-				response.throw(
-					409,
-					K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
-				)                                                               // ==>
-			}
-			else {
-				response.throw(500, error.message)                          // ==>
-			}
+		else {
+			response.throw(500, error.message)                          // ==>
 		}
 	}
+
+	// //
+	// // Validate object.
+	// //
+	// const report = Validation.checkObject(term)
+	//
+	// //
+	// // Clean report.
+	// //
+	// for(const item of Object.keys(report)) {
+	// 	if(report[item].status.code === 0 || report[item].status.code === 1) {
+	// 		delete report[item]
+	// 	}
+	// }
+	//
+	// //
+	// // Handle errors.
+	// //
+	// if(Object.keys(report).length > 0) {
+	// 	response.status(400)
+	// 	response.send({ report: report, value: term })                          // ==>
+	// }
+	//
+	// //
+	// // Save term.
+	// //
+	// else {
+	// 	try
+	// 	{
+	// 		//
+	// 		// Insert.
+	// 		//
+	// 		const meta = collection.save(term)
+	//
+	// 		response.send(Object.assign(meta, term))                            // ==>
+	// 	}
+	// 	catch (error)
+	// 	{
+	// 		//
+	// 		// Duplicate record
+	// 		if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
+	// 			response.throw(
+	// 				409,
+	// 				K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
+	// 			)                                                               // ==>
+	// 		}
+	// 		else {
+	// 			response.throw(500, error.message)                          // ==>
+	// 		}
+	// 	}
+	// }
 
 } // doInsertTerm()
 
@@ -995,19 +1041,19 @@ function doInsertTerms(request, response)
 		}
 	)
 
+	// //
+	// // Validate terms.
+	// //
+	// const report = Validation.checkObjects(terms)
+	// if(report.hasOwnProperty('errors')) {
+	// 	response.status(400)
+	// 	response.send(report)
 	//
-	// Validate terms.
-	//
-	const report = Validation.checkObjects(terms)
-	if(report.hasOwnProperty('errors')) {
-		response.status(400)
-		response.send(report)
+	// 	return                                                                  // ==>
+	// }
 
-		return                                                                  // ==>
-	}
-
 	//
-	// Save term.
+	// Save terms.
 	//
 	try
 	{
@@ -1223,23 +1269,23 @@ function doUpdateTerm(request, response)
 	//
 	const updated = mergeObjects(original, request.body)
 
+	// //
+	// // Validate changes.
+	// //
+	// const result = Validation.validateTermChanges(original, updated)
+	// if(Object.keys(result).length > 0) {
+	// 	response.status(400)
+	// 	response.send({
+	// 		status: K.error.kMSG_BAD_TERM_UPDATE.message[module.context.configuration.language],
+	// 		data: result
+	// 	})
+	// 	return                                                                  // ==>
+	// }
 	//
-	// Validate changes.
-	//
-	const result = Validation.validateTermChanges(original, updated)
-	if(Object.keys(result).length > 0) {
-		response.status(400)
-		response.send({
-			status: K.error.kMSG_BAD_TERM_UPDATE.message[module.context.configuration.language],
-			data: result
-		})
-		return                                                                  // ==>
-	}
-
-	//
-	// Validate object.
-	//
-	const report = Validation.checkObject(updated)
+	// //
+	// // Validate object.
+	// //
+	// const report = Validation.checkObject(updated)
 
 	//
 	// Clean report.

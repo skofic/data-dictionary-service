@@ -545,25 +545,10 @@ function doCheckDescriptorValue(theRequest, theResponse)
     ///
     // Handle status.
     ///
-    if(validator.report.status.code === 0) {
-        if (validator.report.hasOwnProperty('changes')) {
-            theResponse.send({
-                status: status,
-                report: validator.report,
-                value: validator.value
-            })                                                          // ==>
-        } else {
-            theResponse.send({
-                status: status,
-                report: validator.report
-            })                                                          // ==>
-        }
+    if(status === 0) {
+        theResponse.send({ status: status })
     } else {
-        theResponse.send({
-            status: status,
-            report: validator.report,
-            value: validator.value
-        })                                                              // ==>
+        theResponse.send({ status: status, report: validator.report, value: validator.value  })
     }
 
 } // doCheckDescriptorValue()
@@ -605,22 +590,20 @@ function doCheckDescriptorValues(theRequest, theResponse)
     // Iterate statuses.
     ///
     const reports = []
-    for(let i = 0; i < validator.report.length; i++) {
-        if(validator.report[i].hasOwnProperty('changes')) {
+    validator.report.forEach( (value, index) => {
+        if(value.status.code !== 0 || value.hasOwnProperty('changes')) {
             reports.push({
-                report: validator.report[i],
-                value: validator.value[i]
-            })
-        } else if(validator.report[i].status.code !== 0) {
-            reports.push({
-                report: validator.report[i],
-                value: validator.value[i]
+                report: value,
+                value: validator.value[index]
             })
         }
-    }
+    })
 
     theResponse.send({
         status: status,
+        valid: validator.valid,
+        warnings: validator.warnings,
+        errors: validator.errors,
         reports: reports
     })
 
@@ -662,25 +645,10 @@ function doCheckObject(theRequest, theResponse)
     ///
     // Handle status.
     ///
-    if(validator.report.status.code === 0) {
-        if (validator.report.hasOwnProperty('changes')) {
-            theResponse.send({
-                status: status,
-                report: validator.report,
-                value: validator.value
-            })                                                          // ==>
-        } else {
-            theResponse.send({
-                status: status,
-                report: validator.report
-            })                                                          // ==>
-        }
+    if(status === 0) {
+        theResponse.send({ status: status })
     } else {
-        theResponse.send({
-            status: status,
-            report: validator.report,
-            value: validator.value
-        })                                                              // ==>
+        theResponse.send({ status: status, report: validator.report, value: validator.value  })
     }
 
 } // doCheckObject()
@@ -720,22 +688,20 @@ function doCheckObjects(theRequest, theResponse)
     // Iterate statuses.
     ///
     const reports = []
-    for(let i = 0; i < validator.report.length; i++) {
-        if(validator.report[i].hasOwnProperty('changes')) {
+    validator.report.forEach( (value, index) => {
+        if(value.status.code !== 0 || value.hasOwnProperty('changes')) {
             reports.push({
-                report: validator.report[i],
-                value: validator.value[i]
-            })
-        } else if(validator.report[i].status.code !== 0) {
-            reports.push({
-                report: validator.report[i],
-                value: validator.value[i]
+                report: value,
+                value: validator.value[index]
             })
         }
-    }
+    })
 
     theResponse.send({
         status: status,
+        valid: validator.valid,
+        warnings: validator.warnings,
+        errors: validator.errors,
         reports: reports
     })
 
