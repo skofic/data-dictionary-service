@@ -9,16 +9,12 @@
 //
 // Frameworks.
 //
-const fs = require('fs')                    // File system.
 const db = require('@arangodb').db          // Database.
-const aql = require('@arangodb').aql        // Database AQL queries.
-const crypto = require('@arangodb/crypto')  // Cryptographic functions.
 
 //
 // Application.
 //
 const K = require( './constants' )  // Application constants.
-const Auth = require('./auth')                          // Authentication functions.
 
 
 /**

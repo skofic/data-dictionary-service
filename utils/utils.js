@@ -6,19 +6,11 @@
 const _ = require('lodash');                            // Lodash library.
 const aql = require('@arangodb').aql;					// AQL queries.
 const crypto = require('@arangodb/crypto')              // Cryptographic utilities.
-const errors = require('@arangodb').errors;             // ArangoDB errors.
-const status = require('statuses');                     // Status codes.
 
 //
 // Import resources.
 //
 const K = require( './constants' );					    // Application constants.
-
-//
-// Terms cache.
-//
-const TermCache = require('./TermCache')
-const Cache = new TermCache()
 
 
 /******************************************************************************/
