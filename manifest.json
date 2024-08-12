@@ -498,6 +498,42 @@
             "type": "string",
             "required": true,
             "default": "_max-items"
+        },
+        "titleInfoField": {
+            "description": "Title information section field",
+            "type": "string",
+            "required": true,
+            "default": "_title"
+        },
+        "definitionInfoField": {
+            "description": "Definition information section field",
+            "type": "string",
+            "required": true,
+            "default": "_definition"
+        },
+        "descriptionInfoField": {
+            "description": "Description information section field",
+            "type": "string",
+            "required": true,
+            "default": "_description"
+        },
+        "examplesInfoField": {
+            "description": "Examples information section field",
+            "type": "string",
+            "required": true,
+            "default": "_examples"
+        },
+        "notesInfoField": {
+            "description": "Notes information section field",
+            "type": "string",
+            "required": true,
+            "default": "_notes"
+        },
+        "termObjectDefinition": {
+            "description": "Term object definition",
+            "type": "string",
+            "required": true,
+            "default": "_term"
         }
     },
     "tests": [

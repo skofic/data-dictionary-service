@@ -844,7 +844,7 @@ function doInsertTerm(request, response)
 	const validator =
 		new Validator(
 			term,
-			'',
+			module.context.configuration.termObjectDefinition,
 			false,
 			true,
 			true,
@@ -858,19 +858,29 @@ function doInsertTerm(request, response)
 	//
 	// Init code section.
 	//
-	insertTermPrepareCode(term, request, response)
+	Validator.SetDefaultTermCodes(term)
+
+	///
+	// Check for default language.
+	///
+	if(!Validator.AssertTermInfoDefaultLanguage(term, response)) {
+		return                                                          // ==>
+	}
+
+	/// TODO: Find a way to return validation report as error.
 
 	///
 	// Validate term.
 	///
-	const report = validator.validate()
-
-	// //
-	// // Check information section.
-	// //
-	// if (!insertTermCheckInfo(term, request, response)) {
-	// 	return                                                                  // ==>
-	// }
+	const status = validator.validate()
+	if(status !== 0) {
+		response.send({
+			status: status,
+			report: validator.report,
+			value: validator.value
+		})
+		return                                                          // ==>
+	}
 
 	///
 	// Insert term.
@@ -882,7 +892,7 @@ function doInsertTerm(request, response)
 		//
 		const meta = collection.save(term)
 
-		response.send(Object.assign(meta, term))                            // ==>
+		response.send(Object.assign(meta, term))                        // ==>
 	}
 	catch (error)
 	{
@@ -892,63 +902,12 @@ function doInsertTerm(request, response)
 			response.throw(
 				409,
 				K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
-			)                                                               // ==>
+			)                                                           // ==>
 		}
 		else {
-			response.throw(500, error.message)                          // ==>
+			response.throw(500, error.message)                      // ==>
 		}
 	}
-
-	// //
-	// // Validate object.
-	// //
-	// const report = Validation.checkObject(term)
-	//
-	// //
-	// // Clean report.
-	// //
-	// for(const item of Object.keys(report)) {
-	// 	if(report[item].status.code === 0 || report[item].status.code === 1) {
-	// 		delete report[item]
-	// 	}
-	// }
-	//
-	// //
-	// // Handle errors.
-	// //
-	// if(Object.keys(report).length > 0) {
-	// 	response.status(400)
-	// 	response.send({ report: report, value: term })                          // ==>
-	// }
-	//
-	// //
-	// // Save term.
-	// //
-	// else {
-	// 	try
-	// 	{
-	// 		//
-	// 		// Insert.
-	// 		//
-	// 		const meta = collection.save(term)
-	//
-	// 		response.send(Object.assign(meta, term))                            // ==>
-	// 	}
-	// 	catch (error)
-	// 	{
-	// 		//
-	// 		// Duplicate record
-	// 		if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
-	// 			response.throw(
-	// 				409,
-	// 				K.error.kMSG_ERROR_DUPLICATE.message[module.context.configuration.language]
-	// 			)                                                               // ==>
-	// 		}
-	// 		else {
-	// 			response.throw(500, error.message)                          // ==>
-	// 		}
-	// 	}
-	// }
 
 } // doInsertTerm()
 
@@ -1019,38 +978,46 @@ function doInsertTerms(request, response)
 	//
 	// Init local storage.
 	//
-	let terms = request.body
+	const validator =
+		new Validator(
+			request.body,
+			module.context.configuration.termObjectDefinition,
+			true,
+			true,
+			true,
+			true,
+			false,
+			false,
+			false,
+			module.context.configuration.localIdentifier
+		)
 
 	//
 	// Prepare code section and assert default language in info section.
 	//
-	terms.forEach(
-		term =>
-		{
-			//
-			// Init code section.
-			//
-			insertTermPrepareCode(term, request, response)
+	request.body.forEach( (term) => {
+		//
+		// Init code section.
+		//
+		Validator.SetDefaultTermCodes(term)
 
-			//
-			// Check information section.
-			//
-			if (!insertTermCheckInfo(term, request, response)) {
-				return                                                          // ==>
-			}
+		///
+		// Check for default language.
+		///
+		if(!Validator.AssertTermInfoDefaultLanguage(term, response)) {
+			return                                                      // ==>
 		}
-	)
+	})
 
-	// //
-	// // Validate terms.
-	// //
-	// const report = Validation.checkObjects(terms)
-	// if(report.hasOwnProperty('errors')) {
-	// 	response.status(400)
-	// 	response.send(report)
 	//
-	// 	return                                                                  // ==>
-	// }
+	// Validate terms.
+	//
+	if(validator.validate() === -1) {
+		response.status(400)
+		response.send(report)
+
+		return                                                          // ==>
+	}
 
 	//
 	// Save terms.
@@ -1525,47 +1492,6 @@ function termsSelectionQueryOld(request, response)
 	return query                                                                // ==>
 
 } // termsSelectionQueryOld()
-
-/**
- * Prepare term code section.
- * @param term: The term object.
- * @param request: API request.
- * @param response: API response.
- */
-function insertTermPrepareCode(term, request, response)
-{
-	//
-	// Init code section.
-	//
-	if(term.hasOwnProperty('_code')) {
-
-		//
-		// Set global identifier.
-		//
-		if(term._code.hasOwnProperty('_nid')) {
-			term._code['_gid'] = `${term._code._nid}${K.token.ns}${term._code._lid}`
-		} else {
-			term._code['_gid'] = term._code._lid
-		}
-
-		//
-		// Set key.
-		//
-		term._key = term._code._gid
-
-		//
-		// Set official codes.
-		//
-		if(term._code.hasOwnProperty('_aid')) {
-			if(!term._code._aid.includes(term._code._lid)) {
-				term._code._aid.push(term._code._lid)
-			}
-		} else {
-			term._code['_aid'] = [term._code._lid]
-		}
-	}
-
-} // insertTermPrepareCode()
 
 /**
  * Check term info section.

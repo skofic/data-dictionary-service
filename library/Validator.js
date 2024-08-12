@@ -11,6 +11,7 @@ const _ = require('lodash')
 const crypto = require('@arangodb/crypto')
 const TermsCache = require('./TermsCache')
 const ValidationReport = require('./ValidationReport')
+const K = require("../utils/constants");
 
 /**
  * Validator
@@ -3667,12 +3668,6 @@ class Validator
 
 	} // logResolvedValues()
 
-
-	/**
-	 * STATIC UTILITY METHODS
-	 */
-
-
 	/**
 	 * reportStatus
 	 *
@@ -3731,6 +3726,130 @@ class Validator
 		return 0                                                        // ==>
 
 	} // reportStatus()
+
+
+	/**
+	 * STATIC UTILITY METHODS
+	 */
+
+
+	/**
+	 * SetDefaultTermCodes
+	 *
+	 * This method will take care of setting default values for the global
+	 * identifier, the document key and the official identifiers.
+	 *
+	 * The method does not assume the term is complete: it will first check if
+	 * there is a code section, it will then check if there is the local
+	 * identifier, only then will it set the default values. So you should use
+	 * it *before* validating the term.
+	 *
+	 * @param theTerm {Object}: The term to handle.
+	 */
+	static SetDefaultTermCodes(theTerm)
+	{
+		///
+		// Check code section.
+		///
+		if(theTerm.hasOwnProperty(module.context.configuration.sectionCode))
+		{
+			///
+			// Check local identifier.
+			///
+			const codeSection = theTerm[module.context.configuration.sectionCode]
+			if(codeSection.hasOwnProperty(module.context.configuration.localIdentifier))
+			{
+				///
+				// Set global identifier.
+				///
+				const localIdentifier = codeSection[module.context.configuration.localIdentifier]
+				if(codeSection.hasOwnProperty(module.context.configuration.namespaceIdentifier))
+				{
+					const namespaceIdentifier = codeSection[module.context.configuration.namespaceIdentifier]
+					codeSection[module.context.configuration.globalIdentifier] = `${namespaceIdentifier}${K.token.ns}${localIdentifier}`
+				} else {
+					codeSection[module.context.configuration.globalIdentifier] = localIdentifier
+				}
+
+				//
+				// Set key.
+				//
+				theTerm._key = codeSection[module.context.configuration.globalIdentifier]
+
+				//
+				// Set official codes.
+				//
+				if(codeSection.hasOwnProperty(module.context.configuration.officialIdentifiers))
+				{
+					const officialIdentifiers = codeSection[module.context.configuration.officialIdentifiers]
+					if(!officialIdentifiers.includes(localIdentifier)) {
+						officialIdentifiers.push(localIdentifier)
+					}
+				} else {
+					codeSection[module.context.configuration.officialIdentifiers] = [localIdentifier]
+				}
+
+			} // Has local identifier.
+
+		} // Has code section.
+
+	} // SetDefaultTermCodes()
+
+	/**
+	 * AssertTermInfoDefaultLanguage
+	 *
+	 * This method will check if all the information section relevant fields
+	 * have an entry in the default language. The method will return false if
+	 * the default language version is missing and true if the version is there,
+	 * or if the term does not have the information section.
+	 *
+	 * @param theTerm {Object}: The term to handle.
+	 * @param theResponse {Object}: Service response.
+	 *
+	 * @return {Boolean}: `false` is missing.
+	 */
+	static AssertTermInfoDefaultLanguage(theTerm, theResponse)
+	{
+		//
+		// Check information section.
+		//
+		if(theTerm.hasOwnProperty(module.context.configuration.sectionInfo))
+		{
+			///
+			// Init local storage.
+			///
+			const infoSection = theTerm[module.context.configuration.sectionInfo]
+			const fields = [
+				module.context.configuration.titleInfoField,
+				module.context.configuration.definitionInfoField,
+				module.context.configuration.descriptionInfoField,
+				module.context.configuration.examplesInfoField,
+				module.context.configuration.notesInfoField
+			]
+
+			//
+			// Assert descriptions have the default language.
+			//
+			for(const field of fields) {
+				if(infoSection.hasOwnProperty(field)) {
+					if(!infoSection[field].hasOwnProperty(module.context.configuration.language)) {
+						let message = K.error.kMSG_ERROR_MISSING_DEF_LANG.message[module.context.configuration.language]
+						message += ` [term: ${theTerm._key}]`
+						theResponse.throw(400, message)
+
+						return false                                    // ==>
+
+					} // Default language version is missing.
+
+				} // Has field.
+
+			} // Iterating fields.
+
+		} // Has information section.
+
+		return true                                                     // ==>
+
+	} // AssertTermInfoDefaultLanguage()
 
 	/**
 	 * IsBoolean
