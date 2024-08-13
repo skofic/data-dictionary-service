@@ -1741,7 +1741,7 @@ function validateRegexp(theBlock, theValue, theReport)
  * @param theReplaced {Object}: New term.
  * @return {Object}: Invalid properties (leaf nodes and missing top level sections).
  */
-function validateTermChanges(theOriginal,theReplaced)
+function validateTermChanges(theOriginal, theReplaced)
 {
     //
     // Init local storage.

@@ -12,6 +12,7 @@ const crypto = require('@arangodb/crypto')
 const TermsCache = require('./TermsCache')
 const ValidationReport = require('./ValidationReport')
 const K = require("../utils/constants");
+const {isObject} = require("../utils/utils");
 
 /**
  * Validator
@@ -1901,22 +1902,26 @@ class Validator
 		if(value.length === 0)
 		{
 			///
-			// Handle dictionary term and namespace field.
+			// Handle namespace.
 			///
-			if(this.defNamespace &&
-				theKey === module.context.configuration.namespaceIdentifier) {
-				return true                                             // ==>
-			}
+			if(theKey === module.context.configuration.namespaceIdentifier)
+			{
+				///
+				// Allowed to reference default namespace.
+				///
+				if(this.defNamespace) {
+					return true                                         // ==>
+				}
 
-			///
-			// Handle user term or field other than _nid.
-			///
-			if((!this.defNamespace) ||
-				(theKey !== module.context.configuration.namespaceIdentifier)) {
 				return this.setStatusReport(
-					'kEMPTY_KEY', theKey, value, theReportIndex
+					'kNO_REFERENCE_DEFAULT_NAMESPACE', theKey, value, theReportIndex
 				)                                                       // ==>
-			}
+
+			} // Empty string namespace.
+
+			return this.setStatusReport(
+				'kEMPTY_KEY', theKey, value, theReportIndex
+			)                                                           // ==>
 
 		} // Provided default namespace reference.
 
@@ -3793,7 +3798,7 @@ class Validator
 
 		} // Has code section.
 
-	} // SetDefaultTermCodes()
+	} // Validator::SetDefaultTermCodes()
 
 	/**
 	 * AssertTermInfoDefaultLanguage
@@ -3804,11 +3809,10 @@ class Validator
 	 * or if the term does not have the information section.
 	 *
 	 * @param theTerm {Object}: The term to handle.
-	 * @param theResponse {Object}: Service response.
 	 *
 	 * @return {Boolean}: `false` is missing.
 	 */
-	static AssertTermInfoDefaultLanguage(theTerm, theResponse)
+	static AssertTermInfoDefaultLanguage(theTerm)
 	{
 		//
 		// Check information section.
@@ -3833,9 +3837,6 @@ class Validator
 			for(const field of fields) {
 				if(infoSection.hasOwnProperty(field)) {
 					if(!infoSection[field].hasOwnProperty(module.context.configuration.language)) {
-						let message = K.error.kMSG_ERROR_MISSING_DEF_LANG.message[module.context.configuration.language]
-						message += ` [term: ${theTerm._key}]`
-						theResponse.throw(400, message)
 
 						return false                                    // ==>
 
@@ -3849,7 +3850,336 @@ class Validator
 
 		return true                                                     // ==>
 
-	} // AssertTermInfoDefaultLanguage()
+	} // Validator::AssertTermInfoDefaultLanguage()
+
+	/**
+	 * ValidateTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the object are valid.
+	 *
+	 * The method will perform the following tests:
+	 * - `_key`: Value must not change.
+	 * - `_nid`: Value must not change.
+	 * - `_lid`: Value must not change.
+	 * - `_gid`: Value must not change.
+	 * - `_aid`: Array must contain `_lid` (updates the field with no error).
+	 * - `_data`: The only properties that can change are: `_subject`, `_class`,
+	 *            `_domain` and `_tag`.
+	 * - `_rule`: No changes allowed.
+	 *
+	 * The method will return an object containing the invalid properties: a
+	 * dictionary with the property name as key with `old` holding the old value
+	 * and `new` holding the new.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Init local storage.
+		///
+		const result = {}
+
+		///
+		// Handle document key.
+		///
+		if(theUpdated.hasOwnProperty('_key')) {
+			if(theOriginal.hasOwnProperty('_key')) {
+				if(theUpdated._key !== theOriginal._key) {
+					result['_key'] = {
+						old: theOriginal._key,
+						new: theUpdated._key
+					}
+				}
+			} else {
+				result['_key'] = {
+					old: null,
+					new: theUpdated._key
+				}
+			}
+		} else if(theOriginal.hasOwnProperty('_key')) {
+			result['_key'] = {
+				old: theOriginal._key,
+				new: null
+			}
+		}
+
+		///
+		// Init local storage.
+		///
+		let section = module.context.configuration.sectionCode
+		let codes = [
+			module.context.configuration.namespaceIdentifier,
+			module.context.configuration.localIdentifier,
+			module.context.configuration.globalIdentifier
+		]
+
+		// Update has code section.
+		if(theUpdated.hasOwnProperty(section)) {
+
+			// Original has code section.
+			if(theOriginal.hasOwnProperty(section)) {
+				const original = theOriginal[section]
+				const updated = theUpdated[section]
+
+				// Iterate codes.
+				codes.forEach( (code) => {
+
+					// Updated has code.
+					if(updated.hasOwnProperty(code)) {
+
+						// Original has code.
+						if(original.hasOwnProperty(code)) {
+
+							// Codes don't match.
+							if(updated[code] !== original[code]) {
+								result[code] = { old: original[code], new: updated[code] }
+							}
+
+						} // Original has code.
+
+						// original is missing code.
+						else {
+							result[code] = { old: null, new: updated[code] }
+						}
+
+					} // Updated has code.
+
+					// Updated is missing code.
+					else if(original.hasOwnProperty(code)) {
+						result[code] = { old: original[code], new: null }
+					}
+
+				}) // Iterating code section immutable codes.
+
+				// Updated has official codes.
+				const officialCodes = module.context.configuration.officialIdentifiers
+				const localIdentifier = module.context.configuration.localIdentifier
+				if(updated.hasOwnProperty(officialCodes)) {
+
+					// Assert official codes is array (will be caught by validation).
+					if(Validator.IsArray(updated[officialCodes])) {
+
+						// Updated has local identifier (will be caught by validator).
+						if(updated.hasOwnProperty(localIdentifier)) {
+
+							// Add local identifier to official identifiers.
+							if(!updated[officialCodes].includes(updated[localIdentifier])) {
+								theUpdated[section][officialCodes].push(updated[localIdentifier])
+							}
+
+						} // Original has official codes.
+
+					} // Official codes is array.
+
+				} // Updated has official codes.
+
+			} // Original has code section.
+
+			// Original is missing code section.
+			else {
+				result[section] = { old: null, new: theUpdated[section] }
+			}
+
+		} // Update has code section.
+
+		// Updated is missing code section.
+		else if(theOriginal.hasOwnProperty(section)) {
+			result[section] = { old: theOriginal[section], new: null }
+		}
+
+		///
+		// Init local storage.
+		///
+		section = module.context.configuration.sectionData
+		codes = [
+			module.context.configuration.sectionScalar,
+			module.context.configuration.sectionArray,
+			module.context.configuration.sectionSet,
+			module.context.configuration.sectionDict
+		]
+
+		// Updated has data section.
+		if(theUpdated.hasOwnProperty(section)) {
+
+			// Original has data section.
+			if(theOriginal.hasOwnProperty(section)) {
+				const original = theOriginal[section]
+				const updated = theUpdated[section]
+
+				// iterate codes.
+				codes.forEach( (code) => {
+
+					// Updated has section.
+					if(updated.hasOwnProperty(code)) {
+
+						// Original has section.
+						if(original.hasOwnProperty(code)) {
+
+							// Sections don't match.
+							// Sections don't match.
+							if(JSON.stringify(updated[code]) !== JSON.stringify(updated[code])) {
+								result[code] = { old: original[code], new: updated[code] }
+							}
+
+						} // Original has section.
+
+						// Original is missing section.
+						else {
+							result[code] = { old: original[code], new: updated[code] }
+						}
+
+					} // Updated has section.
+
+					// Updated is missing section.
+					else if(original.hasOwnProperty(code)) {
+						result[code] = { old: original[code], new: null }
+					}
+
+				}) // Iterating sections.
+
+			} // Original has data section.
+
+		} // Updated has data section.
+
+		// Updated is missing data section.
+		else if(theOriginal.hasOwnProperty(section)) {
+			result[section] = { old: theOriginal[section], new: null }
+		}
+
+		///
+		// Init local storage.
+		///
+		section = module.context.configuration.sectionRule
+
+		// Updated has rule section.
+		if(theUpdated.hasOwnProperty(section)) {
+
+			// Original has rule section.
+			if(theOriginal.hasOwnProperty(section)) {
+
+				// Rule sections don't match.
+				if(JSON.stringify(theOriginal[section]) !== JSON.stringify(theUpdated[section])) {
+					result[section] = { old: theOriginal[section], new: theUpdated[code] }
+				}
+
+			} // Original has rule section.
+
+		} // Updated has rule section.
+
+		// Updated is missing rule section.
+		else if(theOriginal.hasOwnProperty(section)) {
+			result[section] = { old: theOriginal[section], new: null }
+		}
+
+		return result                                                   // ==>
+
+	} // Validator::ValidateTermUpdates()
+
+	/**
+	 * MergeObjects
+	 *
+	 * The method will merge the provided object with the provided updates and
+	 * will return the merged result.
+	 *
+	 * Updated properties with a null value will be removed from the target if
+	 * there.
+	 *
+	 * If any of the two parameters is not an object, the method will do nothing
+	 * and return the original object.
+	 *
+	 * @param theOriginal {Object}: The original object.
+	 * @param theUpdates {Object}: The updated properties.
+	 *
+	 * @return {Object}: The merged object.
+	 */
+	static MergeObjects(theOriginal = {}, theUpdates = {})
+	{
+		//
+		// Ensure both are objects.
+		//
+		if(isObject(theOriginal) && isObject(theUpdates))
+		{
+			//
+			// Clone both objects.
+			//
+			const copyTarget = Validator.DeepClone(theOriginal)
+			const copyUpdates = Validator.DeepClone(theUpdates)
+
+			//
+			// Iterate properties to be applied.
+			//
+			Object.keys(copyUpdates).forEach( (key) => {
+
+				//
+				// Remove property.
+				//
+				if(copyUpdates[key] === null) {
+					if(copyTarget.hasOwnProperty(key)) {
+						delete copyTarget[key]
+					}
+				}
+
+				//
+				// Recurse objects.
+				//
+				else {
+					copyTarget[key] = (isObject(copyUpdates[key]))
+						? Validator.MergeObjects(copyTarget[key], copyUpdates[key])
+						: copyUpdates[key]
+				}
+			})
+
+			return copyTarget                                           // ==>
+
+		} // Both parameters are objects.
+
+		return theOriginal                                              // ==>
+
+	} // Validator::MergeObjects()
+
+	/**
+	 * DeepClone
+	 *
+	 * The method will merge the provided value and return the clone.
+	 *
+	 * @param theItem {Any}: The original value.
+	 *
+	 * @return {Any}: The cloned value.
+	 */
+	static DeepClone(theItem)
+	{
+		///
+		// Handle values that don't need cloning.
+		///
+		if(theItem === null || typeof theItem !== 'object') {
+			return theItem                                              // ==>
+		}
+
+		///
+		// Handle arrays.
+		///
+		if(Array.isArray(theItem)) {
+			return theItem.map(Validator.DeepClone)                    // ==>
+		}
+
+		///
+		// Handle objects.
+		///
+		const clone = {}
+		for(const key in theItem) {
+			if(theItem.hasOwnProperty(key)) {
+				clone[key] = Validator.DeepClone(theItem[key])
+			}
+		}
+
+		return clone                                                    // ==>
+
+	} // Validator::DeepClone()
 
 	/**
 	 * IsBoolean

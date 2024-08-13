@@ -137,8 +137,12 @@ router.post(
             - Parameter error: if the error is caught at the level of the parameter, \
               the service will return a standard error.
             - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+              object with the following properties:
+              - *status*: The status level:
+                - \`-1\`: Error.
+                - \`1\`: Warning: this will be issued in case values in the object have been updated.
+              - *report*: An object containing the status report.
+              - *value*: The value, eventually containing the updated values.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -863,17 +867,25 @@ function doInsertTerm(request, response)
 	///
 	// Check for default language.
 	///
-	if(!Validator.AssertTermInfoDefaultLanguage(term, response)) {
+	if(!Validator.AssertTermInfoDefaultLanguage(term)) {
+		let message =
+			K
+				.error
+				.kMSG_ERROR_MISSING_DEF_LANG
+				.message[module.context.configuration.language]
+		message += ` [term: ${term._key}]`
+		response.status(400)
+		response.send(message)
+
 		return                                                          // ==>
 	}
-
-	/// TODO: Find a way to return validation report as error.
 
 	///
 	// Validate term.
 	///
 	const status = validator.validate()
 	if(status !== 0) {
+		response.status = 400
 		response.send({
 			status: status,
 			report: validator.report,
@@ -1004,7 +1016,16 @@ function doInsertTerms(request, response)
 		///
 		// Check for default language.
 		///
-		if(!Validator.AssertTermInfoDefaultLanguage(term, response)) {
+		if(!Validator.AssertTermInfoDefaultLanguage(term)) {
+			let message =
+				K
+					.error
+					.kMSG_ERROR_MISSING_DEF_LANG
+					.message[module.context.configuration.language]
+			message += ` [term: ${term._key}]`
+			response.status(400)
+			response.send(message)
+
 			return                                                      // ==>
 		}
 	})
@@ -1012,9 +1033,14 @@ function doInsertTerms(request, response)
 	//
 	// Validate terms.
 	//
-	if(validator.validate() === -1) {
+	const status = validator.validate()
+	if(status !== 0) {
 		response.status(400)
-		response.send(report)
+		response.send({
+			status: status,
+			report: validator.report,
+			value: validator.value
+		})
 
 		return                                                          // ==>
 	}
@@ -1218,7 +1244,6 @@ function doUpdateTerm(request, response)
 	//
 	try {
 		original = JSON.parse(JSON.stringify(collection.document(request.queryParams.key)))
-
 	} catch (error) {
 		if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
 			response.throw(
@@ -1234,77 +1259,81 @@ function doUpdateTerm(request, response)
 	//
 	// Update properties.
 	//
-	const updated = mergeObjects(original, request.body)
-
-	// //
-	// // Validate changes.
-	// //
-	// const result = Validation.validateTermChanges(original, updated)
-	// if(Object.keys(result).length > 0) {
-	// 	response.status(400)
-	// 	response.send({
-	// 		status: K.error.kMSG_BAD_TERM_UPDATE.message[module.context.configuration.language],
-	// 		data: result
-	// 	})
-	// 	return                                                                  // ==>
-	// }
-	//
-	// //
-	// // Validate object.
-	// //
-	// const report = Validation.checkObject(updated)
+	const updated = Validator.MergeObjects(original, request.body)
+	const validator =
+		new Validator(
+			updated,
+			'',
+			false,
+			true,
+			true,
+			true,
+			false,
+			false,
+			false,
+			module.context.configuration.localIdentifier
+		)
 
 	//
-	// Clean report.
+	// Validate changes.
 	//
-	for(const item of Object.keys(report)) {
-		if(report[item].status.code === 0 || report[item].status.code === 1) {
-			delete report[item]
-		}
-	}
-
-	//
-	// Handle errors.
-	//
-	if(Object.keys(report).length > 0) {
+	const result = Validator.ValidateTermUpdates(original, updated)
+	if(Object.keys(result).length > 0) {
 		response.status(400)
-		response.send({ report: report, value: original })                     // ==>
+		response.send({
+			status: K.error.kMSG_BAD_TERM_UPDATE.message[module.context.configuration.language],
+			data: result
+		})
+		return                                                          // ==>
 	}
 
-		//
-		// Save term.
 	//
-	else {
-		try
-		{
-			//
-			// Replace term.
-			//
-			const result =
-				K.db._query( aql`
+	// Validate object.
+	//
+	const status = validator.validate()
+	if(status !== 0) {
+		response.status(400)
+		response.send({
+			status: status,
+			report: validator.report,
+			value: validator.value
+		})
+
+		return                                                          // ==>
+	}
+
+	//
+	// Replace term.
+	//
+	try
+	{
+		//
+		// Replace term.
+		//
+		const result =
+			K.db._query( aql`
 					REPLACE ${updated} IN ${collection}
 					OPTIONS { ignoreRevs: false }
 					RETURN NEW
                 `)
 
-			response.send({
-				status: "OK", //K.error.kMSG_OK.message[module.context.configuration.language],
-				data: result._documents[0]
-			})                                                                  // ==>
+		response.send({
+			status: "OK", //K.error.kMSG_OK.message[module.context.configuration.language],
+			data: result._documents[0]
+		})                                                                  // ==>
+	}
+	catch (error)
+	{
+		//
+		// Duplicate record
+		if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
+			response.throw(
+				409,
+				K.error.kMSG_ERROR_CONFLICT.message[module.context.configuration.language]
+			)                                                               // ==>
 		}
-		catch (error)
-		{
-			//
-			// Duplicate record
-			if(error.isArangoError && error.errorNum === ARANGO_DUPLICATE) {
-				response.throw(
-					409,
-					K.error.kMSG_ERROR_CONFLICT.message[module.context.configuration.language]
-				)                                                               // ==>
-			}
-			else {
-				response.throw(500, error.message)                           // ==>
-			}
+		else {
+			response.throw(500, error.message)                           // ==>
 		}
 	}
 
@@ -1526,56 +1555,3 @@ function insertTermCheckInfo(term, request, response)
 	return true                                                                 // ==>
 
 } // insertTermCheckInfo()
-
-/**
- * Merge two objects
- * The updated properties will be added or replace corresponding properties in the target.
- * Updated properties with a null value will be removed from the target if there.
- * @param theTarget {Object}: The original object.
- * @param theUpdates {Object}: The updated properties.
- * @return {Object}: The merged object.
- */
-function mergeObjects(theTarget = {}, theUpdates = {})
-{
-	//
-	// Ensure both are objects.
-	//
-	if(isObject(theTarget) && isObject(theUpdates)) {
-
-		//
-		// Clone both objects.
-		//
-		const copyTarget = JSON.parse(JSON.stringify(theTarget))
-		const copyUpdates = JSON.parse(JSON.stringify(theUpdates))
-
-		//
-		// Iterate properties to be applied.
-		//
-		Object.keys(copyUpdates).forEach(key => {
-
-			//
-			// Remove property.
-			//
-			if(copyUpdates[key] === null) {
-				if(copyTarget.hasOwnProperty(key)) {
-					delete copyTarget[key]
-				}
-			}
-
-				//
-				// Recurse objects.
-			//
-			else {
-				copyTarget[key] = (isObject(copyUpdates[key]))
-					? mergeObjects(copyTarget[key], copyUpdates[key])
-					: copyUpdates[key]
-			}
-		})
-
-		return copyTarget                                                       // ==>
-
-	}
-
-	return theTarget                                                            // ==>
-
-} // mergeObjects()

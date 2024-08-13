@@ -431,6 +431,12 @@ class ValidationStatus
 			"statusMessage": {
 				"iso_639_3_eng": "GeoJSON 'coordinates' property should be an array."
 			}
+		},
+		"kNO_REFERENCE_DEFAULT_NAMESPACE": {
+			"statusCode": 41,
+			"statusMessage": {
+				"iso_639_3_eng": "Cannot reference default namespace: all terms derived from the default namespace are reserved to the dictionary engine."
+			}
 		}
 	}
 
