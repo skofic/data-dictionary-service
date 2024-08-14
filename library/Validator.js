@@ -4255,6 +4255,12 @@ class Validator
 								updated[updated.key]
 							)                                           // ==>
 
+						// Handle array sections.
+						case module.context.configuration.sectionArray:
+						case module.context.configuration.sectionSet:
+
+							// TODO: Handle elements range, with a specific method.
+
 						// Traverse section.
 						default:
 							return Validator.ValidateDataSectionTermUpdates(
