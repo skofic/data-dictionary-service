@@ -534,6 +534,18 @@
             "type": "string",
             "required": true,
             "default": "_term"
+        },
+        "termScalarFormat": {
+            "description": "Term scalar section value format",
+            "type": "string",
+            "required": true,
+            "default": "_format"
+        },
+        "termScalarUnit": {
+            "description": "Term scalar section value unit",
+            "type": "string",
+            "required": true,
+            "default": "_unit"
         }
     },
     "tests": [

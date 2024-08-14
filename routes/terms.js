@@ -33,6 +33,30 @@ const {isObject} = require("../utils/utils");
 const keySchema = joi.string().required()
 	.description('The key of the document')
 
+const ParamExpectTerms = joi.boolean().default(false)
+const ParamExpectTermsDescription =
+	"**Expect all object properties to be part of the data dictionary**.\n" +
+	"By default, if a property matches a descriptor, then the value must \
+	conform to the descriptor's data definition; if the property does not match \
+	a term in the data dictionary, then it will be ignored and assumed correct. \
+	If you set this flag, all object properties *must* correspond to a descriptor, \
+	failing to do so will be considered an error."
+
+const ParamExpectType = joi.boolean().default(false)
+const ParamExpectTypeDescription =
+	"**Expect all descriptors to have a data type**.\n" +
+	"By default, an empty descriptor data definition section means that it can \
+	take any value: if you set this flag, all descriptors are required to have \
+	a data type."
+
+const ParamDefNamespace = joi.boolean().default(false)
+const ParamDefNamespaceDescription =
+	"**Allow referencing default namespace**.\n" +
+	"The default namespace is reserved to terms that constitute the dictionary \
+	engine. User-defined terms should not reference the default namespace. \
+	If this option is set, it will be possible to create terms that have the \
+	*default namespace* as their namespace."
+
 //
 // Collections.
 //
@@ -95,6 +119,9 @@ router.post(
             and, if correct, will insert the record.
         `
 	)
+	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
+	.queryParam('types', ParamExpectType, ParamExpectTypeDescription)
+	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
 	.body(TermInsert, dd
 		`
             **Service parameters**
@@ -199,6 +226,9 @@ router.post(
             in an all-or-nothing fashion.
         `
 	)
+	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
+	.queryParam('types', ParamExpectType, ParamExpectTypeDescription)
+	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
 	.body(TermsInsert, dd
 		`
             **Service parameters**
@@ -789,6 +819,9 @@ router.patch(
         `
 	)
 	.queryParam('key', Models.StringModel, "Term key")
+	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
+	.queryParam('types', ParamExpectType, ParamExpectTypeDescription)
+	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
 	.body(joi.object(), dd
 		`
             **Service parameters**
@@ -852,10 +885,10 @@ function doInsertTerm(request, response)
 			false,
 			true,
 			true,
+			request.queryParams.terms,
+			request.queryParams.types,
 			false,
-			false,
-			false,
-			false,
+			request.queryParams.defns,
 			module.context.configuration.localIdentifier
 		)
 
@@ -997,10 +1030,10 @@ function doInsertTerms(request, response)
 			true,
 			true,
 			true,
-			true,
+			request.queryParams.terms,
+			request.queryParams.types,
 			false,
-			false,
-			false,
+			request.queryParams.defns,
 			module.context.configuration.localIdentifier
 		)
 
@@ -1244,6 +1277,7 @@ function doUpdateTerm(request, response)
 	//
 	try {
 		original = JSON.parse(JSON.stringify(collection.document(request.queryParams.key)))
+
 	} catch (error) {
 		if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
 			response.throw(
@@ -1259,7 +1293,7 @@ function doUpdateTerm(request, response)
 	//
 	// Update properties.
 	//
-	const updated = Validator.MergeObjects(original, request.body)
+	const updated = Validator.MergeTermUpdates(original, request.body)
 	const validator =
 		new Validator(
 			updated,
@@ -1267,10 +1301,10 @@ function doUpdateTerm(request, response)
 			false,
 			true,
 			true,
-			true,
+			request.queryParams.terms,
+			request.queryParams.types,
 			false,
-			false,
-			false,
+			request.queryParams.defns,
 			module.context.configuration.localIdentifier
 		)
 
@@ -1286,6 +1320,7 @@ function doUpdateTerm(request, response)
 		})
 		return                                                          // ==>
 	}
+	throw new Error(JSON.stringify(updated))
 
 	//
 	// Validate object.

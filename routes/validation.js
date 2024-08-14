@@ -646,9 +646,15 @@ function doCheckObject(theRequest, theResponse)
     // Handle status.
     ///
     if(status === 0) {
-        theResponse.send({ status: status })
+        theResponse.send({
+            status: status
+        })
     } else {
-        theResponse.send({ status: status, report: validator.report, value: validator.value  })
+        theResponse.send({
+            status: status,
+            report: validator.report,
+            value: validator.value
+        })
     }
 
 } // doCheckObject()

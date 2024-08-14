@@ -3858,19 +3858,15 @@ class Validator
 	 * When updating an object, this method can be used to assess if the changes
 	 * made to the object are valid.
 	 *
-	 * The method will perform the following tests:
-	 * - `_key`: Value must not change.
-	 * - `_nid`: Value must not change.
-	 * - `_lid`: Value must not change.
-	 * - `_gid`: Value must not change.
-	 * - `_aid`: Array must contain `_lid` (updates the field with no error).
-	 * - `_data`: The only properties that can change are: `_subject`, `_class`,
-	 *            `_domain` and `_tag`.
-	 * - `_rule`: No changes allowed.
-	 *
-	 * The method will return an object containing the invalid properties: a
-	 * dictionary with the property name as key with `old` holding the old value
-	 * and `new` holding the new.
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
 	 *
 	 * @param theOriginal {Object}: Original term.
 	 * @param theUpdated {Object}: Updated term.
@@ -3882,7 +3878,7 @@ class Validator
 		///
 		// Init local storage.
 		///
-		const result = {}
+		let result = {}
 
 		///
 		// Handle document key.
@@ -3890,33 +3886,92 @@ class Validator
 		if(theUpdated.hasOwnProperty('_key')) {
 			if(theOriginal.hasOwnProperty('_key')) {
 				if(theUpdated._key !== theOriginal._key) {
-					result['_key'] = {
-						old: theOriginal._key,
-						new: theUpdated._key
-					}
+					return {
+						message: `Document keys do not match.`,
+						data: { '_key': { old: theOriginal._key, new: theUpdated._key } }
+					}                                                   // ==>
 				}
 			} else {
-				result['_key'] = {
-					old: null,
-					new: theUpdated._key
-				}
+				return {
+					message: `Original term is missing document key.`,
+					data: { '_key': { old: null, new: theUpdated._key } }
+				}                                                       // ==>
 			}
 		} else if(theOriginal.hasOwnProperty('_key')) {
-			result['_key'] = {
-				old: theOriginal._key,
-				new: null
-			}
+			return {
+				message: `Updated term is missing its document key.`,
+				data: { '_key': { old: theOriginal._key, new: null } }
+			}                                                           // ==>
 		}
 
 		///
+		// Handle code section.
+		///
+		result = Validator.ValidateCodeTermUpdates(theOriginal, theUpdated)
+		if(Object.keys(result).length !== 0) {
+			return result                                               // ==>
+		}
+
+		///
+		// Handle data section.
+		///
+		result = Object.assign(result, Validator.ValidateDataSectionTermUpdates(theOriginal, theUpdated))
+		if(Object.keys(result).length !== 0) {
+			return result                                               // ==>
+		}
+
+		///
+		// Handle rule section.
+		///
+		result = Object.assign(result, Validator.ValidateRuleTermUpdates(theOriginal, theUpdated))
+
+		return result                                                   // ==>
+
+	} // Validator::ValidateTermUpdates()
+
+	/**
+	 * ValidateCodeTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the term code section are valid.
+	 *
+	 * The method will perform the following tests:
+	 * - `_nid`: Value must not change.
+	 * - `_lid`: Value must not change.
+	 * - `_gid`: Value must not change.
+	 * - `_aid`: Array must contain `_lid` (updates the field with no error).
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Note that official identifiers will be fixed in place.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateCodeTermUpdates(theOriginal, theUpdated)
+	{
+		///
 		// Init local storage.
 		///
-		let section = module.context.configuration.sectionCode
-		let codes = [
-			module.context.configuration.namespaceIdentifier,
-			module.context.configuration.localIdentifier,
-			module.context.configuration.globalIdentifier
-		]
+		const section = module.context.configuration.sectionCode
 
 		// Update has code section.
 		if(theUpdated.hasOwnProperty(section)) {
@@ -3925,9 +3980,15 @@ class Validator
 			if(theOriginal.hasOwnProperty(section)) {
 				const original = theOriginal[section]
 				const updated = theUpdated[section]
+				const codes = [
+					module.context.configuration.namespaceIdentifier,
+					module.context.configuration.localIdentifier,
+					module.context.configuration.globalIdentifier
+				]
 
 				// Iterate codes.
-				codes.forEach( (code) => {
+				let status = {}
+				codes.some( (code) => {
 
 					// Updated has code.
 					if(updated.hasOwnProperty(code)) {
@@ -3937,24 +3998,58 @@ class Validator
 
 							// Codes don't match.
 							if(updated[code] !== original[code]) {
-								result[code] = { old: original[code], new: updated[code] }
+								status = {
+									message: `Cannot change the identifier value.`,
+									data: {
+										[code]: {
+											old: original[code],
+											new: updated[code]
+										}
+									}
+								}
+								return true
 							}
 
 						} // Original has code.
 
 						// original is missing code.
 						else {
-							result[code] = { old: null, new: updated[code] }
+							status = {
+								message: `Cannot add identifier.`,
+								data: {
+									[code]: {
+										old: null,
+										new: updated[code]
+									}
+								}
+							}
+							return true
 						}
 
 					} // Updated has code.
 
 					// Updated is missing code.
 					else if(original.hasOwnProperty(code)) {
-						result[code] = { old: original[code], new: null }
+						status = {
+							message: `Cannot remove identifier.`,
+							data: {
+								[code]: {
+									old: original[code],
+									new: null
+								}
+							}
+						}
+						return true
 					}
 
+					return false
+
 				}) // Iterating code section immutable codes.
+
+				// Handle errors.
+				if(Object.keys(status).length > 0) {
+					return status                                       // ==>
+				}
 
 				// Updated has official codes.
 				const officialCodes = module.context.configuration.officialIdentifiers
@@ -3982,106 +4077,1075 @@ class Validator
 
 			// Original is missing code section.
 			else {
-				result[section] = { old: null, new: theUpdated[section] }
+				return {
+					message: `Cannot add code section.`,
+					data: {
+						[section]: {
+							old: null,
+							new: theUpdated[section]
+						}
+					}
+				}                                                       // ==>
 			}
 
 		} // Update has code section.
 
 		// Updated is missing code section.
 		else if(theOriginal.hasOwnProperty(section)) {
-			result[section] = { old: theOriginal[section], new: null }
+			return {
+				message: `Cannot remove code section.`,
+				data: { [section]: { old: theOriginal[section], new: null } }
+			}                                                           // ==>
 		}
 
+		return {}                                                       // ==>
+
+	} // Validator::ValidateCodeTermUpdates()
+
+	/**
+	 * ValidateDataTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the term data section are valid.
+	 *
+	 * This method will only flag data section removals, since additions may
+	 * mean that an existing term has become a descriptor.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateDataTermUpdates(theOriginal, theUpdated)
+	{
 		///
 		// Init local storage.
 		///
-		section = module.context.configuration.sectionData
-		codes = [
-			module.context.configuration.sectionScalar,
-			module.context.configuration.sectionArray,
-			module.context.configuration.sectionSet,
-			module.context.configuration.sectionDict
-		]
+		const section = module.context.configuration.sectionCode
 
 		// Updated has data section.
 		if(theUpdated.hasOwnProperty(section)) {
 
 			// Original has data section.
 			if(theOriginal.hasOwnProperty(section)) {
-				const original = theOriginal[section]
-				const updated = theUpdated[section]
 
-				// iterate codes.
-				codes.forEach( (code) => {
-
-					// Updated has section.
-					if(updated.hasOwnProperty(code)) {
-
-						// Original has section.
-						if(original.hasOwnProperty(code)) {
-
-							// Sections don't match.
-							// Sections don't match.
-							if(JSON.stringify(updated[code]) !== JSON.stringify(updated[code])) {
-								result[code] = { old: original[code], new: updated[code] }
-							}
-
-						} // Original has section.
-
-						// Original is missing section.
-						else {
-							result[code] = { old: original[code], new: updated[code] }
-						}
-
-					} // Updated has section.
-
-					// Updated is missing section.
-					else if(original.hasOwnProperty(code)) {
-						result[code] = { old: original[code], new: null }
-					}
-
-				}) // Iterating sections.
+				// Check data section changes.
+				return Validator.ValidateDataSectionTermUpdates(
+					theOriginal, theUpdated
+				)                                                       // ==>
 
 			} // Original has data section.
 
+			// If data section was added, it means a term became a descriptor.
+
 		} // Updated has data section.
 
-		// Updated is missing data section.
+		// Original had data section.
 		else if(theOriginal.hasOwnProperty(section)) {
-			result[section] = { old: theOriginal[section], new: null }
+			return {
+				message: `Cannot remove data section.`,
+				data: {
+					[section]: {
+						old: theOriginal,
+						new: theUpdated
+					}
+				}
+			}                                                           // ==>
 		}
 
+		return {}                                                       // ==>
+
+	} // Validator::ValidateDataTermUpdates()
+
+	/**
+	 * ValidateDataSectionTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the term data section elements are valid.
+	 *
+	 * At the top level of the data section one can modify all properties except
+	 * the dimension definition sections scalar, array, set and dictionary.
+	 *
+	 * The method will perform the following tests:
+	 * - Iterate sections and stop on first section match in updated value.
+	 *   - If original term does not have it, raise an error. This is because
+	 *     you cannot change the structure of an existing term, since it may
+	 *     already be used in data.
+	 *   - If original term has it also, recurse with both term sections.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateDataSectionTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Traverse next updated term section.
+		///
+		const updated = Validator.TraverseTermDataSection(theUpdated)
+		const original = Validator.TraverseTermDataSection(theOriginal)
+
+		// Updated has a section.
+		if(Object.keys(updated).length > 0) {
+
+			// Original has a section.
+			if(Object.keys(original).length > 0) {
+
+				// Check if these are the same sections.
+				if(updated.key === original.key) {
+
+					// Check specific section.
+					switch(theUpdated._key) {
+
+						// Handle scalar section.
+						case module.context.configuration.sectionScalar:
+							return Validator.ValidateScalarTermUpdates(
+								original[original.key],
+								updated[updated.key]
+							)                                           // ==>
+
+						// Handle set scalar section.
+						case module.context.configuration.sectionSetScalar:
+							return Validator.ValidateSetScalarTermUpdates(
+								original[original.key],
+								updated[updated.key]
+							)                                           // ==>
+
+						// Handle dictionary key section.
+						case module.context.configuration.sectionDictKey:
+							return Validator.ValidateSetScalarTermUpdates(
+								original[original.key],
+								updated[updated.key]
+							)                                           // ==>
+
+						// Traverse section.
+						default:
+							return Validator.ValidateDataSectionTermUpdates(
+								original[original.key],
+								updated[updated.key]
+							)                                           // ==>
+					}
+
+				} // Updated and original share the same section.
+
+				// Updated and original do not have same section.
+				else {
+					return {
+						message: `Expecting [${original.key}] where updated has [${updated.key}].`,
+						data: {
+							[updated.key]: {
+								old: original,
+								new: updated
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Original has section.
+
+			// Cannot remove a data section section.
+			else {
+				return {
+					message: `Cannot add [${updated.key}] to updated term.`,
+					data: {
+						[updated.key]: {
+							old: null,
+							new: updated.value[updated.key]
+						}
+					}
+				}                                                       // ==>
+			}
+
+		} // Updated has a section.
+
+		// Updated is missing a section.
+		else if(Object.keys(original).length > 0) {
+			return {
+				message: `Cannot remove [${original.key}] from updated term.`,
+				data: {
+					[original.key]: {
+						old: original.value[updated.key],
+						new: null
+					}
+				}
+			}                                                           // ==>
+		}
+
+		return {}                                                       // ==>
+
+	} // Validator::ValidateDataSectionTermUpdates()
+
+	/**
+	 * ValidateScalarTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the term code section are valid.
+	 *
+	 * The method will perform the following tests:
+	 * - `_type`: Value must not change.
+	 * - `_kind`: Value can have more elements, but not less.
+	 * - `_format`: Value must not change.
+	 * - `_unit`: Value must not change.
+	 * - `_regexp`: Value must not change.
+	 * - `_valid-range`: Value must not change.
+	 * - `_valid-range_string`: Value must not change.
+	 * - `_valid-range_date`: Value must not change.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateScalarTermUpdates(theOriginal, theUpdated)
+	{
 		///
 		// Init local storage.
 		///
-		section = module.context.configuration.sectionRule
+		const section = module.context.configuration.sectionScalar
+		const fields = [
+			module.context.configuration.scalarType,
+			module.context.configuration.dataKind,
+			module.context.configuration.termScalarFormat,
+			module.context.configuration.termScalarUnit,
+			module.context.configuration.regularExpression,
+			module.context.configuration.rangeNumber,
+			module.context.configuration.rangeString,
+			module.context.configuration.rangeDate
+		]
 
-		// Updated has rule section.
-		if(theUpdated.hasOwnProperty(section)) {
+		// Iterate scalar definitions.
+		let status = {}
+		fields.some( (field) => {
 
-			// Original has rule section.
-			if(theOriginal.hasOwnProperty(section)) {
+			// Parse by field.
+			switch(field)
+			{
+				// Scalar immutable fields.
+				case module.context.configuration.scalarType:
+				case module.context.configuration.termScalarFormat:
+				case module.context.configuration.termScalarUnit:
+				case module.context.configuration.regularExpression:
 
-				// Rule sections don't match.
-				if(JSON.stringify(theOriginal[section]) !== JSON.stringify(theUpdated[section])) {
-					result[section] = { old: theOriginal[section], new: theUpdated[code] }
-				}
+					// Updated has field.
+					if(theUpdated.hasOwnProperty(field)) {
 
-			} // Original has rule section.
+						// Original has field.
+						if(theOriginal.hasOwnProperty(field)) {
 
-		} // Updated has rule section.
+							// Check if changed.
+							if(theUpdated[field] !== theOriginal[field]) {
+								status = {
+									message: `Field ${field} cannot change.`,
+									data: {
+										[field]: {
+											old: theOriginal[field],
+											new: theUpdated[field]
+										}
+									}
+								}
+								return true
 
-		// Updated is missing rule section.
-		else if(theOriginal.hasOwnProperty(section)) {
-			result[section] = { old: theOriginal[section], new: null }
-		}
+							} // Value changed.
 
-		return result                                                   // ==>
+						} // Original has field.
 
-	} // Validator::ValidateTermUpdates()
+						// Original did not have field.
+						else {
+							status = {
+								message: `Cannot add field ${field} to updated term.`,
+								data: {
+									[field]: {
+										old: null,
+										new: theUpdated[field]
+									}
+								}
+							}
+							return true
+						}
+
+					} // Updated has field.
+
+					// Field was removed.
+					else if(theOriginal.hasOwnProperty(field)) {
+						status = {
+							message: `Cannot remove field ${field} from term.`,
+							data: {
+								[field]: {
+									old: theOriginal[field],
+									new: null
+								}
+							}
+						}
+						return true
+					}
+					break
+
+				// Data kinds.
+				case module.context.configuration.dataKind:
+
+					// Updated has data kinds.
+					if(theUpdated.hasOwnProperty(field)) {
+
+						// Original has data kinds.
+						if(theOriginal.hasOwnProperty(field)) {
+
+							// Check if elements were removed.
+							if(theUpdated[field]
+								.filter(value => theOriginal[field].includes(value))
+								.length < theOriginal[field].length)
+							{
+								status = {
+									message: `Cannot remove elements from data kind.`,
+									data: {
+										[field]: {
+											old: theOriginal[field],
+											new: theUpdated[field]
+										}
+									}
+								}
+								return true
+							}
+
+						} // Original has data kinds.
+
+						// Original has no data kinds.
+						else {
+							status = {
+								message: `Cannot add data kinds.`,
+								data: {
+									[field]: {
+										old: theOriginal,
+										new: theUpdated
+									}
+								}
+							}
+							return true
+						}
+
+					} // Updated has data kinds.
+
+					// If original had data kinds,
+					// removing them removes constraints.
+
+					break
+
+				// Numeric range.
+				case module.context.configuration.rangeNumber:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'N')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+
+				// String range.
+				case module.context.configuration.rangeString:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'S')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+
+				// Date range.
+				case module.context.configuration.rangeDate:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'D')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+			}
+
+			return false
+		})
+
+		return status                                                   // ==>
+
+	} // Validator::ValidateScalarTermUpdates()
 
 	/**
-	 * MergeObjects
+	 * ValidateSetScalarTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the term code section are valid.
+	 *
+	 * The method will perform the following tests:
+	 * - `_set_type`: Value must not change.
+	 * - `_kind`: Value can have more elements, but not less.
+	 * - `_format`: Value must not change.
+	 * - `_unit`: Value must not change.
+	 * - `_regexp`: Value must not change.
+	 * - `_valid-range`: Value must not change.
+	 * - `_valid-range_string`: Value must not change.
+	 * - `_valid-range_date`: Value must not change.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateSetScalarTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Init local storage.
+		///
+		const section = module.context.configuration.sectionScalar
+		const fields = [
+			module.context.configuration.setScalarType,
+			module.context.configuration.dataKind,
+			module.context.configuration.termScalarFormat,
+			module.context.configuration.termScalarUnit,
+			module.context.configuration.regularExpression,
+			module.context.configuration.rangeNumber,
+			module.context.configuration.rangeString,
+			module.context.configuration.rangeDate
+		]
+
+		// Iterate scalar definitions.
+		let status = {}
+		fields.some( (field) => {
+
+			// Parse by field.
+			switch(field)
+			{
+				// Scalar immutable fields.
+				case module.context.configuration.setScalarType:
+				case module.context.configuration.termScalarFormat:
+				case module.context.configuration.termScalarUnit:
+				case module.context.configuration.regularExpression:
+
+					// Updated has field.
+					if(theUpdated.hasOwnProperty(field)) {
+
+						// Original has field.
+						if(theOriginal.hasOwnProperty(field)) {
+
+							// Check if changed.
+							if(theUpdated[field] !== theOriginal[field]) {
+								status = {
+									message: `Field ${field} cannot change.`,
+									data: {
+										[field]: {
+											old: theOriginal[field],
+											new: theUpdated[field]
+										}
+									}
+								}
+								return true
+
+							} // Value changed.
+
+						} // Original has field.
+
+						// Original did not have field.
+						else {
+							status = {
+								message: `Cannot add field ${field} to updated term.`,
+								data: {
+									[field]: {
+										old: null,
+										new: theUpdated[field]
+									}
+								}
+							}
+							return true
+						}
+
+					} // Updated has field.
+
+					// Field was removed.
+					else if(theOriginal.hasOwnProperty(field)) {
+						status = {
+							message: `Cannot remove field ${field} from term.`,
+							data: {
+								[field]: {
+									old: theOriginal[field],
+									new: null
+								}
+							}
+						}
+						return true
+					}
+					break
+
+				case module.context.configuration.dataKind:
+					break
+
+				case module.context.configuration.rangeNumber:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'N')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+
+				case module.context.configuration.rangeString:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'S')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+
+				case module.context.configuration.rangeDate:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'D')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+			}
+
+			return false
+		})
+
+		return status                                                   // ==>
+
+	} // Validator::ValidateSetScalarTermUpdates()
+
+	/**
+	 * ValidateKeyScalarTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the term code section are valid.
+	 *
+	 * The method will perform the following tests:
+	 * - `_type_key`: Value must not change.
+	 * - `_kind`: Value can have more elements, but not less.
+	 * - `_format`: Value must not change.
+	 * - `_unit`: Value must not change.
+	 * - `_regexp`: Value must not change.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateKeyScalarTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Init local storage.
+		///
+		const section = module.context.configuration.sectionScalar
+		const fields = [
+			module.context.configuration.keyScalarType,
+			module.context.configuration.dataKind,
+			module.context.configuration.termScalarFormat,
+			module.context.configuration.termScalarUnit,
+			module.context.configuration.regularExpression
+		]
+
+		// Iterate scalar definitions.
+		let status = {}
+		fields.some( (field) => {
+
+			// Parse by field.
+			switch(field)
+			{
+				// Scalar immutable fields.
+				case module.context.configuration.keyScalarType:
+				case module.context.configuration.termScalarFormat:
+				case module.context.configuration.termScalarUnit:
+				case module.context.configuration.regularExpression:
+
+					// Updated has field.
+					if(theUpdated.hasOwnProperty(field)) {
+
+						// Original has field.
+						if(theOriginal.hasOwnProperty(field)) {
+
+							// Check if changed.
+							if(theUpdated[field] !== theOriginal[field]) {
+								status = {
+									message: `Field ${field} cannot change.`,
+									data: {
+										[field]: {
+											old: theOriginal[field],
+											new: theUpdated[field]
+										}
+									}
+								}
+								return true
+
+							} // Value changed.
+
+						} // Original has field.
+
+						// Original did not have field.
+						else {
+							status = {
+								message: `Cannot add field ${field} to updated term.`,
+								data: {
+									[field]: {
+										old: null,
+										new: theUpdated[field]
+									}
+								}
+							}
+							return true
+						}
+
+					} // Updated has field.
+
+					// Field was removed.
+					else if(theOriginal.hasOwnProperty(field)) {
+						status = {
+							message: `Cannot remove field ${field} from term.`,
+							data: {
+								[field]: {
+									old: theOriginal[field],
+									new: null
+								}
+							}
+						}
+						return true
+					}
+					break
+
+				case module.context.configuration.dataKind:
+					break
+
+				case module.context.configuration.rangeNumber:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'N')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+
+				case module.context.configuration.rangeString:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'S')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+
+				case module.context.configuration.rangeDate:
+					status = Validator.ValidateRangeTermUpdates(theOriginal, theUpdated, 'D')
+					if(Object.keys(status).length > 0) {
+						return true
+					}
+					break
+			}
+
+			return false
+		})
+
+		return status                                                   // ==>
+
+	} // Validator::ValidateKeyScalarTermUpdates()
+
+	/**
+	 * ValidateRuleTermUpdates
+	 *
+	 * When updating an object, this method can be used to assess if the changes
+	 * made to the term data section are valid.
+	 *
+	 * At the top level of the data section one can modify all properties except
+	 * the dimension definition sections scalar, array, set and dictionary.
+	 *
+	 * The method will perform the following tests:
+	 * - Iterate sections and stop on first section match in updated value.
+	 *   - If original term does not have it, raise an error. This is because
+	 *     you cannot change the structure of an existing term, since it may
+	 *     already be used in data.
+	 *   - If original term has it also, recurse with both term sections.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term.
+	 * @param theUpdated {Object}: Updated term.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateRuleTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Init local storage.
+		///
+		const section = module.context.configuration.sectionRule
+		const required = module.context.configuration.sectionRuleRequired
+		const banned = module.context.configuration.sectionRuleBanned
+		const selectors = [
+			module.context.configuration.selectionDescriptorsOne,
+			module.context.configuration.selectionDescriptorsOneNone,
+			module.context.configuration.selectionDescriptorsAny,
+			module.context.configuration.selectionDescriptorsAnyOne,
+			module.context.configuration.selectionDescriptorsAll
+		]
+
+		// Updated has required descriptors.
+		// if(theUpdated.hasOwnProperty())
+
+		return {}                                                       // ==>
+
+	} // Validator::ValidateRuleTermUpdates()
+
+	/**
+	 * ValidateRangeTermUpdates
+	 *
+	 * This method can be used to check if two ranges have changed.
+	 *
+	 * The method will issue an error if the range has become more restrictive,
+	 * but ignore if the range has become larger.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 * @param theOriginal {Object}: Original range.
+	 * @param theUpdated {Object}: Updated range.
+	 * @param theType {String}: `N` for numeric, `S` for string and `D` for date.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateRangeTermUpdates(theOriginal, theUpdated, theType)
+	{
+		///
+		// Set range term names.
+		///
+		let rangeMinInc, rangeMaxInc, rangeMinExc, rangeMaxExc
+		switch(theType)
+		{
+			case 'N':
+				rangeMinInc = module.context.configuration.rangeNumberMinInclusive
+				rangeMaxInc = module.context.configuration.rangeNumberMaxInclusive
+				rangeMinExc = module.context.configuration.rangeNumberMinExclusive
+				rangeMaxExc = module.context.configuration.rangeNumberMaxExclusive
+				break
+
+			case 'S':
+				rangeMinInc = module.context.configuration.rangeStringMinInclusive
+				rangeMaxInc = module.context.configuration.rangeStringMaxInclusive
+				rangeMinExc = module.context.configuration.rangeStringMinExclusive
+				rangeMaxExc = module.context.configuration.rangeStringMaxExclusive
+				break
+
+			case 'D':
+				rangeMinInc = module.context.configuration.rangeDateMinInclusive
+				rangeMaxInc = module.context.configuration.rangeDateMaxInclusive
+				rangeMinExc = module.context.configuration.rangeDateMinExclusive
+				rangeMaxExc = module.context.configuration.rangeDateMaxExclusive
+				break
+
+			default:
+				throw new error(
+					`Invalid range type indicator (${theType}).`
+				)                                                       // ==>
+		}
+
+		///
+		// Minimum inclusive.
+		///
+
+		// Original has minimum inclusive.
+		if(theOriginal.hasOwnProperty(rangeMinInc)) {
+
+			// Updated has minimum inclusive.
+			if(theUpdated.hasOwnProperty(rangeMinInc)) {
+
+				// Assert updated lower bound is less or equal to existing lower bound.
+				if(theUpdated[rangeMinInc] > theOriginal[rangeMinInc]) {
+					return {
+						message: `Minimum range has increased, range has become more restrictive.`,
+						data: {
+							[rangeMinInc]: {
+								old: theOriginal[rangeMinInc],
+								new: theUpdated[rangeMinInc]
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has minimum inclusive.
+
+			// Updated has minimum exclusive.
+			else if(theUpdated.hasOwnProperty(rangeMinExc)) {
+
+				// Assert updated minimum exclusive bound is
+				// lower than existing minimum inclusive bound.
+				if(theUpdated[rangeMinExc] >= theOriginal[rangeMinInc]) {
+					return {
+						message: `Lower bound has increased, range has become more restrictive`,
+						data: {
+							[rangeMinInc]: {
+								old: theOriginal,
+								new: theUpdated
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has minimum exclusive.
+
+			// If updated has no lower bound range expands.
+
+		} // Original has minimum inclusive.
+
+		///
+		// Minimum exclusive.
+		///
+
+		// Original has minimum exclusive.
+		if(theOriginal.hasOwnProperty(rangeMinExc)) {
+
+			// Updated has minimum exclusive.
+			if(theUpdated.hasOwnProperty(rangeMinExc)) {
+
+				// Assert updated lower bound is less or equal to existing lower bound.
+				if(theUpdated[rangeMinExc] > theOriginal[rangeMinExc]) {
+					return {
+						message: `Minimum range has increased, range has become more restrictive.`,
+						data: {
+							[rangeMinExc]: {
+								old: theOriginal[rangeMinExc],
+								new: theUpdated[rangeMinExc]
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has minimum exclusive.
+
+			// Updated has minimum inclusive.
+			else if(theUpdated.hasOwnProperty(rangeMinInc)) {
+
+				// Assert updated minimum inclusive bound is
+				// lower or equal to existing minimum exclusive bound.
+				if(theUpdated[rangeMinInc] > theOriginal[rangeMinExc]) {
+					return {
+						message: `Lower bound has increased, range has become more restrictive`,
+						data: {
+							[rangeMinExc]: {
+								old: theOriginal,
+								new: theUpdated
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has minimum exclusive.
+
+			// If updated has no lower bound range expands.
+
+		} // Original has minimum inclusive.
+
+		///
+		// Maximum inclusive.
+		///
+
+		// Original has maximum inclusive.
+		if(theOriginal.hasOwnProperty(rangeMaxInc)) {
+
+			// Updated has maximum inclusive.
+			if(theUpdated.hasOwnProperty(rangeMaxInc)) {
+
+				// Assert updated upper bound is greater or equal to existing upper bound.
+				if(theUpdated[rangeMaxInc] < theOriginal[rangeMaxInc]) {
+					return {
+						message: `Maximum range has decreased, range has become more restrictive.`,
+						data: {
+							[rangeMaxInc]: {
+								old: theOriginal[rangeMaxInc],
+								new: theUpdated[rangeMaxInc]
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has maximum inclusive.
+
+			// Updated has maximum exclusive.
+			else if(theUpdated.hasOwnProperty(rangeMaxExc)) {
+
+				// Assert updated maximum exclusive bound is
+				// lower than existing maximum inclusive bound.
+				if(theUpdated[rangeMaxExc] <= theOriginal[rangeMaxInc]) {
+					return {
+						message: `Upper bound has decreased, range has become more restrictive`,
+						data: {
+							[rangeMaxInc]: {
+								old: theOriginal,
+								new: theUpdated
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has maximum exclusive.
+
+			// If updated has no upper bound range expands.
+
+		} // Original has maximum inclusive.
+
+		///
+		// Maximum exclusive.
+		///
+
+		// Original has maximum exclusive.
+		if(theOriginal.hasOwnProperty(rangeMaxExc)) {
+
+			// Updated has maximum exclusive.
+			if(theUpdated.hasOwnProperty(rangeMaxExc)) {
+
+				// Assert updated upper bound is greater or equal to existing upper bound.
+				if(theUpdated[rangeMaxExc] < theOriginal[rangeMaxExc]) {
+					return {
+						message: `Maximum range has decreased, range has become more restrictive.`,
+						data: {
+							[rangeMinExc]: {
+								old: theOriginal[rangeMaxExc],
+								new: theUpdated[rangeMaxExc]
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has maximum exclusive.
+
+			// Updated has maximum inclusive.
+			else if(theUpdated.hasOwnProperty(rangeMaxInc)) {
+
+				// Assert updated maximum inclusive bound is
+				// greater or equal than existing maximum exclusive bound.
+				if(theUpdated[rangeMaxInc] < theOriginal[rangeMaxExc]) {
+					return {
+						message: `Lower bound has increased, range has become more restrictive`,
+						data: {
+							[rangeMaxExc]: {
+								old: theOriginal,
+								new: theUpdated
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has maximum exclusive.
+
+			// If updated has no lower bound range expands.
+
+		} // Original has maximum exclusive.
+
+		return {}                                                       // ==>
+
+	} // Validator::ValidateRangeTermUpdates()
+
+	/**
+	 * MergeTermUpdates
 	 *
 	 * The method will merge the provided object with the provided updates and
 	 * will return the merged result.
@@ -4097,7 +5161,7 @@ class Validator
 	 *
 	 * @return {Object}: The merged object.
 	 */
-	static MergeObjects(theOriginal = {}, theUpdates = {})
+	static MergeTermUpdates(theOriginal = {}, theUpdates = {})
 	{
 		//
 		// Ensure both are objects.
@@ -4124,12 +5188,12 @@ class Validator
 					}
 				}
 
-				//
-				// Recurse objects.
+					//
+					// Recurse objects.
 				//
 				else {
 					copyTarget[key] = (isObject(copyUpdates[key]))
-						? Validator.MergeObjects(copyTarget[key], copyUpdates[key])
+						? Validator.MergeTermUpdates(copyTarget[key], copyUpdates[key])
 						: copyUpdates[key]
 				}
 			})
@@ -4140,7 +5204,72 @@ class Validator
 
 		return theOriginal                                              // ==>
 
-	} // Validator::MergeObjects()
+	} // Validator::MergeTermUpdates()
+
+	/**
+	 * TraverseTermDataSection
+	 *
+	 * The method will traverse the provided data section returning the next
+	 * level section.
+	 *
+	 * Each time you call the method, it will return the next level object in
+	 * the data section, until it returns `null`.
+	 *
+	 * The method returns a tuple consisting of an object of two elements:
+	 * - `key`: The parent section name.
+	 * - `value`: The parent section.
+	 *
+	 * If the method returns an empty object, it means that we have exhausted
+	 * the sections.
+	 *
+	 * @param theSection {Object}: The current data section level object.
+	 *
+	 * @return {Object|null}: Tuple of (index, value), or empty array when done.
+	 */
+	static TraverseTermDataSection(theSection = {})
+	{
+		///
+		// Init local storage.
+		///
+		let next = {}
+
+		///
+		// Handle non empty objects.
+		///
+		if(Object.keys(theSection) !== 0)
+		{
+			///
+			// Init local storage.
+			///
+			const sections = [
+				module.context.configuration.sectionScalar,
+				module.context.configuration.sectionSetScalar,
+				module.context.configuration.sectionDictKey,
+				module.context.configuration.sectionArray,
+				module.context.configuration.sectionSet,
+				module.context.configuration.sectionDict
+			]
+
+			///
+			// Iterate sections.
+			///
+			sections.some( (section) => {
+				if(theSection.hasOwnProperty(section)) {
+					next = Object.freeze({
+						key: section,
+						value: theSection
+					})
+					return true
+				}
+
+				return false
+			})
+
+		} // Not an empty object.
+
+		return next                                                     // ==>
+
+	} // Validator::TraverseTermDataSection()
 
 	/**
 	 * DeepClone
