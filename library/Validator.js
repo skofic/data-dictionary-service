@@ -3006,13 +3006,14 @@ class Validator
 			///
 			selector = module.context.configuration.selectionDescriptorsAnyOne
 			if(required.hasOwnProperty(selector)) {
+				let status = true
 				if(!Validator.IsArray(required[selector])) {
 					throw new Error(
 						`Invalid rule section in ${theKey}.`
 					)                                                   // ==>
 				}
-				let status = true
-				required[selector].forEach( (choice) => {
+
+				required[selector].some( (choice) => {
 					if(!Validator.IsArray(choice)) {
 						throw new Error(
 							`Invalid rule section in ${theKey}.`
@@ -3024,6 +3025,10 @@ class Validator
 						return true
 					}
 				})
+
+				if(!status) {
+					return false                                        // ==>
+				}
 			}
 
 			///
@@ -4887,18 +4892,31 @@ class Validator
 		// Init local storage.
 		///
 		const section = module.context.configuration.sectionRule
-		const required = module.context.configuration.sectionRuleRequired
-		const banned = module.context.configuration.sectionRuleBanned
-		const selectors = [
-			module.context.configuration.selectionDescriptorsOne,
-			module.context.configuration.selectionDescriptorsOneNone,
-			module.context.configuration.selectionDescriptorsAny,
-			module.context.configuration.selectionDescriptorsAnyOne,
-			module.context.configuration.selectionDescriptorsAll
-		]
 
-		// Updated has required descriptors.
-		// if(theUpdated.hasOwnProperty())
+		// Original has rule section.
+		if(theOriginal.hasOwnProperty(section)) {
+			const original = theOriginal[section]
+
+			// Updated has rules section.
+			if(theUpdated.hasOwnProperty(section)) {
+				const updated = theUpdated[section]
+
+				///
+				// Init local storage.
+				///
+				const required = module.context.configuration.sectionRuleRequired
+				const banned = module.context.configuration.sectionRuleBanned
+				const selectors = [
+					module.context.configuration.selectionDescriptorsOne,
+					module.context.configuration.selectionDescriptorsOneNone,
+					module.context.configuration.selectionDescriptorsAny,
+					module.context.configuration.selectionDescriptorsAnyOne,
+					module.context.configuration.selectionDescriptorsAll
+				]
+
+			} // Updated has rules section.
+
+		} // Original has rule section.
 
 		return {}                                                       // ==>
 
@@ -4928,7 +4946,12 @@ class Validator
 	 * an empty object. This means that you *must* run validation preferably
 	 * before or after running this method.
 	 *
+	 * Note: you must take care of correctly applying updated values to range
+	 * indicators: you could end up with both minimum inclusive and minimum
+	 * exclusive ranges, for example.
+	 *
 	 * This method will exit on first error.
+	 *
 	 * @param theOriginal {Object}: Original range.
 	 * @param theUpdated {Object}: Updated range.
 	 * @param theType {String}: `N` for numeric, `S` for string and `D` for date.
@@ -4940,10 +4963,11 @@ class Validator
 		///
 		// Set range term names.
 		///
-		let rangeMinInc, rangeMaxInc, rangeMinExc, rangeMaxExc
+		let section, rangeMinInc, rangeMaxInc, rangeMinExc, rangeMaxExc
 		switch(theType)
 		{
 			case 'N':
+				section = module.context.configuration.rangeNumber
 				rangeMinInc = module.context.configuration.rangeNumberMinInclusive
 				rangeMaxInc = module.context.configuration.rangeNumberMaxInclusive
 				rangeMinExc = module.context.configuration.rangeNumberMinExclusive
@@ -4951,6 +4975,7 @@ class Validator
 				break
 
 			case 'S':
+				section = module.context.configuration.rangeString
 				rangeMinInc = module.context.configuration.rangeStringMinInclusive
 				rangeMaxInc = module.context.configuration.rangeStringMaxInclusive
 				rangeMinExc = module.context.configuration.rangeStringMinExclusive
@@ -4958,6 +4983,7 @@ class Validator
 				break
 
 			case 'D':
+				section = module.context.configuration.rangeDate
 				rangeMinInc = module.context.configuration.rangeDateMinInclusive
 				rangeMaxInc = module.context.configuration.rangeDateMaxInclusive
 				rangeMinExc = module.context.configuration.rangeDateMinExclusive
@@ -4970,197 +4996,228 @@ class Validator
 				)                                                       // ==>
 		}
 
-		///
-		// Minimum inclusive.
-		///
+		// Original has range.
+		if(theOriginal.hasOwnProperty(section)) {
 
-		// Original has minimum inclusive.
-		if(theOriginal.hasOwnProperty(rangeMinInc)) {
+			// Updated has range.
+			if(theUpdated.hasOwnProperty(section)) {
 
-			// Updated has minimum inclusive.
-			if(theUpdated.hasOwnProperty(rangeMinInc)) {
+				///
+				// Init local storage.
+				///
+				const original = theOriginal[section]
+				const updated = theUpdated[section]
 
-				// Assert updated lower bound is less or equal to existing lower bound.
-				if(theUpdated[rangeMinInc] > theOriginal[rangeMinInc]) {
-					return {
-						message: `Minimum range has increased, range has become more restrictive.`,
-						data: {
-							[rangeMinInc]: {
-								old: theOriginal[rangeMinInc],
-								new: theUpdated[rangeMinInc]
-							}
+				///
+				// Minimum inclusive.
+				///
+
+				// Original has minimum inclusive.
+				if(original.hasOwnProperty(rangeMinInc)) {
+
+					// Updated has minimum inclusive.
+					if(updated.hasOwnProperty(rangeMinInc)) {
+
+						// Assert updated lower bound is less or equal to existing lower bound.
+						if(updated[rangeMinInc] > original[rangeMinInc]) {
+							return {
+								message: `Minimum range has increased, range has become more restrictive.`,
+								data: {
+									[rangeMinInc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
-				}
 
-			} // Updated has minimum inclusive.
+					} // Updated has minimum inclusive.
 
-			// Updated has minimum exclusive.
-			else if(theUpdated.hasOwnProperty(rangeMinExc)) {
+					// Updated has minimum exclusive.
+					else if(updated.hasOwnProperty(rangeMinExc)) {
 
-				// Assert updated minimum exclusive bound is
-				// lower than existing minimum inclusive bound.
-				if(theUpdated[rangeMinExc] >= theOriginal[rangeMinInc]) {
-					return {
-						message: `Lower bound has increased, range has become more restrictive`,
-						data: {
-							[rangeMinInc]: {
-								old: theOriginal,
-								new: theUpdated
-							}
+						// Assert updated minimum exclusive bound is
+						// lower than existing minimum inclusive bound.
+						if(updated[rangeMinExc] >= original[rangeMinInc]) {
+							return {
+								message: `Lower bound has increased, range has become more restrictive`,
+								data: {
+									[rangeMinInc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
-				}
 
-			} // Updated has minimum exclusive.
+					} // Updated has minimum exclusive.
 
-			// If updated has no lower bound range expands.
+					// If updated has no lower bound range expands.
 
-		} // Original has minimum inclusive.
+				} // Original has minimum inclusive.
 
-		///
-		// Minimum exclusive.
-		///
+				///
+				// Minimum exclusive.
+				///
 
-		// Original has minimum exclusive.
-		if(theOriginal.hasOwnProperty(rangeMinExc)) {
+				// Original has minimum exclusive.
+				if(original.hasOwnProperty(rangeMinExc)) {
 
-			// Updated has minimum exclusive.
-			if(theUpdated.hasOwnProperty(rangeMinExc)) {
+					// Updated has minimum exclusive.
+					if(updated.hasOwnProperty(rangeMinExc)) {
 
-				// Assert updated lower bound is less or equal to existing lower bound.
-				if(theUpdated[rangeMinExc] > theOriginal[rangeMinExc]) {
-					return {
-						message: `Minimum range has increased, range has become more restrictive.`,
-						data: {
-							[rangeMinExc]: {
-								old: theOriginal[rangeMinExc],
-								new: theUpdated[rangeMinExc]
-							}
+						// Assert updated lower bound is less or equal to existing lower bound.
+						if(updated[rangeMinExc] > original[rangeMinExc]) {
+							return {
+								message: `Minimum range has increased, range has become more restrictive.`,
+								data: {
+									[rangeMinExc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
-				}
 
-			} // Updated has minimum exclusive.
+					} // Updated has minimum exclusive.
 
-			// Updated has minimum inclusive.
-			else if(theUpdated.hasOwnProperty(rangeMinInc)) {
+					// Updated has minimum inclusive.
+					else if(updated.hasOwnProperty(rangeMinInc)) {
 
-				// Assert updated minimum inclusive bound is
-				// lower or equal to existing minimum exclusive bound.
-				if(theUpdated[rangeMinInc] > theOriginal[rangeMinExc]) {
-					return {
-						message: `Lower bound has increased, range has become more restrictive`,
-						data: {
-							[rangeMinExc]: {
-								old: theOriginal,
-								new: theUpdated
-							}
+						// Assert updated minimum inclusive bound is
+						// lower or equal to existing minimum exclusive bound.
+						if(updated[rangeMinInc] > original[rangeMinExc]) {
+							return {
+								message: `Lower bound has increased, range has become more restrictive`,
+								data: {
+									[rangeMinExc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
-				}
 
-			} // Updated has minimum exclusive.
+					} // Updated has minimum exclusive.
 
-			// If updated has no lower bound range expands.
+					// If updated has no lower bound range expands.
 
-		} // Original has minimum inclusive.
+				} // Original has minimum exclusive.
 
-		///
-		// Maximum inclusive.
-		///
+				///
+				// Maximum inclusive.
+				///
 
-		// Original has maximum inclusive.
-		if(theOriginal.hasOwnProperty(rangeMaxInc)) {
+				// Original has maximum inclusive.
+				if(original.hasOwnProperty(rangeMaxInc)) {
 
-			// Updated has maximum inclusive.
-			if(theUpdated.hasOwnProperty(rangeMaxInc)) {
+					// Updated has maximum inclusive.
+					if(updated.hasOwnProperty(rangeMaxInc)) {
 
-				// Assert updated upper bound is greater or equal to existing upper bound.
-				if(theUpdated[rangeMaxInc] < theOriginal[rangeMaxInc]) {
-					return {
-						message: `Maximum range has decreased, range has become more restrictive.`,
-						data: {
-							[rangeMaxInc]: {
-								old: theOriginal[rangeMaxInc],
-								new: theUpdated[rangeMaxInc]
-							}
+						// Assert updated upper bound is greater or equal to existing upper bound.
+						if(updated[rangeMaxInc] < original[rangeMaxInc]) {
+							return {
+								message: `Maximum range has decreased, range has become more restrictive.`,
+								data: {
+									[rangeMaxInc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
-				}
 
-			} // Updated has maximum inclusive.
+					} // Updated has maximum inclusive.
 
-			// Updated has maximum exclusive.
-			else if(theUpdated.hasOwnProperty(rangeMaxExc)) {
+					// Updated has maximum exclusive.
+					else if(updated.hasOwnProperty(rangeMaxExc)) {
 
-				// Assert updated maximum exclusive bound is
-				// lower than existing maximum inclusive bound.
-				if(theUpdated[rangeMaxExc] <= theOriginal[rangeMaxInc]) {
-					return {
-						message: `Upper bound has decreased, range has become more restrictive`,
-						data: {
-							[rangeMaxInc]: {
-								old: theOriginal,
-								new: theUpdated
-							}
+						// Assert updated maximum exclusive bound is
+						// lower than existing maximum inclusive bound.
+						if(updated[rangeMaxExc] <= original[rangeMaxInc]) {
+							return {
+								message: `Upper bound has decreased, range has become more restrictive`,
+								data: {
+									[rangeMaxInc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
-				}
 
-			} // Updated has maximum exclusive.
+					} // Updated has maximum exclusive.
 
-			// If updated has no upper bound range expands.
+					// If updated has no upper bound range expands.
 
-		} // Original has maximum inclusive.
+				} // Original has maximum inclusive.
 
-		///
-		// Maximum exclusive.
-		///
+				///
+				// Maximum exclusive.
+				///
 
-		// Original has maximum exclusive.
-		if(theOriginal.hasOwnProperty(rangeMaxExc)) {
+				// Original has maximum exclusive.
+				if(original.hasOwnProperty(rangeMaxExc)) {
 
-			// Updated has maximum exclusive.
-			if(theUpdated.hasOwnProperty(rangeMaxExc)) {
+					// Updated has maximum exclusive.
+					if(updated.hasOwnProperty(rangeMaxExc)) {
 
-				// Assert updated upper bound is greater or equal to existing upper bound.
-				if(theUpdated[rangeMaxExc] < theOriginal[rangeMaxExc]) {
-					return {
-						message: `Maximum range has decreased, range has become more restrictive.`,
-						data: {
-							[rangeMinExc]: {
-								old: theOriginal[rangeMaxExc],
-								new: theUpdated[rangeMaxExc]
-							}
+						// Assert updated upper bound is greater or equal to existing upper bound.
+						if(updated[rangeMaxExc] < original[rangeMaxExc]) {
+							return {
+								message: `Maximum range has decreased, range has become more restrictive.`,
+								data: {
+									[rangeMinExc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
-				}
 
-			} // Updated has maximum exclusive.
+					} // Updated has maximum exclusive.
 
-			// Updated has maximum inclusive.
-			else if(theUpdated.hasOwnProperty(rangeMaxInc)) {
+					// Updated has maximum inclusive.
+					else if(updated.hasOwnProperty(rangeMaxInc)) {
 
-				// Assert updated maximum inclusive bound is
-				// greater or equal than existing maximum exclusive bound.
-				if(theUpdated[rangeMaxInc] < theOriginal[rangeMaxExc]) {
-					return {
-						message: `Lower bound has increased, range has become more restrictive`,
-						data: {
-							[rangeMaxExc]: {
-								old: theOriginal,
-								new: theUpdated
-							}
+						// Assert updated maximum inclusive bound is
+						// greater or equal than existing maximum exclusive bound.
+						if(updated[rangeMaxInc] < original[rangeMaxExc]) {
+							return {
+								message: `Lower bound has increased, range has become more restrictive`,
+								data: {
+									[rangeMaxExc]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
 						}
-					}                                                   // ==>
+
+					} // Updated has maximum exclusive.
+
+					// If updated has no lower bound range expands.
+
+				} // Original has maximum exclusive.
+
+			} // Updated has range.
+
+			// Removing range lifts restrictions.
+
+		} // Original has range.
+
+		// Updated has range.
+		else if(theUpdated.hasOwnProperty(section)) {
+			return {
+				message: `Cannot add range restrictions to existing descriptors.`,
+				data: {
+					[section]: {
+						old: null,
+						new: theUpdated
+					}
 				}
-
-			} // Updated has maximum exclusive.
-
-			// If updated has no lower bound range expands.
-
-		} // Original has maximum exclusive.
+			}                                                           // ==>
+		}
 
 		return {}                                                       // ==>
 
@@ -5369,8 +5426,8 @@ class Validator
 					}
 				}
 
-					//
-					// Recurse objects.
+				//
+				// Recurse objects.
 				//
 				else {
 					copyTarget[key] = (isObject(copyUpdates[key]))
