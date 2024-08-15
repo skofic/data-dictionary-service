@@ -1320,7 +1320,6 @@ function doUpdateTerm(request, response)
 		})
 		return                                                          // ==>
 	}
-	throw new Error(JSON.stringify(updated))
 
 	//
 	// Validate object.

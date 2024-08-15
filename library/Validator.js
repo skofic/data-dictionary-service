@@ -3915,7 +3915,7 @@ class Validator
 		///
 		// Handle data section.
 		///
-		result = Object.assign(result, Validator.ValidateDataSectionTermUpdates(theOriginal, theUpdated))
+		result = Validator.ValidateDataTermUpdates(theOriginal, theUpdated)
 		if(Object.keys(result).length !== 0) {
 			return result                                               // ==>
 		}
@@ -3923,7 +3923,7 @@ class Validator
 		///
 		// Handle rule section.
 		///
-		result = Object.assign(result, Validator.ValidateRuleTermUpdates(theOriginal, theUpdated))
+		result = Validator.ValidateRuleTermUpdates(theOriginal, theUpdated)
 
 		return result                                                   // ==>
 
@@ -4139,7 +4139,7 @@ class Validator
 		///
 		// Init local storage.
 		///
-		const section = module.context.configuration.sectionCode
+		const section = module.context.configuration.sectionData
 
 		// Updated has data section.
 		if(theUpdated.hasOwnProperty(section)) {
@@ -4149,7 +4149,8 @@ class Validator
 
 				// Check data section changes.
 				return Validator.ValidateDataSectionTermUpdates(
-					theOriginal, theUpdated
+					theOriginal[section],
+					theUpdated[section]
 				)                                                       // ==>
 
 			} // Original has data section.
@@ -4232,40 +4233,55 @@ class Validator
 				if(updated.key === original.key) {
 
 					// Check specific section.
-					switch(theUpdated._key) {
+					switch(updated.key) {
+
+						///
+						// Scalar sections.
+						///
 
 						// Handle scalar section.
 						case module.context.configuration.sectionScalar:
 							return Validator.ValidateScalarTermUpdates(
-								original[original.key],
-								updated[updated.key]
+								original.value[original.key],
+								updated.value[updated.key]
 							)                                           // ==>
 
 						// Handle set scalar section.
 						case module.context.configuration.sectionSetScalar:
 							return Validator.ValidateSetScalarTermUpdates(
-								original[original.key],
-								updated[updated.key]
+								original.value[original.key],
+								updated.value[updated.key]
 							)                                           // ==>
 
 						// Handle dictionary key section.
 						case module.context.configuration.sectionDictKey:
-							return Validator.ValidateSetScalarTermUpdates(
-								original[original.key],
-								updated[updated.key]
+							return Validator.ValidateKeyScalarTermUpdates(
+								original.value[original.key],
+								updated.value[updated.key]
 							)                                           // ==>
 
-						// Handle array sections.
-						case module.context.configuration.sectionArray:
-						case module.context.configuration.sectionSet:
+						///
+						// Container sections.
+						///
 
-							// TODO: Handle elements range, with a specific method.
+						// Handle array sections.
+						case module.context.configuration.sectionSet:
+						case module.context.configuration.sectionArray:
+
+							const status = Validator.ValidateElementsTermUpdates(
+								original.value[original.key],
+								updated.value[updated.key]
+							)
+
+							if(Object.keys(status).length > 0) {
+								return status                           // ==>
+							}
 
 						// Traverse section.
 						default:
 							return Validator.ValidateDataSectionTermUpdates(
-								original[original.key],
-								updated[updated.key]
+								original.value[original.key],
+								updated.value[updated.key]
 							)                                           // ==>
 					}
 
@@ -5149,6 +5165,165 @@ class Validator
 		return {}                                                       // ==>
 
 	} // Validator::ValidateRangeTermUpdates()
+
+	/**
+	 * ValidateElementsTermUpdates
+	 *
+	 * This method can be used to check if an updated array element constraints
+	 * is compatible.
+	 *
+	 * The method will issue an error if the range has become more restrictive,
+	 * but ignore if the range has become larger.
+	 *
+	 * The method will return the following values:
+	 * - On errors the method will return an object describing the reason and
+	 *   the offending data:
+	 *   - `message`: The status message.
+	 *   - `data`: The incorrect data. In general, it will return a dictionary
+	 *             whose keys are the incorrect field names and the value is an
+	 *             object containing the old value, `old`, and the updated
+	 *             value, `new`.
+	 * - If there were no errors, the method will return an empty object.
+	 *
+	 * Any major structural error will not be flagged in this method: the method
+	 * will check if the properties have the correct structure, but if that is
+	 * not the case, no error will be raised, the method will simply exit with
+	 * an empty object. This means that you *must* run validation preferably
+	 * before or after running this method.
+	 *
+	 * This method will exit on first error.
+	 * @param theOriginal {Object}: Original range.
+	 * @param theUpdated {Object}: Updated range.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateElementsTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Init local storage.
+		///
+		const section = module.context.configuration.arrayElements
+
+		// Original has elements count.
+		if(theOriginal.hasOwnProperty(section)) {
+
+			// Updated has element count.
+			if(theUpdated.hasOwnProperty(section)) {
+
+				///
+				// Init local storage.
+				///
+				const original = theOriginal[section]
+				const updated = theUpdated[section]
+				const min = module.context.configuration.arrayMinElements
+				const max = module.context.configuration.arrayMaxElements
+
+				///
+				// Minimum elements.
+				///
+
+				// Original has minimum elements.
+				if(original.hasOwnProperty(min)) {
+
+					// Updated has minimum elements.
+					if(updated.hasOwnProperty(min)) {
+
+						// Assert updated minimum is less or equal to existing minimum.
+						if(updated[min] > original[min]) {
+							return {
+								message: `Minimum number of elements has increased, range has become more restrictive.`,
+								data: {
+									[min]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
+						}
+
+					} // Updated has minimum inclusive.
+
+					// If updated has no minimum count range expands.
+
+				} // Original has minimum elements.
+
+				// Original does not have minimum elements.
+				else if(theUpdated.hasOwnProperty(min)) {
+					return {
+						message: `Minimum number of elements constraint has been added, range has become more restrictive.`,
+						data: {
+							[min]: {
+								old: null,
+								new: updated
+							}
+						}
+					}                                                   // ==>
+				}
+
+				///
+				// Maximum elements.
+				///
+
+				// Original has maximum elements.
+				if(original.hasOwnProperty(max)) {
+
+					// Updated has maximum elements.
+					if(updated.hasOwnProperty(max)) {
+
+						// Assert updated maximum is greater or equal to existing maximum.
+						if(updated[max] < original[max]) {
+							return {
+								message: `Maximum number of elements has decreased, range has become more restrictive.`,
+								data: {
+									[max]: {
+										old: original,
+										new: updated
+									}
+								}
+							}                                                   // ==>
+						}
+
+					} // Updated has maximum elements.
+
+					// If updated has no maximum range expands.
+
+				} // Original has maximum elements.
+
+				// Original does not have maximum elements.
+				else if(updated.hasOwnProperty(max)) {
+					return {
+						message: `Maximum number of elements constraint has been added, range has become more restrictive.`,
+						data: {
+							[max]: {
+								old: null,
+								new: updated
+							}
+						}
+					}                                                   // ==>
+				}
+
+			} // Updated has elements count.
+
+			// If element count was removed, restrictions have been lifted.
+
+		} // Original has elements count.
+
+		// Updated has element count.
+		else if(theUpdated.hasOwnProperty(section)) {
+			return {
+				message: `Cannot add array element count restrictions to existing descriptor.`,
+				data: {
+					[section]: {
+						old: null,
+						new: updated
+					}
+				}
+			}                                                           // ==>
+		}
+
+		return {}                                                       // ==>
+
+	} // Validator::ValidateElementsTermUpdates()
 
 	/**
 	 * MergeTermUpdates
