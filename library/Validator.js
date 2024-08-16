@@ -5541,6 +5541,71 @@ class Validator
 	} // Validator::TraverseTermDataSection()
 
 	/**
+	 * GetValueByPath
+	 *
+	 * The method will return the value in the provided object referenced by the
+	 * provided dot delimited path.
+	 *
+	 * The path may reference array elements by providing the index in square
+	 * brackets trailing the array property name.
+	 *
+	 * Example: *level0.level1[0].property*.
+	 *
+	 * If the object or the path is empty, the method will return `undefined`;
+	 * if you provide several contiguous dots (`.`) in the path, these will be
+	 * resolved into a single dot.
+	 *
+	 * The method will return the matched value or `undefined`.
+	 *
+	 * @param theObject {Object}: The object containing the value, must not be
+	 *                            empty.
+	 * @param thePath {String}: The dot delimited path to the value, must not be
+	 *                          empty.
+	 *
+	 * @return {Any}: The matched value, or `undefined`.
+	 */
+	static GetValueByPath(theObject, thePath)
+	{
+		///
+		// Init local storage.
+		///
+		let value = theObject
+		const keys = thePath.split(/\.|\[|\]/).filter(Boolean)
+
+		///
+		// Handle empty object
+		// or empty path.
+		///
+		if(Object.keys(value).length === 0 || keys.length === 0) {
+			return undefined                                            // ==>
+		}
+
+		///
+		// Iterate path elements.
+		///
+		for(let key of keys)
+		{
+			///
+			// Get value.
+			///
+			const match = key.match(/^\[(\d+)\]$/)
+			value = (match !== null)
+				  ? value[parseInt(key)]
+				  : value[key]
+
+			///
+			// Stop on mismatches.
+			///
+			if (value === undefined) {
+				break
+			}
+		}
+
+		return value                                                    // ==>
+
+	} // Validator::GetValueByPath()
+
+	/**
 	 * DeepClone
 	 *
 	 * The method will merge the provided value and return the clone.
