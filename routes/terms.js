@@ -814,23 +814,38 @@ router.patch(
             This service can be used to update a term. You provide the term global identifier \
             in the path query parameter \`key\` and the fields to be updated in the request body.
             
+            The body consists of an object with two properties: one contains the term updates, \
+            the other contains the list of path keys to the fields to be updated.
+            
             The service will return the updated term object plus a property, \`status\` \
             providing the operation outcome, \`OK\`.
         `
 	)
 	.queryParam('key', Models.StringModel, "Term key")
-	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-	.queryParam('types', ParamExpectType, ParamExpectTypeDescription)
 	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
 	.body(joi.object(), dd
 		`
             **Service parameters**
             
-            The body should contain an object holding the properties that will be updated. \
+            The body should contain an object holding the properties that will be updated \
+            and the path to all elements to be replaced:
+            - \`updates\`: The updates data.
+            - \`references\`: An array of object paths to the elements to be updated.
+            
+            The \`references\` array is a list of *dot delimited* strings corresponding \
+            to the properties, in the \`updates\` field, that should replace the \
+            corresponding elements of the original term, or that should be inserted in the \
+            original term. This is necessary in order to identify at what level should \
+            the replacements or insertions begin: in order to update a deeply nested \
+            object one must know which level represents the replacement, and which \
+            level represents the path to the target element.
+            
             The following rules will be followed:
-            - To delete a field pass \`null\`.
-            - Arrays must be provided complete.
-            - Objects are merged: object properties are added or replaced.
+            - All values pointed by the \`references\` array will be either \
+              added or replaced.
+            - All paths matching elements, in the original term, with a value \
+              of \`null\` will be deleted.
+            - Arrays must be provided in full, they will be replaced.
         `
 	)
 	.response(200, joi.object({"status": "OK"}), dd
@@ -1293,6 +1308,7 @@ function doUpdateTerm(request, response)
 	//
 	// Update properties.
 	//
+	// TODO: Add back flags and handle body with updates and array of paths.
 	const updated = Validator.MergeTermUpdates(original, request.body)
 	const validator =
 		new Validator(
@@ -1301,8 +1317,8 @@ function doUpdateTerm(request, response)
 			false,
 			true,
 			true,
-			request.queryParams.terms,
-			request.queryParams.types,
+			true,
+			false,
 			false,
 			request.queryParams.defns,
 			module.context.configuration.localIdentifier
