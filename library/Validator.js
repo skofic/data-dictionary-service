@@ -5555,14 +5555,17 @@ class Validator
 	 * if you provide several contiguous dots (`.`) in the path, these will be
 	 * resolved into a single dot.
 	 *
-	 * The method will return the matched value or `undefined`.
+	 * The method will return an object containing two properties: `value`
+	 * contains the matched value, `keys` contains the array of path components.
+	 * If the value was not matched, the returned object will only have the
+	 * `keys` property.
 	 *
 	 * @param theObject {Object}: The object containing the value, must not be
 	 *                            empty.
 	 * @param thePath {String}: The dot delimited path to the value, must not be
 	 *                          empty.
 	 *
-	 * @return {Any}: The matched value, or `undefined`.
+	 * @return {Object}: The matched value and path components.
 	 */
 	static GetValueByPath(theObject, thePath)
 	{
@@ -5570,6 +5573,12 @@ class Validator
 		// Init local storage.
 		///
 		let value = theObject
+
+		///
+		// Get path components.
+		// The regular expression strips eventual square brackets from array
+		// indexes, and makes the array index an element on its own.
+		///
 		const keys = thePath.split(/\.|\[|\]/).filter(Boolean)
 
 		///
@@ -5577,7 +5586,7 @@ class Validator
 		// or empty path.
 		///
 		if(Object.keys(value).length === 0 || keys.length === 0) {
-			return undefined                                            // ==>
+			return { keys }                                             // ==>
 		}
 
 		///
@@ -5597,11 +5606,11 @@ class Validator
 			// Stop on mismatches.
 			///
 			if (value === undefined) {
-				break
+				return { keys }                                         // ==>
 			}
 		}
 
-		return value                                                    // ==>
+		return { value, keys }                                          // ==>
 
 	} // Validator::GetValueByPath()
 
