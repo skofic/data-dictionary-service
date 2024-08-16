@@ -33,7 +33,7 @@ const {isObject} = require("../utils/utils");
 const keySchema = joi.string().required()
 	.description('The key of the document')
 
-const ParamExpectTerms = joi.boolean().default(false)
+const ParamExpectTerms = joi.boolean().default(true)
 const ParamExpectTermsDescription =
 	"**Expect all object properties to be part of the data dictionary**.\n" +
 	"By default, if a property matches a descriptor, then the value must \
@@ -42,13 +42,6 @@ const ParamExpectTermsDescription =
 	If you set this flag, all object properties *must* correspond to a descriptor, \
 	failing to do so will be considered an error."
 
-const ParamExpectType = joi.boolean().default(false)
-const ParamExpectTypeDescription =
-	"**Expect all descriptors to have a data type**.\n" +
-	"By default, an empty descriptor data definition section means that it can \
-	take any value: if you set this flag, all descriptors are required to have \
-	a data type."
-
 const ParamDefNamespace = joi.boolean().default(false)
 const ParamDefNamespaceDescription =
 	"**Allow referencing default namespace**.\n" +
@@ -56,6 +49,31 @@ const ParamDefNamespaceDescription =
 	engine. User-defined terms should not reference the default namespace. \
 	If this option is set, it will be possible to create terms that have the \
 	*default namespace* as their namespace."
+
+const ParamResolve = joi.boolean().default(false)
+const ParamResolveDescription =
+	"**Attempt to resolve unmatched term references**.\n" +
+	"This option is relevant to enumerated values. If this flag is set, when a \
+	provided value *does not* resolve into a term global identifier, the value \
+	will be tested against the terms code section property indicated in the \
+	*resfld* parameter: if there is a single match, the original value will be \
+	replaced by the matched global identifier. This way one can use the local \
+	identifier as the reference and let the validator resolve the global \
+	identifier.\n" + "When this happens the status code will be zero, if no \
+    errors have occurred, but the response will feature a property named *changes* \
+    in the status report, which contains the list of resolved values.\n" + "Be \
+    aware that to successfully use this feature the local identifiers must be unique."
+
+const ParamResolveField = joi.string().default(module.context.configuration.localIdentifier)
+const ParamResolveFieldDescription =
+	"**Terms code section field used to resolve term references**.\n" +
+	"This option is relevant if the *resolve* flag was set. This parameter \
+	corresponds to the name of a property in the descriptor's code section: \
+	the unresolved value will be matched against the value contained in that \
+	field and if there is a *single* match, the matched term global identifier \
+	will replace the provided value.\n" + "By default this parameter is set \
+    to the *local identifier*, you could set it, for instance, to the *list \
+    of official identifiers* in order to have a larger choice."
 
 //
 // Collections.
@@ -120,8 +138,9 @@ router.post(
         `
 	)
 	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-	.queryParam('types', ParamExpectType, ParamExpectTypeDescription)
 	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
+	.queryParam('resolve', ParamResolve, ParamResolveDescription)
+	.queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
 	.body(TermInsert, dd
 		`
             **Service parameters**
@@ -227,8 +246,9 @@ router.post(
         `
 	)
 	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-	.queryParam('types', ParamExpectType, ParamExpectTypeDescription)
 	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
+	.queryParam('resolve', ParamResolve, ParamResolveDescription)
+	.queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
 	.body(TermsInsert, dd
 		`
             **Service parameters**
@@ -821,16 +841,24 @@ router.patch(
             providing the operation outcome, \`OK\`.
         `
 	)
-	.queryParam('key', Models.StringModel, "Term key")
+	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
 	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-	.body(joi.object(), dd
+	.queryParam('resolve', ParamResolve, ParamResolveDescription)
+	.queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+	.body(joi.object({
+			"updates": joi.object().required(),
+			"references": joi.array().items(joi.string()).required()
+		}), dd
 		`
             **Service parameters**
             
             The body should contain an object holding the properties that will be updated \
             and the path to all elements to be replaced:
-            - \`updates\`: The updates data.
-            - \`references\`: An array of object paths to the elements to be updated.
+            - \`updates\`: The updates data. It is expected to be a term containing \
+                           only those values to be updated.
+            - \`references\`: An array of object paths referencing the elements of \
+                              the provided term that will replace the \
+                              original term values.
             
             The \`references\` array is a list of *dot delimited* strings corresponding \
             to the properties, in the \`updates\` field, that should replace the \
@@ -845,7 +873,14 @@ router.patch(
               added or replaced.
             - All paths matching elements, in the original term, with a value \
               of \`null\` will be deleted.
-            - Arrays must be provided in full, they will be replaced.
+            - Array elements must be provided as *[element]*.
+            
+            For instance you could set
+            *{ "_data": { "_array": { "_scalar": decimals: 2 } } }*
+            as the updated value and
+            *"_data._array._scalar.decimals"*
+            as the corresponding reference element. This way the service will replace the \
+            *decimals* value and not replace the whole *_data*.
         `
 	)
 	.response(200, joi.object({"status": "OK"}), dd
@@ -901,10 +936,10 @@ function doInsertTerm(request, response)
 			true,
 			true,
 			request.queryParams.terms,
-			request.queryParams.types,
 			false,
+			request.queryParams.resolve,
 			request.queryParams.defns,
-			module.context.configuration.localIdentifier
+			request.queryParams.resfld
 		)
 
 	//
@@ -1046,10 +1081,10 @@ function doInsertTerms(request, response)
 			true,
 			true,
 			request.queryParams.terms,
-			request.queryParams.types,
 			false,
+			request.queryParams.resolve,
 			request.queryParams.defns,
-			module.context.configuration.localIdentifier
+			request.queryParams.resfld
 		)
 
 	//
@@ -1309,7 +1344,12 @@ function doUpdateTerm(request, response)
 	// Update properties.
 	//
 	// TODO: Add back flags and handle body with updates and array of paths.
-	const updated = Validator.MergeTermUpdates(original, request.body)
+	const updated =
+		Validator.MergeTermUpdates(
+			original,
+			request.body.updates,
+			request.body.references
+		)
 	const validator =
 		new Validator(
 			updated,
@@ -1317,11 +1357,11 @@ function doUpdateTerm(request, response)
 			false,
 			true,
 			true,
-			true,
+			request.queryParams.terms,
 			false,
-			false,
+			request.queryParams.resolve,
 			request.queryParams.defns,
-			module.context.configuration.localIdentifier
+			request.queryParams.resfld
 		)
 
 	//

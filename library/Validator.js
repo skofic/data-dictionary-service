@@ -5396,11 +5396,16 @@ class Validator
 	 *
 	 * @param theOriginal {Object}: The original object.
 	 * @param theUpdates {Object}: The updated properties.
+	 * @param theReferences {Array}: The list of field references.
 	 *
 	 * @return {Object}: The merged object.
 	 */
-	static MergeTermUpdates(theOriginal = {}, theUpdates = {})
-	{
+	static MergeTermUpdates(
+		theOriginal = {},
+		theUpdates = {},
+		theReferences = []
+	){
+		// TODO: Need to handle updates and paths: see Notes AI.
 		//
 		// Ensure both are objects.
 		//
@@ -5410,30 +5415,15 @@ class Validator
 			// Clone both objects.
 			//
 			const copyTarget = Validator.DeepClone(theOriginal)
-			const copyUpdates = Validator.DeepClone(theUpdates)
 
-			//
-			// Iterate properties to be applied.
-			//
-			Object.keys(copyUpdates).forEach( (key) => {
-
-				//
-				// Remove property.
-				//
-				if(copyUpdates[key] === null) {
-					if(copyTarget.hasOwnProperty(key)) {
-						delete copyTarget[key]
-					}
-				}
-
-				//
-				// Recurse objects.
-				//
-				else {
-					copyTarget[key] = (isObject(copyUpdates[key]))
-						? Validator.MergeTermUpdates(copyTarget[key], copyUpdates[key])
-						: copyUpdates[key]
-				}
+			///
+			// Iterate references.
+			///
+			theReferences.forEach( (path) => {
+				///
+				// Create individual property elements.
+				///
+				const components = path.split('.')
 			})
 
 			return copyTarget                                           // ==>
@@ -5441,6 +5431,47 @@ class Validator
 		} // Both parameters are objects.
 
 		return theOriginal                                              // ==>
+
+		// //
+		// // Ensure both are objects.
+		// //
+		// if(isObject(theOriginal) && isObject(theUpdates))
+		// {
+		// 	//
+		// 	// Clone both objects.
+		// 	//
+		// 	const copyTarget = Validator.DeepClone(theOriginal)
+		// 	const copyUpdates = Validator.DeepClone(theUpdates)
+		//
+		// 	//
+		// 	// Iterate properties to be applied.
+		// 	//
+		// 	Object.keys(copyUpdates).forEach( (key) => {
+		//
+		// 		//
+		// 		// Remove property.
+		// 		//
+		// 		if(copyUpdates[key] === null) {
+		// 			if(copyTarget.hasOwnProperty(key)) {
+		// 				delete copyTarget[key]
+		// 			}
+		// 		}
+		//
+		// 		//
+		// 		// Recurse objects.
+		// 		//
+		// 		else {
+		// 			copyTarget[key] = (isObject(copyUpdates[key]))
+		// 				? Validator.MergeTermUpdates(copyTarget[key], copyUpdates[key])
+		// 				: copyUpdates[key]
+		// 		}
+		// 	})
+		//
+		// 	return copyTarget                                           // ==>
+		//
+		// } // Both parameters are objects.
+		//
+		// return theOriginal                                              // ==>
 
 	} // Validator::MergeTermUpdates()
 
