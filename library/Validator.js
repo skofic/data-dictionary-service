@@ -5530,6 +5530,106 @@ class Validator
 	} // Validator::MergeTermUpdates()
 
 	/**
+	 * GetValueByPath
+	 *
+	 * The method will return the value in the provided object referenced by the
+	 * provided dot delimited path.
+	 *
+	 * The path may reference array elements by providing the index in square
+	 * brackets trailing the array property name.
+	 *
+	 * Example: *level0.level1[0].property*.
+	 *
+	 * If the provided path, `thePath`, matches an element in the provided
+	 * object, `theObject`, the method will return an object with the following
+	 * properties:
+	 * - `value`: The matched value.
+	 * - `keys`: An array containing the elements of the path.
+	 *
+	 * Elements of the `keys` array that reference array elements will be parsed
+	 * as single elements and will be integers, all other elements will be
+	 * strings.
+	 *
+	 * Example: *["level0", "level1", 0, "property"]*.
+	 *
+	 * This means you can have properties composed exclusively of digits.
+	 * If you provide several contiguous dots (`.`) in the path, these will be
+	 * resolved into a single dot.
+	 *
+	 * If the object or the path is empty, or if the path does not match any
+	 * element of the provided object, the method will return an object with a
+	 * single property, `path`, that will contain the path.
+	 *
+	 * The method expects both the provided object and the path *not to be
+	 * empty*.
+	 *
+	 * @param theObject {Object}: The object containing the value, must not be empty.
+	 * @param thePath {String}: The dot delimited path to the value, must not be empty.
+	 *
+	 * @return {Object}: The matched value and path components, or invalid path.
+	 */
+	static GetValueByPath(theObject, thePath)
+	{
+		///
+		// Handle empty object.
+		///
+		if(Object.keys(theObject) === 0) {
+			return { "path": thePath }                                  // ==>
+		}
+
+		///
+		// Get path components.
+		// The regular expression splits the string on dots and opening brackets.
+		// Array indexes become a field of digits closed by a closing bracket,
+		// not a valid property name. Properties become strings. This allows
+		// having properties made exclusively of digits.
+		///
+		const elements = thePath.split(/\.|\[/).filter(Boolean)
+
+		///
+		// Handle empty path.
+		///
+		if(elements.length === 0) {
+			return { "path": thePath }                                  // ==>
+		}
+
+		///
+		// Iterate path elements.
+		///
+		const keys = []
+		let value = theObject
+		for(let key of elements)
+		{
+			///
+			// Parse key.
+			// Match digits ending with a closing square bracket:
+			// if it matches, then it is an array index,
+			// if not, it is a property name.
+			///
+			const match = key.match(/^(\d+)\]$/)
+			if(match === null) {
+				if(Validator.IsObject(value)) {
+					keys.push(key)
+					value = value[key]
+				} else {
+					return { "path": thePath }                          // ==>
+				}
+			} else {
+				if(Validator.IsArray(value)) {
+					const ref = parseInt(match[1])
+					keys.push(ref)
+					value = value[ref]
+				} else {
+					return { "path": thePath }                          // ==>
+				}
+			}
+		}
+
+		return { value, keys }                                          // ==>
+
+	} // Validator::GetValueByPath()
+
+	/**
 	 * TraverseTermDataSection
 	 *
 	 * The method will traverse the provided data section returning the next
@@ -5593,100 +5693,6 @@ class Validator
 		return next                                                     // ==>
 
 	} // Validator::TraverseTermDataSection()
-
-	/**
-	 * GetValueByPath
-	 *
-	 * The method will return the value in the provided object referenced by the
-	 * provided dot delimited path.
-	 *
-	 * The path may reference array elements by providing the index in square
-	 * brackets trailing the array property name.
-	 *
-	 * Example: *level0.level1[0].property*.
-	 *
-	 * If the provided path, `thePath`, matches an element in the provided
-	 * object, `theObject`, the method will return an object with the following
-	 * properties:
-	 * - `value`: The matched value.
-	 * - `keys`: An array containing the elements of the path.
-	 *
-	 * Elements of the `keys` array that reference array elements will be parsed
-	 * as single elements and will be integers, all other elements will be
-	 * strings.
-	 *
-	 * Example: *["level0", "level1", 0, "property"]*.
-	 *
-	 * This means you can have properties composed exclusively of digits.
-	 * If you provide several contiguous dots (`.`) in the path, these will be
-	 * resolved into a single dot.
-	 *
-	 * If the object or the path is empty, or if the path does not match any
-	 * element of the provided object, the method will return an object with a
-	 * single property, `path`, that will contain the path.
-	 *
-	 * The method expects both the provided object and the path *not to be
-	 * empty*.
-	 *
-	 * @param theObject {Object}: The object containing the value, must not be empty.
-	 * @param thePath {String}: The dot delimited path to the value, must not be empty.
-	 *
-	 * @return {Object}: The matched value and path components, or invalid path.
-	 */
-	static GetValueByPath(theObject, thePath)
-	{
-		///
-		// Handle empty object.
-		///
-		if(Object.keys(theObject) === 0) {
-			return { path: thePath }                                    // ==>
-		}
-
-		///
-		// Get path components.
-		// The regular expression splits the string on dots and opening brackets.
-		// Array indexes become a field of digits closed by a closing bracket,
-		// not a valid property name. Properties become strings. This allows
-		// having properties made exclusively of digits.
-		///
-		const elements = thePath.split(/\.|\[/).filter(Boolean)
-
-		///
-		// Handle empty path.
-		///
-		if(elements.length === 0) {
-			return { path: thePath }                                    // ==>
-		}
-
-		///
-		// Iterate path elements.
-		///
-		const keys = []
-		let value = theObject
-		for(let key of elements)
-		{
-			///
-			// Parse key.
-			// Match digits ending with a closing square bracket:
-			// if it matches, then it is an array index,
-			// if not, it is a property name.
-			///
-			const match = key.match(/^(\d+)\]$/)
-			const ref = (match === null) ? key : parseInt(match[1])
-			keys.push(ref)
-			value = value[ref]
-
-			///
-			// Stop on mismatches.
-			///
-			if (value === undefined) {
-				return { path: thePath }                                // ==>
-			}
-		}
-
-		return { value, keys }                                          // ==>
-
-	} // Validator::GetValueByPath()
 
 	/**
 	 * DeepClone
