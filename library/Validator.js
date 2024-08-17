@@ -5403,13 +5403,14 @@ class Validator
 	static MergeTermUpdates(
 		theOriginal = {},
 		theUpdates = {},
-		theReferences = []
+		thePaths = []
 	){
-		// TODO: Need to handle updates and paths: see Notes AI.
 		//
 		// Ensure both are objects.
 		//
-		if(isObject(theOriginal) && isObject(theUpdates))
+		if( Validator.IsObject(theOriginal) &&
+			Validator.IsObject(theUpdates) &&
+			Validator.IsArray(thePaths))
 		{
 			//
 			// Clone both objects.
@@ -5417,61 +5418,114 @@ class Validator
 			const copyTarget = Validator.DeepClone(theOriginal)
 
 			///
-			// Iterate references.
+			// Iterate paths.
 			///
-			theReferences.forEach( (path) => {
+			for(let path of thePaths)
+			{
 				///
-				// Create individual property elements.
+				// Get current path value.
 				///
-				const components = path.split('.')
-			})
+				const reference = GetValueByPath(theUpdates, path)
+				if(!reference.hasOwnProperty('value')) {
+					throw new Error(
+						`The provided path, ${reference.path}, does not have a match in update values`
+					)                                                       // ==>
+				}
+
+				///
+				// Init local storage.
+				///
+				let update = theUpdates
+				let original = copyTarget
+				const remove = (reference.value === null)
+
+				///
+				// Iterate path elements.
+				// We know we have the keys property.
+				///
+				reference.keys.some( (key, index) =>
+				{
+					///
+					// Handle deletions.
+					///
+					if(remove)
+					{
+						///
+						// Original has key.
+						///
+						if(original[key] !== undefined)
+						{
+							///
+							// Delete value.
+							// We reached the leaf node.
+							///
+							if(update[key] === null)
+							{
+								delete original[key]
+								return true                         // =>
+
+							} // Delete original value.
+
+							///
+							// Next.
+							// We did not reach the leaf node yet.
+							///
+							update = update[key]
+							original = original[key]
+							return false                            // =>
+
+						} // Original has key.
+
+						///
+						// Original does not have key:
+						// simply exit, since the value does not exist.
+						///
+						return true                                 // =>
+
+					} // Remove value.
+
+					///
+					// Original has key.
+					///
+					if(original[key] !== undefined)
+					{
+						///
+						// Got to leaf node.
+						// Replace value and done.
+						///
+						if(index === (reference.keys.length - 1))
+						{
+							original[key] = update[key]
+							return true                             // =>
+
+						} // Reached leaf node.
+
+						///
+						// Point to next node.
+						///
+						update = update[key]
+						original = original[key]
+						return false                                // =>
+
+					} // Original has key.
+
+					///
+					// Original has not key.
+					// Create value, and done.
+					///
+					original[key] = update[key]
+					return true                                     // =>
+				})
+
+			} // Iterating paths.
 
 			return copyTarget                                           // ==>
 
-		} // Both parameters are objects.
+		} // Correct parameters.
 
-		return theOriginal                                              // ==>
-
-		// //
-		// // Ensure both are objects.
-		// //
-		// if(isObject(theOriginal) && isObject(theUpdates))
-		// {
-		// 	//
-		// 	// Clone both objects.
-		// 	//
-		// 	const copyTarget = Validator.DeepClone(theOriginal)
-		// 	const copyUpdates = Validator.DeepClone(theUpdates)
-		//
-		// 	//
-		// 	// Iterate properties to be applied.
-		// 	//
-		// 	Object.keys(copyUpdates).forEach( (key) => {
-		//
-		// 		//
-		// 		// Remove property.
-		// 		//
-		// 		if(copyUpdates[key] === null) {
-		// 			if(copyTarget.hasOwnProperty(key)) {
-		// 				delete copyTarget[key]
-		// 			}
-		// 		}
-		//
-		// 		//
-		// 		// Recurse objects.
-		// 		//
-		// 		else {
-		// 			copyTarget[key] = (isObject(copyUpdates[key]))
-		// 				? Validator.MergeTermUpdates(copyTarget[key], copyUpdates[key])
-		// 				: copyUpdates[key]
-		// 		}
-		// 	})
-		//
-		// 	return copyTarget                                           // ==>
-		//
-		// } // Both parameters are objects.
-		//
-		// return theOriginal                                              // ==>
+		throw new Error(
+			`Invoked method with invalid parameters.`
+		)                                                               // ==>
 
 	} // Validator::MergeTermUpdates()
 
@@ -5551,62 +5605,82 @@ class Validator
 	 *
 	 * Example: *level0.level1[0].property*.
 	 *
-	 * If the object or the path is empty, the method will return `undefined`;
-	 * if you provide several contiguous dots (`.`) in the path, these will be
+	 * If the provided path, `thePath`, matches an element in the provided
+	 * object, `theObject`, the method will return an object with the following
+	 * properties:
+	 * - `value`: The matched value.
+	 * - `keys`: An array containing the elements of the path.
+	 *
+	 * Elements of the `keys` array that reference array elements will be parsed
+	 * as single elements and will be integers, all other elements will be
+	 * strings.
+	 *
+	 * Example: *["level0", "level1", 0, "property"]*.
+	 *
+	 * This means you can have properties composed exclusively of digits.
+	 * If you provide several contiguous dots (`.`) in the path, these will be
 	 * resolved into a single dot.
 	 *
-	 * The method will return an object containing two properties: `value`
-	 * contains the matched value, `keys` contains the array of path components.
-	 * If the value was not matched, the returned object will only have the
-	 * `keys` property.
+	 * If the object or the path is empty, or if the path does not match any
+	 * element of the provided object, the method will return an object with a
+	 * single property, `path`, that will contain the path.
 	 *
-	 * @param theObject {Object}: The object containing the value, must not be
-	 *                            empty.
-	 * @param thePath {String}: The dot delimited path to the value, must not be
-	 *                          empty.
+	 * The method expects both the provided object and the path *not to be
+	 * empty*.
 	 *
-	 * @return {Object}: The matched value and path components.
+	 * @param theObject {Object}: The object containing the value, must not be empty.
+	 * @param thePath {String}: The dot delimited path to the value, must not be empty.
+	 *
+	 * @return {Object}: The matched value and path components, or invalid path.
 	 */
 	static GetValueByPath(theObject, thePath)
 	{
 		///
-		// Init local storage.
+		// Handle empty object.
 		///
-		let value = theObject
+		if(Object.keys(theObject) === 0) {
+			return { path: thePath }                                    // ==>
+		}
 
 		///
 		// Get path components.
-		// The regular expression strips eventual square brackets from array
-		// indexes, and makes the array index an element on its own.
+		// The regular expression splits the string on dots and opening brackets.
+		// Array indexes become a field of digits closed by a closing bracket,
+		// not a valid property name. Properties become strings. This allows
+		// having properties made exclusively of digits.
 		///
-		const keys = thePath.split(/\.|\[|\]/).filter(Boolean)
+		const elements = thePath.split(/\.|\[/).filter(Boolean)
 
 		///
-		// Handle empty object
-		// or empty path.
+		// Handle empty path.
 		///
-		if(Object.keys(value).length === 0 || keys.length === 0) {
-			return { keys }                                             // ==>
+		if(elements.length === 0) {
+			return { path: thePath }                                    // ==>
 		}
 
 		///
 		// Iterate path elements.
 		///
-		for(let key of keys)
+		const keys = []
+		let value = theObject
+		for(let key of elements)
 		{
 			///
-			// Get value.
+			// Parse key.
+			// Match digits ending with a closing square bracket:
+			// if it matches, then it is an array index,
+			// if not, it is a property name.
 			///
-			const match = key.match(/^\[(\d+)\]$/)
-			value = (match !== null)
-				  ? value[parseInt(key)]
-				  : value[key]
+			const match = key.match(/^(\d+)\]$/)
+			const ref = (match === null) ? key : parseInt(match[1])
+			keys.push(ref)
+			value = value[ref]
 
 			///
 			// Stop on mismatches.
 			///
 			if (value === undefined) {
-				return { keys }                                         // ==>
+				return { path: thePath }                                // ==>
 			}
 		}
 
