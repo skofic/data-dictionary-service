@@ -5396,14 +5396,16 @@ class Validator
 	 *
 	 * @param theOriginal {Object}: The original object.
 	 * @param theUpdates {Object}: The updated properties.
-	 * @param theReferences {Array}: The list of field references.
+	 * @param thePaths {Array}: The list of field references.
+	 * @param doStrict {Boolean}: Trow exceptions if paths do not match.
 	 *
 	 * @return {Object}: The merged object.
 	 */
-	static MergeTermUpdates(
-		theOriginal = {},
-		theUpdates = {},
-		thePaths = []
+	static MergeObjectUpdates(
+		theOriginal,
+		theUpdates,
+		thePaths,
+		doStrict = false
 	){
 		//
 		// Ensure both are objects.
@@ -5428,8 +5430,9 @@ class Validator
 				const reference = GetValueByPath(theUpdates, path)
 				if(!reference.hasOwnProperty('value')) {
 					throw new Error(
-						`The provided path, ${reference.path}, does not have a match in update values`
-					)                                                       // ==>
+						`The provided path, (${reference.path}), \
+						does not have a match in update values.`
+					)                                                   // ==>
 				}
 
 				///
@@ -5446,76 +5449,155 @@ class Validator
 				reference.keys.some( (key, index) =>
 				{
 					///
-					// Handle deletions.
+					// Init local storage.
 					///
-					if(remove)
+					const array = Number.isInteger(key)
+					const last = (index === reference.keys.length - 1)
+
+					///
+					// Handle matching original array.
+					///
+					if(array && Validator.IsArray(original))
 					{
 						///
-						// Original has key.
+						// Original does not have index.
+						// Since we have an array: if we are removing we simply exit,
+						// since the original does not have the index;
+						// if we are replacing or adding, whether or not we are
+						// on the last path component, we add the update to the
+						// array and exit.
 						///
-						if(original[key] !== undefined)
+						if(original[key] === undefined)
 						{
 							///
-							// Delete value.
-							// We reached the leaf node.
+							// Set element.
+							// Beware: if the index is beyond the array count,
+							// the intermediate elements will be undefined.
 							///
-							if(update[key] === null)
+							if(!remove)
 							{
-								delete original[key]
-								return true                         // =>
+								///
+								// Do not allow undefined elements.
+								///
+								if(doStrict && key > original.length) {
+									throw new Error(
+										`Cannot add/replace: path (${path}) \
+										is inconsistent with original object.`
+									)                                   // ==>
+								}
+								original[key] = update[key]
 
-							} // Delete original value.
+							} // Add update.
 
 							///
-							// Next.
-							// We did not reach the leaf node yet.
+							// Delete element.
+							// Since original does not have element we exit.
 							///
-							update = update[key]
-							original = original[key]
-							return false                            // =>
-
-						} // Original has key.
-
-						///
-						// Original does not have key:
-						// simply exit, since the value does not exist.
-						///
-						return true                                 // =>
-
-					} // Remove value.
-
-					///
-					// Original has key.
-					///
-					if(original[key] !== undefined)
-					{
-						///
-						// Got to leaf node.
-						// Replace value and done.
-						///
-						if(index === (reference.keys.length - 1))
-						{
-							original[key] = update[key]
 							return true                             // =>
 
-						} // Reached leaf node.
+						} // Original does not have index.
 
 						///
-						// Point to next node.
+						// Handle last path component.
+						///
+						if(last)
+						{
+							///
+							// Delete, add or replace element
+							///
+							if(remove) {
+								original.splice(key, 1)
+							} else {
+								original[key] = update[key]
+							}
+
+							return true                             // =>
+
+						} // Last path component.
+
+						///
+						// Move to next.
 						///
 						update = update[key]
 						original = original[key]
+
 						return false                                // =>
 
-					} // Original has key.
+					} // Both update and original are arrays.
 
 					///
-					// Original has not key.
-					// Create value, and done.
+					// Handle matching original object.
 					///
-					original[key] = update[key]
+					if((!array) && Validator.IsObject(original))
+					{
+						///
+						// Original has property.
+						///
+						if(original.hasOwnProperty(key))
+						{
+							///
+							// Handle last path component.
+							///
+							if(last)
+							{
+								if(remove) {
+									delete original[key]
+								} else {
+									original[key] = update[key]
+								}
+
+								return true                         // =>
+
+							} // Last path component.
+
+							///
+							// Move to next.
+							///
+							update = update[key]
+							original = original[key]
+
+							return false                            // =>
+
+						} // Original has property.
+
+						///
+						// Add property.
+						// If original does not have property we are done.
+						///
+						if(!remove) {
+							original[key] = update[key]
+						}
+
+						///
+						// If original does not have property
+						// and we are not on the last path component,
+						// and we want to remove: we exit,
+						// since original does not have it.
+						///
+						return true                                 // =>
+
+					} // Both update and original are objects.
+
+					///
+					// Update path is not compatible with original object.
+					///
+					if(!remove) {
+						if(doStrict) {
+							throw new Error(
+								`Cannot add or delete array element in path \
+								(${path}) at element(${key}): update and original \
+								values are not compatible.`
+							)                                           // ==>
+						}
+					}
+
+					///
+					// Remove value.
+					// Since value is not there ignore and exit.
+					///
 					return true                                     // =>
-				})
+
+				}) // Iterating path elements.
 
 			} // Iterating paths.
 
