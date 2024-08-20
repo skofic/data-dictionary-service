@@ -4891,6 +4891,7 @@ class Validator
 		///
 		// Init local storage.
 		///
+		const status = {}
 		const section = module.context.configuration.sectionRule
 
 		// Original has rule section.
@@ -4914,11 +4915,20 @@ class Validator
 					module.context.configuration.selectionDescriptorsAll
 				]
 
+				///
+				// Handle required properties.
+				// TODO: Implement.
+				///
+				if(updated.hasOwnProperty(required))
+				{
+
+				} // Rule section has required.
+
 			} // Updated has rules section.
 
 		} // Original has rule section.
 
-		return {}                                                       // ==>
+		return status                                                   // ==>
 
 	} // Validator::ValidateRuleTermUpdates()
 
@@ -5427,7 +5437,7 @@ class Validator
 				///
 				// Get current path value.
 				///
-				const reference = GetValueByPath(theUpdates, path)
+				const reference = Validator.GetValueByPath(theUpdates, path)
 				if(!reference.hasOwnProperty('value')) {
 					throw new Error(
 						`The provided path, (${reference.path}), \

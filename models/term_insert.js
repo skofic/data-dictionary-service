@@ -15,7 +15,7 @@ module.exports = {
 			_gid: joi.string(),
 			_aid: joi.array().items(joi.string()),
 			_pid: joi.array().items(joi.string()),
-			name: joi.string()
+			_name: joi.string()
 		}).required(),
 		_info: joi.object({
 			_title: joi.object().required(),

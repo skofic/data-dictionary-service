@@ -29,51 +29,71 @@ const TermInsert = require('../models/term_insert')
 const TermsInsert = require('../models/terms_insert')
 const TermDisplay = require('../models/term_display')
 const TermSelection = require('../models/term_selection')
-const {isObject} = require("../utils/utils");
-const keySchema = joi.string().required()
-	.description('The key of the document')
+const keySchema =
+	joi.string().required()
+		.description('The key of the document')
 
-const ParamExpectTerms = joi.boolean().default(true)
-const ParamExpectTermsDescription =
-	"**Expect all object properties to be part of the data dictionary**.\n" +
-	"By default, if a property matches a descriptor, then the value must \
-	conform to the descriptor's data definition; if the property does not match \
-	a term in the data dictionary, then it will be ignored and assumed correct. \
-	If you set this flag, all object properties *must* correspond to a descriptor, \
-	failing to do so will be considered an error."
+const ParamExpectTerms = joi.boolean()
+	.default(true)
+	.description(
+		"**Expect all object properties to be part of the data dictionary**.\n\
+		By default, if a property matches a descriptor, then the value must \
+		conform to the descriptor's data definition; if the property does not match \
+		a term in the data dictionary, then it will be ignored and assumed correct. \
+		If you set this flag, all object properties *must* correspond to a descriptor, \
+		failing to do so will be considered an error."
+	)
 
-const ParamDefNamespace = joi.boolean().default(false)
-const ParamDefNamespaceDescription =
-	"**Allow referencing default namespace**.\n" +
-	"The default namespace is reserved to terms that constitute the dictionary \
-	engine. User-defined terms should not reference the default namespace. \
-	If this option is set, it will be possible to create terms that have the \
-	*default namespace* as their namespace."
+const ParamDefNamespace = joi.boolean()
+	.default(false)
+	.description(
+		"**Allow referencing default namespace**.\n\
+		The default namespace is reserved to terms that constitute the dictionary \
+		engine. User-defined terms should not reference the default namespace. \
+		If this option is set, it will be possible to create terms that have the \
+		*default namespace* as their namespace."
+	)
 
-const ParamResolve = joi.boolean().default(false)
-const ParamResolveDescription =
-	"**Attempt to resolve unmatched term references**.\n" +
-	"This option is relevant to enumerated values. If this flag is set, when a \
-	provided value *does not* resolve into a term global identifier, the value \
-	will be tested against the terms code section property indicated in the \
-	*resfld* parameter: if there is a single match, the original value will be \
-	replaced by the matched global identifier. This way one can use the local \
-	identifier as the reference and let the validator resolve the global \
-	identifier.\n" + "When this happens the status code will be zero, if no \
-    errors have occurred, but the response will feature a property named *changes* \
-    in the status report, which contains the list of resolved values.\n" + "Be \
-    aware that to successfully use this feature the local identifiers must be unique."
+const ParamResolve = joi.boolean()
+	.default(false)
+	.description(
+		"**Attempt to resolve unmatched term references**.\n\
+		This option is relevant to enumerated values. If this flag is set, when a \
+		provided value *does not* resolve into a term global identifier, the value \
+		will be tested against the terms code section property indicated in the \
+		*resfld* parameter: if there is a single match, the original value will be \
+		replaced by the matched global identifier. This way one can use the local \
+		identifier as the reference and let the validator resolve the global \
+		identifier.\n" + "When this happens the status code will be zero, if no \
+	    errors have occurred, but the response will feature a property named *changes* \
+	    in the status report, which contains the list of resolved values.\nBe \
+	    aware that to successfully use this feature the local identifiers must be unique."
+	)
 
-const ParamResolveField = joi.string().default(module.context.configuration.localIdentifier)
-const ParamResolveFieldDescription =
-	"**Terms code section field used to resolve term references**.\n" +
-	"This option is relevant if the *resolve* flag was set. This parameter \
-	corresponds to the name of a property in the descriptor's code section: \
-	the unresolved value will be matched against the value contained in that \
-	field and if there is a *single* match, the matched term global identifier \
-	will replace the provided value.\n" + "By default this parameter is set \
-    to the *local identifier*, you could set it, for instance, to the *list \
-    of official identifiers* in order to have a larger choice."
+const ParamResolveField = joi.string()
+	.default(module.context.configuration.localIdentifier)
+	.description(
+		"**Terms code section field used to resolve term references**.\n\
+		This option is relevant if the *resolve* flag was set. This parameter \
+		corresponds to the name of a property in the descriptor's code section: \
+		the unresolved value will be matched against the value contained in that \
+		field and if there is a *single* match, the matched term global identifier \
+		will replace the provided value.\nBy default this parameter is set \
+	    to the *local identifier*, you could set it, for instance, to the *list \
+	    of official identifiers* in order to have a larger choice."
+	)
+
+const ParamSaveTerm = joi.boolean()
+	.default(true)
+	.description(
+		"**Flag to determine whether to save the term or not**.\n\
+		This option can be used when inserting or updating terms: if the flag is \
+		set, if all the required validations tests pass, the term will be either \
+		inserted or updated. If the flag is not set, you will get the status of \
+		the validation provess. This flag is useful if you just need to check if \
+		the term is valid, or if you want to see if the updated term structure \
+		before persisting the object to the data dictionary."
+	)
 
 //
 // Collections.
@@ -137,10 +157,11 @@ router.post(
             and, if correct, will insert the record.
         `
 	)
-	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-	.queryParam('resolve', ParamResolve, ParamResolveDescription)
-	.queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+	.queryParam('terms', ParamExpectTerms)
+	.queryParam('defns', ParamDefNamespace)
+	.queryParam('resolve', ParamResolve)
+	.queryParam('resfld', ParamResolveField)
+	.queryParam('save', ParamSaveTerm)
 	.body(TermInsert, dd
 		`
             **Service parameters**
@@ -245,10 +266,12 @@ router.post(
             in an all-or-nothing fashion.
         `
 	)
-	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-	.queryParam('resolve', ParamResolve, ParamResolveDescription)
-	.queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+	.queryParam('terms', ParamExpectTerms)
+	.queryParam('defns', ParamDefNamespace)
+	.queryParam('resolve', ParamResolve)
+	.queryParam('resfld', ParamResolveField)
+	.queryParam('save', ParamSaveTerm)
+	.queryParam('save', ParamSaveTerm)
 	.body(TermsInsert, dd
 		`
             **Service parameters**
@@ -492,7 +515,7 @@ router.get(
              you will get the English language ISO entry with names in all available languages.
         `
 	)
-	.queryParam('key', keySchema, "Term global identifier")
+	.queryParam('key', keySchema)
 	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
 	.response(200, TermDisplay, dd
 		`
@@ -532,16 +555,16 @@ router.get(
  * @param response: API response.
  */
 router.post(
-	'many',
+	'dict',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
 			doDictionaryTerms(request, response)
 		}
 	},
-	'term-dictionary'
+	'term-terms'
 )
-	.summary('Terms by key')
+	.summary('Terms dictionary by key')
 	.description(dd
 		`
             **Get a dictionary of terms**
@@ -594,14 +617,14 @@ router.post(
  * @param response: API response.
  */
 router.post(
-	'key',
+	'query/keys',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
 			doSelectTermKeys(request, response)
 		}
 	},
-	'term-key-list'
+	'term-keys'
 )
 	.summary('Query term keys')
 	.description(dd
@@ -703,13 +726,14 @@ router.post(
  * @param response: API response.
  */
 router.post(
+	'query/terms',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
 			doSelectTerms(request, response)
 		}
 	},
-	'term-list'
+	'term-query'
 )
 	.summary('Query term objects')
 	.description(dd
@@ -841,10 +865,12 @@ router.patch(
             providing the operation outcome, \`OK\`.
         `
 	)
-	.queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-	.queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-	.queryParam('resolve', ParamResolve, ParamResolveDescription)
-	.queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+	.queryParam('key', keySchema)
+	.queryParam('terms', ParamExpectTerms)
+	.queryParam('defns', ParamDefNamespace)
+	.queryParam('resolve', ParamResolve)
+	.queryParam('resfld', ParamResolveField)
+	.queryParam('save', ParamSaveTerm)
 	.body(joi.object({
 			"updates": joi.object().required(),
 			"references": joi.array().items(joi.string()).required()
@@ -978,6 +1004,16 @@ function doInsertTerm(request, response)
 	}
 
 	///
+	// Just wanted to check.
+	///
+	if(!request.queryParams.save) {
+		response.status(200)
+		response.send({ term, status })
+
+		return                                                          // ==>
+	}
+
+	///
 	// Insert term.
 	///
 	try
@@ -1070,12 +1106,17 @@ function doDeleteTerms(request, response)
  */
 function doInsertTerms(request, response)
 {
+	///
+	// Init local storage.
+	///
+	const terms = request.body
+
 	//
 	// Init local storage.
 	//
 	const validator =
 		new Validator(
-			request.body,
+			terms,
 			module.context.configuration.termObjectDefinition,
 			true,
 			true,
@@ -1090,7 +1131,7 @@ function doInsertTerms(request, response)
 	//
 	// Prepare code section and assert default language in info section.
 	//
-	request.body.forEach( (term) => {
+	terms.forEach( (term) => {
 		//
 		// Init code section.
 		//
@@ -1124,6 +1165,16 @@ function doInsertTerms(request, response)
 			report: validator.report,
 			value: validator.value
 		})
+
+		return                                                          // ==>
+	}
+
+	///
+	// Just wanted to check.
+	///
+	if(!request.queryParams.save) {
+		response.status(200)
+		response.send({ terms, status })
 
 		return                                                          // ==>
 	}
@@ -1341,15 +1392,18 @@ function doUpdateTerm(request, response)
 	}
 
 	//
-	// Update properties.
+	// Create updated object.
 	//
-	// TODO: Add back flags and handle body with updates and array of paths.
 	const updated =
-		Validator.MergeTermUpdates(
+		Validator.MergeObjectUpdates(
 			original,
 			request.body.updates,
 			request.body.references
 		)
+
+	///
+	// Init validator object with options.
+	///
 	const validator =
 		new Validator(
 			updated,
@@ -1388,6 +1442,16 @@ function doUpdateTerm(request, response)
 			report: validator.report,
 			value: validator.value
 		})
+
+		return                                                          // ==>
+	}
+
+	///
+	// Just wanted to check.
+	///
+	if(!request.queryParams.save) {
+		response.status(200)
+		response.send({ updated, status })
 
 		return                                                          // ==>
 	}
