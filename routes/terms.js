@@ -1383,7 +1383,8 @@ function doUpdateTerm(request, response)
 		if (error.isArangoError && error.errorNum === ARANGO_NOT_FOUND) {
 			response.throw(
 				HTTP_NOT_FOUND,
-				K.error.kMSG_TERM_NOT_FOUND.message[module.context.configuration.language]
+				K.error.kMSG_TERM_NOT_FOUND.message[module.context.configuration.language] +
+				` [${request.queryParams.key}]`
 			)                                                                   // ==>
 		}
 		else {

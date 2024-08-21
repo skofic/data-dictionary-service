@@ -1966,7 +1966,11 @@ class Validator
 				if(term === false)
 				{
 					return this.setStatusReport(
-						'kVALUE_NOT_TERM', theKey, value, theReportIndex
+						'kVALUE_NOT_TERM',
+						theKey,
+						value,
+						theReportIndex,
+						{ property: theContainer}
 					)                                                   // ==>
 				}
 
@@ -3004,7 +3008,7 @@ class Validator
 			///
 			// Require one or none from each set.
 			///
-			selector = module.context.configuration.selectionDescriptorsAnyOne
+			selector = module.context.configuration.selectionDescriptorsOneNoneSet
 			if(required.hasOwnProperty(selector)) {
 				let status = true
 				if(!Validator.IsArray(required[selector])) {
@@ -4843,10 +4847,10 @@ class Validator
 			return false
 		})
 
-		return status                                                   // ==>
+		return status                                                     // ==>
 
 	} // Validator::ValidateKeyScalarTermUpdates()
-
+	
 	/**
 	 * ValidateRuleTermUpdates
 	 *
@@ -4891,17 +4895,33 @@ class Validator
 		///
 		// Init local storage.
 		///
-		const status = {}
+		let status = {}
 		const section = module.context.configuration.sectionRule
-
+		
 		// Original has rule section.
 		if(theOriginal.hasOwnProperty(section)) {
 			const original = theOriginal[section]
-
+			
 			// Updated has rules section.
 			if(theUpdated.hasOwnProperty(section)) {
 				const updated = theUpdated[section]
-
+				
+				///
+				// Check required properties.
+				///
+				status = Validator.ValidateRuleRequiredTermUpdates(original, updated)
+				if(Object.keys(status).length > 0) {
+					return status                                       // ==>
+				}
+				
+				///
+				// Check banned properties.
+				///
+				status = Validator.ValidateRuleBannedTermUpdates(original, updated)
+				if(Object.keys(status).length > 0) {
+					return status                                       // ==>
+				}
+				
 				///
 				// Init local storage.
 				///
@@ -4911,26 +4931,265 @@ class Validator
 					module.context.configuration.selectionDescriptorsOne,
 					module.context.configuration.selectionDescriptorsOneNone,
 					module.context.configuration.selectionDescriptorsAny,
-					module.context.configuration.selectionDescriptorsAnyOne,
+					module.context.configuration.selectionDescriptorsOneNoneSet,
 					module.context.configuration.selectionDescriptorsAll
 				]
-
-				///
-				// Handle required properties.
-				// TODO: Implement.
-				///
-				if(updated.hasOwnProperty(required))
-				{
-
-				} // Rule section has required.
-
+				
 			} // Updated has rules section.
-
+			
 		} // Original has rule section.
-
+			
+		///
+		// Handle rule section added.
+		///
+		else if(theUpdated.hasOwnProperty(section)) {
+			return {
+				message: `Cannot add rule section to existing object structure type terms.`,
+				data: {
+					[section]: {
+						old: theOriginal,
+						new: theUpdated
+					}
+				}
+			}                                                           // ==>
+		}
+		
 		return status                                                   // ==>
-
+		
 	} // Validator::ValidateRuleTermUpdates()
+	
+	/**
+	 * ValidateRuleRequiredTermUpdates
+	 *
+	 * This method will check if the rules section required properties updates
+	 * are compatible with the original term.
+	 *
+	 * The method will return an object containing the eventual error: if the
+	 * returned object is empty, it means there were no errors.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term rule section.
+	 * @param theUpdated {Object}: Updated term rule section.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateRuleRequiredTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Init local storage.
+		///
+		let status = {}
+		const section = module.context.configuration.sectionRuleRequired
+		const selectors = [
+			module.context.configuration.selectionDescriptorsOne,
+			module.context.configuration.selectionDescriptorsOneNone,
+			module.context.configuration.selectionDescriptorsAny,
+			module.context.configuration.selectionDescriptorsAll,
+			module.context.configuration.selectionDescriptorsOneNoneSet
+		]
+		
+		// Original has section.
+		if(theOriginal.hasOwnProperty(section)) {
+			const original = theOriginal[section]
+			
+			// Updated has section.
+			if(theUpdated.hasOwnProperty(section)) {
+				const updated = theUpdated[section]
+				
+				///
+				// Iterate section contents.
+				///
+				selectors.some( (selector) =>
+				{
+					if(original.hasOwnProperty(selector))
+					{
+						if(updated.hasOwnProperty(selector))
+						{
+							const originalset = new Set(original[selector])
+							
+							switch(selector)
+							{
+								case module.context.configuration.selectionDescriptorsOneNoneSet:
+									
+									///
+									// Iterate selection sets.
+									// We create an aggregate set of choices for
+									// both update and original: if the updated
+									// choices are less than the originals, we
+									// assume a restriction was added.
+									// Not scientific, but should do for now.
+									///
+									const updateset = new Set(updated[selector])
+									const list = Array.from(updateset).filter(item => originalset.has(item))
+									
+									if(originalset.size > list.length) {
+										status = {
+											message: `Constraint ${selector} restricts term possibilities.`,
+											data: {
+												[selector]: {
+													old: original,
+													new: updated
+												}
+											}
+										}
+										return true                 // =>
+									}
+									break
+								
+								default:
+									
+									///
+									// If updated loses options we fail.
+									///
+									if(originalset.size >
+										updated[selector].filter(item => originalset.has(item)).length)
+									{
+										status = {
+											message: `Constraint ${selector} restricts term possibilities.`,
+											data: {
+												[selector]: {
+													old: original,
+													new: updated
+												}
+											}
+										}
+										return true                 // =>
+									}
+									break
+							}
+							
+						} // Updated has selector.
+						
+						///
+						// If the restriction has been lifted we are OK.
+						///
+						
+					} // Original has selector.
+					
+					else if(updated.hasOwnProperty(selector)) {
+						status = {
+							message: `Cannot add ${selector} rule section to existing object structure type terms.`,
+							data: {
+								[selector]: {
+									old: original,
+									new: updated
+								}
+							}
+						}
+						
+						return true                                 // =>
+						
+					} // Updated has selector.
+					
+					return false                                    // =>
+				})
+				
+			} // Updated has rules section.
+			
+			///
+			// If the restriction has been lifted we are OK.
+			///
+			
+		} // Original has section.
+			
+		///
+		// Handle rule section added.
+		///
+		else if(theUpdated.hasOwnProperty(section)) {
+			return {
+				message: `Cannot add required properties to existing object structure type terms.`,
+				data: {
+					[section]: {
+						old: theOriginal,
+						new: theUpdated
+					}
+				}
+			}                                                           // ==>
+		}
+		
+		return status                                                   // ==>
+		
+	} // Validator::ValidateRuleRequiredTermUpdates()
+	
+	/**
+	 * ValidateRuleBannedTermUpdates
+	 *
+	 * This method will check if the rules section banned properties updates
+	 * are compatible with the original term.
+	 *
+	 * The method will return an object containing the eventual error: if the
+	 * returned object is empty, it means there were no errors.
+	 *
+	 * This method will exit on first error.
+	 *
+	 * @param theOriginal {Object}: Original term rule section.
+	 * @param theUpdated {Object}: Updated term rule section.
+	 *
+	 * @return {Object}: Invalid properties.
+	 */
+	static ValidateRuleBannedTermUpdates(theOriginal, theUpdated)
+	{
+		///
+		// Init local storage.
+		///
+		let status = {}
+		const section = module.context.configuration.sectionRuleRequired
+		
+		// Original has section.
+		if(theOriginal.hasOwnProperty(section)) {
+			const original = theOriginal[section]
+			
+			// Updated has section.
+			if(theUpdated.hasOwnProperty(section)) {
+				const updated = theUpdated[section]
+				
+				///
+				// If any updated element is not in original set of banned, it
+				// means that there could be objects with properties that will
+				// now be banned.
+				///
+				const originalset = new Set(original)
+				
+				if(updated.some(item => !originalset.has(item))) {
+					status = {
+						message: `Constraint ${section} restricts term possibilities.`,
+						data: {
+							[section]: {
+								old: theOriginal,
+								new: theUpdated
+							}
+						}
+					}
+					return true                                     // =>
+				}
+				
+			} // Updated has rules section.
+			
+			///
+			// If the restriction has been lifted we are OK.
+			///
+			
+		} // Original has section.
+			
+		///
+		// Handle rule section added.
+		///
+		else if(theUpdated.hasOwnProperty(section)) {
+			return {
+				message: `Cannot add required properties to existing object structure type terms.`,
+				data: {
+					[section]: {
+						old: theOriginal,
+						new: theUpdated
+					}
+				}
+			}                                                           // ==>
+		}
+		
+		return status                                                   // ==>
+		
+	} // Validator::ValidateRuleBannedTermUpdates()
 
 	/**
 	 * ValidateRangeTermUpdates

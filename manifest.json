@@ -151,7 +151,7 @@
             "required": true,
             "default": "_selection-descriptors_any"
         },
-        "selectionDescriptorsAnyOne": {
+        "selectionDescriptorsOneNoneSet": {
             "description": "Require one or no properties from each set rules section name key",
             "type": "string",
             "required": true,
