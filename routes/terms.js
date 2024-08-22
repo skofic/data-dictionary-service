@@ -972,6 +972,11 @@ function doInsertTerm(request, response)
 	// Init code section.
 	//
 	Validator.SetDefaultTermCodes(term)
+	
+	///
+	// Copy document key to current object.
+	///
+	validator['_key'] = term._key
 
 	///
 	// Check for default language.

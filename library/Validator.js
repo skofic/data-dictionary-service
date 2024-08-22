@@ -121,6 +121,7 @@ class Validator
 	 * - `expectTerms`: Will receive thw `doOnlyTerms` flag.
 	 * - `expectType`: Will receive the `doDataType` flag.
 	 * - `defNamespace`: Will receive the `allowDefaultNamespace` flag.
+	 * - `_key`: Will hold the current value's document key.
 	 * - `language`: Will receive the language provided in validate() for report
 	 *               messages.
 	 *
@@ -1965,13 +1966,18 @@ class Validator
 					)
 				if(term === false)
 				{
-					return this.setStatusReport(
-						'kVALUE_NOT_TERM',
-						theKey,
-						value,
-						theReportIndex,
-						{ property: theContainer}
-					)                                                   // ==>
+					///
+					// If the data kind is recursive, allow it.
+					///
+					if(value !== this._key) {
+						return this.setStatusReport(
+							'kVALUE_NOT_TERM',
+							theKey,
+							value,
+							theReportIndex,
+							{ property: theContainer}
+						)                                               // ==>
+					}
 				}
 
 				///
