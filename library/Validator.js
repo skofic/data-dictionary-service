@@ -513,7 +513,7 @@ class Validator
 		return status                                                   // ==>
 
 	} // validateObjects()
-
+	
 	/**
 	 * validateObject
 	 *
@@ -545,22 +545,81 @@ class Validator
 		// Init current idle status report.
 		///
 		this.setStatusReport('kOK', '', null, theReportIndex)
-
+		
 		///
 		// Validate object.
 		///
 		return this.doValidateObject(
 			theContainer, null, null, theReportIndex
 		)                                                               // ==>
-
+		
 	} // validateObject()
-
+	
 
 	/**
 	 * PRIVATE VALIDATION INTERFACE
 	 */
-
-
+	
+	
+	/**
+	 * doValidateInfoSection
+	 *
+	 * This method will validate the information section of an object.
+	 *
+	 * The method will assert that all language dependent values have an entry
+	 * in the default language.
+	 *
+	 * The method will return true if no errors occurred, or false if at least
+	 * one error occurred.
+	 *
+	 * @param theContainer {Object}: The object to be checked.
+	 * @param theReportIndex {Number}: Container key for value, defaults to null.
+	 *
+	 * @return {Boolean}: `true` means valid, `false` means error.
+	 */
+	doValidateInfoSection(theContainer, theReportIndex = null)
+	{
+		//
+		// Check information section.
+		//
+		if(theContainer.hasOwnProperty(module.context.configuration.sectionInfo))
+		{
+			///
+			// Init local storage.
+			///
+			const language = module.context.configuration.language
+			const infoSection = theContainer[module.context.configuration.sectionInfo]
+			const properties = [
+				module.context.configuration.titleInfoField,
+				module.context.configuration.definitionInfoField,
+				module.context.configuration.descriptionInfoField,
+				module.context.configuration.examplesInfoField,
+				module.context.configuration.notesInfoField
+			]
+			
+			//
+			// Assert descriptions have the default language.
+			//
+			for(const property of properties) {
+				if(infoSection.hasOwnProperty(property)) {
+					if(!infoSection[property].hasOwnProperty(language)) {
+						return this.setStatusReport(
+							'kNO_REFERENCE_DEFAULT_LANGUAGE',
+							property, infoSection, theReportIndex
+						)                                               // ==>
+						
+					} // Default language version is missing.
+					
+				} // Has property.
+				
+			} // Iterating properties.
+			
+		} // Has information section.
+		
+		return true                                                     // ==>
+		
+	} // doValidateInfoSection()
+	
 	/**
 	 * doValidateDataSection
 	 *
@@ -2516,7 +2575,16 @@ class Validator
 
 					return true
 				}
-
+				
+				///
+				// Validate information section.
+				// Here we only ensure descriptions have a version in the default language.
+				///
+				if(!this.doValidateInfoSection(value, theReportIndex)) {
+					status = false
+					return true
+				}
+				
 				///
 				// Validate property/value pair.
 				///
@@ -3814,58 +3882,6 @@ class Validator
 		} // Has code section.
 
 	} // Validator::SetDefaultTermCodes()
-
-	/**
-	 * AssertTermInfoDefaultLanguage
-	 *
-	 * This method will check if all the information section relevant fields
-	 * have an entry in the default language. The method will return false if
-	 * the default language version is missing and true if the version is there,
-	 * or if the term does not have the information section.
-	 *
-	 * @param theTerm {Object}: The term to handle.
-	 *
-	 * @return {Boolean}: `false` is missing.
-	 */
-	static AssertTermInfoDefaultLanguage(theTerm)
-	{
-		//
-		// Check information section.
-		//
-		if(theTerm.hasOwnProperty(module.context.configuration.sectionInfo))
-		{
-			///
-			// Init local storage.
-			///
-			const infoSection = theTerm[module.context.configuration.sectionInfo]
-			const fields = [
-				module.context.configuration.titleInfoField,
-				module.context.configuration.definitionInfoField,
-				module.context.configuration.descriptionInfoField,
-				module.context.configuration.examplesInfoField,
-				module.context.configuration.notesInfoField
-			]
-
-			//
-			// Assert descriptions have the default language.
-			//
-			for(const field of fields) {
-				if(infoSection.hasOwnProperty(field)) {
-					if(!infoSection[field].hasOwnProperty(module.context.configuration.language)) {
-
-						return false                                    // ==>
-
-					} // Default language version is missing.
-
-				} // Has field.
-
-			} // Iterating fields.
-
-		} // Has information section.
-
-		return true                                                     // ==>
-
-	} // Validator::AssertTermInfoDefaultLanguage()
 
 	/**
 	 * ValidateTermUpdates

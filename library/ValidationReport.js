@@ -437,6 +437,12 @@ class ValidationStatus
 			"statusMessage": {
 				"iso_639_3_eng": "Cannot reference default namespace: all terms derived from the default namespace are reserved to the dictionary engine."
 			}
+		},
+		"kNO_REFERENCE_DEFAULT_LANGUAGE": {
+			"statusCode": 42,
+			"statusMessage": {
+				"iso_639_3_eng": "Property is missing entry in the default language."
+			}
 		}
 	}
 

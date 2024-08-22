@@ -979,22 +979,6 @@ function doInsertTerm(request, response)
 	validator['_key'] = term._key
 
 	///
-	// Check for default language.
-	///
-	if(!Validator.AssertTermInfoDefaultLanguage(term)) {
-		let message =
-			K
-				.error
-				.kMSG_ERROR_MISSING_DEF_LANG
-				.message[module.context.configuration.language]
-		message += ` [term: ${term._key}]`
-		response.status(400)
-		response.send(message)
-
-		return                                                          // ==>
-	}
-
-	///
 	// Validate term.
 	///
 	const status = validator.validate()
@@ -1134,29 +1118,14 @@ function doInsertTerms(request, response)
 		)
 
 	//
-	// Prepare code section and assert default language in info section.
+	// Prepare code sections.
 	//
-	terms.forEach( (term) => {
+	terms.forEach( (term) =>
+	{
 		//
 		// Init code section.
 		//
 		Validator.SetDefaultTermCodes(term)
-
-		///
-		// Check for default language.
-		///
-		if(!Validator.AssertTermInfoDefaultLanguage(term)) {
-			let message =
-				K
-					.error
-					.kMSG_ERROR_MISSING_DEF_LANG
-					.message[module.context.configuration.language]
-			message += ` [term: ${term._key}]`
-			response.status(400)
-			response.send(message)
-
-			return                                                      // ==>
-		}
 	})
 
 	//
