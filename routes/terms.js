@@ -989,6 +989,7 @@ function doInsertTerm(request, response)
 			report: validator.report,
 			value: validator.value
 		})
+		
 		return                                                          // ==>
 	}
 
@@ -997,7 +998,7 @@ function doInsertTerm(request, response)
 	///
 	if(!request.queryParams.save) {
 		response.status(200)
-		response.send({ term, status })
+		response.send({ status, term })
 
 		return                                                          // ==>
 	}
@@ -1148,7 +1149,7 @@ function doInsertTerms(request, response)
 	///
 	if(!request.queryParams.save) {
 		response.status(200)
-		response.send({ terms, status })
+		response.send({ status, terms })
 
 		return                                                          // ==>
 	}
@@ -1172,11 +1173,11 @@ function doInsertTerms(request, response)
             RETURN NEW
         `).toArray()
 
-		response.send(result)                                                   // ==>
+		response.send(result)                                           // ==>
 	}
 	catch (error)
 	{
-		response.throw(500, error.message)                                  // ==>
+		response.throw(500, error.message)                          // ==>
 	}
 
 } // doInsertTerms()

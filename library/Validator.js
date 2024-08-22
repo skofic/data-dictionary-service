@@ -579,6 +579,7 @@ class Validator
 	 */
 	doValidateInfoSection(theContainer, theReportIndex = null)
 	{
+		// TODO: Find where to put this method because it fails before language is resolved.
 		//
 		// Check information section.
 		//
@@ -2577,21 +2578,21 @@ class Validator
 				}
 				
 				///
-				// Validate information section.
-				// Here we only ensure descriptions have a version in the default language.
-				///
-				if(!this.doValidateInfoSection(value, theReportIndex)) {
-					status = false
-					return true
-				}
-				
-				///
 				// Validate property/value pair.
 				///
 				if(!this.doValidateDataSection(
 					value, property, term[module.context.configuration.sectionData],
 					theReportIndex
 				)) {
+					status = false
+					return true
+				}
+				
+				///
+				// Validate information section.
+				// Here we only ensure descriptions have a version in the default language.
+				///
+				if(!this.doValidateInfoSection(value, theReportIndex)) {
 					status = false
 					return true
 				}
