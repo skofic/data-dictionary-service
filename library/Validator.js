@@ -556,7 +556,13 @@ class Validator
 			// Here we only ensure descriptions have a version in the default language.
 			///
 			return this.doValidateInfoSection(
-				theContainer, this.term._key, theReportIndex
+				theContainer,
+				this.hasOwnProperty('term')
+					? this.term.hasOwnProperty('_key')
+						? this.term._key
+						: null
+					: null,
+				theReportIndex
 			)                                                           // ==>
 		
 		} // Object is valid.
@@ -5042,8 +5048,18 @@ class Validator
 					{
 						if(updated.hasOwnProperty(selector))
 						{
-							const originalset = new Set(original[selector])
+							const originals = original[selector].flat(1)
+							const originalset =
+								originals
+									.filter( (item, index) =>
+										originals.indexOf(item) === index)
 							
+							const updates = updated[selector].flat(1)
+							const updateset =
+								updates
+									.filter( (item, index) =>
+										updates.indexOf(item) === index)
+
 							switch(selector)
 							{
 								case module.context.configuration.selectionDescriptorsOneNoneSet:
@@ -5056,10 +5072,11 @@ class Validator
 									// assume a restriction was added.
 									// Not scientific, but should do for now.
 									///
-									const updateset = new Set(updated[selector])
-									const list = Array.from(updateset).filter(item => originalset.has(item))
-									
-									if(originalset.size > list.length) {
+									const list = originalset.filter(item => updateset.includes(item))
+									if(originalset.length > list.length) {
+										throw new Error(
+											JSON.stringify(list)
+										)
 										status = {
 											message: `Constraint ${selector} restricts term possibilities.`,
 											data: {
@@ -5078,8 +5095,7 @@ class Validator
 									///
 									// If updated loses options we fail.
 									///
-									if(originalset.size >
-										updated[selector].filter(item => originalset.has(item)).length)
+									if(originalset.length > updateset.length)
 									{
 										status = {
 											message: `Constraint ${selector} restricts term possibilities.`,
@@ -5170,7 +5186,7 @@ class Validator
 		// Init local storage.
 		///
 		let status = {}
-		const section = module.context.configuration.sectionRuleRequired
+		const section = module.context.configuration.sectionRuleBanned
 		
 		// Original has section.
 		if(theOriginal.hasOwnProperty(section)) {
@@ -5185,9 +5201,12 @@ class Validator
 				// means that there could be objects with properties that will
 				// now be banned.
 				///
-				const originalset = new Set(original)
+				const originalset =
+					original
+						.filter( (item, index) =>
+							originals.indexOf(item) === index)
 				
-				if(updated.some(item => !originalset.has(item))) {
+				if(updated.some(item => !originalset.includes(item))) {
 					status = {
 						message: `Constraint ${section} restricts term possibilities.`,
 						data: {
