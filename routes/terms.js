@@ -32,6 +32,84 @@ const TermSelection = require('../models/term_selection')
 const keySchema =
 	joi.string().required()
 		.description('The key of the document')
+const ValidTerm =
+	joi.alternatives().try(
+		joi.object(),
+		joi.object({
+			"status": joi.number().required().default(0),
+			"term": joi.object().required()
+		})
+	).required()
+const ValidTerms =
+	joi.alternatives().try(
+		joi.array().items(
+			joi.object()
+		),
+		joi.object({
+			"status": joi.number().required().default(0),
+			"term": joi.array().items(
+				joi.object().required()
+			).required()
+		})
+	).required()
+const ResolvedTerm =
+	joi.object({
+		"status": joi.number().required().default(1),
+		"report": joi.object({
+			"status": joi.object({
+				"status": joi.number().default(0),
+				"message": joi.string().required()
+			}).required(),
+			"changes": joi.object().required()
+		}),
+		"value": joi.object().required()
+	})
+const ResolvedTerms =
+	joi.object({
+		"status": joi.number().required().default(1),
+		"reports": joi.array().items(
+			joi.object({
+				"status": joi.object({
+					"status": joi.number().default(0),
+					"message": joi.string().required()
+				}).required(),
+				"changes": joi.object().required()
+			})
+		).required(),
+		"values": joi.array().items(
+			joi.object()
+		).required()
+	})
+const IncorrectTerm =
+	joi.object({
+		"status": joi.number().required().default(1),
+		"report": joi.object({
+			"status": joi.object({
+				"code": joi.number().required(),
+				"message": joi.string().required()
+			}).required(),
+			"descriptor": joi.string(),
+			"value": joi.any()
+		}),
+		"value": joi.object().required()
+	})
+const IncorrectTerms =
+	joi.object({
+		"status": joi.number().required().default(1),
+		"reports": joi.array().items(
+			joi.object({
+				"status": joi.object({
+					"code": joi.number().required(),
+					"message": joi.string().required()
+				}).required(),
+				"descriptor": joi.string(),
+				"value": joi.any()
+			})
+		),
+		"values": joi.array().items(
+			joi.object()
+		).required()
+	})
 
 const ParamExpectTerms = joi.boolean()
 	.default(true)
@@ -174,42 +252,73 @@ router.post(
             The global identifier will be set, and overwritten, by the service. \
             The list of official identifiers will also be set if missing.
             
-            The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
+            The \`_info\` block requires the \`_title\` property, \
             the other properties are only provided as placeholders, delete them if not needed. \
             Remember that all elements, except \`_provider\`, are dictionaries with the language \
-            code as the dictionary key and the text as the dictionary value, you will have to \
-            provide by default the entry in the default language (\`language\` entry in the service settings).
+            code as the dictionary key and the text as the dictionary value: you will have to \
+            provide by default the entry in the default language (\`language\` entry in the \
+            service settings).
             
-            The \`_data\` section and the \`_rule\` section are provided as placeholders, \
-            delete them if not needed. You are responsible for their contents.
+            The \`_data\` section and the \`_rule\` section should be included, depending on the \
+            type of term you want to create..
             
             The document key will be automatically set, and overwritten, by the service.
-            
-            *Be aware that if you provide a local identifier in an enumeration field, \
-            the service will attempt to resolve it into a global identifier*.
          `
 	)
-	.response(200, joi.object(), dd
+	.response(200, ValidTerm, dd
 		`
             **Inserted term**
             
-            The service will return the newly inserted term.
+            If the \`save\` parameter has been set to \`true\`, the service will \
+            return the newly inserted term, including the \`_id\` and \`_rev\` \
+            properties.
+            
+            if the parameter is \`false\`, the service will return an object \
+            with two properties:
+            - \`status\`: The validation status that will be zero.
+            - \`term\`: The provided term with the updated code section global \
+                        identifier and the document key.
         `
 	)
-	.response(400, joi.object(), dd
+	.response(202, ResolvedTerm, dd
+		`
+            **Inserted resolved term**
+            
+            This HTTP status is returned if the service has the \`resolve\` \
+            parameter *set* and there were resolved fields. This does not imply \
+            an error, the term can be inserted, but the provided term and the \
+            inserted term will not be identical. For this reason the service \
+            will always document what changes were made to the provided term.
+            
+            The structure of the response is as follows:
+            
+            - \`status\`: The validation status which is one.
+            - \`report\`: The status report comprised of the following elements:
+              - \`status\`: The status report:
+                - \`status\`: The status code, that will be zero.
+                - \`message\`: The status message.
+              - \`changes\`: An object containing the list of resolved fields.
+            - \`value\`: The provided term with the resolved fields, and the \
+                         document \`_id\` and \`_rev\` properties if the \
+                         \`save\` parameter was *set*.
+        `
+	)
+	.response(400, IncorrectTerm, dd
 		`
             **Invalid parameter**
             
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error.
-            - Validation error: if it is a validation error, the service will return an \
-              object with the following properties:
-              - *status*: The status level:
-                - \`-1\`: Error.
-                - \`1\`: Warning: this will be issued in case values in the object have been updated.
-              - *report*: An object containing the status report.
-              - *value*: The value, eventually containing the updated values.
+            The service will return this status if the provided term did not \
+            pass validation. The service will not attempt to insert the term \
+            and will return an object structured as follows:
+            
+            - \`status\`: The validation status which is minus 1.
+            - \`report\`: The status report comprised of the following elements:
+              - \`status\`: The status report:
+                - \`status\`: The status code, that will be non zero.
+                - \`message\`: The status message describing the error.
+              - \`descriptor\`: The name of the property that contains the error.
+              - \`value\`: The value of the incorrect property.
+            - \`value\`: The provided term.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -257,13 +366,12 @@ router.post(
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              
-            This service can be used to create a list of new terms.
+            This service can be used to create a list of new terms, or to check if the provided \
+            list of terms is valid.
             
             You provide an array of term objects in the request body, the service will validate \
-            the elements of the list and, if all are correct, it will insert all the the records.
-            
-            When inserting the records, the operation is executed transactionally \
-            in an all-or-nothing fashion.
+            the elements of the list and, if all are correct, it will insert all the the records. \
+            This means that if there is at least one error, no terms will be inserted.
         `
 	)
 	.queryParam('terms', ParamExpectTerms)
@@ -278,48 +386,81 @@ router.post(
             
             The service body expects an array of term objects.
             
-            It is required to have at least the \`_code\` and \`_info\` data blocks.
+            Each provided term is required to have at least the \`_code\` and \
+            \`_info\` data blocks. The \`_code\` block is required to have at least the \
+            \`_lid\` property. The global identifiers and document keys will be set, and \
+            overwritten by the service. The list of official identifiers will also be set \
+            if missing.
             
-            The \`_code\` block is required to have at least the \`_lid\`. \
-            The global identifier will be set, and overwritten, by the service. \
-            The list of official identifiers will also be set if missing.
-            
-            The \`_info\` block requires the \`_title\` and \`_definition\` properties, \
+            The \`_info\` block requires the \`_title\` property, \
             the other properties are only provided as placeholders, delete them if not needed. \
             Remember that all elements, except \`_provider\`, are dictionaries with the language \
-            code as the dictionary key and the text as the dictionary value, you will have to \
-            provide by default the entry in the default language (\`language\` entry in the service settings).
+            code as the dictionary key and the text as the dictionary value: you will have to \
+            provide by default the entry in the default language (\`language\` entry in the \
+            service settings).
             
-            The \`_data\` section and the \`_rule\` section are provided as placeholders, \
-            delete them if not needed. You are responsible for their contents.
+            The \`_data\` section and the \`_rule\` section should be included, depending on the \
+            type of term you want to create..
             
             The document key will be automatically set, and overwritten, by the service.
-            
-            *Be aware that if you provide a local identifier in an enumeration field, \
-            the service will attempt to resolve it into a global identifier*.
        `
 	)
-	.response(200, joi.array().items(joi.object()), dd
+	.response(200, ValidTerms, dd
 		`
             **Inserted terms**
             
-            The service will return the newly inserted terms.
+            If the \`save\` parameter has been set to \`true\`, the service will \
+            return the list of newly inserted terms, which include the \`_id\` and \`_rev\` \
+            properties.
+            
+            if the parameter is \`false\`, the service will return an object \
+            with two properties:
+            - \`status\`: The validation status *applying to all entries*, which will be zero.
+            - \`terms\`: The provided terms list with the updated code section global \
+                        identifiers and the document keys.
+       `
+	)
+	.response(202, ResolvedTerms, dd
+		`
+            **Inserted resolved terms**
+            
+            This HTTP status is returned if the service has the \`resolve\` \
+            parameter *set* and there were resolved fields in any of the provided \
+            terms. This does not imply an error, the term can be inserted, but the \
+            provided term and the inserted term will not be identical. For this reason \
+            the service will always document what changes were made to the provided terms.
+            
+            The structure of the response is as follows:
+            
+            - \`status\`: The validation status which is one.
+            - \`reports\`: An *array* of status reports, one for each provided term, \
+                          comprised of the following elements:
+              - \`status\`: The status report:
+                - \`status\`: The status code, that will be zero.
+                - \`message\`: The status message.
+              - \`changes\`: An object containing the list of resolved fields.
+            - \`values\`: An *array* with the provided terms featuring the resolved \
+                         fields, and the document \`_id\` and \`_rev\` properties if the \
+                         \`save\` parameter was *set*.
         `
 	)
-	.response(400, joi.array().items(joi.object()), dd
+	.response(400, IncorrectTerms, dd
 		`
             **Invalid parameter**
             
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error. Note that the service will exit \
-              on the first error.
-            - Validation error: in this case the service will return an object that will \
-              contain a property \`errors\`, an array of objects holding the value of the \
-              invalid term in a property called \`value\` and the status in a \`status\` \
-              property. The provided object may also contain a \`valid\` array property \
-              with the valid terms and a \`warnings\` array property containing all terms \
-              whose enumerations have been resolved and modified by the validation process.
+            The service will return this status if any of the provided terms did \
+            not pass validation. The service will not attempt to insert the term \
+            and will return an object structured as follows:
+            
+            - \`status\`: The validation status which is minus 1.
+            - \`reports\`: An array of status reports each comprised of the \
+                          following elements:
+              - \`status\`: The status report:
+                - \`status\`: The status code, that will be non zero.
+                - \`message\`: The status message describing the error.
+              - \`descriptor\`: The name of the property that contains the error.
+              - \`value\`: The value of the incorrect property.
+            - \`values\`: The provided array of terms.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -872,8 +1013,12 @@ router.patch(
 	.queryParam('resfld', ParamResolveField)
 	.queryParam('save', ParamSaveTerm)
 	.body(joi.object({
-			"updates": joi.object().required(),
-			"references": joi.array().items(joi.string()).required()
+			"updates": joi.object()
+				.required(),
+			"references": joi.array()
+				.items(
+					joi.string()
+				).required()
 		}), dd
 		`
             **Service parameters**
@@ -945,11 +1090,17 @@ router.patch(
 
 /**
  * Insert term.
- * @param request: API request.
- * @param response: API response.
+ * @param request {Object}: API request.
+ * @param response {Object}: API response.
+ * @return {Object}: Object with `status` = HTTP status and `value` = response.
  */
 function doInsertTerm(request, response)
 {
+	///
+	// Init local storage.
+	///
+	const result = {}
+	
 	//
 	// Init local storage.
 	//
@@ -982,25 +1133,39 @@ function doInsertTerm(request, response)
 	// Validate term.
 	///
 	const status = validator.validate()
-	if(status !== 0) {
-		response.status = 400
-		response.send({
-			status: status,
-			report: validator.report,
-			value: validator.value
-		})
+	switch(status)
+	{
+		case 0:
+			if(!request.queryParams.save) {
+				response.status(200)
+				response.send({
+					status: status,
+					term: validator.value
+				})
+				return                                                  // ==>
+			}
+			break
 		
-		return                                                          // ==>
-	}
-
-	///
-	// Just wanted to check.
-	///
-	if(!request.queryParams.save) {
-		response.status(200)
-		response.send({ status, term })
-
-		return                                                          // ==>
+		case 1:
+			if(!request.queryParams.save) {
+				response.status(202)
+				response.send({
+					status: status,
+					report: validator.report,
+					value: validator.value
+				})
+				return                                                  // ==>
+			}
+			break
+			
+		case -1:
+			response.status(400)
+			response.send({
+				status: status,
+				report: validator.report,
+				vakue: validator.value
+			})
+			return                                                      // ==>
 	}
 
 	///
@@ -1012,8 +1177,25 @@ function doInsertTerm(request, response)
 		// Insert.
 		//
 		const meta = collection.save(term)
-
-		response.send(Object.assign(meta, term))                        // ==>
+		
+		///
+		// Handle no errors or resolved values.
+		///
+		if(status === 0) {
+			response.status(200)
+			response.send(
+				Object.assign(meta, term)
+			)
+		} else {
+			response.status(202)
+			response.send({
+				status: status,
+				report: validator.report,
+				value: Object.assign(meta, term)
+			})
+		}
+		
+		return                                                          // ==>
 	}
 	catch (error)
 	{
@@ -1133,25 +1315,39 @@ function doInsertTerms(request, response)
 	// Validate terms.
 	//
 	const status = validator.validate()
-	if(status !== 0) {
-		response.status(400)
-		response.send({
-			status: status,
-			report: validator.report,
-			value: validator.value
-		})
-
-		return                                                          // ==>
-	}
-
-	///
-	// Just wanted to check.
-	///
-	if(!request.queryParams.save) {
-		response.status(200)
-		response.send({ status, terms })
-
-		return                                                          // ==>
+	switch(status)
+	{
+		case 0:
+			if(!request.queryParams.save) {
+				response.status(200)
+				response.send({
+					status: status,
+					terms: validator.value
+				})
+				return                                                  // ==>
+			}
+			break
+		
+		case 1:
+			if(!request.queryParams.save) {
+				response.status(202)
+				response.send({
+					status: status,
+					reports: validator.report,
+					values: validator.value
+				})
+				return                                                  // ==>
+			}
+			break
+		
+		case -1:
+			response.status(400)
+			response.send({
+				status: status,
+				reports: validator.report,
+				values: validator.value
+			})
+			return                                                      // ==>
 	}
 
 	//
@@ -1172,8 +1368,23 @@ function doInsertTerms(request, response)
                 }
             RETURN NEW
         `).toArray()
-
-		response.send(result)                                           // ==>
+		
+		///
+		// Handle no errors or resolved values.
+		///
+		if(status === 0) {
+			response.status(200)
+			response.send(result)
+		} else {
+			response.status(202)
+			response.send({
+				status: status,
+				reports: validator.report,
+				values: result
+			})
+		}
+		
+		return                                                          // ==>
 	}
 	catch (error)
 	{
@@ -1427,7 +1638,7 @@ function doUpdateTerm(request, response)
 	///
 	if(!request.queryParams.save) {
 		response.status(200)
-		response.send({ updated, status })
+		response.send({ status, updated })
 
 		return                                                          // ==>
 	}
@@ -1447,10 +1658,7 @@ function doUpdateTerm(request, response)
 					RETURN NEW
                 `)
 
-		response.send({
-			status: "OK", //K.error.kMSG_OK.message[module.context.configuration.language],
-			data: result._documents[0]
-		})                                                                  // ==>
+		response.send(result._documents[0])                             // ==>
 	}
 	catch (error)
 	{
@@ -1460,10 +1668,10 @@ function doUpdateTerm(request, response)
 			response.throw(
 				409,
 				K.error.kMSG_ERROR_CONFLICT.message[module.context.configuration.language]
-			)                                                               // ==>
+			)                                                           // ==>
 		}
 		else {
-			response.throw(500, error.message)                           // ==>
+			response.throw(500, error.message)                      // ==>
 		}
 	}
 
