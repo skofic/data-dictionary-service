@@ -549,9 +549,19 @@ class Validator
 		///
 		// Validate object.
 		///
-		return this.doValidateObject(
-			theContainer, null, null, theReportIndex
-		)                                                               // ==>
+		if(this.doValidateObject(theContainer, null, null, theReportIndex))
+		{
+			///
+			// Validate information section.
+			// Here we only ensure descriptions have a version in the default language.
+			///
+			return this.doValidateInfoSection(
+				theContainer, this.term._key, theReportIndex
+			)                                                           // ==>
+		
+		} // Object is valid.
+		
+		return false                                                    // ==>
 		
 	} // validateObject()
 	
@@ -569,27 +579,39 @@ class Validator
 	 * The method will assert that all language dependent values have an entry
 	 * in the default language.
 	 *
+	 * Provide the container in `theContainer` and the key to the object in
+	 * `theKey`. The method is generally called with the property name in the
+	 * key and the object in the container: we check if the object has the
+	 * information section.
+	 *
 	 * The method will return true if no errors occurred, or false if at least
 	 * one error occurred.
 	 *
 	 * @param theContainer {Object}: The object to be checked.
+	 * @param theKey {String|Number|null}: The key to the value in the container.
 	 * @param theReportIndex {Number}: Container key for value, defaults to null.
 	 *
 	 * @return {Boolean}: `true` means valid, `false` means error.
 	 */
-	doValidateInfoSection(theContainer, theReportIndex = null)
+	doValidateInfoSection(theContainer, theKey = null, theReportIndex = null)
 	{
-		// TODO: Find where to put this method because it fails before language is resolved.
+		///
+		// Init local storage.
+		///
+		const value = (theKey === null)
+			? theContainer
+			: theContainer[theKey]
+		
 		//
 		// Check information section.
 		//
-		if(theContainer.hasOwnProperty(module.context.configuration.sectionInfo))
+		if(value.hasOwnProperty(module.context.configuration.sectionInfo))
 		{
 			///
 			// Init local storage.
 			///
 			const language = module.context.configuration.language
-			const infoSection = theContainer[module.context.configuration.sectionInfo]
+			const infoSection = value[module.context.configuration.sectionInfo]
 			const properties = [
 				module.context.configuration.titleInfoField,
 				module.context.configuration.definitionInfoField,
@@ -2584,15 +2606,6 @@ class Validator
 					value, property, term[module.context.configuration.sectionData],
 					theReportIndex
 				)) {
-					status = false
-					return true
-				}
-				
-				///
-				// Validate information section.
-				// Here we only ensure descriptions have a version in the default language.
-				///
-				if(!this.doValidateInfoSection(value, theReportIndex)) {
 					status = false
 					return true
 				}
