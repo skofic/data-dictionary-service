@@ -122,6 +122,16 @@ const ParamExpectTerms = joi.boolean()
 		failing to do so will be considered an error."
 	)
 
+const ParamExpectTypes = joi.boolean()
+	.default(false)
+	.description(
+		"**Expect all scalar data sections to have the data type**.\n\
+		By default, if a scalar data definition section is empty, we assume the \
+		value can take any scalar value: if you set this flag, it means that all \
+		scalar data definition sections need to indicate the data type, failing \
+		to do so will be considered an error."
+	)
+
 const ParamDefNamespace = joi.boolean()
 	.default(false)
 	.description(
@@ -236,6 +246,7 @@ router.post(
         `
 	)
 	.queryParam('terms', ParamExpectTerms)
+	.queryParam('types', ParamExpectTypes)
 	.queryParam('defns', ParamDefNamespace)
 	.queryParam('resolve', ParamResolve)
 	.queryParam('resfld', ParamResolveField)
@@ -375,6 +386,7 @@ router.post(
         `
 	)
 	.queryParam('terms', ParamExpectTerms)
+	.queryParam('types', ParamExpectTypes)
 	.queryParam('defns', ParamDefNamespace)
 	.queryParam('resolve', ParamResolve)
 	.queryParam('resfld', ParamResolveField)
@@ -997,17 +1009,13 @@ router.patch(
             ***In order to use this service, the current user must have the \`dict\` role.***
              
             This service can be used to update a term. You provide the term global identifier \
-            in the path query parameter \`key\` and the fields to be updated in the request body.
-            
-            The body consists of an object with two properties: one contains the term updates, \
-            the other contains the list of path keys to the fields to be updated.
-            
-            The service will return the updated term object plus a property, \`status\` \
-            providing the operation outcome, \`OK\`.
+            in the path query parameter \`key\`. In the request body you provide an object that \
+            that contains the update values and the list pf paths to the values to be updated.
         `
 	)
 	.queryParam('key', keySchema)
 	.queryParam('terms', ParamExpectTerms)
+	.queryParam('types', ParamExpectTypes)
 	.queryParam('defns', ParamDefNamespace)
 	.queryParam('resolve', ParamResolve)
 	.queryParam('resfld', ParamResolveField)
@@ -1054,11 +1062,69 @@ router.patch(
             *decimals* value and not replace the whole *_data*.
         `
 	)
-	.response(200, joi.object({"status": "OK"}), dd
+	.response(200, ValidTerm, dd
 		`
             **Updated term**
             
-            The service will return the updated term object.
+            If the \`save\` parameter has been set to \`true\`, the service \
+            will return the newly updated term, including the \`_id\` and \`_rev\` properties.
+			If the parameter is \`false\`, the service will return an object with \
+			two properties:
+			- \`status\`: The validation status that will be zero.
+			- \`term\`: The updated term.
+        `
+	)
+	.response(202, ResolvedTerm, dd
+		`
+            **Updated resolved term**
+            
+            This HTTP status is returned if the service has the \`resolve\` \
+            parameter *set* and there were resolved fields. This does not imply \
+            an error, the term can be updated, but the provided term and the \
+            updated term will not be identical. For this reason the service \
+            will always document what changes were made to the provided term.
+            
+            The structure of the response is as follows:
+            
+            - \`status\`: The validation status which is one.
+            - \`report\`: The status report comprised of the following elements:
+              - \`status\`: The status report:
+                - \`status\`: The status code, that will be zero.
+                - \`message\`: The status message.
+              - \`changes\`: An object containing the list of resolved fields.
+            - \`value\`: The updated term with the resolved fields.
+        `
+	)
+	.response(400, IncorrectTerm, dd
+		`
+            **Invalid parameter**
+            
+            The service will return this status if the provided term did not \
+            pass validation. The service will not attempt to insert the term \
+            and will return an object structured as follows:
+            
+            - \`status\`: The validation status which is minus 1.
+            - \`report\`: The status report comprised of the following elements:
+              - \`status\`: The status report:
+                - \`status\`: The status code, that will be non zero.
+                - \`message\`: The status message describing the error.
+              - \`descriptor\`: The name of the property that contains the error.
+              - \`value\`: The value of the incorrect property.
+            - \`value\`: The provided term.
+            
+            The service will also perform a check on the updated fialds to \
+            verify if the updates, although having a correct syntax, will change \
+            the validation rules and render existing data incorrect. In that case \
+            the service will return an object structured as follows:
+            
+            - \`status\`: The service status.
+            - \`report\`: The status report:
+              - \`message\`: The status message describing the error.
+              - \`data\`: An object containing the incorrect data:
+                - *incorrect descriptor*: The name pf the property that triggered
+                                          the error.
+                  - \`old\`: The original container of the incorrect property.
+                  - \`new\`: The updated container of the incorrect property.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -1113,7 +1179,7 @@ function doInsertTerm(request, response)
 			true,
 			true,
 			request.queryParams.terms,
-			false,
+			request.queryParams.types,
 			request.queryParams.resolve,
 			request.queryParams.defns,
 			request.queryParams.resfld
@@ -1163,7 +1229,7 @@ function doInsertTerm(request, response)
 			response.send({
 				status: status,
 				report: validator.report,
-				vakue: validator.value
+				value: validator.value
 			})
 			return                                                      // ==>
 	}
@@ -1194,8 +1260,6 @@ function doInsertTerm(request, response)
 				value: Object.assign(meta, term)
 			})
 		}
-		
-		return                                                          // ==>
 	}
 	catch (error)
 	{
@@ -1294,7 +1358,7 @@ function doInsertTerms(request, response)
 			true,
 			true,
 			request.queryParams.terms,
-			false,
+			request.queryParams.types,
 			request.queryParams.resolve,
 			request.queryParams.defns,
 			request.queryParams.resfld
@@ -1383,8 +1447,6 @@ function doInsertTerms(request, response)
 				values: result
 			})
 		}
-		
-		return                                                          // ==>
 	}
 	catch (error)
 	{
@@ -1599,7 +1661,7 @@ function doUpdateTerm(request, response)
 			true,
 			true,
 			request.queryParams.terms,
-			false,
+			request.queryParams.types,
 			request.queryParams.resolve,
 			request.queryParams.defns,
 			request.queryParams.resfld
@@ -1613,7 +1675,7 @@ function doUpdateTerm(request, response)
 		response.status(400)
 		response.send({
 			status: K.error.kMSG_BAD_TERM_UPDATE.message[module.context.configuration.language],
-			data: result
+			report: result
 		})
 		return                                                          // ==>
 	}
@@ -1622,25 +1684,39 @@ function doUpdateTerm(request, response)
 	// Validate object.
 	//
 	const status = validator.validate()
-	if(status !== 0) {
-		response.status(400)
-		response.send({
-			status: status,
-			report: validator.report,
-			value: validator.value
-		})
-
-		return                                                          // ==>
-	}
-
-	///
-	// Just wanted to check.
-	///
-	if(!request.queryParams.save) {
-		response.status(200)
-		response.send({ status, updated })
-
-		return                                                          // ==>
+	switch(status)
+	{
+		case 0:
+			if(!request.queryParams.save) {
+				response.status(200)
+				response.send({
+					status: status,
+					term: validator.value
+				})
+				return                                                  // ==>
+			}
+			break
+		
+		case 1:
+			if(!request.queryParams.save) {
+				response.status(202)
+				response.send({
+					status: status,
+					report: validator.report,
+					value: validator.value
+				})
+				return                                                  // ==>
+			}
+			break
+		
+		case -1:
+			response.status(400)
+			response.send({
+				status: status,
+				report: validator.report,
+				value: validator.value
+			})
+			return                                                      // ==>
 	}
 
 	//
@@ -1657,8 +1733,21 @@ function doUpdateTerm(request, response)
 					OPTIONS { ignoreRevs: false }
 					RETURN NEW
                 `)
-
-		response.send(result._documents[0])                             // ==>
+		
+		///
+		// Handle no errors or resolved values.
+		///
+		if(status === 0) {
+			response.status(200)
+			response.send(result._documents[0])
+		} else {
+			response.status(202)
+			response.send({
+				status: status,
+				report: validator.report,
+				value: result._documents[0]
+			})
+		}
 	}
 	catch (error)
 	{
