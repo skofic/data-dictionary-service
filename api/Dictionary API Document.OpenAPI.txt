@@ -19,9 +19,63 @@
     "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/terms/insert/": {
       "post": {
         "summary": "Create term",
-        "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term.\n\nThe service expects the term object in the body.\n\nIt is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term record [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if the provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+        "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term, or to check if the provided term would be accepted.\n\nThe service expects the term object in the body. It is required to have at least the `_code` and `_info` data blocks. The `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` property. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value: you will have to provide by default the *entry* in the *default language* (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section should be included depending on what type of term you are creating.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The provided term with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The provided term with the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The provided term.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
         "operationId": "fbf54a75-fd0b-4b80-94aa-4f094bfe55c4",
         "parameters": [
+          {
+            "name": "defns",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
+          {
+            "name": "resfld",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "_lid",
+              "description": ""
+            }
+          },
+          {
+            "name": "resolve",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "true",
+              "description": ""
+            }
+          },
+          {
+            "name": "save",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
+          {
+            "name": "terms",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "true",
+              "description": ""
+            }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
           {
             "name": "Content-Type",
             "in": "header",
@@ -42,20 +96,265 @@
           }
         ],
         "requestBody": {
-          "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term.\n\nThe service expects the term object in the body.\n\nIt is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term record [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if the provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+          "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term, or to check if the provided term would be accepted.\n\nThe service expects the term object in the body. It is required to have at least the `_code` and `_info` data blocks. The `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` property. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value: you will have to provide by default the *entry* in the *default language* (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section should be included depending on what type of term you are creating.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The provided term with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The provided term with the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The provided term.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
           "content": {
             "text/plain": {
               "schema": {
                 "type": "string",
-                "example": "{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"iso_639_3_eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"iso_639_3_eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"iso_639_3_eng\": \"This term can be *safely deleted*.\"\n    }\n  }\n}"
+                "example": "{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"eng\": \"This term can be *safely deleted*.\"\n    }\n  },\n  \"_data\": {\n    \"_scalar\": {\n      \"_type\": \"enum\",\n      \"_kind\": [\"_type\"]\n    }\n  }\n}"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
-            "description": ""
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "format": "int64",
+                      "example": 1
+                    },
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "integer",
+                              "format": "int64",
+                              "example": 0
+                            },
+                            "message": {
+                              "type": "string",
+                              "example": "Idle."
+                            }
+                          }
+                        },
+                        "changes": {
+                          "type": "object",
+                          "properties": {
+                            "364f1f4ad5d180fc5f21c58cd8d25fcb": {
+                              "type": "object",
+                              "properties": {
+                                "field": {
+                                  "type": "integer",
+                                  "format": "int64",
+                                  "example": 0
+                                },
+                                "original": {
+                                  "type": "string",
+                                  "example": "eng"
+                                },
+                                "resolved": {
+                                  "type": "string",
+                                  "example": "iso_639_3_eng"
+                                }
+                              }
+                            },
+                            "9df2af9bca8a2e656188012f893a9599": {
+                              "type": "object",
+                              "properties": {
+                                "field": {
+                                  "type": "string",
+                                  "example": "_type"
+                                },
+                                "original": {
+                                  "type": "string",
+                                  "example": "enum"
+                                },
+                                "resolved": {
+                                  "type": "string",
+                                  "example": "_type_string_enum"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "value": {
+                      "type": "object",
+                      "properties": {
+                        "_code": {
+                          "type": "object",
+                          "properties": {
+                            "_lid": {
+                              "type": "string",
+                              "example": "test"
+                            },
+                            "_gid": {
+                              "type": "string",
+                              "example": "test"
+                            },
+                            "_aid": {
+                              "type": "string",
+                              "items": {
+                                "type": "string"
+                              },
+                              "example": [
+                                "test"
+                              ]
+                            }
+                          }
+                        },
+                        "_info": {
+                          "type": "object",
+                          "properties": {
+                            "_title": {
+                              "type": "object",
+                              "properties": {
+                                "iso_639_3_eng": {
+                                  "type": "string",
+                                  "example": "Test term"
+                                }
+                              }
+                            },
+                            "_definition": {
+                              "type": "object",
+                              "properties": {
+                                "iso_639_3_eng": {
+                                  "type": "string",
+                                  "example": "A term created for testing purposes."
+                                }
+                              }
+                            },
+                            "_description": {
+                              "type": "object",
+                              "properties": {
+                                "iso_639_3_eng": {
+                                  "type": "string",
+                                  "example": "This term can be *safely deleted*."
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "_data": {
+                          "type": "object",
+                          "properties": {
+                            "_scalar": {
+                              "type": "object",
+                              "properties": {
+                                "_type": {
+                                  "type": "string",
+                                  "example": "_type_string_enum"
+                                },
+                                "_kind": {
+                                  "type": "string",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "example": [
+                                    "_type"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "_key": {
+                          "type": "string",
+                          "example": "test"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "application/json; charset=utf-8"
+                }
+              },
+              "Pragma": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "frame-ancestors 'self'; form-action 'self';"
+                }
+              },
+              "Set-Cookie": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "FOXXSID=null; expires=Sat, 31-Aug-2024 14:23:53 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 31-Aug-2024 14:23:53 GMT; path=/"
+                }
+              },
+              "Server": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "ArangoDB"
+                }
+              },
+              "Expires": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              },
+              "Cache-Control": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
+                }
+              },
+              "X-Arango-Queue-Time-Seconds": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0.000000"
+                }
+              },
+              "Strict-Transport-Security": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "max-age=31536000 ; includeSubDomains"
+                }
+              },
+              "Content-Length": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "602"
+                }
+              },
+              "Connection": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "Close"
+                }
+              },
+              "X-Content-Type-Options": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "nosniff"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -64,9 +363,63 @@
     "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/terms/insert/many/": {
       "post": {
         "summary": "Create terms",
-        "description": "Use this service to create a list of new terms.\n\n*In order to create terms, the current user must have the `dict` role*.\n\nThis service can be used to create a set of new terms.\n\nWhen inserting the records, the operation is executed transactionally in an *all-or-nothing* fashion.\n\nThe service expects an array of term objects in the body.\n\nEach term is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term records [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if any provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+        "description": "Use this service to create a list of new terms.\n\n*In order to create terms, the current user must have the `dict` role*.\n\nThis service can be used to create a set of new terms.\n\nWhen inserting the records, the operation is executed transactionally in an *all-or-nothing* fashion.\n\nThe service expects an array of term objects in the body.\n\nEach term is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted terms list including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `terms`: The provided list of terms with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided terms was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `reports`: The status reports, one for each provided term, comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `values`: The provided list of terms containing the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `reports`: The list of status reports, one for each provided terms, comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `values`: The provided list of terms.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
         "operationId": "458d3efd-5b68-45f2-86c4-56456cf9c423",
         "parameters": [
+          {
+            "name": "defns",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
+          {
+            "name": "resfld",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "_aid",
+              "description": ""
+            }
+          },
+          {
+            "name": "resolve",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "true",
+              "description": ""
+            }
+          },
+          {
+            "name": "save",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
+          {
+            "name": "terms",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "true",
+              "description": ""
+            }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
           {
             "name": "Content-Type",
             "in": "header",
@@ -87,20 +440,132 @@
           }
         ],
         "requestBody": {
-          "description": "Use this service to create a list of new terms.\n\n*In order to create terms, the current user must have the `dict` role*.\n\nThis service can be used to create a set of new terms.\n\nWhen inserting the records, the operation is executed transactionally in an *all-or-nothing* fashion.\n\nThe service expects an array of term objects in the body.\n\nEach term is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term records [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if any provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+          "description": "Use this service to create a list of new terms.\n\n*In order to create terms, the current user must have the `dict` role*.\n\nThis service can be used to create a set of new terms.\n\nWhen inserting the records, the operation is executed transactionally in an *all-or-nothing* fashion.\n\nThe service expects an array of term objects in the body.\n\nEach term is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted terms list including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `terms`: The provided list of terms with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided terms was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `reports`: The status reports, one for each provided term, comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `values`: The provided list of terms containing the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `reports`: The list of status reports, one for each provided terms, comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `values`: The provided list of terms.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
           "content": {
             "text/plain": {
               "schema": {
                 "type": "string",
-                "example": "[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n\t\t\"_type\": \"_type_string_enum\",\n\t\t\"_kind\": [\"_type\"]\n\t  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]"
+                "example": "[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n\t\t\"_type\": \"enum\",\n\t\t\"_kind\": [\"_type\"]\n\t  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
-            "description": ""
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "format": "int64",
+                      "example": 1
+                    },
+                    "reports": {
+                      "type": "object",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "values": {
+                      "type": "object",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "application/json; charset=utf-8"
+                }
+              },
+              "Pragma": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "frame-ancestors 'self'; form-action 'self';"
+                }
+              },
+              "Set-Cookie": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "FOXXSID=null; expires=Sat, 31-Aug-2024 14:24:49 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 31-Aug-2024 14:24:49 GMT; path=/"
+                }
+              },
+              "Server": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "ArangoDB"
+                }
+              },
+              "Expires": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              },
+              "Cache-Control": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
+                }
+              },
+              "X-Arango-Queue-Time-Seconds": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0.000000"
+                }
+              },
+              "Strict-Transport-Security": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "max-age=31536000 ; includeSubDomains"
+                }
+              },
+              "Content-Length": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "884"
+                }
+              },
+              "Connection": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "Close"
+                }
+              },
+              "X-Content-Type-Options": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "nosniff"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -109,15 +574,69 @@
     "/{Protocol}:/{Host}:{Port}/_db/{Db}/{Path}/terms/": {
       "patch": {
         "summary": "Update term",
-        "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. You provide the term *global identifier* in the *path query parameter* `key`, and the *fields to be updated* in the *request body*.\n\nIf the service is successful it will return the updated term record [`200`], plus a property, `status`, with the operation outcome, `OK`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Term not found**: the service will return this code if the provided identifier has no match.\n- `500`: For other types of error.",
+        "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. The body consists of an object with two properties: one contains the *term updates*, the other contains the *list of path keys* to the fields to be updated.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the updated term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The updated term.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The updated term with the resolved fields.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The updated term.\n\nThe service will also assert that the updates, although formally valid, will not reduce the term's options, excluding eventual data associated with the term. In that case the service will fail with a [`400`] HTTP status and return an object structured as follows:\n\n- `status`: The service status message indicating the error is not a validation error.\n- `report`: The status report comprised of the following elements:\n    - `message`: The status message describing the error.\n    - `data`: Original and updated data which triggered the error.\n      - *property name*: The name of the property that triggered the error.\n      - `old`: The original value of the latter property.\n      - `new`: The updated value of the latter property.\n\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
         "operationId": "31cd7333-15fc-4a71-8e8c-a283c69cf248",
         "parameters": [
+          {
+            "name": "defns",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
           {
             "name": "key",
             "in": "query",
             "schema": {
               "type": "string",
-              "default": "test",
+              "default": "_set_scalar",
+              "description": ""
+            }
+          },
+          {
+            "name": "resfld",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "_lid",
+              "description": ""
+            }
+          },
+          {
+            "name": "resolve",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "true",
+              "description": ""
+            }
+          },
+          {
+            "name": "save",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
+              "description": ""
+            }
+          },
+          {
+            "name": "terms",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "true",
+              "description": ""
+            }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "false",
               "description": ""
             }
           },
@@ -126,7 +645,7 @@
             "in": "header",
             "schema": {
               "type": "string",
-              "default": "text/plain; charset=utf-8",
+              "default": "application/json; charset=utf-8",
               "description": ""
             }
           },
@@ -141,20 +660,371 @@
           }
         ],
         "requestBody": {
-          "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. You provide the term *global identifier* in the *path query parameter* `key`, and the *fields to be updated* in the *request body*.\n\nIf the service is successful it will return the updated term record [`200`], plus a property, `status`, with the operation outcome, `OK`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Term not found**: the service will return this code if the provided identifier has no match.\n- `500`: For other types of error.",
+          "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. The body consists of an object with two properties: one contains the *term updates*, the other contains the *list of path keys* to the fields to be updated.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the updated term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The updated term.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The updated term with the resolved fields.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The updated term.\n\nThe service will also assert that the updates, although formally valid, will not reduce the term's options, excluding eventual data associated with the term. In that case the service will fail with a [`400`] HTTP status and return an object structured as follows:\n\n- `status`: The service status message indicating the error is not a validation error.\n- `report`: The status report comprised of the following elements:\n    - `message`: The status message describing the error.\n    - `data`: Original and updated data which triggered the error.\n      - *property name*: The name of the property that triggered the error.\n      - `old`: The original value of the latter property.\n      - `new`: The updated value of the latter property.\n\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
           "content": {
-            "text/plain": {
+            "application/json": {
               "schema": {
-                "type": "string",
-                "example": "{\n  \"_info\": {\n    \"_title\": {\n     \"iso_639_3_eng\": \"Test term (modified)\"\n    }\n  }\n}\n"
+                "type": "object",
+                "properties": {
+                  "updates": {
+                    "type": "object",
+                    "properties": {
+                      "_code": {
+                        "type": "object",
+                        "properties": {
+                          "_aid": {
+                            "type": "string",
+                            "items": {
+                              "type": "string"
+                            },
+                            "example": [
+                              "iso"
+                            ]
+                          }
+                        }
+                      },
+                      "_data": {
+                        "type": "object",
+                        "properties": {
+                          "_class": {
+                            "type": "string",
+                            "example": "identifier"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "references": {
+                    "type": "string",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "_code._aid",
+                      "_data._class"
+                    ]
+                  }
+                }
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
-            "description": ""
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "format": "int64",
+                      "example": 1
+                    },
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "integer",
+                              "format": "int64",
+                              "example": 0
+                            },
+                            "message": {
+                              "type": "string",
+                              "example": "Idle."
+                            }
+                          }
+                        },
+                        "changes": {
+                          "type": "object",
+                          "properties": {
+                            "226646dfa3dfe996c2062e17ba2d598f": {
+                              "type": "object",
+                              "properties": {
+                                "field": {
+                                  "type": "string",
+                                  "example": "_class"
+                                },
+                                "original": {
+                                  "type": "string",
+                                  "example": "identifier"
+                                },
+                                "resolved": {
+                                  "type": "string",
+                                  "example": "_class_identifier"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "value": {
+                      "type": "object",
+                      "properties": {
+                        "_key": {
+                          "type": "string",
+                          "example": "_set_scalar"
+                        },
+                        "_id": {
+                          "type": "string",
+                          "example": "terms/_set_scalar"
+                        },
+                        "_rev": {
+                          "type": "string",
+                          "example": "_iSbM78C---"
+                        },
+                        "_code": {
+                          "type": "object",
+                          "properties": {
+                            "_nid": {
+                              "type": "string",
+                              "example": "_set"
+                            },
+                            "_lid": {
+                              "type": "string",
+                              "example": "scalar"
+                            },
+                            "_gid": {
+                              "type": "string",
+                              "example": "_set_scalar"
+                            },
+                            "_aid": {
+                              "type": "string",
+                              "items": {
+                                "type": "string"
+                              },
+                              "example": [
+                                "iso",
+                                "scalar"
+                              ]
+                            }
+                          }
+                        },
+                        "_info": {
+                          "type": "object",
+                          "properties": {
+                            "_title": {
+                              "type": "object",
+                              "properties": {
+                                "iso_639_3_eng": {
+                                  "type": "string",
+                                  "example": "Set scalar data container"
+                                }
+                              }
+                            },
+                            "_definition": {
+                              "type": "object",
+                              "properties": {
+                                "iso_639_3_eng": {
+                                  "type": "string",
+                                  "example": "This property describes the container for the elements of a set."
+                                }
+                              }
+                            },
+                            "_description": {
+                              "type": "object",
+                              "properties": {
+                                "iso_639_3_eng": {
+                                  "type": "string",
+                                  "example": "This property defines the [data type](_set_type.md) of the *elements* of a [set](_set.md). Since a set is a *list* of *unique elements*, these elements must be *comparable* in order to prevent duplicate items. Set elements can be [booleans](_type_boolean.md), [integers](_type_integer.md), [floats](_type_number.md) and [strings](_type_string.md)."
+                                }
+                              }
+                            },
+                            "_examples": {
+                              "type": "object",
+                              "properties": {
+                                "iso_639_3_eng": {
+                                  "type": "string",
+                                  "example": "```json\n{\n\t\"_set_scalar\": {\n\t\t\"_set_type\": \"_type_boolean\"\n\t}\n}\n```\nThe *elements* of the [set](_set.md) can either be, `true` or `false`.\n\n\n\n\n```json\n{\n\t\"_set_scalar\": {\n\t\t\"_class\": \"_class_quantity\",\n\t\t\"_set_type\": \"_type_integer\"\n\t}\n}\n```\nThe *elements* of the [set](_set.md) are [quantitative](_class_quantity.md) values of [type](_set_type.md) [integer](_type_integer.md).\n\n\n\n\n```json\n{\n\t\"_set_scalar\": {\n\t\t\"_class\": \"_class_quantity\",\n\t\t\"_set_type\": \"_type_number\",\n\t\t\"_valid-range\": {\n\t\t\t\"_min-range-inclusive\": 0.0,\n\t\t\t\"_max-range-exclusive\": 100.0\n\t\t},\n\t\t\"_unit\": \"_unit_length_cm\"\n\t}\n}\n```\nThe *elements* of the [set](_set.md) are [continuous](_type_number.md) [quantitative](_class_quantity.md) values *greater or equal* to `0.0` and *less than* `100.0` representing [centimetres](_unit_length_cm.md).\n\n\n\n\n```json\n{\n\t\"_set_scalar\": {\n\t\t\"_class\": \"_class_category\",\n\t\t\"_set_type\": \"_type_string_enum\",\n\t\t\"_kind\": [\"iso_639_3\"]\n\t}\n}\n```\nThe *elements* of the [set](_set.md) are [categorical](_class_category.md) [enumerations](_type_string_enum.md) that must be chosen from the ISO 639 [language codes](iso_639_3.md)."
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "_data": {
+                          "type": "object",
+                          "properties": {
+                            "_scalar": {
+                              "type": "object",
+                              "properties": {
+                                "_type": {
+                                  "type": "string",
+                                  "example": "_type_object"
+                                },
+                                "_kind": {
+                                  "type": "string",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "example": [
+                                    "_set_scalar"
+                                  ]
+                                }
+                              }
+                            },
+                            "_class": {
+                              "type": "string",
+                              "example": "_class_identifier"
+                            }
+                          }
+                        },
+                        "_rule": {
+                          "type": "object",
+                          "properties": {
+                            "_required": {
+                              "type": "object",
+                              "properties": {
+                                "_selection-descriptors_all": {
+                                  "type": "string",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "example": [
+                                    "_set_type"
+                                  ]
+                                }
+                              }
+                            },
+                            "_recommended": {
+                              "type": "object",
+                              "properties": {
+                                "_selection-descriptors_any": {
+                                  "type": "string",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "example": [
+                                    "_kind",
+                                    "_format",
+                                    "_unit",
+                                    "_unit-name",
+                                    "_regexp",
+                                    "_range",
+                                    "_range_string",
+                                    "_range_date",
+                                    "_valid-range",
+                                    "_valid-range_string",
+                                    "_valid-range_date",
+                                    "_normal-range",
+                                    "_normal-range_string",
+                                    "_normal-range_date"
+                                  ]
+                                }
+                              }
+                            },
+                            "_banned": {
+                              "type": "string",
+                              "items": {
+                                "type": "string"
+                              },
+                              "example": [
+                                "_type",
+                                "_scalar",
+                                "_array",
+                                "_set",
+                                "_dict"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "application/json; charset=utf-8"
+                }
+              },
+              "Pragma": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Content-Security-Policy": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "frame-ancestors 'self'; form-action 'self';"
+                }
+              },
+              "Set-Cookie": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "FOXXSID=null; expires=Sat, 31-Aug-2024 16:02:46 GMT; path=/, FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb; expires=Sat, 31-Aug-2024 16:02:46 GMT; path=/"
+                }
+              },
+              "Server": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "ArangoDB"
+                }
+              },
+              "Expires": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              },
+              "Cache-Control": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0, s-maxage=0"
+                }
+              },
+              "X-Arango-Queue-Time-Seconds": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "0.000000"
+                }
+              },
+              "Strict-Transport-Security": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "max-age=31536000 ; includeSubDomains"
+                }
+              },
+              "Content-Length": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "2661"
+                }
+              },
+              "Connection": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "Close"
+                }
+              },
+              "X-Content-Type-Options": {
+                "description": "",
+                "schema": {
+                  "type": "string",
+                  "example": "nosniff"
+                }
+              }
+            }
           }
         },
         "security": []

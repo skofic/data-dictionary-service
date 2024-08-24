@@ -12,8 +12,45 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert?terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=false",
+              "query": [
+                {
+                  "key": "terms",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Expect all object properties to be part of the data dictionary.\nBy default, if a property matches a descriptor, then the value must conform to the descriptor's data definition; if the property does not match a term in the data dictionary, then it will be ignored and assumed correct. If you set this flag, all object properties must correspond to a descriptor, failing to do so will be considered an error."
+                },
+                {
+                  "key": "types",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Expect all scalar data sections to have the data type.\nBy default, if a scalar data definition section is empty, we assume the value can take any scalar value: if you set this flag, it means that all scalar data definition sections need to indicate the data type, failing to do so will be considered an error."
+                },
+                {
+                  "key": "defns",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Allow referencing default namespace.\nThe default namespace is reserved to terms that constitute the dictionary engine. User-defined terms should not reference the default namespace. If this option is set, it will be possible to create terms that have the default namespace as their namespace."
+                },
+                {
+                  "key": "resolve",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Attempt to resolve unmatched term references.\nThis option is relevant to enumerated values. If this flag is set, when a provided value does not resolve into a term global identifier, the value will be tested against the terms code section property indicated in the resfld parameter: if there is a single match, the original value will be replaced by the matched global identifier. This way one can use the local identifier as the reference and let the validator resolve the global identifier.\nWhen this happens the status code will be zero, if no errors have occurred, but the response will feature a property named changes in the status report, which contains the list of resolved values.\nBe aware that to successfully use this feature the local identifiers must be unique."
+                },
+                {
+                  "key": "resfld",
+                  "value": "_lid",
+                  "disabled": false,
+                  "description": "Terms code section field used to resolve term references.\nThis option is relevant if the resolve flag was set. This parameter corresponds to the name of a property in the descriptor's code section: the unresolved value will be matched against the value contained in that field and if there is a single match, the matched term global identifier will replace the provided value.\nBy default this parameter is set to the local identifier, you could set it, for instance, to the list of official identifiers in order to have a larger choice."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Flag to determine whether to save the term or not.\nThis option can be used when inserting or updating terms: if the flag is set, if all the required validations tests pass, the term will be either inserted or updated. If the flag is not set, you will get the status of the validation provess. This flag is useful if you just need to check if the term is valid, or if you want to see if the updated term structure before persisting the object to the data dictionary."
+                }
+              ],
               "protocol": null,
               "host": [
                 "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert"
@@ -21,12 +58,12 @@
               "port": null,
               "path": null
             },
-            "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term.\n\nThe service expects the term object in the body.\n\nIt is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term record [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if the provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+            "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term, or to check if the provided term would be accepted.\n\nThe service expects the term object in the body. It is required to have at least the `_code` and `_info` data blocks. The `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` property. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value: you will have to provide by default the *entry* in the *default language* (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section should be included depending on what type of term you are creating.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The provided term with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The provided term with the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The provided term.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"iso_639_3_eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"iso_639_3_eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"iso_639_3_eng\": \"This term can be *safely deleted*.\"\n    }\n  }\n}"
+              "raw": "{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"eng\": \"This term can be *safely deleted*.\"\n    }\n  },\n  \"_data\": {\n    \"_scalar\": {\n      \"_type\": \"enum\",\n      \"_kind\": [\"_type\"]\n    }\n  }\n}"
             },
             "auth": null
           },
@@ -42,8 +79,45 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert/many",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert/many?terms=true&types=false&defns=false&resolve=true&resfld=_aid&save=false",
+              "query": [
+                {
+                  "key": "terms",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Expect all object properties to be part of the data dictionary.\nBy default, if a property matches a descriptor, then the value must conform to the descriptor's data definition; if the property does not match a term in the data dictionary, then it will be ignored and assumed correct. If you set this flag, all object properties must correspond to a descriptor, failing to do so will be considered an error."
+                },
+                {
+                  "key": "types",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Expect all scalar data sections to have the data type.\nBy default, if a scalar data definition section is empty, we assume the value can take any scalar value: if you set this flag, it means that all scalar data definition sections need to indicate the data type, failing to do so will be considered an error."
+                },
+                {
+                  "key": "defns",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Allow referencing default namespace.\nThe default namespace is reserved to terms that constitute the dictionary engine. User-defined terms should not reference the default namespace. If this option is set, it will be possible to create terms that have the default namespace as their namespace."
+                },
+                {
+                  "key": "resolve",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Attempt to resolve unmatched term references.\nThis option is relevant to enumerated values. If this flag is set, when a provided value does not resolve into a term global identifier, the value will be tested against the terms code section property indicated in the resfld parameter: if there is a single match, the original value will be replaced by the matched global identifier. This way one can use the local identifier as the reference and let the validator resolve the global identifier.\nWhen this happens the status code will be zero, if no errors have occurred, but the response will feature a property named changes in the status report, which contains the list of resolved values.\nBe aware that to successfully use this feature the local identifiers must be unique."
+                },
+                {
+                  "key": "resfld",
+                  "value": "_aid",
+                  "disabled": false,
+                  "description": "Terms code section field used to resolve term references.\nThis option is relevant if the resolve flag was set. This parameter corresponds to the name of a property in the descriptor's code section: the unresolved value will be matched against the value contained in that field and if there is a single match, the matched term global identifier will replace the provided value.\nBy default this parameter is set to the local identifier, you could set it, for instance, to the list of official identifiers in order to have a larger choice."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Flag to determine whether to save the term or not.\nThis option can be used when inserting or updating terms: if the flag is set, if all the required validations tests pass, the term will be either inserted or updated. If the flag is not set, you will get the status of the validation provess. This flag is useful if you just need to check if the term is valid, or if you want to see if the updated term structure before persisting the object to the data dictionary."
+                }
+              ],
               "protocol": null,
               "host": [
                 "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert/many"
@@ -51,12 +125,12 @@
               "port": null,
               "path": null
             },
-            "description": "Use this service to create a list of new terms.\n\n*In order to create terms, the current user must have the `dict` role*.\n\nThis service can be used to create a set of new terms.\n\nWhen inserting the records, the operation is executed transactionally in an *all-or-nothing* fashion.\n\nThe service expects an array of term objects in the body.\n\nEach term is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set, and overwritten, by the service.\n*Be aware that if you provide a local identifier in an enumeration field, the service will attempt to resolve it into a global identifier*.\n\nIf the service is successful it will return the newly created term records [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid parameter**: the service will return this error if any provided term is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.",
+            "description": "Use this service to create a list of new terms.\n\n*In order to create terms, the current user must have the `dict` role*.\n\nThis service can be used to create a set of new terms.\n\nWhen inserting the records, the operation is executed transactionally in an *all-or-nothing* fashion.\n\nThe service expects an array of term objects in the body.\n\nEach term is required to have at least the `_code` and `_info` data blocks.\nThe `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` and `_definition` properties, the other properties are only provided as placeholders, delete them if not needed. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value, you will have to provide by default the entry in the default language (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section are provided as placeholders, delete them if not needed. You are responsible for their contents.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted terms list including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `terms`: The provided list of terms with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided terms was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `reports`: The status reports, one for each provided term, comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `values`: The provided list of terms containing the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `reports`: The list of status reports, one for each provided terms, comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `values`: The provided list of terms.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n\t\t\"_type\": \"_type_string_enum\",\n\t\t\"_kind\": [\"_type\"]\n\t  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]"
+              "raw": "[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n\t\t\"_type\": \"enum\",\n\t\t\"_kind\": [\"_type\"]\n\t  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]"
             },
             "auth": null
           },
@@ -72,13 +146,49 @@
           "request": {
             "method": "PATCH",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?key=test",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?key=_set_scalar&terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=false",
               "query": [
                 {
                   "key": "key",
-                  "value": "test",
+                  "value": "_set_scalar",
                   "disabled": false,
                   "description": "Term global identifier."
+                },
+                {
+                  "key": "terms",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Expect all object properties to be part of the data dictionary.\nBy default, if a property matches a descriptor, then the value must conform to the descriptor's data definition; if the property does not match a term in the data dictionary, then it will be ignored and assumed correct. If you set this flag, all object properties must correspond to a descriptor, failing to do so will be considered an error."
+                },
+                {
+                  "key": "types",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Expect all scalar data sections to have the data type.\nBy default, if a scalar data definition section is empty, we assume the value can take any scalar value: if you set this flag, it means that all scalar data definition sections need to indicate the data type, failing to do so will be considered an error."
+                },
+                {
+                  "key": "defns",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Allow referencing default namespace.\nThe default namespace is reserved to terms that constitute the dictionary engine. User-defined terms should not reference the default namespace. If this option is set, it will be possible to create terms that have the default namespace as their namespace."
+                },
+                {
+                  "key": "resolve",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Attempt to resolve unmatched term references.\nThis option is relevant to enumerated values. If this flag is set, when a provided value does not resolve into a term global identifier, the value will be tested against the terms code section property indicated in the resfld parameter: if there is a single match, the original value will be replaced by the matched global identifier. This way one can use the local identifier as the reference and let the validator resolve the global identifier.\nWhen this happens the status code will be zero, if no errors have occurred, but the response will feature a property named changes in the status report, which contains the list of resolved values.\nBe aware that to successfully use this feature the local identifiers must be unique."
+                },
+                {
+                  "key": "resfld",
+                  "value": "_lid",
+                  "disabled": false,
+                  "description": "Terms code section field used to resolve term references.\nThis option is relevant if the resolve flag was set. This parameter corresponds to the name of a property in the descriptor's code section: the unresolved value will be matched against the value contained in that field and if there is a single match, the matched term global identifier will replace the provided value.\nBy default this parameter is set to the local identifier, you could set it, for instance, to the list of official identifiers in order to have a larger choice."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Flag to determine whether to save the term or not.\nThis option can be used when inserting or updating terms: if the flag is set, if all the required validations tests pass, the term will be either inserted or updated. If the flag is not set, you will get the status of the validation process. This flag is useful if you just need to check if the term is valid, or if you want to see if the updated term structure before persisting the object to the data dictionary."
                 }
               ],
               "protocol": null,
@@ -88,12 +198,19 @@
               "port": null,
               "path": null
             },
-            "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. You provide the term *global identifier* in the *path query parameter* `key`, and the *fields to be updated* in the *request body*.\n\nIf the service is successful it will return the updated term record [`200`], plus a property, `status`, with the operation outcome, `OK`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Term not found**: the service will return this code if the provided identifier has no match.\n- `500`: For other types of error.",
-            "header": [],
+            "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. The body consists of an object with two properties: one contains the *term updates*, the other contains the *list of path keys* to the fields to be updated.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the updated term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The updated term.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The updated term with the resolved fields.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The updated term.\n\nThe service will also assert that the updates, although formally valid, will not reduce the term's options, excluding eventual data associated with the term. In that case the service will fail with a [`400`] HTTP status and return an object structured as follows:\n\n- `status`: The service status message indicating the error is not a validation error.\n- `report`: The status report comprised of the following elements:\n    - `message`: The status message describing the error.\n    - `data`: Original and updated data which triggered the error.\n      - *property name*: The name of the property that triggered the error.\n      - `old`: The original value of the latter property.\n      - `new`: The updated value of the latter property.\n\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "description": null
+              }
+            ],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"_info\": {\n    \"_title\": {\n     \"iso_639_3_eng\": \"Test term (modified)\"\n    }\n  }\n}\n"
+              "raw": "{\"updates\":{\"_code\":{\"_aid\":[\"iso\"]},\"_data\":{\"_class\":\"identifier\"}},\"references\":[\"_code._aid\",\"_data._class\"]}"
             },
             "auth": null
           },

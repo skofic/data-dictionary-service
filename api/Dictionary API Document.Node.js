@@ -9,7 +9,7 @@
     const httpOptions = {
         hostname: 'localhost',
         port: '8529',
-        path: '/_db/EUFGIS/dict/terms/insert',
+        path: '/_db/EUFGIS/dict/terms/insert?terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=false',
         method: 'POST',
         headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };
@@ -40,7 +40,7 @@
     .on('error', (error) => {
         callback(error);
     });
-    request.write("{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"iso_639_3_eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"iso_639_3_eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"iso_639_3_eng\": \"This term can be *safely deleted*.\"\n    }\n  }\n}")
+    request.write("{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"eng\": \"This term can be *safely deleted*.\"\n    }\n  },\n  \"_data\": {\n    \"_scalar\": {\n      \"_type\": \"enum\",\n      \"_kind\": [\"_type\"]\n    }\n  }\n}")
     request.end();
     
 
@@ -60,7 +60,7 @@
     const httpOptions = {
         hostname: 'localhost',
         port: '8529',
-        path: '/_db/EUFGIS/dict/terms/insert/many',
+        path: '/_db/EUFGIS/dict/terms/insert/many?terms=true&types=false&defns=false&resolve=true&resfld=_aid&save=false',
         method: 'POST',
         headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };
@@ -91,7 +91,7 @@
     .on('error', (error) => {
         callback(error);
     });
-    request.write("[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n\t\t\"_type\": \"_type_string_enum\",\n\t\t\"_kind\": [\"_type\"]\n\t  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]")
+    request.write("[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n\t\t\"_type\": \"enum\",\n\t\t\"_kind\": [\"_type\"]\n\t  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]")
     request.end();
     
 
@@ -111,9 +111,9 @@
     const httpOptions = {
         hostname: 'localhost',
         port: '8529',
-        path: '/_db/EUFGIS/dict/terms?key=test',
+        path: '/_db/EUFGIS/dict/terms?key=_set_scalar&terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=false',
         method: 'PATCH',
-        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+        headers: {"Content-Type":"application/json; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
     };
     httpOptions.headers['User-Agent'] = 'node ' + process.version;
  
@@ -142,7 +142,7 @@
     .on('error', (error) => {
         callback(error);
     });
-    request.write("{\n  \"_info\": {\n    \"_title\": {\n     \"iso_639_3_eng\": \"Test term (modified)\"\n    }\n  }\n}\n")
+    request.write("{\"updates\":{\"_code\":{\"_aid\":[\"iso\"]},\"_data\":{\"_class\":\"identifier\"}},\"references\":[\"_code._aid\",\"_data._class\"]}")
     request.end();
     
 

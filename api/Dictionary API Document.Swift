@@ -17,6 +17,15 @@ class MyRequestController {
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms/insert") else {return}
+        let URLParams = [
+            "terms": "true",
+            "types": "false",
+            "defns": "false",
+            "resolve": "true",
+            "resfld": "_lid",
+            "save": "false",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -27,7 +36,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"iso_639_3_eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"iso_639_3_eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"iso_639_3_eng\": \"This term can be *safely deleted*.\"\n    }\n  }\n}"
+        let bodyString = "{\n  \"_code\": {\n    \"_lid\": \"test\"\n  },\n  \"_info\": {\n    \"_title\": {\n      \"eng\": \"Test term\"\n    },\n    \"_definition\": {\n      \"eng\": \"A term created for testing purposes.\"\n    },\n    \"_description\": {\n      \"eng\": \"This term can be *safely deleted*.\"\n    }\n  },\n  \"_data\": {\n    \"_scalar\": {\n      \"_type\": \"enum\",\n      \"_kind\": [\"_type\"]\n    }\n  }\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -47,6 +56,42 @@ class MyRequestController {
     }
 }
 
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
 
 
 class MyRequestController {
@@ -68,6 +113,15 @@ class MyRequestController {
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms/insert/many") else {return}
+        let URLParams = [
+            "terms": "true",
+            "types": "false",
+            "defns": "false",
+            "resolve": "true",
+            "resfld": "_aid",
+            "save": "false",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -78,7 +132,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n		\"_type\": \"_type_string_enum\",\n		\"_kind\": [\"_type\"]\n	  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]"
+        let bodyString = "[\n  {\n    \"_code\": {\n      \"_lid\": \"test-01\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-02\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 2\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n		\"_type\": \"enum\",\n		\"_kind\": [\"_type\"]\n	  }\n    }\n  },\n  {\n    \"_code\": {\n      \"_lid\": \"test-03\"\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 3\"\n      }\n    }\n  }\n]"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -98,6 +152,42 @@ class MyRequestController {
     }
 }
 
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
 
 
 class MyRequestController {
@@ -120,7 +210,13 @@ class MyRequestController {
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms") else {return}
         let URLParams = [
-            "key": "test",
+            "key": "_set_scalar",
+            "terms": "true",
+            "types": "false",
+            "defns": "false",
+            "resolve": "true",
+            "resfld": "_lid",
+            "save": "false",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
@@ -128,13 +224,28 @@ class MyRequestController {
 
         // Headers
 
-        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
         request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
-        // Body
+        // JSON Body
 
-        let bodyString = "{\n  \"_info\": {\n    \"_title\": {\n     \"iso_639_3_eng\": \"Test term (modified)\"\n    }\n  }\n}\n"
-        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+        let bodyObject: [String : Any] = [
+            "updates": [
+                "_code": [
+                    "_aid": [
+                        "iso"
+                    ]
+                ],
+                "_data": [
+                    "_class": "identifier"
+                ]
+            ],
+            "references": [
+                "_code._aid",
+                "_data._class"
+            ]
+        ]
+        request.httpBody = try! JSONSerialization.data(withJSONObject: bodyObject, options: [])
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
