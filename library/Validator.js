@@ -1104,7 +1104,32 @@ class Validator
 					return false                                        // ==>
 				}
 			}
+			
+			///
+			// Ensure array has unique elements.
+			///
+			const uniques = value.filter((item, index) => value.indexOf(item) === index)
+			if(uniques.length !== value.length)
+			{
+				///
+				// Log changes.
+				///
+				this.logResolvedValues(
+					theKey, value, uniques, theReportIndex
+				)
 
+				///
+				// Replace set.
+				///
+				if(theKey === null) {
+					theContainer = uniques
+					
+				} else {
+					theContainer[theKey] = uniques
+				}
+				
+			} // Set has duplicate elements.
+			
 			return true                                                 // ==>
 
 		} // Is an array.
@@ -2549,6 +2574,46 @@ class Validator
 		if(Validator.IsObject(value))
 		{
 			///
+			// Check scalar data type.
+			///
+			switch(theKey)
+			{
+				case module.context.configuration.sectionScalar:
+					if(!value.hasOwnProperty(module.context.configuration.scalarType)) {
+						if(this.expectType || Object.keys(value).length > 0) {
+							return this.setStatusReport(
+								'kMISSING_DATA_TYPE',
+								theKey, value, theReportIndex
+							)                                           // ==>
+						}
+					}
+					break
+				
+				case module.context.configuration.sectionSetScalar:
+					if(!value.hasOwnProperty(module.context.configuration.setScalarType)) {
+						if(this.expectType || Object.keys(value).length > 0) {
+							return this.setStatusReport(
+								'kMISSING_DATA_TYPE',
+								theKey, value, theReportIndex
+							)                                           // ==>
+						}
+					}
+					break
+				
+				case module.context.configuration.sectionDictKey:
+					if(!value.hasOwnProperty(module.context.configuration.keyScalarType)) {
+						if(this.expectType || Object.keys(value).length > 0) {
+							return this.setStatusReport(
+								'kMISSING_DATA_TYPE',
+								theKey, value, theReportIndex
+							)                                           // ==>
+						}
+					}
+					break
+			
+			} // Parsing scalar sections.
+			
+			///
 			// Validate object structure.
 			///
 			if(theSection !== null) {
@@ -2968,6 +3033,7 @@ class Validator
 	{
 		///
 		// Init local storage.
+		// Caller asserted term has rule section.
 		///
 		const rules = theObjectType[module.context.configuration.sectionRule]
 
@@ -3038,6 +3104,7 @@ class Validator
 	{
 		///
 		// Init local storage.
+		// Caller asserted rules has required properties clause.
 		///
 		const required = theObjectRules[module.context.configuration.sectionRuleRequired]
 		const value = (theKey !== null)
@@ -3052,29 +3119,36 @@ class Validator
 		if(Object.keys(required).length > 0)
 		{
 			///
-			// Require one among set.
+			// Require one in set.
+			// TODO: we throw an exception on a data kind error: we need to
+			//       rationalise data kind errors by returning a meaningful error.
+			//       If this exception is thrown, it means the data dictionary
+			//       is corrupted.
 			///
 			selector = module.context.configuration.selectionDescriptorsOne
 			if(required.hasOwnProperty(selector)) {
 				if(!Validator.IsArray(required[selector])) {
 					throw new Error(
-						`Invalid rule section in ${selector}.`
+						`Rule section (${selector}) should be an array.`
 					)                                                   // ==>
 				}
-				const intersection = required[selector].filter(item => properties.includes(item))
-				if(intersection.length !== 1) {
+				if(required[selector].filter(item => properties.includes(item)).length !== 1) {
 					return false                                        // ==>
 				}
 			}
 
 			///
-			// Require one or none among set.
+			// Require one or none in set.
+			// TODO: we throw an exception on a data kind error: we need to
+			//       rationalise data kind errors by returning a meaningful error.
+			//       If this exception is thrown, it means the data dictionary
+			//       is corrupted.
 			///
 			selector = module.context.configuration.selectionDescriptorsOneNone
 			if(required.hasOwnProperty(selector)) {
 				if(!Validator.IsArray(required[selector])) {
 					throw new Error(
-						`Invalid rule section in ${selector}.`
+						`Rule section (${selector}) should be an array.`
 					)                                                   // ==>
 				}
 				const intersection = required[selector].filter(item => properties.includes(item))
@@ -3084,13 +3158,17 @@ class Validator
 			}
 
 			///
-			// Require one or more among set.
+			// Require one or more in set.
+			// TODO: we throw an exception on a data kind error: we need to
+			//       rationalise data kind errors by returning a meaningful error.
+			//       If this exception is thrown, it means the data dictionary
+			//       is corrupted.
 			///
 			selector = module.context.configuration.selectionDescriptorsAny
 			if(required.hasOwnProperty(selector)) {
 				if(!Validator.IsArray(required[selector])) {
 					throw new Error(
-						`Invalid rule section in ${selector}.`
+						`Rule section (${selector}) should be an array.`
 					)                                                   // ==>
 				}
 				const intersection = required[selector].filter(item => properties.includes(item))
@@ -3101,20 +3179,24 @@ class Validator
 
 			///
 			// Require one or none from each set.
+			// TODO: we throw an exception on a data kind error: we need to
+			//       rationalise data kind errors by returning a meaningful error.
+			//       If this exception is thrown, it means the data dictionary
+			//       is corrupted.
 			///
 			selector = module.context.configuration.selectionDescriptorsOneNoneSet
 			if(required.hasOwnProperty(selector)) {
 				let status = true
 				if(!Validator.IsArray(required[selector])) {
 					throw new Error(
-						`Invalid rule section in ${theKey}.`
+						`Rule section (${selector}) should be an array.`
 					)                                                   // ==>
 				}
 
 				required[selector].some( (choice) => {
 					if(!Validator.IsArray(choice)) {
 						throw new Error(
-							`Invalid rule section in ${theKey}.`
+							`Rule section (${selector}) should be an array of arrays.`
 						)                                               // ==>
 					}
 					const intersection = choice.filter(item => properties.includes(item))
@@ -3131,12 +3213,16 @@ class Validator
 
 			///
 			// Require all from set.
+			// TODO: we throw an exception on a data kind error: we need to
+			//       rationalise data kind errors by returning a meaningful error.
+			//       If this exception is thrown, it means the data dictionary
+			//       is corrupted.
 			///
 			selector = module.context.configuration.selectionDescriptorsAll
 			if(required.hasOwnProperty(selector)) {
 				if(!Validator.IsArray(required[selector])) {
 					throw new Error(
-						`Invalid rule section in ${selector}.`
+						`Rule section (${selector}) should be an array.`
 					)                                                   // ==>
 				}
 				const intersection = required[selector].filter(item => properties.includes(item))
@@ -3186,23 +3272,32 @@ class Validator
 		///
 		// Init local storage.
 		///
-		const banned = theObjectRules[module.context.configuration.sectionRuleBanned]
+		const section = module.context.configuration.sectionRuleBanned
+		const banned = theObjectRules[section]
 		const value = (theKey !== null)
 			? theContainer[theKey]
 			: theContainer
-
+		
 		///
-		// Handle banned.
+		// Assert banned is an array.
+		// TODO: we throw an exception on a data kind error: we need to
+		//       rationalise data kind errors by returning a meaningful error.
+		//       If this exception is thrown, it means the data dictionary
+		//       is corrupted.
+		///
+		if(!Validator.IsArray(banned)) {
+			throw new Error(
+				`Rule section (${section}) should be an array.`
+			)                                                           // ==>
+		}
+		
+		///
+		// Prevent object from having any of the banned properties.
 		///
 		const properties = Object.keys(value)
-		if(Object.keys(banned).length > 0)
-		{
-			const intersection = banned.filter(item => properties.includes(item))
-			if(intersection.length > 0) {
-				return false                                            // ==>
-			}
-
-		} // Has banned.
+		if(banned.filter(item => properties.includes(item)).length > 0) {
+			return false                                                // ==>
+		}
 
 		return true                                                     // ==>
 
@@ -4964,19 +5059,6 @@ class Validator
 					return status                                       // ==>
 				}
 				
-				///
-				// Init local storage.
-				///
-				const required = module.context.configuration.sectionRuleRequired
-				const banned = module.context.configuration.sectionRuleBanned
-				const selectors = [
-					module.context.configuration.selectionDescriptorsOne,
-					module.context.configuration.selectionDescriptorsOneNone,
-					module.context.configuration.selectionDescriptorsAny,
-					module.context.configuration.selectionDescriptorsOneNoneSet,
-					module.context.configuration.selectionDescriptorsAll
-				]
-				
 			} // Updated has rules section.
 			
 		} // Original has rule section.
@@ -5074,9 +5156,6 @@ class Validator
 									///
 									const list = originalset.filter(item => updateset.includes(item))
 									if(originalset.length > list.length) {
-										throw new Error(
-											JSON.stringify(list)
-										)
 										status = {
 											message: `Constraint ${selector} restricts term possibilities.`,
 											data: {
@@ -5098,7 +5177,7 @@ class Validator
 									if(originalset.length > updateset.length)
 									{
 										status = {
-											message: `Constraint ${selector} restricts term possibilities.`,
+											message: `Constraint ${selector} restricts term options.`,
 											data: {
 												[selector]: {
 													old: original,
@@ -5204,7 +5283,7 @@ class Validator
 				const originalset =
 					original
 						.filter( (item, index) =>
-							originals.indexOf(item) === index)
+							original.indexOf(item) === index)
 				
 				if(updated.some(item => !originalset.includes(item))) {
 					status = {

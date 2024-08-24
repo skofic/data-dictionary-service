@@ -178,7 +178,7 @@ class ValidationStatus
 		"kMISSING_DATA_TYPE": {
 			"statusCode": -2,
 			"statusMessage": {
-				"iso_639_3_eng": `Invalid descriptor: missing data type.`
+				"iso_639_3_eng": `Invalid descriptor: missing required data type.`
 			}
 		},
 		"kEXPECTING_DATA_DIMENSION": {
