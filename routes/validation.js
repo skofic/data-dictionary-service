@@ -37,6 +37,105 @@ const DescriptorValues =
         )
         .required()
 
+const StatusIdle = joi.object({
+    status: joi.number().default(0).required()
+})
+
+const StatusIdleMany = joi.object({
+    status: joi.number().default(0).required(),
+    descriptor: joi.string().required(),
+    valid: joi.number().required(),
+    warnings: joi.number().default(0).required(),
+    errors: joi.number().default(0).required()
+})
+
+const StatusResolvedMany = joi.object({
+    status: joi.number().default(1).required(),
+    descriptor: joi.string().required(),
+    valid: joi.number().required(),
+    warnings: joi.number().required(),
+    errors: joi.number().default(0).required(),
+    reports: joi.array().items(
+        joi.object({
+            status: joi.number().integer().min(-1).max(100).required(),
+            report: joi.object({
+                status: joi.object({
+                    code: joi.number().required(),
+                    message: joi.string().required()
+                }).required(),
+                changes: joi.object({
+                    "<hash>": joi.object({
+                        field: joi.string().required(),
+                        original: joi.any().required(),
+                        resolved: joi.any().required()
+                    }).required()
+                })
+            }).required()
+        }).required()
+    ).required(),
+    values: joi.array().items(joi.any()).required()
+})
+
+const StatusErrorMany = joi.object({
+    status: joi.number().default(-1).required(),
+    descriptor: joi.string().required(),
+    valid: joi.number().required(),
+    warnings: joi.number().required(),
+    errors: joi.number().required(),
+    reports: joi.array().items(
+        joi.object({
+            status: joi.number().integer().min(-1).max(100).required(),
+            report: joi.object({
+                status: joi.object({
+                    code: joi.number().required(),
+                    message: joi.string().required()
+                }).required(),
+                changes: joi.object({
+                    "<hash>": joi.object({
+                        field: joi.string().required(),
+                        original: joi.any().required(),
+                        resolved: joi.any().required()
+                    }).required()
+                }),
+                descriptor: joi.string().required(),
+                value: joi.any().required()
+            }).required()
+        }).required()
+    ).required(),
+    values: joi.array().items(joi.any()).required()
+})
+
+const StatusResolved = joi.object({
+    status: joi.number().default(1).required(),
+    report: joi.object({
+        status: joi.object({
+            code: joi.number().default(0).required(),
+            message: joi.string().required()
+        }).required(),
+        changes: joi.object({
+            "<hash>": joi.object({
+                field: joi.string().required(),
+                original: joi.any().required(),
+                resolved: joi.any().required()
+            }).required()
+        }).required()
+    }).required(),
+    value: joi.any().required()
+})
+
+const StatusError = joi.object({
+    status: joi.number().default(-1).required(),
+    report: joi.object({
+        status: joi.object({
+            code: joi.number().required(),
+            message: joi.string().required()
+        }).required(),
+        descriptor: joi.string().required(),
+        value: joi.any().required()
+    }).required(),
+    value: joi.any().required()
+})
+
 const StatusReport = joi.object({
     status: joi.boolean().required(),
     report: joi.object({
@@ -179,9 +278,9 @@ router.post(
     .queryParam('miss', ParamCacheMissed, ParamCacheMissedDescription)
     .queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
     .queryParam('types', ParamExpectType, ParamExpectTypeDescription)
+    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
     .queryParam('resolve', ParamResolve, ParamResolveDescription)
     .queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
-    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
     .body(DescriptorValue, dd
         `
             **Descriptor value**
@@ -189,32 +288,54 @@ router.post(
             Provide the value associated to the descriptor, it can be of any type.
         `
     )
-    .response(200, StatusReport,
-        "**Validation status**\n" +
-        "\n" +
-        "The service will return the following information items:\n" +
-        "\n" +
-        "- `status`: A boolean indicating the operation status: `true` means \
-        *OK*, `false` means *ERROR*.\n" +
-        "- `report`: The status report:\n" +
-        "  - `status`: The status of the operation:\n" +
-        "    - `code`: The status code,`0` means no errors, any other value means \
-        an error occurred. Note that although you may receive a zero status code, \
-        you may have resolved values, in this case the `report` will include a \
-        `changes` field listing the updated values.\n" +
-        "    - `message`: The status message in the default language.\n" +
-        "  - `descriptor`: In case of an error, this will hold the descriptor global \
-        identifier of the incorrect field.\n" +
-        "  - `value`: The incorrect value.\n" +
-        "  - *other fields*: There may be other fields depending on the kind and scope \
-        of the error.\n" +
-        "  - `changes`: An object listing the eventual resolved values. Each entry is \
-        indexed by the MD5 hash of the descriptor, old and new values.\n" +
-        "    - `field`: A reference to the descriptor.\n" +
-        "    - `original`: Original value.\n" +
-        "    - `resolved`: Resolved value.\n" +
-        "- `value`: The eventual updated value, if there were resolved references.\n"
-    )
+    .response(200, StatusIdle, dd`
+        **Idle validation status**
+        
+        This response will be returned if the validation did not return any \
+        errors or warnings.
+        
+        The returned value will be an object with a single property, \`status\` \
+        that will have a value of *zero*.
+    `)
+    .response(202, StatusResolved, dd`
+        **Resolved validation status**
+        
+        This response will be returned if the \`resolve\` option is set and there \
+        was a value that was resolved. The validation passed, but there were \
+        modifications to the original value, which means that modifications are \
+        needed to the value.
+        
+        The returned value will be an object with the following properties:
+        
+        - \`status\`: The validation status which will be the number *one*.
+        - \`report\`: The validation report:
+          - \`status\`: The status report:
+            - \`code\`: The status code, that will be *zero*.
+            - \`message\`: The status report message.
+          - \`changes\`: The list of resolved values:
+            - *hash*: This will be a hash used to disambiguate and group \
+                      resolved values.
+              - \`field\`: The property name.
+              - \`original\`: The original value.
+              - \`resolved\`: The resolved value.
+        - \`value\`: The provided value with modifications applied.
+    `)
+    .response(202, StatusError, dd`
+        **Error validation status**
+        
+        This response will be returned if the validation failed.
+        
+        The returned value will be an object with the following properties:
+        
+        - \`status\`: The validation status which will be the number *minus one*.
+        - \`report\`: The validation report:
+          - \`status\`: The status report:
+            - \`code\`: The status code, that will be *non-zero*.
+            - \`message\`: The status report message describing the error.
+          - \`descriptor\`: The property name that has the error.
+          - \`value\`: The value that caused the error.
+        - \`value\`: The originally provided value.
+    `)
     .response(401, ErrorModel, dd
         `
             **No user registered**
@@ -265,6 +386,12 @@ router.post(
             
             The service also expects a series of path query parameters that provide \
             custom options governing the validation process.
+            
+            The service will only return status and values of items that had \
+            resolved values, or items that were incorrect. The returned global \
+            status will be *zero* only if all items were correct; *one* if at \
+            least one item had resolved values and no items were incorrect; \
+            *minus one* if there was at least one error.
         `
     )
     .queryParam('descriptor', ParamDescriptor, ParamDescriptorDescription)
@@ -272,43 +399,72 @@ router.post(
     .queryParam('miss', ParamCacheMissed, ParamCacheMissedDescription)
     .queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
     .queryParam('types', ParamExpectType, ParamExpectTypeDescription)
+    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
     .queryParam('resolve', ParamResolve, ParamResolveDescription)
     .queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
-    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
     .body(DescriptorValues, dd
         `
             **Descriptor values**
             
-            Provide an array containing the list of values to be matched \
-            with the provided descriptor.
+            Provide an array containing the list of values to be validated \
+            using the provided descriptor definitions.
         `
     )
-    .response(200, StatusReport,
-        "**Validation status**\n" +
-        "\n" +
-        "The service will return the following information items:\n" +
-        "\n" +
-        "- `status`: A boolean indicating the operation status: `true` means \
-        *OK*, `false` means *ERROR*.\n" +
-        "- `report`: The status report:\n" +
-        "  - `status`: The status of the operation:\n" +
-        "    - `code`: The status code,`0` means no errors, any other value means \
-        an error occurred. Note that although you may receive a zero status code, \
-        you may have resolved values, in this case the `report` will include a \
-        `changes` field listing the updated values.\n" +
-        "    - `message`: The status message in the default language.\n" +
-        "  - `descriptor`: In case of an error, this will hold the descriptor global \
-        identifier of the incorrect field.\n" +
-        "  - `value`: The incorrect value.\n" +
-        "  - *other fields*: There may be other fields depending on the kind and scope \
-        of the error.\n" +
-        "  - `changes`: An object listing the eventual resolved values. Each entry is \
-        indexed by the MD5 hash of the descriptor, old and new values.\n" +
-        "    - `field`: A reference to the descriptor.\n" +
-        "    - `original`: Original value.\n" +
-        "    - `resolved`: Resolved value.\n" +
-        "- `value`: The eventual updated value, if there were resolved references.\n"
-    )
+    .response(200, StatusIdleMany, dd`
+        **No errors**
+        
+        This response will be returned if *all the validations* did not return \
+        an error and did not resolve any values.
+        
+        The returned value will be an object with the following properties:
+        
+        - \`status\`: The status of the whole operation, will be *zero*.
+        - \`descriptor\`: The descriptor that was passed to the service.
+        - \`valid\`: The number of valid items, all in this case.
+        - \`warnings\`: The number of items that had resolved values, none in this case.
+        - \`errors\`: The number of incorrect items, none in this case.
+    `)
+    .response(202, StatusResolvedMany, dd`
+        **No errors**
+        
+        This response will be returned if *all the validations* did not return \
+        an error and did not resolve any values.
+        
+        The returned value will be an object with the following properties:
+        
+        - \`status\`: The status of the whole operation, will be *zero*.
+        - \`descriptor\`: The descriptor that was passed to the service.
+        - \`valid\`: The number of valid items, all in this case.
+        - \`warnings\`: The number of items that had resolved values, none in this case.
+        - \`errors\`: The number of incorrect items, none in this case.
+        - \`reports\`: An array of status reports:
+          - \`status\`: The status for the item.
+          - \`report\`: An object containing the status report for the item:
+            - \`status\`: The status record for the item:
+              - \`code\`: The status code for the item, will be *zero*.
+              - \`message\`: The status message for the item.
+            - \`changes\`: The list of resolved values for the item.
+              - *hash*: This will be a hash used to disambiguate and group \
+                        resolved values.
+              - \`field\`: The property name.
+              - \`original\`: The original value.
+              - \`resolved\`: The resolved value.
+        - \`values\`: The list of values corresponding to the reports.
+    `)
+    .response(400, StatusErrorMany, dd`
+        **No errors but resolved values**
+        
+        This response will be returned if *all the validations* did not return \
+        an error but at least one item had resolved values.
+        
+        The returned value will be an object with the following properties:
+        
+        - \`status\`: The status of the whole operation, will be *one*.
+        - \`descriptor\`: The descriptor that was passed to the service.
+        - \`valid\`: The number of valid items, all in this case.
+        - \`warnings\`: The number of items that had resolved values, none in this case.
+        - \`errors\`: The number of incorrect items, none in this case.
+    `)
     .response(401, ErrorModel, dd
         `
             **No user registered**
@@ -541,7 +697,31 @@ function doCheckDescriptorValue(theRequest, theResponse)
     // Perform validation.
     //
     const status = validator.validate()
-
+    switch(status)
+    {
+        case 0:
+            theResponse.status(200)
+            theResponse.send({ status })
+            break
+        
+        case 1:
+            theResponse.status(202)
+            theResponse.send({
+                status: status,
+                report: validator.report
+            })
+            break
+        
+        case -1:
+            theResponse.status(400)
+            theResponse.send({
+                status: status,
+                report: validator.report,
+                value: validator.value
+            })
+            return                                                      // ==>
+    }
+    
     ///
     // Handle status.
     ///
@@ -580,32 +760,70 @@ function doCheckDescriptorValues(theRequest, theResponse)
             theRequest.queryParams.defns,
             theRequest.queryParams.resfld
         )
-
+    
     //
     // Perform validation.
     //
     const status = validator.validate()
-
-    ///
-    // Iterate statuses.
-    ///
+    
+    //
+    // Collect statistics.
+    //
+    const values = []
     const reports = []
-    validator.report.forEach( (value, index) => {
-        if(value.status.code !== 0 || value.hasOwnProperty('changes')) {
+    validator.report.forEach( (report, index) => {
+        if(report.status.code !== 0 || report.hasOwnProperty('changes')) {
             reports.push({
-                report: value,
-                value: validator.value[index]
+                status: (report.status.code !== 0) ? -1 : 1,
+                report: report
             })
-        }
+            values.push(validator.value[index])
+       }
     })
-
-    theResponse.send({
-        status: status,
-        valid: validator.valid,
-        warnings: validator.warnings,
-        errors: validator.errors,
-        reports: reports
-    })
+    
+    ///
+    // Set HTTP status.
+    ///
+    switch(status) {
+        case -1:
+            theResponse.status(400)
+            theResponse.send({
+                status,
+                descriptor: theRequest.queryParams.descriptor,
+                valid: validator.valid,
+                warnings: validator.warnings,
+                errors: validator.errors,
+                reports,
+                values
+            })
+            break
+        
+        case 0:
+            theResponse.status(200)
+            theResponse.send({
+                status,
+                descriptor: theRequest.queryParams.descriptor,
+                valid: validator.valid,
+                warnings: validator.warnings,
+                errors: validator.errors
+            })
+            break
+        case 1:
+            theResponse.status(202)
+            theResponse.send({
+                status,
+                descriptor: theRequest.queryParams.descriptor,
+                valid: validator.valid,
+                warnings: validator.warnings,
+                errors: validator.errors,
+                reports,
+                values
+            })
+            break
+        
+        default:
+            throw new Error(`Unknown validation status: ${status}`)     // ==>
+    }
 
 } // doCheckDescriptorValues()
 
