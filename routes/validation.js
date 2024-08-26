@@ -423,9 +423,11 @@ router.post(
         - \`valid\`: The number of valid items, all in this case.
         - \`warnings\`: The number of items that had resolved values, none in this case.
         - \`errors\`: The number of incorrect items, none in this case.
+        
+        The list of provided items will not be returned in this case.
     `)
     .response(202, StatusResolvedMany, dd`
-        **No errors**
+        **Resolved values**
         
         This response will be returned if *all the validations* did not return \
         an error and did not resolve any values.
@@ -434,8 +436,8 @@ router.post(
         
         - \`status\`: The status of the whole operation, will be *zero*.
         - \`descriptor\`: The descriptor that was passed to the service.
-        - \`valid\`: The number of valid items, all in this case.
-        - \`warnings\`: The number of items that had resolved values, none in this case.
+        - \`valid\`: The number of valid items.
+        - \`warnings\`: The number of items that had resolved values.
         - \`errors\`: The number of incorrect items, none in this case.
         - \`reports\`: An array of status reports:
           - \`status\`: The status for the item.
@@ -450,20 +452,38 @@ router.post(
               - \`original\`: The original value.
               - \`resolved\`: The resolved value.
         - \`values\`: The list of values corresponding to the reports.
+        
+        The service will only return the items that had resolved values.
     `)
     .response(400, StatusErrorMany, dd`
-        **No errors but resolved values**
+        **Invalid parameter**
         
-        This response will be returned if *all the validations* did not return \
-        an error but at least one item had resolved values.
+        This response will be returned if *at least one error* was returned.
         
         The returned value will be an object with the following properties:
         
-        - \`status\`: The status of the whole operation, will be *one*.
+        - \`status\`: The status of the whole operation, will be *minus one*.
         - \`descriptor\`: The descriptor that was passed to the service.
-        - \`valid\`: The number of valid items, all in this case.
-        - \`warnings\`: The number of items that had resolved values, none in this case.
-        - \`errors\`: The number of incorrect items, none in this case.
+        - \`valid\`: The number of valid items.
+        - \`warnings\`: The number of items that had resolved values.
+        - \`errors\`: The number of incorrect items.
+        - \`reports\`: An array of status reports:
+          - \`status\`: The status for the item.
+          - \`report\`: An object containing the status report for the item:
+            - \`status\`: The status record for the item:
+              - \`code\`: The status code for the item.
+              - \`message\`: The status message for the item.
+            - \`changes\`: The list of resolved values for the item.
+              - *hash*: This will be a hash used to disambiguate and group \
+                        resolved values.
+              - \`field\`: The property name.
+              - \`original\`: The original value.
+              - \`resolved\`: The resolved value.
+            - \`descriptor\`: The descriptor that was passed to the service.
+            - \`value\`: The value that triggered the error.
+        - \`values\`: The list of values corresponding to the reports.
+        
+        The service will only return incorrect items and items that had resolved values.
     `)
     .response(401, ErrorModel, dd
         `
