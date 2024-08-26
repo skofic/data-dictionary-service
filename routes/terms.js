@@ -17,7 +17,6 @@ const createRouter = require('@arangodb/foxx/router')
 const K = require("../utils/constants")
 const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
-// const Validation = require("../utils/validation")
 const Validator = require("../library/Validator")
 
 //
@@ -25,74 +24,110 @@ const Validator = require("../library/Validator")
 //
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic")
-const TermInsert = require('../models/term_insert')
-const TermsInsert = require('../models/terms_insert')
-const TermDisplay = require('../models/term_display')
-const TermSelection = require('../models/term_selection')
+const TermValidation = require('../models/validation_parameters.')
+
+// Term document key.
 const keySchema =
 	joi.string().required()
-		.description('The key of the document')
+		.description('Term document key and global identifier.')
+
+// Terms selection query.
+const TermSelection = joi.object({
+	start: joi.number().integer().min(0).default(0).required(),
+	limit: joi.number().integer().min(0).default(25).required(),
+	term_type: joi.string().valid('descriptor', 'structure'),
+	_nid: joi.string(),
+	_lid: joi.string(),
+	_gid: joi.string(),
+	_name: joi.string(),
+	_pid: joi.string(),
+	_aid: joi.array().items(joi.string()),
+	_title: joi.string(),
+	_definition: joi.string(),
+	_description: joi.string(),
+	_examples: joi.string(),
+	_notes: joi.string(),
+	_provider: joi.string()
+})
+
+// Valid term service response.
 const ValidTerm =
 	joi.alternatives().try(
-		joi.object(),
+		Models.TermInsertedModel,
 		joi.object({
-			"status": joi.number().required().default(0),
-			"term": joi.object().required()
+			status: joi.number().default(0).required(),
+			value: Models.TermInsertedModel
 		})
 	).required()
+
+// List of valid terms service response.
 const ValidTerms =
 	joi.alternatives().try(
-		joi.array().items(
-			joi.object()
-		),
+		Models.TermsInsertedArrayModel,
 		joi.object({
-			"status": joi.number().required().default(0),
-			"term": joi.array().items(
-				joi.object().required()
-			).required()
+			status: joi.number().required().default(0),
+			terms: Models.TermsInsertedArrayModel
 		})
 	).required()
+
+// Response for a term with resolved values.
 const ResolvedTerm =
 	joi.object({
-		"status": joi.number().required().default(1),
-		"report": joi.object({
-			"status": joi.object({
-				"status": joi.number().default(0),
-				"message": joi.string().required()
+		status: joi.number().required().default(1),
+		report: joi.object({
+			status: joi.object({
+				status: joi.number().default(0),
+				message: joi.string().required()
 			}).required(),
-			"changes": joi.object().required()
+			changes: joi.object({
+				"<hash>": joi.object({
+					field: joi.string().required(),
+					original: joi.any().required(),
+					resolved: joi.any().required()
+				}).required()
+			})
 		}),
-		"value": joi.object().required()
+		value: Models.TermInsertedModel.required()
 	})
+
+// Response for terms with resolved values.
 const ResolvedTerms =
 	joi.object({
-		"status": joi.number().required().default(1),
-		"reports": joi.array().items(
+		status: joi.number().required().default(1),
+		reports: joi.array().items(
 			joi.object({
-				"status": joi.object({
-					"status": joi.number().default(0),
-					"message": joi.string().required()
+				status: joi.object({
+					status: joi.number().default(0),
+					message: joi.string().required()
 				}).required(),
-				"changes": joi.object().required()
+				changes: joi.object({
+					"<hash>": joi.object({
+						field: joi.string().required(),
+						original: joi.any().required(),
+						resolved: joi.any().required()
+					}).required()
+				})
 			})
 		).required(),
-		"values": joi.array().items(
-			joi.object()
-		).required()
+		values: Models.TermsInsertedArrayModel.required()
 	})
+
+// Response for invalid term.
 const IncorrectTerm =
 	joi.object({
-		"status": joi.number().required().default(-1),
-		"report": joi.object({
-			"status": joi.object({
-				"code": joi.number().required(),
-				"message": joi.string().required()
+		status: joi.number().required().default(-1),
+		report: joi.object({
+			status: joi.object({
+				code: joi.number().integer().required(),
+				message: joi.string().required()
 			}).required(),
-			"descriptor": joi.string(),
-			"value": joi.any()
+			descriptor: joi.string(),
+			value: joi.any()
 		}),
-		"value": joi.object().required()
+		value: Models.TermInsertedModel.required()
 	})
+
+// TODO: Continue rationalising models.
 const IncorrectTerms =
 	joi.object({
 		"status": joi.number().required().default(-1),
@@ -110,78 +145,6 @@ const IncorrectTerms =
 			joi.object()
 		).required()
 	})
-
-const ParamExpectTerms = joi.boolean()
-	.default(true)
-	.description(
-		"**Expect all object properties to be part of the data dictionary**.\n\
-		By default, if a property matches a descriptor, then the value must \
-		conform to the descriptor's data definition; if the property does not match \
-		a term in the data dictionary, then it will be ignored and assumed correct. \
-		If you set this flag, all object properties *must* correspond to a descriptor, \
-		failing to do so will be considered an error."
-	)
-
-const ParamExpectTypes = joi.boolean()
-	.default(false)
-	.description(
-		"**Expect all scalar data sections to have the data type**.\n\
-		By default, if a scalar data definition section is empty, we assume the \
-		value can take any scalar value: if you set this flag, it means that all \
-		scalar data definition sections need to indicate the data type, failing \
-		to do so will be considered an error."
-	)
-
-const ParamDefNamespace = joi.boolean()
-	.default(false)
-	.description(
-		"**Allow referencing default namespace**.\n\
-		The default namespace is reserved to terms that constitute the dictionary \
-		engine. User-defined terms should not reference the default namespace. \
-		If this option is set, it will be possible to create terms that have the \
-		*default namespace* as their namespace."
-	)
-
-const ParamResolve = joi.boolean()
-	.default(false)
-	.description(
-		"**Attempt to resolve unmatched term references**.\n\
-		This option is relevant to enumerated values. If this flag is set, when a \
-		provided value *does not* resolve into a term global identifier, the value \
-		will be tested against the terms code section property indicated in the \
-		*resfld* parameter: if there is a single match, the original value will be \
-		replaced by the matched global identifier. This way one can use the local \
-		identifier as the reference and let the validator resolve the global \
-		identifier.\n" + "When this happens the status code will be zero, if no \
-	    errors have occurred, but the response will feature a property named *changes* \
-	    in the status report, which contains the list of resolved values.\nBe \
-	    aware that to successfully use this feature the local identifiers must be unique."
-	)
-
-const ParamResolveField = joi.string()
-	.default(module.context.configuration.localIdentifier)
-	.description(
-		"**Terms code section field used to resolve term references**.\n\
-		This option is relevant if the *resolve* flag was set. This parameter \
-		corresponds to the name of a property in the descriptor's code section: \
-		the unresolved value will be matched against the value contained in that \
-		field and if there is a *single* match, the matched term global identifier \
-		will replace the provided value.\nBy default this parameter is set \
-	    to the *local identifier*, you could set it, for instance, to the *list \
-	    of official identifiers* in order to have a larger choice."
-	)
-
-const ParamSaveTerm = joi.boolean()
-	.default(true)
-	.description(
-		"**Flag to determine whether to save the term or not**.\n\
-		This option can be used when inserting or updating terms: if the flag is \
-		set, if all the required validations tests pass, the term will be either \
-		inserted or updated. If the flag is not set, you will get the status of \
-		the validation provess. This flag is useful if you just need to check if \
-		the term is valid, or if you want to see if the updated term structure \
-		before persisting the object to the data dictionary."
-	)
 
 //
 // Collections.
@@ -245,13 +208,13 @@ router.post(
             and, if correct, will insert the record.
         `
 	)
-	.queryParam('terms', ParamExpectTerms)
-	.queryParam('types', ParamExpectTypes)
-	.queryParam('defns', ParamDefNamespace)
-	.queryParam('resolve', ParamResolve)
-	.queryParam('resfld', ParamResolveField)
-	.queryParam('save', ParamSaveTerm)
-	.body(TermInsert, dd
+	.queryParam('terms', TermValidation.ParamExpectTerms)
+	.queryParam('types', TermValidation.ParamExpectTypes)
+	.queryParam('defns', TermValidation.ParamDefNamespace)
+	.queryParam('resolve', TermValidation.ParamResolve)
+	.queryParam('resfld', TermValidation.ParamResolveField)
+	.queryParam('save', TermValidation.ParamSaveTerm)
+	.body(Models.TermModel, dd
 		`
             **Service parameters**
             
@@ -385,14 +348,13 @@ router.post(
             This means that if there is at least one error, no terms will be inserted.
         `
 	)
-	.queryParam('terms', ParamExpectTerms)
-	.queryParam('types', ParamExpectTypes)
-	.queryParam('defns', ParamDefNamespace)
-	.queryParam('resolve', ParamResolve)
-	.queryParam('resfld', ParamResolveField)
-	.queryParam('save', ParamSaveTerm)
-	.queryParam('save', ParamSaveTerm)
-	.body(TermsInsert, dd
+	.queryParam('terms', TermValidation.ParamExpectTerms)
+	.queryParam('types', TermValidation.ParamExpectTypes)
+	.queryParam('defns', TermValidation.ParamDefNamespace)
+	.queryParam('resolve', TermValidation.ParamResolve)
+	.queryParam('resfld', TermValidation.ParamResolveField)
+	.queryParam('save', TermValidation.ParamSaveTerm)
+	.body(Models.TermsinsertArrayModel, dd
 		`
             **Service parameters**
             
@@ -532,7 +494,7 @@ router.delete(
             **One safe way to try the service is to create a new term and then delete it.**
         `
 	)
-	.queryParam('key', keySchema, "Term global identifier")
+	.queryParam('key', keySchema)
 	.response(200, joi.object(), dd
 		`
             **Deleted term identifiers**
@@ -670,7 +632,7 @@ router.get(
 	)
 	.queryParam('key', keySchema)
 	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, or @ for all languages.")
-	.response(200, TermDisplay, dd
+	.response(200, Models.TermModel, dd
 		`
             **Term record**
             
@@ -964,7 +926,7 @@ router.post(
             Any selector can be omitted, except \`start\` and \`limit\`.
         `
 	)
-	.response(200, Models.TermsArrayModel, dd
+	.response(200, Models.TermsinsertArrayModel, dd
 		`
             **List of terms**
             
@@ -1014,12 +976,12 @@ router.patch(
         `
 	)
 	.queryParam('key', keySchema)
-	.queryParam('terms', ParamExpectTerms)
-	.queryParam('types', ParamExpectTypes)
-	.queryParam('defns', ParamDefNamespace)
-	.queryParam('resolve', ParamResolve)
-	.queryParam('resfld', ParamResolveField)
-	.queryParam('save', ParamSaveTerm)
+	.queryParam('terms', TermValidation.ParamExpectTerms)
+	.queryParam('types', TermValidation.ParamExpectTypes)
+	.queryParam('defns', TermValidation.ParamDefNamespace)
+	.queryParam('resolve', TermValidation.ParamResolve)
+	.queryParam('resfld', TermValidation.ParamResolveField)
+	.queryParam('save', TermValidation.ParamSaveTerm)
 	.body(joi.object({
 			"updates": joi.object()
 				.required(),

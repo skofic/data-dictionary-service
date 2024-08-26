@@ -162,7 +162,7 @@ router.get(
 	)
 	.queryParam('key', Models.StringModel, "Descriptor global identifier")
 	.queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
-	.response(200, Models.TermsArrayModel, dd
+	.response(200, Models.TermsinsertArrayModel, dd
 		`
             **Controlled vocabulary element term object**
             

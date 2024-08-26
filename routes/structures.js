@@ -136,7 +136,7 @@ router.get(
         `
     )
     .queryParam('path', Models.StringModel, "Object descriptor global identifier")
-    .response(200, Models.TermsArrayModel, dd
+    .response(200, Models.TermsinsertArrayModel, dd
         `
             **List of structure properties**
             

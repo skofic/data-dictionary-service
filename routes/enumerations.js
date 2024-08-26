@@ -160,7 +160,7 @@ router.get(
     )
     .queryParam('path', Models.StringModel, "Enumeration root global identifier")
     .queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
-    .response(200, Models.TermsArrayModel, dd
+    .response(200, Models.TermsinsertArrayModel, dd
         `
             **List of enumeration terms**
             
@@ -581,7 +581,7 @@ router.get(
     .queryParam('path', Models.StringModel, "Enumeration root global identifier")
     .queryParam('code', Models.StringModel, "Target enumeration identifier")
     .queryParam('field', ArrayIdentifierFields, "Code section field name where the code should be matched")
-    .response(200, Models.TermsArrayModel, dd
+    .response(200, Models.TermsinsertArrayModel, dd
         `
             **List of matched term records**
 

@@ -17,6 +17,7 @@ const Validator = require('../library/Validator')
 //
 // Models.
 //
+const Models = require('../models/validation_parameters.')
 const DescriptorValue =
     joi.alternatives().try(
         joi.array(),
@@ -123,13 +124,6 @@ const StatusErrorMany = joi.object({
                     code: joi.number().required(),
                     message: joi.string().required()
                 }).required(),
-                changes: joi.object({
-                    "<hash>": joi.object({
-                        field: joi.string().required(),
-                        original: joi.any().required(),
-                        resolved: joi.any().required()
-                    }).required()
-                }),
                 descriptor: joi.string().required(),
                 value: joi.any().required()
             }).required()
@@ -151,13 +145,6 @@ const StatusObjectErrorMany = joi.object({
                     code: joi.number().required(),
                     message: joi.string().required()
                 }).required(),
-                changes: joi.object({
-                    "<hash>": joi.object({
-                        field: joi.string().required(),
-                        original: joi.any().required(),
-                        resolved: joi.any().required()
-                    }).required()
-                }),
                 descriptor: joi.string().required(),
                 value: joi.any().required()
             }).required()
@@ -207,74 +194,6 @@ const ObjectValues = joi.array()
     .required()
 
 
-const ParamDescriptor = joi.string().required()
-const ParamDescriptorDescription =
-    "**Descriptor**.\n" +
-    "Provide the global identifier of the descriptor associated with the \
-    provided value."
-
-const ParamUseCache = joi.boolean().default(true)
-const ParamUseCacheDescription =
-    "**Use cache**.\n" +
-    "Cache all terms used in the validation procedure. This can speed the \." +
-    "execution when validating large lists of values."
-
-const ParamCacheMissed = joi.boolean().default(true)
-const ParamCacheMissedDescription =
-    "**Cache unresolved references**.\n" +
-    "This option is only relevant if the *use cache* flag is set. If set, \
-    also unresolved term references will be cached, this can be useful if \
-    the data contains a large number of incorrect references with the same value."
-
-const ParamExpectTerms = joi.boolean().default(false)
-const ParamExpectTermsDescription =
-    "**Expect all object properties to be part of the data dictionary**.\n" +
-    "By default, if a property matches a descriptor, then the value must \
-    conform to the descriptor's data definition; if the property does not match \
-    a term in the data dictionary, then it will be ignored and assumed correct. \
-    If you set this flag, all object properties *must* correspond to a descriptor, \
-    failing to do so will be considered an error."
-
-const ParamExpectType = joi.boolean().default(false)
-const ParamExpectTypeDescription =
-    "**Expect all descriptors to have a data type**.\n" +
-    "By default, an empty descriptor data definition section means that it can \
-    take any value: if you set this flag, all descriptors are required to have \
-    a data type."
-
-const ParamResolve = joi.boolean().default(false)
-const ParamResolveDescription =
-    "**Attempt to resolve unmatched term references**.\n" +
-    "This option is relevant to enumerated values. If this flag is set, when a \
-    provided value *does not* resolve into a term global identifier, the value \
-    will be tested against the terms code section property indicated in the \
-    *resfld* parameter: if there is a single match, the original value will be \
-    replaced by the matched global identifier. This way one can use the local \
-    identifier as the reference and let the validator resolve the global \
-    identifier.\n" + "When this happens the status code will be zero, if no \
-    errors have occurred, but the response will feature a property named *changes* \
-    in the status report, which contains the list of resolved values.\n" + "Be \
-    aware that to successfully use this feature the local identifiers must be unique."
-
-const ParamResolveField = joi.string().default(module.context.configuration.localIdentifier)
-const ParamResolveFieldDescription =
-    "**Terms code section field used to resolve term references**.\n" +
-    "This option is relevant if the *resolve* flag was set. This parameter \
-    corresponds to the name of a property in the descriptor's code section: \
-    the unresolved value will be matched against the value contained in that \
-    field and if there is a *single* match, the matched term global identifier \
-    will replace the provided value.\n" + "By default this parameter is set \
-    to the *local identifier*, you could set it, for instance, to the *list \
-    of official identifiers* in order to have a larger choice."
-
-const ParamDefNamespace = joi.boolean().default(false)
-const ParamDefNamespaceDescription =
-    "**Allow referencing default namespace**.\n" +
-    "The default namespace is reserved to terms that constitute the dictionary \
-    engine. User-defined terms should not reference the default namespace. \
-    If this option is set, it will be possible to create terms that have the \
-    *default namespace* as their namespace."
-
 //
 // Instantiate router.
 //
@@ -318,16 +237,22 @@ router.post(
             
             The service also expects a series of path query parameters that provide \
             custom options governing the validation process.
+            
+            *Note: if you provide terms to this service, ensure all required \
+            properties have been provided: fields such as official identifiers \
+            will not be automatically fixed by the service and will be considered \
+            correct. Use the terms insert or insert many services with the \`save\` \
+            parameter unset to validate terms that have not yet been saved.*
         `
     )
-    .queryParam('descriptor', ParamDescriptor, ParamDescriptorDescription)
-    .queryParam('cache', ParamUseCache, ParamUseCacheDescription)
-    .queryParam('miss', ParamCacheMissed, ParamCacheMissedDescription)
-    .queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-    .queryParam('types', ParamExpectType, ParamExpectTypeDescription)
-    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-    .queryParam('resolve', ParamResolve, ParamResolveDescription)
-    .queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+    .queryParam('descriptor', Models.ParamDescriptor)
+    .queryParam('cache', Models.ParamUseCache)
+    .queryParam('miss', Models.ParamCacheMissed)
+    .queryParam('terms', Models.ParamExpectTerms)
+    .queryParam('types', Models.ParamExpectTypes)
+    .queryParam('defns', Models.ParamDefNamespace)
+    .queryParam('resolve', Models.ParamResolve)
+    .queryParam('resfld', Models.ParamResolveField)
     .body(DescriptorValue, dd
         `
             **Descriptor value**
@@ -441,14 +366,14 @@ router.post(
             *minus one* if there was at least one error.
         `
     )
-    .queryParam('descriptor', ParamDescriptor, ParamDescriptorDescription)
-    .queryParam('cache', ParamUseCache, ParamUseCacheDescription)
-    .queryParam('miss', ParamCacheMissed, ParamCacheMissedDescription)
-    .queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-    .queryParam('types', ParamExpectType, ParamExpectTypeDescription)
-    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-    .queryParam('resolve', ParamResolve, ParamResolveDescription)
-    .queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+    .queryParam('descriptor', Models.ParamDescriptor)
+    .queryParam('cache', Models.ParamUseCache)
+    .queryParam('miss', Models.ParamCacheMissed)
+    .queryParam('terms', Models.ParamExpectTerms)
+    .queryParam('types', Models.ParamExpectTypes)
+    .queryParam('defns', Models.ParamDefNamespace)
+    .queryParam('resolve', Models.ParamResolve)
+    .queryParam('resfld', Models.ParamResolveField)
     .body(DescriptorValues, dd
         `
             **Descriptor values**
@@ -580,13 +505,13 @@ router.post(
             custom options governing the validation process.
         `
     )
-    .queryParam('cache', ParamUseCache, ParamUseCacheDescription)
-    .queryParam('miss', ParamCacheMissed, ParamCacheMissedDescription)
-    .queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-    .queryParam('types', ParamExpectType, ParamExpectTypeDescription)
-    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-    .queryParam('resolve', ParamResolve, ParamResolveDescription)
-    .queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+    .queryParam('cache', Models.ParamUseCache)
+    .queryParam('miss', Models.ParamCacheMissed)
+    .queryParam('terms', Models.ParamExpectTerms)
+    .queryParam('types', Models.ParamExpectTypes)
+    .queryParam('defns', Models.ParamDefNamespace)
+    .queryParam('resolve', Models.ParamResolve)
+    .queryParam('resfld', Models.ParamResolveField)
     .body(ObjectValue, dd
         `
             **Value to be validated**
@@ -638,6 +563,12 @@ router.post(
           - \`status\`: The status report:
             - \`code\`: The status code, that will be *non-zero*.
             - \`message\`: The status report message describing the error.
+          - \`changes\`: The list of eventual resolved values:
+            - *hash*: This will be a hash used to disambiguate and group \
+                      resolved values.
+              - \`field\`: The property name.
+              - \`original\`: The original value.
+              - \`resolved\`: The resolved value.
           - \`descriptor\`: The property name that has the error.
           - \`value\`: The value that caused the error.
         - \`value\`: The originally provided value.
@@ -693,13 +624,13 @@ router.post(
             custom options governing the validation process.
        `
     )
-    .queryParam('cache', ParamUseCache, ParamUseCacheDescription)
-    .queryParam('miss', ParamCacheMissed, ParamCacheMissedDescription)
-    .queryParam('terms', ParamExpectTerms, ParamExpectTermsDescription)
-    .queryParam('types', ParamExpectType, ParamExpectTypeDescription)
-    .queryParam('defns', ParamDefNamespace, ParamDefNamespaceDescription)
-    .queryParam('resolve', ParamResolve, ParamResolveDescription)
-    .queryParam('resfld', ParamResolveField, ParamResolveFieldDescription)
+    .queryParam('cache', Models.ParamUseCache)
+    .queryParam('miss', Models.ParamCacheMissed)
+    .queryParam('terms', Models.ParamExpectTerms)
+    .queryParam('types', Models.ParamExpectTypes)
+    .queryParam('defns', Models.ParamDefNamespace)
+    .queryParam('resolve', Models.ParamResolve)
+    .queryParam('resfld', Models.ParamResolveField)
     .body(ObjectValues, dd
         `
             **Descriptor values**

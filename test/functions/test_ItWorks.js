@@ -6,15 +6,6 @@
 //
 const expect = require('chai').expect
 
-//
-// Functions.
-//
-const validation = require("../../utils/validation");
-
-//
-// Types.
-//
-const ValidationReport = require('../../models/ValidationReport')
 
 //
 // Test should pass.

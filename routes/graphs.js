@@ -707,7 +707,6 @@ function doAddProperties(request, response)
 	//
 	const missing = getMissingKeys(data)
 	if(missing.length > 0) {
-
 		const message =
 			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
 				.replace('@@@', missing.join(", "))
