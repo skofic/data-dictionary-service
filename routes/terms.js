@@ -82,7 +82,7 @@ const ResolvedTerms =
 	})
 const IncorrectTerm =
 	joi.object({
-		"status": joi.number().required().default(1),
+		"status": joi.number().required().default(-1),
 		"report": joi.object({
 			"status": joi.object({
 				"code": joi.number().required(),
@@ -95,7 +95,7 @@ const IncorrectTerm =
 	})
 const IncorrectTerms =
 	joi.object({
-		"status": joi.number().required().default(1),
+		"status": joi.number().required().default(-1),
 		"reports": joi.array().items(
 			joi.object({
 				"status": joi.object({
@@ -1063,69 +1063,74 @@ router.patch(
         `
 	)
 	.response(200, ValidTerm, dd
-		`
-            **Updated term**
-            
-            If the \`save\` parameter has been set to \`true\`, the service \
-            will return the newly updated term, including the \`_id\` and \`_rev\` properties.
-			If the parameter is \`false\`, the service will return an object with \
-			two properties:
-			- \`status\`: The validation status that will be zero.
-			- \`term\`: The updated term.
-        `
+	`
+        **Updated term**
+        
+        This response will be returned if the validation did not return any \
+        errors or warnings.
+        
+        If the \`save\` parameter was set, the service will return the updated \
+        term, including the \`_id\` and \`_rev\` properties.
+        
+        If the parameter was not set, the service will return an object with \
+        two properties:
+        
+        - \`status\`: The validation status that will be *zero*.
+        - \`value\`: The updated term, that was not persisted to the database.
+    `
 	)
 	.response(202, ResolvedTerm, dd
-		`
-            **Updated resolved term**
-            
-            This HTTP status is returned if the service has the \`resolve\` \
-            parameter *set* and there were resolved fields. This does not imply \
-            an error, the term can be updated, but the provided term and the \
-            updated term will not be identical. For this reason the service \
-            will always document what changes were made to the provided term.
-            
-            The structure of the response is as follows:
-            
-            - \`status\`: The validation status which is one.
-            - \`report\`: The status report comprised of the following elements:
-              - \`status\`: The status report:
-                - \`status\`: The status code, that will be zero.
-                - \`message\`: The status message.
-              - \`changes\`: An object containing the list of resolved fields.
-            - \`value\`: The updated term with the resolved fields.
-        `
+	`
+        **Updated resolved term**
+        
+        This HTTP status is returned if the service has the \`resolve\` \
+        parameter *set* and there were resolved fields. This does not imply \
+        an error, the term can be updated, but the provided term and the \
+        updated term will not be identical. For this reason the service \
+        will always document what changes were made to the provided term.
+        
+        The structure of the response is as follows:
+        
+        - \`status\`: The validation status which is one.
+        - \`report\`: The status report comprised of the following elements:
+          - \`status\`: The status report:
+            - \`status\`: The status code, that will be zero.
+            - \`message\`: The status message.
+          - \`changes\`: An object containing the list of resolved fields.
+        - \`value\`: The updated term with the resolved fields.
+    `
 	)
 	.response(400, IncorrectTerm, dd
-		`
-            **Invalid parameter**
-            
-            The service will return this status if the provided term did not \
-            pass validation. The service will not attempt to insert the term \
-            and will return an object structured as follows:
-            
-            - \`status\`: The validation status which is minus 1.
-            - \`report\`: The status report comprised of the following elements:
-              - \`status\`: The status report:
-                - \`status\`: The status code, that will be non zero.
-                - \`message\`: The status message describing the error.
-              - \`descriptor\`: The name of the property that contains the error.
-              - \`value\`: The value of the incorrect property.
-            - \`value\`: The provided term.
-            
-            The service will also perform a check on the updated fialds to \
-            verify if the updates, although having a correct syntax, will change \
-            the validation rules and render existing data incorrect. In that case \
-            the service will return an object structured as follows:
-            
-            - \`status\`: The service status.
-            - \`report\`: The status report:
-              - \`message\`: The status message describing the error.
-              - \`data\`: An object containing the incorrect data:
-                - *incorrect descriptor*: The name pf the property that triggered
-                                          the error.
-                  - \`old\`: The original container of the incorrect property.
-                  - \`new\`: The updated container of the incorrect property.
-        `
+	`
+        **Invalid parameter**
+        
+        The service will return this status if the provided term did not \
+        pass validation. The service will not attempt to insert the term \
+        and will return an object structured as follows:
+        
+        - \`status\`: The validation status which is minus 1.
+        - \`report\`: The status report comprised of the following elements:
+          - \`status\`: The status report:
+            - \`status\`: The status code, that will be non zero.
+            - \`message\`: The status message describing the error.
+          - \`descriptor\`: The name of the property that contains the error.
+          - \`value\`: The value of the incorrect property.
+        - \`value\`: The provided term.
+        
+        The service will also perform a check on the updated fialds to \
+        verify if the updates, although having a correct syntax, will change \
+        the validation rules and render existing data incorrect. In that case \
+        the service will return an object structured as follows:
+        
+        - \`status\`: The service status.
+        - \`report\`: The status report:
+          - \`message\`: The status message describing the error.
+          - \`data\`: An object containing the incorrect data:
+            - *incorrect descriptor*: The name pf the property that triggered
+                                      the error.
+              - \`old\`: The original container of the incorrect property.
+              - \`new\`: The updated container of the incorrect property.
+    `
 	)
 	.response(401, ErrorModel, dd
 		`
@@ -1232,6 +1237,9 @@ function doInsertTerm(request, response)
 				value: validator.value
 			})
 			return                                                      // ==>
+		
+		default:
+			throw new Error(`Unknown validation status: ${status}`)     // ==>
 	}
 
 	///
@@ -1412,6 +1420,9 @@ function doInsertTerms(request, response)
 				values: validator.value
 			})
 			return                                                      // ==>
+		
+		default:
+			throw new Error(`Unknown validation status: ${status}`)     // ==>
 	}
 
 	//
@@ -1691,7 +1702,7 @@ function doUpdateTerm(request, response)
 				response.status(200)
 				response.send({
 					status: status,
-					term: validator.value
+					value: validator.value
 				})
 				return                                                  // ==>
 			}
