@@ -2534,8 +2534,6 @@ class Validator
 	 *
 	 * This method will validate the provided object value.
 	 *
-	 * The method only asserts if the value is boolean.
-	 *
 	 * Validation workflow:
 	 *
 	 * - Assert value is an object.
@@ -2576,42 +2574,46 @@ class Validator
 			///
 			// Check scalar data type.
 			///
-			switch(theKey)
+			if(theKey !== null)
 			{
-				case module.context.configuration.sectionScalar:
-					if(!value.hasOwnProperty(module.context.configuration.scalarType)) {
-						if(this.expectType || Object.keys(value).length > 0) {
-							return this.setStatusReport(
-								'kMISSING_DATA_TYPE',
-								theKey, value, theReportIndex
-							)                                           // ==>
+				switch(theKey)
+				{
+					case module.context.configuration.sectionScalar:
+						if(!value.hasOwnProperty(module.context.configuration.scalarType)) {
+							if(this.expectType || Object.keys(value).length > 0) {
+								return this.setStatusReport(
+									'kMISSING_DATA_TYPE',
+									theKey, value, theReportIndex
+								)                                       // ==>
+							}
 						}
-					}
-					break
+						break
+					
+					case module.context.configuration.sectionSetScalar:
+						if(!value.hasOwnProperty(module.context.configuration.setScalarType)) {
+							if(this.expectType || Object.keys(value).length > 0) {
+								return this.setStatusReport(
+									'kMISSING_DATA_TYPE',
+									theKey, value, theReportIndex
+								)                                       // ==>
+							}
+						}
+						break
+					
+					case module.context.configuration.sectionDictKey:
+						if(!value.hasOwnProperty(module.context.configuration.keyScalarType)) {
+							if(this.expectType || Object.keys(value).length > 0) {
+								return this.setStatusReport(
+									'kMISSING_DATA_TYPE',
+									theKey, value, theReportIndex
+								)                                       // ==>
+							}
+						}
+						break
+					
+				} // Parsing scalar sections.
 				
-				case module.context.configuration.sectionSetScalar:
-					if(!value.hasOwnProperty(module.context.configuration.setScalarType)) {
-						if(this.expectType || Object.keys(value).length > 0) {
-							return this.setStatusReport(
-								'kMISSING_DATA_TYPE',
-								theKey, value, theReportIndex
-							)                                           // ==>
-						}
-					}
-					break
-				
-				case module.context.configuration.sectionDictKey:
-					if(!value.hasOwnProperty(module.context.configuration.keyScalarType)) {
-						if(this.expectType || Object.keys(value).length > 0) {
-							return this.setStatusReport(
-								'kMISSING_DATA_TYPE',
-								theKey, value, theReportIndex
-							)                                           // ==>
-						}
-					}
-					break
-			
-			} // Parsing scalar sections.
+			} // Provided container key.
 			
 			///
 			// Validate object structure.
@@ -2629,7 +2631,7 @@ class Validator
 			}
 
 			///
-			// Validate object.
+			// Validate object properties.
 			///
 			let status = true
 			Object.keys(value).some( (property) =>
@@ -2652,10 +2654,10 @@ class Validator
 							property, value, theReportIndex
 						)
 
-						return true
+						return true                                 // =>
 					}
 
-					return false
+					return false                                    // =>
 				}
 
 				///
@@ -2667,7 +2669,7 @@ class Validator
 						property, value, theReportIndex
 					)
 
-					return true
+					return true                                     // =>
 				}
 				
 				///
@@ -2678,14 +2680,15 @@ class Validator
 					theReportIndex
 				)) {
 					status = false
-					return true
+					return true                                     // =>
 				}
 
-				return false
+				return false                                        // =>
 			})
 
 			return status                                               // ==>
-		}
+		
+		} // Value is an object.
 
 		return this.setStatusReport(
 			'kNOT_AN_OBJECT',
