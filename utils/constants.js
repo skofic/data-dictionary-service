@@ -248,22 +248,22 @@ module.exports = Object.freeze({
                                     }
                                 }
                             },
-                            "_rule": {
+                            [module.context.configuration.sectionRule]: {
                                 "fields": {
-                                    "_required": {
+                                    [module.context.configuration.sectionRuleRequired]: {
                                         "fields": {
-                                            "_selection-descriptors_any": {},
-                                            "_selection-descriptors_one": {},
-                                            "_selection-descriptors_all": {}
+                                            [module.context.configuration.selectionDescriptorsAny]: {},
+                                            [module.context.configuration.selectionDescriptorsOne]: {},
+                                            [module.context.configuration.selectionDescriptorsAll]: {}
                                         }
                                     },
-                                    "_banned": {},
-                                    "_computed": {},
-                                    "_recomended": {
+                                    [module.context.configuration.sectionRuleBanned]: {},
+                                    [module.context.configuration.sectionRuleComputed]: {},
+                                    [module.context.configuration.sectionRuleRecommended]: {
                                         "fields": {
-                                            "_selection-descriptors_any": {},
-                                            "_selection-descriptors_one": {},
-                                            "_selection-descriptors_all": {}
+                                            [module.context.configuration.selectionDescriptorsAny]: {},
+                                            [module.context.configuration.selectionDescriptorsOne]: {},
+                                            [module.context.configuration.selectionDescriptorsAll]: {}
                                         }
                                     }
                                 }

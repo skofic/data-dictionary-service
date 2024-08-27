@@ -175,6 +175,18 @@
             "required": true,
             "default": "_banned"
         },
+        "sectionRuleComputed": {
+            "description": "Computed properties rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_computed"
+        },
+        "sectionRuleRecommended": {
+            "description": "Recommended properties rules section name key",
+            "type": "string",
+            "required": true,
+            "default": "_recommended"
+        },
         "sectionScalar": {
             "description": "Term scalar data definition section key",
             "type": "string",
