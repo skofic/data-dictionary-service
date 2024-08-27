@@ -35,9 +35,10 @@ const ErrorModel = require("../models/error_generic");
 //
 // Collections.
 //
-const view_object = K.db._view(K.view.term.name)
-const collection_edge = K.db._collection(K.collection.schema.name)
-const collection_term = K.db._collection(K.collection.term.name)
+const view_object = K.db._view(module.context.configuration.viewTerm)
+const collection_edge = K.db._collection(module.context.configuration.collectionEdge)
+const collection_link = K.db._collection(module.context.configuration.collectionLink)
+const collection_term = K.db._collection(module.context.configuration.collectionTerm)
 const view_reference = {
 	isArangoCollection: true,
 	name: () => view_object.name()
@@ -65,7 +66,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(request, response, K.term.predicateEnum)
+			doAddEdges(request, response, module.context.configuration.predicateEnumeration)
 		}
 	},
 	'graph-add-enum'
@@ -88,7 +89,7 @@ router.post(
             *parent* node within the *root* graph.
         `
 	)
-	.body(Models.AddChildren, dd
+	.body(Models.AddEdges, dd
 		`
             **Root, parent and elements**
             
@@ -106,7 +107,7 @@ router.post(
             options for the *parent* node.
         `
 	)
-	.response(200, Models.AddChildrenResponse, dd
+	.response(200, Models.AddEdgesResponse, dd
 		`
             **Operations count**
             
@@ -146,7 +147,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddFields(request, response)
+			doAddEdges(request, response, module.context.configuration.predicateField)
 		}
 	},
 	'graph-add-field'
@@ -168,7 +169,7 @@ router.post(
             and the list of child descriptor global identifiers representing data input fields.
         `
 	)
-	.body(Models.AddChildren, dd
+	.body(Models.AddEdges, dd
 		`
             **Root, parent and elements**
             
@@ -180,7 +181,7 @@ router.post(
               that represent the data input fields.
         `
 	)
-	.response(200, Models.AddChildrenResponse, dd
+	.response(200, Models.AddEdgesResponse, dd
 		`
             **Operations count**
             
@@ -213,88 +214,6 @@ router.post(
 	)
 
 /**
- * Add properties.
- */
-router.post(
-	'add/property',
-	(request, response) => {
-		const roles = [K.environment.role.dict]
-		if(Session.hasPermission(request, response, roles)) {
-			doAddProperties(request, response)
-		}
-	},
-	'graph-add-property'
-)
-	.summary('Add properties')
-	.description(dd
-		`
-            **Add properties**
-             
-            ***In order to use this service, the current user must have the \`dict\` role.***
-             
-            This service can be used to add a set of properties to an object structure type.
-            
-            Object structures are represented by a term that holds the list of restrictions \
-            and constraints the structure should obey. This term represents the object type. \
-            The graph is a one level tree where the children are all the properties that the \
-            object type parent might feature. This list is only indicative, it should be used \
-            as a suggestion of which properties to set in the object. The constraints will be \
-            listed in the rule (_rule) section of the object type term. Note that, by design, \
-            an object type can only have one level, which means that if an object contains \
-            another object, there must be a type at both levels.
-            
-            The service expects the global identifier of the object type term,  and the list of \
-            descriptor global identifiers representing the object's properties.
-        `
-	)
-	.body(Models.AddChildrenProperties, dd
-		`
-            **Object type and properties**
-            
-            The request body should hold an object containing the following elements:
-            - \`parent\`: The global identifier of the object type.
-            - \`items\`: A set of descriptor term global identifiers representing the object's properties.
-        `
-	)
-	.response(200, Models.AddChildrenResponse, dd
-		`
-            **Operations count**
-            
-            The service will return an object containign the following properties:
-            - inserted: The number of inserted edges.
-            - updated: The number of existing edges to which the root has been added to their path.
-            - existing: The number of existing edges that include subject, object predicate and path.
-        `
-	)
-	.response(400, joi.object(), dd
-		`
-            **Invalid parameter**
-            
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error. Note that all child elements must \
-              reference descriptor terms.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
-        `
-	)
-	.response(401, ErrorModel, dd
-		`
-            **No current user**
-            
-            The service will return this code if no user is currently logged in.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **Unauthorised user**
-            
-            The service will return this code if the current user is not a dictionary user.
-        `
-	)
-
-/**
  * Add sections.
  */
 router.post(
@@ -302,7 +221,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(request, response, K.term.predicateSection)
+			doAddEdges(request, response, module.context.configuration.predicateSection)
 		}
 	},
 	'graph-add-section'
@@ -328,7 +247,7 @@ router.post(
             within the *root* graph.
         `
 	)
-	.body(Models.AddChildren, dd
+	.body(Models.AddEdges, dd
 		`
             **Root, parent and elements**
             
@@ -346,7 +265,7 @@ router.post(
             the *parent* node.
         `
 	)
-	.response(200, Models.AddChildrenResponse, dd
+	.response(200, Models.AddEdgesResponse, dd
 		`
             **Operations count**
             
@@ -391,7 +310,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(request, response, K.term.predicateBridge)
+			doAddEdges(request, response, module.context.configuration.predicateBridge)
 		}
 	},
 	'graph-add-bridge'
@@ -419,7 +338,7 @@ router.post(
             within the *root* graph.
         `
 	)
-	.body(Models.AddChildren, dd
+	.body(Models.AddEdges, dd
 		`
             **Root, parent and elements**
             
@@ -435,7 +354,7 @@ router.post(
             The *items* represent the nodes that will be ignored during graph traversals.
         `
 	)
-	.response(200, Models.AddChildrenResponse, dd
+	.response(200, Models.AddEdgesResponse, dd
 		`
             **Operations count**
             
@@ -472,6 +391,191 @@ router.post(
         `
 	)
 
+/**
+ * Add properties.
+ */
+router.post(
+	'add/property',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doAddLinks(
+				request,
+				response,
+				module.context.configuration.predicateProperty,
+				'parent',
+				'children',
+				true,
+				true
+			)
+		}
+	},
+	'graph-add-property'
+)
+	.summary('Add properties')
+	.description(dd
+		`
+            **Add properties**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to add a set of properties to an object structure type.
+            
+            Object structures are represented by a term that holds the list of restrictions \
+            and constraints the structure should obey. This term represents the object type. \
+            The graph is a one level tree where the children are all the properties that the \
+            object type parent might feature. This list is only indicative, it should be used \
+            as a suggestion of which properties to set in the object. The constraints will be \
+            listed in the rule (_rule) section of the object type term. Note that, by design, \
+            an object type can only have one level, which means that if an object contains \
+            another object, there must be a type at both levels.
+            
+            The service expects
+            
+            The service expects the global identifier of the object type term,  and the list of \
+            descriptor global identifiers representing the object's properties.
+        `
+	)
+	.body(Models.AddChildrenToParent, dd
+		`
+            **Object type and properties**
+            
+            The request body should hold an object containing the following elements:
+            - \`parent\`: The parent node: the global identifier of the object.
+            - \`children\`: A set of descriptor term global identifiers representing \
+              the object's properties.
+            
+            The edges will contain a relationship from the children to the parent.
+        `
+	)
+	.response(200, Models.AddLinksResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - inserted: The number of inserted edges.
+            - existing: The number of existing edges that include subject, object and predicate.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided term is invalid:
+            - Parameter error: if the error is caught at the level of the parameter, \
+              the service will return a standard error. Note that all child elements must \
+              reference descriptor terms.
+            - Validation error: if it is a validation error, the service will return an \
+              object with two properties: \`report\` will contain the status report and \
+              \`value\` will contain the provided term.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Add properties.
+ */
+router.post(
+	'add/indicator',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doAddLinks(
+				request,
+				response,
+				module.context.configuration.predicateRequiredIndicator,
+				'child',
+				'parents',
+				false,
+				true
+			)
+		}
+	},
+	'graph-add-indicator'
+)
+	.summary('Add required-indicators')
+	.description(dd
+		`
+            **Add required indicators**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to add a set of required indicator references \
+            to an existing descriptor.
+            
+            There are cases in which a particular descriptor requires a set of other \
+            indicators to give meaning to its data in a dataset. For instance we could \
+            link date to temperature, so that whenever we include temperature in a dataset \
+            we also make sure to add the date in which the temperature was recorded. \
+            This feature is useful when building data submission templates or \
+            aggregating datasets.
+            
+            The service expects the global identifier of the object type term,  and the list of \
+            descriptor global identifiers representing the object's properties.
+        `
+	)
+	.body(Models.AddParentsToChild, dd
+		`
+            **Descriptor and its required indicators**
+            
+            The request body should hold an object containing the following elements:
+            - \`child\`: The descriptor global identifier.
+            - \`parents\`: A set of descriptor term global identifiers representing \
+              the required indicators.
+            
+            The edges will contain a relationship from the parents to the children.
+        `
+	)
+	.response(200, Models.AddEdgesResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - inserted: The number of inserted edges.
+            - existing: The number of existing edges that include subject, object and predicate.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided term is invalid:
+            - Parameter error: if the error is caught at the level of the parameter, \
+              the service will return a standard error. Note that all child elements must \
+              reference descriptor terms.
+            - Validation error: if it is a validation error, the service will return an \
+              object with two properties: \`report\` will contain the status report and \
+              \`value\` will contain the provided term.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
 
 //
 // Functions.
@@ -479,9 +583,9 @@ router.post(
 
 /**
  * Insert enumerations.
- * @param request: API request.
- * @param response: API response.
- * @param predicate: Predicate value.
+ * @param request {Object}: API request.
+ * @param response {Object}: API response.
+ * @param predicate {String}: Link predicate.
  */
 function doAddEdges(request, response, predicate)
 {
@@ -493,7 +597,7 @@ function doAddEdges(request, response, predicate)
 	//
 	// Check for missing keys.
 	//
-	const missing = getMissingKeys(data)
+	const missing = getEdgeMissingKeys(data)
 	if(missing.length > 0) {
 
 		const message =
@@ -514,9 +618,9 @@ function doAddEdges(request, response, predicate)
 		//
 		// Init local identifiers.
 		//
-		const root = `${K.collection.term.name}/${data.root}`
-		const subject = `${K.collection.term.name}/${item}`
-		const object = `${K.collection.term.name}/${data.parent}`
+		const root = `${module.context.configuration.collectionTerm}/${data.root}`
+		const subject = `${module.context.configuration.collectionTerm}/${item}`
+		const object = `${module.context.configuration.collectionTerm}/${data.parent}`
 		const key = Utils.getEdgeKey(subject, predicate, object)
 
 		//
@@ -575,228 +679,113 @@ function doAddEdges(request, response, predicate)
 } // doAddEdges()
 
 /**
- * Insert fields.
- * @param request: API request.
- * @param response: API response.
+ * Adds descriptor links based on the provided parameters.
+ *
+ * @param theRequest {Onject}: The request object.
+ * @param theResponse {Onject}: The response object.
+ * @param thePredicate {String}: The predicate for the links.
+ * @param theNodeRef {String}: The single node.
+ * @param theNodesRef {String[]}: The list of nodes.
+ * @param theDirection {Boolean}: `true` many to one; `false` one to many.
+ * @param allLinksDescriptors {Boolean}: Assert all links are descriptors.
+ *
+ * @return {void}
  */
-function doAddFields(request, response)
-{
+function doAddLinks(
+	theRequest,
+    theResponse,
+	thePredicate,
+	theNodeRef,
+	theNodesRef,
+	theDirection,
+	allLinksDescriptors = false
+){
 	//
 	// Init local storage.
 	//
-	const data = request.body
-	const predicate = K.term.predicateField
-
+	const data = theRequest.body
+	const terms = []
+	
 	//
-	// Check for missing keys.
+	// Check for missing terms.
 	//
-	const missing = getMissingKeys(data)
+	const missing = getLinksMissingKeys(data, theNodeRef, theNodesRef, terms)
 	if(missing.length > 0) {
-
 		const message =
 			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
 				.replace('@@@', missing.join(", "))
-
-		response.throw(400, message)
-		return                                                                  // ==>
+		
+		theResponse.throw(400, message)
+		return                                                          // ==>
 	}
-
+	
 	//
-	// Ensure children are all descriptors.
+	// Ensure all terms are descriptors.
 	//
-	const found = getNotDescriptorKeys(data.items)
-	if(found.length > 0) {
-
-		const message =
-			K.error.kMSG_NOT_DESCRIPTORS.message[module.context.configuration.language]
-				.replace('@@@', found.join(", "))
-
-		response.throw(400, message)
-		return                                                                  // ==>
+	if(allLinksDescriptors) {
+		const found = getNotDescriptorKeys(terms)
+		if(found.length > 0) {
+			const message =
+				K.error.kMSG_NOT_DESCRIPTORS.message[module.context.configuration.language]
+					.replace('@@@', found.join(", "))
+			
+			theResponse.throw(400, message)
+			return                                                      // ==>
+		}
 	}
-
+	
 	//
 	// Create list of expected edges.
 	//
 	const edges = []
-	const result = {inserted: 0, updated: 0, existing: 0}
-	data.items.forEach(item => {
-
+	const result = {inserted: 0, existing: 0}
+	data[theNodesRef].forEach(item =>
+	{
 		//
 		// Init local identifiers.
 		//
-		const root = `${K.collection.term.name}/${data.root}`
-		const subject = `${K.collection.term.name}/${item}`
-		const object = `${K.collection.term.name}/${data.parent}`
-		const key = Utils.getEdgeKey(subject, predicate, object)
-
+		const src = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${item}`
+			: `${module.context.configuration.collectionTerm}/${data[theNodeRef]}`
+		const dst = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${data[theNodeRef]}`
+			: `${module.context.configuration.collectionTerm}/${item}`
+		const key = Utils.getEdgeKey(src, thePredicate, dst)
+		
 		//
-		// Check if it exists.
+		// Check if it does not exist.
 		//
-		try {
-			const found = collection_edge.document(key)
-			if(found._path.includes(root)) {
-				result.existing += 1
-			} else {
-				result.updated += 1
-				edges.push({
-					_key: key,
-					_from: subject,
-					_to: object,
-					_predicate: predicate,
-					_path: found._path.concat([root])
-				})
-			}
-		} catch (error) {
-
+		if(collection_link.exists(key) === false)
+		{
 			//
-			// Handle unexpected errors.
-			//
-			if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
-				response.throw(500, error.message)
-				return                                                          // ==>
-			}
-
-			//
-			// Insert edge.
+			// Add edge to list.
 			//
 			result.inserted += 1
 			edges.push({
 				_key: key,
-				_from: subject,
-				_to: object,
-				_predicate: predicate,
-				_path: [ root ]
+				_from: src,
+				_to: dst,
+				_predicate: thePredicate
 			})
+			
+		} else {
+			result.existing += 1
 		}
 	})
-
+	
 	//
 	// Perform query.
 	//
 	K.db._query( aql`
         FOR item in ${edges}
             INSERT item
-            INTO ${collection_edge}
-            OPTIONS {
-	            overwriteMode: "update",
-	            keepNull: false,
-	            mergeObjects: false
-            }
-    `)
-
-	response.send(result)
-
-} // doAddFields()
-
-/**
- * Insert fields.
- * @param request: API request.
- * @param response: API response.
- */
-function doAddProperties(request, response)
-{
-	//
-	// Init local storage.
-	//
-	const data = request.body
-	const predicate = K.term.predicateProperty
-
-	//
-	// Check for missing keys.
-	//
-	const missing = getMissingKeys(data)
-	if(missing.length > 0) {
-		const message =
-			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
-				.replace('@@@', missing.join(", "))
-
-		response.throw(400, message)
-		return                                                                  // ==>
-	}
-
-	//
-	// Ensure children are all descriptors.
-	//
-	const found = getNotDescriptorKeys(data.items)
-	if(found.length > 0) {
-
-		const message =
-			K.error.kMSG_NOT_DESCRIPTORS.message[module.context.configuration.language]
-				.replace('@@@', found.join(", "))
-
-		response.throw(400, message)
-		return                                                                  // ==>
-	}
-
-	//
-	// Create list of expected edges.
-	//
-	const edges = []
-	const result = {inserted: 0, updated: 0, existing: 0}
-	data.items.forEach(item => {
-
-		//
-		// Init local identifiers.
-		//
-		const subject = `${K.collection.term.name}/${item}`
-		const object = `${K.collection.term.name}/${data.parent}`
-		const key = Utils.getEdgeKey(subject, predicate, object)
-
-		//
-		// Check if it exists.
-		//
-		try {
-			const found = collection_edge.document(key)
-			if(found._path.includes(object)) {
-				result.existing += 1
-			} else {
-				result.updated += 1
-				edges.push({
-					_key: key,
-					_from: subject,
-					_to: object,
-					_predicate: predicate,
-					_path: found._path.concat([object])
-				})
-			}
-		} catch (error) {
-
-			//
-			// Handle unexpected errors.
-			//
-			if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
-				response.throw(500, error.message)
-				return                                                          // ==>
-			}
-
-			//
-			// Insert edge.
-			//
-			result.inserted += 1
-			edges.push({
-				_key: key,
-				_from: subject,
-				_to: object,
-				_predicate: predicate,
-				_path: [ object ]
-			})
-		}
-	})
-
-	//
-	// Perform query.
-	//
-	K.db._query( aql`
-        FOR item in ${edges}
-            INSERT item
-            INTO ${collection_edge}
+            INTO ${collection_link}
             OPTIONS { overwriteMode: "update", keepNull: false, mergeObjects: false }
     `)
-
-	response.send(result)
-
-} // doAddProperties()
+	
+	theResponse.send(result)
+	
+} // doAddDescriptorLinks()
 
 
 //
@@ -804,25 +793,23 @@ function doAddProperties(request, response)
 //
 
 /**
- * Assert enum request keys exist.
+ * Assert edgem request keys exist.
  * This function will return the list of keys that are missing from terms collection.
  * @param theData {Object}: Object containing `root`, `parent` and `items` term keys.
  * @return {Array<String>}: List of missing keys
  */
-function getMissingKeys(theData)
+function getEdgeMissingKeys(theData)
 {
 	//
 	// Ensure items are a set.
 	//
 	theData.items = [... new Set(theData.items)]
-
+	
 	//
 	// Collect keys.
 	//
-	const terms = (theData.hasOwnProperty('root'))
-				? Array.from(new Set(theData.items.concat([theData.root, theData.parent])))
-				: Array.from(new Set(theData.items.concat([theData.parent])))
-
+	const terms = Array.from(new Set(theData.items.concat([theData.root, theData.parent])))
+	
 	//
 	// Assert all terms exist.
 	//
@@ -832,10 +819,46 @@ function getMissingKeys(theData)
             FOR term IN terms
             RETURN term._key
         `).toArray()
+	
+	return terms.filter(x => !found.includes(x))                        // ==>
+	
+} // getEdgeMissingKeys()
 
-	return terms.filter(x => !found.includes(x))                                // ==>
-
-} // getMissingKeys()
+/**
+ * Assert links request keys exist.
+ * This function will return the list of keys that are missing from terms collection.
+ * @param theData {Object}: Object containing subject and object terms.
+ * @param target {String}: Body object target key.
+ * @param links {[String]}: Body object link keys.
+ * @param terms {String[]}: Receives list of term global identifiers.
+ *
+ * @return {String[]}: List of missing keys
+ */
+function getLinksMissingKeys(theData, target, links, terms)
+{
+	//
+	// Ensure items are a set.
+	//
+	theData[links] = [... new Set(theData[links])]
+	
+	//
+	// Collect keys.
+	//
+	terms = [theData[target]].concat(theData[links])
+	
+	//
+	// Assert all terms exist.
+	//
+	const found =
+		K.db._query( aql`
+            LET terms = DOCUMENT(${collection_term}, ${terms})
+            FOR term IN terms
+            RETURN term._key
+        `).toArray()
+	
+	return terms.filter(x => !found.includes(x))                        // ==>
+	
+} // getLinksMissingKeys()
 
 /**
  * Return edge matching keys.
@@ -884,9 +907,9 @@ function getNotDescriptorKeys(theKeys)
 	//
 	const result =
 		K.db._query( aql`
-			FOR term IN ${K.db._collection(K.collection.term.name)}
+			FOR term IN ${K.db._collection(module.context.configuration.collectionTerm)}
 			    FILTER term._key IN ${theKeys}
-			    FILTER NOT HAS(term, ${K.term.dataBlock})
+			    FILTER NOT HAS(term, ${module.context.configuration.sectionData})
 			RETURN term._key
         `).toArray()
 
