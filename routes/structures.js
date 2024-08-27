@@ -11,7 +11,6 @@ const createRouter = require('@arangodb/foxx/router');
 // Application constants.
 //
 const K = require('../utils/constants')
-const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
 const Dictionary = require("../utils/dictionary");
 

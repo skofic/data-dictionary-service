@@ -17,31 +17,15 @@ const Validator = require('../library/Validator')
 //
 // Models.
 //
-const Models = require('../models/validation_parameters.')
-const DescriptorValue =
-    joi.alternatives().try(
-        joi.array(),
-        joi.object(),
-        joi.number(),
-        joi.string()
-    ).required()
+const Models = require('../models/generic_models')
+const ModelValidationParameters = require('../models/validation_parameters.')
 
-const DescriptorValues =
-    joi.array()
-        .items(
-            joi.alternatives().try(
-                joi.array(),
-                joi.object(),
-                joi.number(),
-                joi.string()
-            ).required()
-        )
-        .required()
-
+// Single validation idle status response.
 const StatusIdle = joi.object({
     status: joi.number().default(0).required()
 })
 
+// List validation idle status response.
 const StatusIdleMany = joi.object({
     status: joi.number().default(0).required(),
     descriptor: joi.string().required(),
@@ -67,17 +51,8 @@ const StatusResolvedMany = joi.object({
         joi.object({
             status: joi.number().integer().min(-1).max(100).required(),
             report: joi.object({
-                status: joi.object({
-                    code: joi.number().required(),
-                    message: joi.string().required()
-                }).required(),
-                changes: joi.object({
-                    "<hash>": joi.object({
-                        field: joi.string().required(),
-                        original: joi.any().required(),
-                        resolved: joi.any().required()
-                    }).required()
-                })
+                status: Models.ReportStatus.required(),
+                changes: Models.ReportChanges.required()
             }).required()
         }).required()
     ).required(),
@@ -93,17 +68,8 @@ const StatusObjectResolvedMany = joi.object({
         joi.object({
             status: joi.number().integer().min(-1).max(100).required(),
             report: joi.object({
-                status: joi.object({
-                    code: joi.number().required(),
-                    message: joi.string().required()
-                }).required(),
-                changes: joi.object({
-                    "<hash>": joi.object({
-                        field: joi.string().required(),
-                        original: joi.any().required(),
-                        resolved: joi.any().required()
-                    }).required()
-                })
+                status: Models.ReportStatus.required(),
+                changes: Models.ReportChanges.required()
             }).required()
         }).required()
     ).required(),
@@ -120,10 +86,7 @@ const StatusErrorMany = joi.object({
         joi.object({
             status: joi.number().integer().min(-1).max(100).required(),
             report: joi.object({
-                status: joi.object({
-                    code: joi.number().required(),
-                    message: joi.string().required()
-                }).required(),
+                status: Models.ReportStatus.required(),
                 descriptor: joi.string().required(),
                 value: joi.any().required()
             }).required()
@@ -141,10 +104,7 @@ const StatusObjectErrorMany = joi.object({
         joi.object({
             status: joi.number().integer().min(-1).max(100).required(),
             report: joi.object({
-                status: joi.object({
-                    code: joi.number().required(),
-                    message: joi.string().required()
-                }).required(),
+                status: Models.ReportStatus.required(),
                 descriptor: joi.string().required(),
                 value: joi.any().required()
             }).required()
@@ -156,17 +116,8 @@ const StatusObjectErrorMany = joi.object({
 const StatusResolved = joi.object({
     status: joi.number().default(1).required(),
     report: joi.object({
-        status: joi.object({
-            code: joi.number().default(0).required(),
-            message: joi.string().required()
-        }).required(),
-        changes: joi.object({
-            "<hash>": joi.object({
-                field: joi.string().required(),
-                original: joi.any().required(),
-                resolved: joi.any().required()
-            }).required()
-        }).required()
+        status: Models.ReportStatus.required(),
+        changes: Models.ReportChanges.required().required()
     }).required(),
     value: joi.any().required()
 })
@@ -174,10 +125,7 @@ const StatusResolved = joi.object({
 const StatusError = joi.object({
     status: joi.number().default(-1).required(),
     report: joi.object({
-        status: joi.object({
-            code: joi.number().required(),
-            message: joi.string().required()
-        }).required(),
+        status: Models.ReportStatus.required(),
         descriptor: joi.string().required(),
         value: joi.any().required()
     }).required(),
@@ -245,15 +193,15 @@ router.post(
             parameter unset to validate terms that have not yet been saved.*
         `
     )
-    .queryParam('descriptor', Models.ParamDescriptor)
-    .queryParam('cache', Models.ParamUseCache)
-    .queryParam('miss', Models.ParamCacheMissed)
-    .queryParam('terms', Models.ParamExpectTerms)
-    .queryParam('types', Models.ParamExpectTypes)
-    .queryParam('defns', Models.ParamDefNamespace)
-    .queryParam('resolve', Models.ParamResolve)
-    .queryParam('resfld', Models.ParamResolveField)
-    .body(DescriptorValue, dd
+    .queryParam('descriptor', ModelValidationParameters.ParamDescriptor)
+    .queryParam('cache', ModelValidationParameters.ParamUseCache)
+    .queryParam('miss', ModelValidationParameters.ParamCacheMissed)
+    .queryParam('terms', ModelValidationParameters.ParamExpectTerms)
+    .queryParam('types', ModelValidationParameters.ParamExpectTypes)
+    .queryParam('defns', ModelValidationParameters.ParamDefNamespace)
+    .queryParam('resolve', ModelValidationParameters.ParamResolve)
+    .queryParam('resfld', ModelValidationParameters.ParamResolveField)
+    .body(Models.AnyDescriptorValue, dd
         `
             **Descriptor value**
             
@@ -366,15 +314,15 @@ router.post(
             *minus one* if there was at least one error.
         `
     )
-    .queryParam('descriptor', Models.ParamDescriptor)
-    .queryParam('cache', Models.ParamUseCache)
-    .queryParam('miss', Models.ParamCacheMissed)
-    .queryParam('terms', Models.ParamExpectTerms)
-    .queryParam('types', Models.ParamExpectTypes)
-    .queryParam('defns', Models.ParamDefNamespace)
-    .queryParam('resolve', Models.ParamResolve)
-    .queryParam('resfld', Models.ParamResolveField)
-    .body(DescriptorValues, dd
+    .queryParam('descriptor', ModelValidationParameters.ParamDescriptor)
+    .queryParam('cache', ModelValidationParameters.ParamUseCache)
+    .queryParam('miss', ModelValidationParameters.ParamCacheMissed)
+    .queryParam('terms', ModelValidationParameters.ParamExpectTerms)
+    .queryParam('types', ModelValidationParameters.ParamExpectTypes)
+    .queryParam('defns', ModelValidationParameters.ParamDefNamespace)
+    .queryParam('resolve', ModelValidationParameters.ParamResolve)
+    .queryParam('resfld', ModelValidationParameters.ParamResolveField)
+    .body(Models.AnyDescriptorValues, dd
         `
             **Descriptor values**
             
@@ -505,13 +453,13 @@ router.post(
             custom options governing the validation process.
         `
     )
-    .queryParam('cache', Models.ParamUseCache)
-    .queryParam('miss', Models.ParamCacheMissed)
-    .queryParam('terms', Models.ParamExpectTerms)
-    .queryParam('types', Models.ParamExpectTypes)
-    .queryParam('defns', Models.ParamDefNamespace)
-    .queryParam('resolve', Models.ParamResolve)
-    .queryParam('resfld', Models.ParamResolveField)
+    .queryParam('cache', ModelValidationParameters.ParamUseCache)
+    .queryParam('miss', ModelValidationParameters.ParamCacheMissed)
+    .queryParam('terms', ModelValidationParameters.ParamExpectTerms)
+    .queryParam('types', ModelValidationParameters.ParamExpectTypes)
+    .queryParam('defns', ModelValidationParameters.ParamDefNamespace)
+    .queryParam('resolve', ModelValidationParameters.ParamResolve)
+    .queryParam('resfld', ModelValidationParameters.ParamResolveField)
     .body(ObjectValue, dd
         `
             **Value to be validated**
@@ -624,13 +572,13 @@ router.post(
             custom options governing the validation process.
        `
     )
-    .queryParam('cache', Models.ParamUseCache)
-    .queryParam('miss', Models.ParamCacheMissed)
-    .queryParam('terms', Models.ParamExpectTerms)
-    .queryParam('types', Models.ParamExpectTypes)
-    .queryParam('defns', Models.ParamDefNamespace)
-    .queryParam('resolve', Models.ParamResolve)
-    .queryParam('resfld', Models.ParamResolveField)
+    .queryParam('cache', ModelValidationParameters.ParamUseCache)
+    .queryParam('miss', ModelValidationParameters.ParamCacheMissed)
+    .queryParam('terms', ModelValidationParameters.ParamExpectTerms)
+    .queryParam('types', ModelValidationParameters.ParamExpectTypes)
+    .queryParam('defns', ModelValidationParameters.ParamDefNamespace)
+    .queryParam('resolve', ModelValidationParameters.ParamResolve)
+    .queryParam('resfld', ModelValidationParameters.ParamResolveField)
     .body(ObjectValues, dd
         `
             **Descriptor values**

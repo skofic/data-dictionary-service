@@ -111,6 +111,30 @@ const ReportStatus =
 // Generic models.
 //
 
+// Any value model.
+const AnyDescriptorValue =
+	joi.alternatives()
+		.try(
+			joi.array(),
+			joi.object(),
+			joi.number(),
+			joi.string()
+		).required()
+
+// List of any values model.
+const AnyDescriptorValues =
+	joi.array()
+		.items(
+			joi.alternatives()
+				.try(
+					joi.array(),
+					joi.object(),
+					joi.number(),
+					joi.string()
+				).required()
+		)
+		.required()
+
 // Generic array model.
 const ArrayModel = joi.array()
 	.items(
@@ -144,22 +168,34 @@ const TreeModel = joi.array()
 	)
 
 // Graph insertion elements: root, parent and items to insert.
-const AddChildren = joi.object({
+const AddEdges = joi.object({
 	root: joi.string().required(),
 	parent: joi.string().required(),
 	items: joi.array().items(joi.string()).required()
 })
 
-// Structure to add child properties to an object.
-const AddChildrenProperties = joi.object({
+// Add elements to graph response.
+const AddEdgesResponse = joi.object({
+	inserted: joi.number(),
+	updated: joi.number(),
+	existing: joi.number()
+})
+
+// Structure to add child properties to a parent.
+const AddChildrenToParent = joi.object({
 	parent: joi.string().required(),
-	items: joi.array().items(joi.string()).required()
+	children: joi.array().items(joi.string()).required()
+})
+
+// Structure to add parent properties to a child.
+const AddParentsToChild = joi.object({
+	child: joi.string().required(),
+	parents: joi.array().items(joi.string()).required()
 })
 
 // Add elements to graph response.
-const AddChildrenResponse = joi.object({
+const AddLinksResponse = joi.object({
 	inserted: joi.number(),
-	updated: joi.number(),
 	existing: joi.number()
 })
 
@@ -185,13 +221,17 @@ module.exports = {
 	ReportChanges,
 	ReportStatus,
 	
+	AnyDescriptorValue,
+	AnyDescriptorValues,
 	ArrayModel,
 	StringArrayModel,
 	StringModel,
 	LevelsModel,
 	TreeModel,
-	AddChildrenProperties,
-	AddChildren,
-	AddChildrenResponse,
+	AddEdges,
+	AddEdgesResponse,
+	AddChildrenToParent,
+	AddParentsToChild,
+	AddLinksResponse,
 	DescriptorQualifications
 }

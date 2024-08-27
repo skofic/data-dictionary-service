@@ -22,7 +22,6 @@ const HTTP_CONFLICT = status('conflict');
 // Application constants.
 //
 const K = require('../utils/constants')
-const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
 const Dictionary = require("../utils/dictionary");
 
