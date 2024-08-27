@@ -57,12 +57,12 @@ function termLanguage(theTerm, theLanguage)
     //
     // Check if the term has info.
     //
-    if(theTerm.hasOwnProperty(K.term.infoBlock)) {
-        for(const property of Object.keys(theTerm[K.term.infoBlock])) {
-            if(Validator.IsObject(theTerm[K.term.infoBlock][property])) {
-                if(theTerm[K.term.infoBlock][property].hasOwnProperty(theLanguage)) {
-                    const element = theTerm[K.term.infoBlock][property][theLanguage]
-                    theTerm[K.term.infoBlock][property] = element
+    if(theTerm.hasOwnProperty(module.context.configuration.sectionInfo)) {
+        for(const property of Object.keys(theTerm[module.context.configuration.sectionInfo])) {
+            if(Validator.IsObject(theTerm[module.context.configuration.sectionInfo][property])) {
+                if(theTerm[module.context.configuration.sectionInfo][property].hasOwnProperty(theLanguage)) {
+                    const element = theTerm[module.context.configuration.sectionInfo][property][theLanguage]
+                    theTerm[module.context.configuration.sectionInfo][property] = element
 
                 } // Has language element.
 

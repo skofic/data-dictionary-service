@@ -87,7 +87,7 @@ function getAllKindEnumerationKeys(theKind)
                 LET handle = CONCAT_SEPARATOR("/", ${K.collection.term.name}, root)
                 FOR edge IN ${collection_edges}
                     FILTER handle IN edge._path
-                    FILTER edge._predicate == ${K.term.predicateEnum}
+                    FILTER edge._predicate == ${module.context.configuration.predicateEnumeration}
                 RETURN PARSE_IDENTIFIER(edge._from).key
         `).toArray();
 
@@ -119,7 +119,7 @@ function getAllKindEnumerationTerms(theKind)
                 LET handle = CONCAT_SEPARATOR("/", ${K.collection.term.name}, root)
                 FOR edge IN ${collection_edges}
                     FILTER handle IN edge._path
-                    FILTER edge._predicate == ${K.term.predicateEnum}
+                    FILTER edge._predicate == ${module.context.configuration.predicateEnumeration}
                 RETURN DOCUMENT(edge._from)
         `).toArray();
 
@@ -450,7 +450,7 @@ function matchEnumerationTerm(thePath, theTerm)
     //
     const path = K.collection.term.name + '/' + thePath
     const target = K.collection.term.name + '/' + theTerm
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -492,7 +492,7 @@ function matchEnumerationTermKey(thePath, theTerm)
     //
     const path = K.collection.term.name + '/' + thePath
     const target = K.collection.term.name + '/' + theTerm
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -534,7 +534,7 @@ function matchEnumerationTermPath(thePath, theTerm)
     //
     const path = K.collection.term.name + '/' + thePath
     const target = K.collection.term.name + '/' + theTerm
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -575,7 +575,7 @@ function matchEnumerationCodeKey(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -615,7 +615,7 @@ function traverseFieldKeys(thePath, theCode, theField)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -655,7 +655,7 @@ function traverseFieldTerms(thePath, theCode, theField)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -695,7 +695,7 @@ function traverseFieldPath(thePath, theCode, theField)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -734,7 +734,7 @@ function matchEnumerationCodeTerm(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -772,7 +772,7 @@ function matchEnumerationIdentifierKey(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -810,7 +810,7 @@ function matchEnumerationIdentifierTerm(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -848,7 +848,7 @@ function matchEnumerationIdentifierPath(thePath, theCode)
     // Init local storage.
     //
     const path = K.collection.term.name + '/' + thePath
-    const predicate = K.term.predicateEnum
+    const predicate = module.context.configuration.predicateEnumeration
 
     //
     // Query database.
@@ -1018,7 +1018,7 @@ function doCheckEnumKeysByField(theCode, theField, theType)
             
             FOR edge IN ${collection_edges}
               FILTER edge._from IN terms
-              FILTER edge._predicate == ${K.term.predicateEnum}
+              FILTER edge._predicate == ${module.context.configuration.predicateEnumeration}
               FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge._path
             RETURN PARSE_IDENTIFIER(edge._from)['key']
         `).toArray()
@@ -1053,7 +1053,7 @@ function doCheckEnumTermsByField(theCode, theField, theType)
             
             FOR edge IN ${collection_edges}
               FILTER edge._from IN terms
-              FILTER edge._predicate == ${K.term.predicateEnum}
+              FILTER edge._predicate == ${module.context.configuration.predicateEnumeration}
               FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge._path
               
               FOR doc IN ${collection_terms}
@@ -1162,27 +1162,27 @@ function getDescriptorEnumKind(theData)
     //
     // Handle scalar.
     //
-    if(theData.hasOwnProperty(K.term.dataBlockScalar) ||
-        theData.hasOwnProperty(K.term.dataBlockSetScalar))
+    if(theData.hasOwnProperty(module.context.configuration.sectionScalar) ||
+        theData.hasOwnProperty(module.context.configuration.sectionSetScalar))
     {
         //
         // Save block identifiers.
         //
-        if(theData.hasOwnProperty(K.term.dataBlockScalar)) {
-            scalar = theData[K.term.dataBlockScalar]
-            type = K.term.dataType
+        if(theData.hasOwnProperty(module.context.configuration.sectionScalar)) {
+            scalar = theData[module.context.configuration.sectionScalar]
+            type = module.context.configuration.scalarType
         } else {
-            scalar = theData[K.term.dataBlockSetScalar]
-            type = K.term.dataSetType
+            scalar = theData[module.context.configuration.sectionSetScalar]
+            type = module.context.configuration.setScalarType
         }
 
         //
         // Check type.
         //
         if(scalar.hasOwnProperty(type)) {
-            if(scalar[type] === K.term.dataTypeEnum) {
-                if(scalar.hasOwnProperty(K.term.dataKind)) {
-                    return scalar[K.term.dataKind]                              // ==>
+            if(scalar[type] === module.context.configuration.typeEnum) {
+                if(scalar.hasOwnProperty(module.context.configuration.dataKind)) {
+                    return scalar[module.context.configuration.dataKind]                              // ==>
                 }
             }
         }
@@ -1192,15 +1192,15 @@ function getDescriptorEnumKind(theData)
     //
     // Handle set.
     //
-    else if(theData.hasOwnProperty(K.term.dataBlockSet)) {
-        return getDescriptorEnumKind(theData[K.term.dataBlockSet])              // ==>
+    else if(theData.hasOwnProperty(module.context.configuration.sectionSet)) {
+        return getDescriptorEnumKind(theData[module.context.configuration.sectionSet])              // ==>
     }
 
     //
     // Handle array.
     //
-    else if(theData.hasOwnProperty(K.term.dataBlockArray)) {
-        return getDescriptorEnumKind(theData[K.term.dataBlockArray])            // ==>
+    else if(theData.hasOwnProperty(module.context.configuration.sectionArray)) {
+        return getDescriptorEnumKind(theData[module.context.configuration.sectionArray])            // ==>
     }
 
     return []                                                                   // ==>

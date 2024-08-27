@@ -396,7 +396,7 @@ function getDescriptorEnumKeys(request, response)
 	//
 	try {
 		const term = db._document(K.collection.term.name + '/' + descriptor)
-		if(term.hasOwnProperty(K.term.dataBlock)) {
+		if(term.hasOwnProperty(module.context.configuration.sectionData)) {
 			const kind = Dictionary.getDescriptorEnumKind(term._data)
 			if(kind.length > 0) {
 				response.send(Dictionary.getAllKindEnumerationKeys(kind))                                           // ==>
@@ -433,7 +433,7 @@ function getDescriptorEnumTerms(request, response)
 	//
 	try {
 		const term = db._document(K.collection.term.name + '/' + descriptor)
-		if(term.hasOwnProperty(K.term.dataBlock)) {
+		if(term.hasOwnProperty(module.context.configuration.sectionData)) {
 			const kind = Dictionary.getDescriptorEnumKind(term._data)
 			if(kind.length > 0) {
 				response.send(Dictionary.getAllKindEnumerationTerms(kind))                                           // ==>
@@ -471,7 +471,7 @@ function getDescriptorEnumTrees(request, response)
 	//
 	try {
 		const term = db._document(K.collection.term.name + '/' + descriptor)
-		if(term.hasOwnProperty(K.term.dataBlock)) {
+		if(term.hasOwnProperty(module.context.configuration.sectionData)) {
 			const kind = Dictionary.getDescriptorEnumKind(term._data)
 			if(kind.length > 0) {
 				response.send(Dictionary.getEnumerationDescriptorTrees(kind, levels))                                           // ==>
