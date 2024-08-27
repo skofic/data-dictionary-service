@@ -80,6 +80,33 @@ const DefaultLanguageTokenModel = joi.string()
 		module.context.configuration.language
 	)
 
+
+///
+// Report models.
+///
+
+// Object providing resolved values changes in service reports.
+const ReportChanges =
+	joi.object({
+		changes: joi.object({
+			"<hash>": joi.object({
+				field: joi.string().required(),
+				original: joi.any().required(),
+				resolved: joi.any().required()
+			}).required()
+		})
+	})
+
+// Object providing status report in service reports.
+const ReportStatus =
+	joi.object({
+		status: joi.object({
+			status: joi.number().default(0),
+			message: joi.string().required()
+		}).required()
+	})
+
+
 //
 // Generic models.
 //
@@ -116,17 +143,20 @@ const TreeModel = joi.array()
 		})
 	)
 
-const AddChildrenProperties = joi.object({
-	parent: joi.string().required(),
-	items: joi.array().items(joi.string()).required()
-})
-
+// Graph insertion elements: root, parent and items to insert.
 const AddChildren = joi.object({
 	root: joi.string().required(),
 	parent: joi.string().required(),
 	items: joi.array().items(joi.string()).required()
 })
 
+// Structure to add child properties to an object.
+const AddChildrenProperties = joi.object({
+	parent: joi.string().required(),
+	items: joi.array().items(joi.string()).required()
+})
+
+// Add elements to graph response.
 const AddChildrenResponse = joi.object({
 	inserted: joi.number(),
 	updated: joi.number(),
@@ -149,13 +179,17 @@ module.exports = {
 	TermsArrayModel,
 	TermsInsertedArrayModel,
 	
+	GraphPathsModel,
 	DefaultLanguageTokenModel,
+	
+	ReportChanges,
+	ReportStatus,
+	
+	ArrayModel,
+	StringArrayModel,
 	StringModel,
 	LevelsModel,
 	TreeModel,
-	ArrayModel,
-	StringArrayModel,
-	GraphPathsModel,
 	AddChildrenProperties,
 	AddChildren,
 	AddChildrenResponse,
