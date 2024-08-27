@@ -302,19 +302,19 @@ module.exports = Object.freeze({
     // Terms.
     //
     term : {
-        codeBlock: "_code",
-        infoBlock: "_info",
-        dataBlock: "_data",
-        ruleBlock: "_rule",
+        codeBlock: module.context.configuration.sectionCode,
+        infoBlock: module.context.configuration.sectionInfo,
+        dataBlock: module.context.configuration.sectionData,
+        ruleBlock: module.context.configuration.sectionRule,
 
-        dataBlockScalar: "_scalar",
-        dataBlockSetScalar: "_set_scalar",
-        dataBlockArray: "_array",
-        dataBlockSet: "_set",
-        dataBlockDict: "_dict",
+        dataBlockScalar: module.context.configuration.sectionScalar,
+        dataBlockSetScalar: module.context.configuration.sectionSetScalar,
+        dataBlockArray: module.context.configuration.sectionArray,
+        dataBlockSet: module.context.configuration.sectionSet,
+        dataBlockDict: module.context.configuration.sectionDict,
 
-        dataType: "_type",
-        dataKind: "_kind",
+        dataType: module.context.configuration.scalarType,
+        dataKind: module.context.configuration.dataKind,
         dataSetType: "_set_type",
 
         dataTypeBool: "_type_boolean",
