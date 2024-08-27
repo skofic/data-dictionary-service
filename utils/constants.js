@@ -142,7 +142,7 @@ module.exports = Object.freeze({
                             "_key": {},
                             "_code": {
                                 "fields": {
-                                    "_nid": {
+                                    [module.context.configuration.namespaceIdentifier]: {
                                         "analyzers": [
                                             "identity",
                                             "text_en"
