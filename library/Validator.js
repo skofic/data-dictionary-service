@@ -12,7 +12,6 @@ const crypto = require('@arangodb/crypto')
 const TermsCache = require('./TermsCache')
 const ValidationReport = require('./ValidationReport')
 const K = require("../utils/constants");
-const {isObject} = require("../utils/utils");
 
 /**
  * Validator
