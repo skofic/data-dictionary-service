@@ -140,7 +140,7 @@ module.exports = Object.freeze({
                         ],
                         "fields": {
                             "_key": {},
-                            "_code": {
+                            [module.context.configuration.sectionCode]: {
                                 "fields": {
                                     [module.context.configuration.namespaceIdentifier]: {
                                         "analyzers": [
@@ -148,38 +148,38 @@ module.exports = Object.freeze({
                                             "text_en"
                                         ]
                                     },
-                                    "_lid": {
+                                    [module.context.configuration.localIdentifier]: {
                                         "analyzers": [
                                             "identity",
                                             "text_en"
                                         ]
                                     },
-                                    "_gid": {
+                                    [module.context.configuration.globalIdentifier]: {
                                         "analyzers": [
                                             "identity",
                                             "text_en"
                                         ]
                                     },
-                                    "_name": {
+                                    [module.context.configuration.nameIdentifier]: {
                                         "analyzers": [
                                             "identity",
                                             "text_en"
                                         ]
                                     },
-                                    "_pid": {
+                                    [module.context.configuration.providerIdentifiers]: {
                                         "analyzers": [
                                             "identity",
                                             "text_en"
                                         ]
                                     },
-                                    "_aid": {}
+                                    [module.context.configuration.officialIdentifiers]: {}
                                 }
                             },
-                            "_info": {
+                            [module.context.configuration.sectionInfo]: {
                                 "fields": {
-                                    "_title": {
+                                    [module.context.configuration.titleInfoField]: {
                                         "fields": {
-                                            "iso_639_3_eng": {
+                                            [module.context.configuration.language]: {
                                                 "analyzers": [
                                                     "text_en",
                                                     "identity"
@@ -187,9 +187,9 @@ module.exports = Object.freeze({
                                             }
                                         }
                                     },
-                                    "_definition": {
+                                    [module.context.configuration.definitionInfoField]: {
                                         "fields": {
-                                            "iso_639_3_eng": {
+                                            [module.context.configuration.language]: {
                                                 "analyzers": [
                                                     "text_en",
                                                     "identity"
@@ -197,9 +197,9 @@ module.exports = Object.freeze({
                                             }
                                         }
                                     },
-                                    "_description": {
+                                    [module.context.configuration.descriptionInfoField]: {
                                         "fields": {
-                                            "iso_639_3_eng": {
+                                            [module.context.configuration.language]: {
                                                 "analyzers": [
                                                     "text_en",
                                                     "identity"
@@ -207,9 +207,9 @@ module.exports = Object.freeze({
                                             }
                                         }
                                     },
-                                    "_examples": {
+                                    [module.context.configuration.examplesInfoField]: {
                                         "fields": {
-                                            "iso_639_3_eng": {
+                                            [module.context.configuration.language]: {
                                                 "analyzers": [
                                                     "text_en",
                                                     "identity"
@@ -217,9 +217,9 @@ module.exports = Object.freeze({
                                             }
                                         }
                                     },
-                                    "_notes": {
+                                    [module.context.configuration.notesInfoField]: {
                                         "fields": {
-                                            "iso_639_3_eng": {
+                                            [module.context.configuration.language]: {
                                                 "analyzers": [
                                                     "text_en",
                                                     "identity"
@@ -227,7 +227,7 @@ module.exports = Object.freeze({
                                             }
                                         }
                                     },
-                                    "_provider": {
+                                    [module.context.configuration.providersInfoField]: {
                                         "analyzers": [
                                             "text_en",
                                             "identity"
@@ -235,12 +235,12 @@ module.exports = Object.freeze({
                                     }
                                 }
                             },
-                            "_data": {
+                            [module.context.configuration.sectionData]: {
                                 "fields": {
-                                    "_subject": {},
-                                    "_class": {},
-                                    "_domain": {},
-                                    "_tag": {
+                                    [module.context.configuration.sectionDataSubject]: {},
+                                    [module.context.configuration.sectionDataClass]: {},
+                                    [module.context.configuration.sectionDataDomain]: {},
+                                    [module.context.configuration.sectionDataTag]: {
                                         "analyzers": [
                                             "identity",
                                             "text_en"

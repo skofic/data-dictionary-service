@@ -265,6 +265,12 @@
             "required": true,
             "default": "_pid"
         },
+        "nameIdentifier": {
+            "description": "Name",
+            "type": "string",
+            "required": true,
+            "default": "_name"
+        },
         "scalarType": {
             "description": "Scalar data type descriptor key",
             "type": "string",
@@ -529,6 +535,12 @@
             "required": true,
             "default": "_notes"
         },
+        "providersInfoField": {
+            "description": "Providers information section field",
+            "type": "string",
+            "required": true,
+            "default": "_providers"
+        },
         "termObjectDefinition": {
             "description": "Term object definition",
             "type": "string",
@@ -546,6 +558,30 @@
             "type": "string",
             "required": true,
             "default": "_unit"
+        },
+        "sectionDataSubject": {
+            "description": "Data section subject",
+            "type": "string",
+            "required": true,
+            "default": "_subject"
+        },
+        "sectionDataClass": {
+            "description": "Data section class",
+            "type": "string",
+            "required": true,
+            "default": "_class"
+        },
+        "sectionDataDomain": {
+            "description": "Data section domain",
+            "type": "string",
+            "required": true,
+            "default": "_domain"
+        },
+        "sectionDataTag": {
+            "description": "Data section tag",
+            "type": "string",
+            "required": true,
+            "default": "_tag"
         }
     },
     "tests": [
