@@ -247,6 +247,36 @@
             "required": true,
             "default": "_predicate_enum-of"
         },
+        "predicateSection": {
+            "description": "Section predicate key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate_section-of"
+        },
+        "predicateBridge": {
+            "description": "Bridge predicate key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate_bridge-of"
+        },
+        "predicateField": {
+            "description": "Field predicate key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate_field-of"
+        },
+        "predicateProperty": {
+            "description": "Property predicate key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate_property-of"
+        },
+        "predicateRequiredIndicator": {
+            "description": "Property predicate key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate_requires_indicator"
+        },
         "namespaceIdentifier": {
             "description": "Namespace identifier key",
             "type": "string",
