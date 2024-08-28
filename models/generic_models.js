@@ -174,23 +174,17 @@ const AddEdges = joi.object({
 	items: joi.array().items(joi.string()).required()
 })
 
+// Graph insertion elements: root, parent and items to insert.
+const AddLinks = joi.object({
+	parent: joi.string().required(),
+	items: joi.array().items(joi.string()).required()
+})
+
 // Add elements to graph response.
 const AddEdgesResponse = joi.object({
 	inserted: joi.number(),
 	updated: joi.number(),
 	existing: joi.number()
-})
-
-// Structure to add child properties to a parent.
-const AddChildrenToParent = joi.object({
-	parent: joi.string().required(),
-	children: joi.array().items(joi.string()).required()
-})
-
-// Structure to add parent properties to a child.
-const AddParentsToChild = joi.object({
-	child: joi.string().required(),
-	parents: joi.array().items(joi.string()).required()
 })
 
 // Add elements to graph response.
@@ -223,15 +217,18 @@ module.exports = {
 	
 	AnyDescriptorValue,
 	AnyDescriptorValues,
+	
 	ArrayModel,
 	StringArrayModel,
 	StringModel,
 	LevelsModel,
 	TreeModel,
+	
 	AddEdges,
+	AddLinks,
+	
 	AddEdgesResponse,
-	AddChildrenToParent,
-	AddParentsToChild,
 	AddLinksResponse,
+	
 	DescriptorQualifications
 }
