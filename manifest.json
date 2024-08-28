@@ -272,10 +272,16 @@
             "default": "_predicate_property-of"
         },
         "predicateRequiredIndicator": {
-            "description": "Property predicate key",
+            "description": "Required indicator predicate key",
             "type": "string",
             "required": true,
             "default": "_predicate_requires_indicator"
+        },
+        "predicateRequiredMetadata": {
+            "description": "Required metadata predicate key",
+            "type": "string",
+            "required": true,
+            "default": "_predicate_requires_metadata"
         },
         "namespaceIdentifier": {
             "description": "Namespace identifier key",
