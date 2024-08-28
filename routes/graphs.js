@@ -66,7 +66,12 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(request, response, module.context.configuration.predicateEnumeration)
+			doAddEdges(
+				request,
+				response,
+				module.context.configuration.predicateEnumeration,
+				true
+			)
 		}
 	},
 	'graph-add-enum'
@@ -147,7 +152,12 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(request, response, module.context.configuration.predicateField)
+			doAddEdges(
+				request,
+				response,
+				module.context.configuration.predicateField,
+				true
+			)
 		}
 	},
 	'graph-add-field'
@@ -221,7 +231,12 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(request, response, module.context.configuration.predicateSection)
+			doAddEdges(
+				request,
+				response,
+				module.context.configuration.predicateSection,
+				true
+			)
 		}
 	},
 	'graph-add-section'
@@ -310,7 +325,12 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(request, response, module.context.configuration.predicateBridge)
+			doAddEdges(
+				request,
+				response,
+				module.context.configuration.predicateBridge,
+				true
+			)
 		}
 	},
 	'graph-add-bridge'
@@ -582,88 +602,121 @@ router.post(
 //
 
 /**
- * Insert enumerations.
- * @param request {Object}: API request.
- * @param response {Object}: API response.
- * @param predicate {String}: Link predicate.
+ * Adds edges based on the provided parameters.
+ *
+ * @param theRequest {Onject}: The request object.
+ * @param theResponse {Onject}: The response object.
+ * @param thePredicate {String}: The predicate for the edges.
+ * @param theDirection {Boolean}: `true` many to one; `false` one to many.
+ *
+ * @return {void}
  */
-function doAddEdges(request, response, predicate)
-{
+function doAddEdges(
+	theRequest,
+	theResponse,
+	thePredicate,
+	theDirection
+){
 	//
 	// Init local storage.
 	//
-	const data = request.body
-
+	const data = theRequest.body
+	const terms = []
+	
 	//
-	// Check for missing keys.
+	// Check for missing terms.
 	//
 	const missing = getEdgeMissingKeys(data)
 	if(missing.length > 0) {
-
+		
 		const message =
 			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
 				.replace('@@@', missing.join(", "))
-
-		response.throw(400, message)
-		return                                                                  // ==>
+		
+		theResponse.throw(400, message)
+		return                                                          // ==>
 	}
-
+	
 	//
 	// Create list of expected edges.
 	//
 	const edges = []
 	const result = {inserted: 0, updated: 0, existing: 0}
-	data.items.forEach(item => {
-
+	data.items.forEach(item =>
+	{
 		//
 		// Init local identifiers.
 		//
 		const root = `${module.context.configuration.collectionTerm}/${data.root}`
-		const subject = `${module.context.configuration.collectionTerm}/${item}`
-		const object = `${module.context.configuration.collectionTerm}/${data.parent}`
-		const key = Utils.getEdgeKey(subject, predicate, object)
-
+		const src = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${item}`
+			: `${module.context.configuration.collectionTerm}/${data.parent}`
+		const dst = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${data.parent}`
+			: `${module.context.configuration.collectionTerm}/${item}`
+		const key = Utils.getEdgeKey(src, thePredicate, dst)
+		
 		//
 		// Check if it exists.
 		//
-		try {
+		try
+		{
+			///
+			// Get edge.
+			///
 			const found = collection_edge.document(key)
-			if(found._path.includes(root)) {
+			
+			///
+			// Handle existing.
+			//
+			if(found._path.includes(root))
+			{
 				result.existing += 1
-			} else {
+			}
+			
+			///
+			// Add root.
+			///
+			else
+			{
 				result.updated += 1
 				edges.push({
 					_key: key,
-					_from: subject,
-					_to: object,
-					_predicate: predicate,
+					_from: src,
+					_to: dst,
+					_predicate: thePredicate,
 					_path: found._path.concat([root])
 				})
 			}
-		} catch (error) {
-
+		}
+		
+		///
+		// New edge.
+		///
+		catch (error)
+		{
 			//
 			// Handle unexpected errors.
 			//
 			if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
 				response.throw(500, error.message)
-				return                                                          // ==>
+				return                                                  // ==>
 			}
-
+			
 			//
 			// Insert edge.
 			//
 			result.inserted += 1
 			edges.push({
 				_key: key,
-				_from: subject,
-				_to: object,
-				_predicate: predicate,
+				_from: src,
+				_to: dst,
+				_predicate: thePredicate,
 				_path: [ root ]
 			})
 		}
 	})
-
+	
 	//
 	// Perform query.
 	//
@@ -673,13 +726,13 @@ function doAddEdges(request, response, predicate)
             INTO ${collection_edge}
             OPTIONS { overwriteMode: "update", keepNull: false, mergeObjects: false }
     `)
-
-	response.send(result)
-
+	
+	theResponse.send(result)
+	
 } // doAddEdges()
 
 /**
- * Adds descriptor links based on the provided parameters.
+ * Adds links based on the provided parameters.
  *
  * @param theRequest {Onject}: The request object.
  * @param theResponse {Onject}: The response object.
@@ -693,7 +746,7 @@ function doAddEdges(request, response, predicate)
  */
 function doAddLinks(
 	theRequest,
-    theResponse,
+	theResponse,
 	thePredicate,
 	theNodeRef,
 	theNodesRef,
