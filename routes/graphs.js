@@ -145,6 +145,92 @@ router.post(
 	)
 
 /**
+ * Delete enumerations.
+ */
+router.post(
+	'del/enum',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelEdges(
+				request,
+				response,
+				module.context.configuration.predicateEnumeration,
+				true
+			)
+		}
+	},
+	'graph-del-enum'
+)
+	.summary('Delete enumerations')
+	.description(dd
+		`
+            **Delete enumerations**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to remove a set of child enumerations from a parent \
+            node in a specific graph path.
+            
+            Enumerations are controlled vocabularies that can have several nested levels.
+            
+            The service expects the graph root global identifier, the \
+            parent global identifier and its children global identifiers in the request body. \
+            The *child* elements will be considered *valid enumeration options* of the \
+            *parent* node within the *root* graph.
+        `
+	)
+	.body(Models.AddEdges, dd
+		`
+            **Root, parent and elements**
+            
+            The request body should hold an object containing the following elements:
+            - \`root\`: The global identifier of the term that represents the \
+              enumeration type, root or path.
+            - \`parent\`: The global identifier of the term that represents \
+              the parent of the enumeration elements.
+            - \`items\`: A set of term global identifiers, each representing an enumeration.
+            
+            The *root* represents the type or name of the graph.
+            The *parent* represents a node in the graph, at any level, to which the provided \
+            enumeration options belong.
+            The *items* represent the identifiers of the terms that represent valid enumeration \
+            options for the *parent* node.
+        `
+	)
+	.response(200, Models.AddEdgesResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containign the following properties:
+            - deleted: The number of deleted edges.
+            - updated: The number of existing edges in which the root was removed from their path.
+            - ignored: The number of edges that were not found.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid reference**
+
+            The service will return this code any of the provided term references are invalid.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
  * Add fields.
  */
 router.post(
@@ -600,8 +686,8 @@ router.post(
 /**
  * Adds edges based on the provided parameters.
  *
- * @param theRequest {Onject}: The request object.
- * @param theResponse {Onject}: The response object.
+ * @param theRequest {Object}: The request object.
+ * @param theResponse {Object}: The response object.
  * @param thePredicate {String}: The predicate for the edges.
  * @param theDirection {Boolean}: `true` many to one; `false` one to many.
  *
@@ -617,7 +703,6 @@ function doAddEdges(
 	// Init local storage.
 	//
 	const data = theRequest.body
-	const terms = []
 	
 	//
 	// Check for missing terms.
@@ -669,9 +754,9 @@ function doAddEdges(
 			{
 				result.existing += 1
 			}
-			
-			///
-			// Add root.
+				
+				///
+				// Add root.
 			///
 			else
 			{
@@ -685,10 +770,10 @@ function doAddEdges(
 				})
 			}
 		}
-		
-		///
-		// New edge.
-		///
+			
+			///
+			// New edge.
+			///
 		catch (error)
 		{
 			//
@@ -728,10 +813,152 @@ function doAddEdges(
 } // doAddEdges()
 
 /**
+ * Removes edges based on the provided parameters.
+ *
+ * @param theRequest {Object}: The request object.
+ * @param theResponse {Object}: The response object.
+ * @param thePredicate {String}: The predicate for the edges.
+ * @param theDirection {Boolean}: `true` many to one; `false` one to many.
+ *
+ * @return {void}
+ */
+function doDelEdges(
+	theRequest,
+	theResponse,
+	thePredicate,
+	theDirection
+){
+	//
+	// Init local storage.
+	//
+	const remove = {}
+	const update = {}
+	const data = theRequest.body
+	const result = {deleted: 0, updated: 0, ignored: 0}
+	
+	//
+	// Iterate child nodes.
+	//
+	data.items.forEach(child =>
+	{
+		//
+		// Init local identifiers.
+		//
+		const root = `${module.context.configuration.collectionTerm}/${data.root}`
+		const src = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${child}`
+			: `${module.context.configuration.collectionTerm}/${data.parent}`
+		const dst = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${data.parent}`
+			: `${module.context.configuration.collectionTerm}/${child}`
+		// const key = Utils.getEdgeKey(src, thePredicate, dst)
+		const pred = module.context.configuration.predicate
+		const pred_bridge = module.context.configuration.predicateBridge
+		const path = module.context.configuration.sectionPath
+		
+		///
+		// Get all edges between the parent and the current child and
+		// all edges stemming from child to the leaf nodes having the
+		// requested root.
+		///
+		const edges = K.db._query( aql`
+				WITH ${collection_term}
+				LET branch = FLATTEN(
+				  FOR vertex, edge, path IN 0..10
+				      INBOUND ${dst}
+				      ${collection_edge}
+				      
+				      PRUNE edge._from == ${src} AND
+				            edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+				            ${root} IN edge.${path}
+				  
+				      OPTIONS {
+				        "order": "bfs",
+				        "uniqueVertices": "path"
+				      }
+				  
+				      FILTER (edge._from == ${src} OR edge._to == ${src}) AND
+				             edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+				             ${root} IN edge.${path}
+				            
+				  RETURN path.edges
+				)
+				
+				LET leaves = FLATTEN(
+				  FOR vertex, edge, path IN 0..10
+				      INBOUND ${src}
+				      ${collection_edge}
+				      
+				      PRUNE edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+				            ${root} IN edge.${path}
+				  
+				      OPTIONS {
+				        "order": "bfs",
+				        "uniqueVertices": "path"
+				      }
+				  
+				      FILTER edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+				            ${root} IN edge.${path}
+				      
+				  RETURN path.edges
+				)
+				
+				RETURN APPEND(branch, leaves)
+		    `).toArray()[0]
+		
+		///
+		// Iterate found edges.
+		// For each edge:
+		// if the root is not in the path, discard element;
+		// if the root is in the path remove it from the path and
+		// if the path becomes empty,  add to delete elements,
+		// if the path does not become empty, add to update elements.
+		///
+		edges.forEach( (edge) => {
+			if(edge[path].includes(root)) {
+				const elements = edge[path].filter(x => x !== root)
+				if(elements.length > 0) {
+					result.updated += 1
+					update[edge._key] = {
+						_key: edge._key,
+						[path]: elements
+					}
+				} else {
+					result.deleted += 1
+					remove[edge._key] = edge._key
+				}
+			} else {
+				result.ignored += 1
+			}
+		})
+	})
+	
+	//
+	// Perform updates.
+	//
+	K.db._query( aql`
+        FOR item in ${Object.values(update)}
+        UPDATE item IN ${collection_edge}
+        OPTIONS { keepNull: false, mergeObjects: false }
+    `)
+	
+	//
+	// Perform removals.
+	//
+	K.db._query( aql`
+        FOR item in ${Object.values(remove)}
+        REMOVE item IN ${collection_edge}
+    `)
+	
+	theResponse.send(result)
+	
+} // doDelEdges()
+
+/**
  * Adds links based on the provided parameters.
  *
- * @param theRequest {Onject}: The request object.
- * @param theResponse {Onject}: The response object.
+ * @param theRequest {Object}: The request object.
+ * @param theResponse {Object}: The response object.
  * @param thePredicate {String}: The predicate for the links.
  * @param theDirection {Boolean}: `true` many to one; `false` one to many.
  * @param allLinksDescriptors {Boolean}: Assert all links are descriptors.
