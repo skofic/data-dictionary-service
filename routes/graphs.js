@@ -66,7 +66,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(
+			doAddEnums(
 				request,
 				response,
 				module.context.configuration.predicateEnumeration,
@@ -94,7 +94,7 @@ router.post(
             *parent* node within the *root* graph.
         `
 	)
-	.body(Models.AddEdges, dd
+	.body(Models.AddDelEdges, dd
 		`
             **Root, parent and elements**
             
@@ -152,7 +152,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doDelEdges(
+			doDelEnums(
 				request,
 				response,
 				module.context.configuration.predicateEnumeration,
@@ -180,7 +180,7 @@ router.post(
             *parent* node within the *root* graph.
         `
 	)
-	.body(Models.AddEdges, dd
+	.body(Models.AddDelEdges, dd
 		`
             **Root, parent and elements**
             
@@ -198,11 +198,11 @@ router.post(
             options for the *parent* node.
         `
 	)
-	.response(200, Models.AddEdgesResponse, dd
+	.response(200, Models.DelEdgesResponse, dd
 		`
             **Operations count**
             
-            The service will return an object containign the following properties:
+            The service will return an object containing the following properties:
             - deleted: The number of deleted edges.
             - updated: The number of existing edges in which the root was removed from their path.
             - ignored: The number of edges that were not found.
@@ -238,7 +238,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(
+			doAddEnums(
 				request,
 				response,
 				module.context.configuration.predicateField,
@@ -265,7 +265,7 @@ router.post(
             and the list of child descriptor global identifiers representing data input fields.
         `
 	)
-	.body(Models.AddEdges, dd
+	.body(Models.AddDelEdges, dd
 		`
             **Root, parent and elements**
             
@@ -310,6 +310,93 @@ router.post(
 	)
 
 /**
+ * Delete fields.
+ */
+router.post(
+	'del/field',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelEnums(
+				request,
+				response,
+				module.context.configuration.predicateField,
+				true
+			)
+		}
+	},
+	'graph-del-field'
+)
+	.summary('Delete fields')
+	.description(dd
+		`
+            **Delete fields**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to remove a set of child fields from a parent \
+            node in a specific graph path.
+            
+            A graph of fields represents a form in which you may have sections containing \
+            a set of descriptors representing data input fields.
+            
+            The service expects the graph root global identifier, the \
+            parent global identifier and its children global identifiers in the request body. \
+            The *child* elements will be considered *fields* of the \
+            *parent* node within the *root* graph.
+        `
+	)
+	.body(Models.AddDelEdges, dd
+		`
+            **Root, parent and elements**
+            
+            The request body should hold an object containing the following elements:
+            - \`root\`: The global identifier of the term that represents the \
+              form.
+            - \`parent\`: The global identifier of the term that represents \
+              the parent of the items.
+            - \`items\`: A set of term global identifiers, each representing a field.
+            
+            The *root* represents the type or name of the graph.
+            The *parent* represents a node in the graph, at any level, to which the provided \
+            enumeration options belong.
+            The *items* represent the identifiers of the terms that represent fields \
+            of the *parent* node.
+        `
+	)
+	.response(200, Models.DelEdgesResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - deleted: The number of deleted edges.
+            - updated: The number of existing edges in which the root was removed from their path.
+            - ignored: The number of edges that were not found.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid reference**
+
+            The service will return this code any of the provided term references are invalid.
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
  * Add sections.
  */
 router.post(
@@ -317,7 +404,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(
+			doAddEnums(
 				request,
 				response,
 				module.context.configuration.predicateSection,
@@ -348,7 +435,7 @@ router.post(
             within the *root* graph.
         `
 	)
-	.body(Models.AddEdges, dd
+	.body(Models.AddDelEdges, dd
 		`
             **Root, parent and elements**
             
@@ -380,12 +467,95 @@ router.post(
 		`
             **Invalid parameter**
             
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+            The service will return this code if the provided request is invalid:
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Delete sections.
+ */
+router.post(
+	'del/section',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelEnums(
+				request,
+				response,
+				module.context.configuration.predicateSection,
+				true
+			)
+		}
+	},
+	'graph-del-section'
+)
+	.summary('Delete sections')
+	.description(dd
+		`
+            **Delete sections**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to remove a set of child sections from a parent \
+            node in a specific graph path.
+            
+            *Sections* are used to create *non-functional groups of elements* that \
+            can be used as subdivisions for display purposes, such as sections in a \
+            list of child enumeration elements, or sections in a form.
+            
+            The service expects the graph root global identifier, the \
+            parent global identifier and its children global identifiers in the request body. \
+            The *child* elements will be considered *sections* of the \
+            *parent* node within the *root* graph.
+        `
+	)
+	.body(Models.AddDelEdges, dd
+		`
+            **Root, parent and elements**
+            
+            The request body should hold an object containing the following elements:
+            - \`root\`: The global identifier of the term that represents the \
+              form.
+            - \`parent\`: The global identifier of the term that represents \
+              the parent of the items.
+            - \`items\`: A set of term global identifiers, each representing a field.
+            
+            The *root* represents the type or name of the graph.
+            The *parent* represents a node in the graph, at any level, to which the provided \
+            enumeration options belong.
+            The *items* represent the identifiers of the terms that represent sections \
+            of the *parent* node.
+        `
+	)
+	.response(200, Models.DelEdgesResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - deleted: The number of deleted edges.
+            - updated: The number of existing edges in which the root was removed from their path.
+            - ignored: The number of edges that were not found.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid reference**
+
+            The service will return this code any of the provided term references are invalid.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -411,7 +581,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEdges(
+			doAddEnums(
 				request,
 				response,
 				module.context.configuration.predicateBridge,
@@ -444,7 +614,7 @@ router.post(
             within the *root* graph.
         `
 	)
-	.body(Models.AddEdges, dd
+	.body(Models.AddDelEdges, dd
 		`
             **Root, parent and elements**
             
@@ -474,12 +644,7 @@ router.post(
 		`
             **Invalid parameter**
             
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+            The service will return this code if the provided request is invalid:
         `
 	)
 	.response(401, ErrorModel, dd
@@ -526,21 +691,19 @@ router.post(
             This service can be used to add a set of properties to an object structure type.
             
             Object structures are represented by a term that holds the list of restrictions \
-            and constraints the structure should obey. This term represents the object type. \
+            and constraints the structure should obey. This term represents the object type.
             The graph is a one level tree where the children are all the properties that the \
             object type parent might feature. This list is only indicative, it should be used \
-            as a suggestion of which properties to set in the object. The constraints will be \
-            listed in the rule (_rule) section of the object type term. Note that, by design, \
-            an object type can only have one level, which means that if an object contains \
-            another object, there must be a type at both levels.
+            as a suggestion of which properties to set in the object.
+            The constraints will be listed in the rule (_rule) section of the object type \
+            term. Note that, by design, an object type can only have one level, which means \
+            that if an object contains another object, there must be a type at both levels.
             
-            The service expects
-            
-            The service expects the global identifier of the object type term,  and the list of \
+            The service expects the global identifier of the object type term, and the list of \
             descriptor global identifiers representing the object's properties.
         `
 	)
-	.body(Models.AddLinks, dd
+	.body(Models.AddDelLinks, dd
 		`
             **Object type and properties**
             
@@ -565,13 +728,7 @@ router.post(
 		`
             **Invalid parameter**
             
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error. Note that all child elements must \
-              reference descriptor terms.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+            The service will return this code if the provided request is invalid:
         `
 	)
 	.response(401, ErrorModel, dd
@@ -590,7 +747,90 @@ router.post(
 	)
 
 /**
- * Add properties.
+ * Remove properties.
+ */
+router.post(
+	'del/property',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelLinks(
+				request,
+				response,
+				module.context.configuration.predicateProperty,
+				true,
+			)
+		}
+	},
+	'graph-del-property'
+)
+	.summary('Remove properties')
+	.description(dd
+		`
+            **Remove properties**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to remove a set of properties from an object structure type.
+            
+            Object structures are represented by a term that holds the list of restrictions \
+            and constraints the structure should obey. This term represents the object type.
+            The graph is a one level tree where the children are all the properties that the \
+            object type parent might feature. This list is only indicative, it should be used \
+            as a suggestion of which properties to set in the object.
+            The constraints will be listed in the rule (_rule) section of the object type \
+            term. Note that, by design, an object type can only have one level, which means \
+            that if an object contains another object, there must be a type at both levels.
+            
+            The service expects the global identifier of the object type term, and the list of \
+            descriptor global identifiers representing the object's properties.
+        `
+	)
+	.body(Models.AddDelLinks, dd
+		`
+            **Object type and properties**
+            
+            The request body should hold an object containing the following elements:
+            - \`parent\`: The parent node: the global identifier of the object.
+            - \`items\`: A set of descriptor term global identifiers representing \
+              the object's properties.
+            
+            The edges will contain a relationship from the children to the parent.
+        `
+	)
+	.response(200, Models.DelLinksResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - removed: The number of removed edges.
+            - ignored: The number of ignored edges.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided request is invalid:
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Add indicators.
  */
 router.post(
 	'add/indicator',
@@ -608,7 +848,7 @@ router.post(
 	},
 	'graph-add-indicator'
 )
-	.summary('Add required-indicators')
+	.summary('Add required indicators')
 	.description(dd
 		`
             **Add required indicators**
@@ -625,11 +865,11 @@ router.post(
             This feature is useful when building data submission templates or \
             aggregating datasets.
             
-            The service expects the global identifier of the object type term,  and the list of \
+            The service expects the global identifier of the object type term, and the list of \
             descriptor global identifiers representing the object's properties.
         `
 	)
-	.body(Models.AddLinks, dd
+	.body(Models.AddDelLinks, dd
 		`
             **Descriptor and its required indicators**
             
@@ -654,13 +894,254 @@ router.post(
 		`
             **Invalid parameter**
             
-            The service will return this code if the provided term is invalid:
-            - Parameter error: if the error is caught at the level of the parameter, \
-              the service will return a standard error. Note that all child elements must \
-              reference descriptor terms.
-            - Validation error: if it is a validation error, the service will return an \
-              object with two properties: \`report\` will contain the status report and \
-              \`value\` will contain the provided term.
+            The service will return this code if the provided request is invalid:
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Remove properties.
+ */
+router.post(
+	'del/indicator',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelLinks(
+				request,
+				response,
+				module.context.configuration.predicateRequiredIndicator,
+				false
+			)
+		}
+	},
+	'graph-del-indicator'
+)
+	.summary('Remove required indicators')
+	.description(dd
+		`
+            **Remove required indicators**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to remove a set of required indicators from a \
+            descriptor term.
+            
+            There are cases in which a particular descriptor requires a set of other \
+            indicators to give meaning to its data in a dataset. For instance we could \
+            link date to temperature, so that whenever we include temperature in a dataset \
+            we also make sure to add the date in which the temperature was recorded. \
+            This feature is useful when building data submission templates or \
+            aggregating datasets.
+            
+            The service expects the global identifier of the object type term, and the list of \
+            descriptor global identifiers representing the object's properties.
+        `
+	)
+	.body(Models.AddDelLinks, dd
+		`
+            **Object type and properties**
+            
+            The request body should hold an object containing the following elements:
+            - \`parent\`: The parent node: the global identifier of the object.
+            - \`items\`: A set of descriptor term global identifiers representing \
+              the object's properties.
+            
+            The edges will contain a relationship from the children to the parent.
+        `
+	)
+	.response(200, Models.DelLinksResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - removed: The number of removed edges.
+            - ignored: The number of ignored edges.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided request is invalid:
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Add metadata.
+ */
+router.post(
+	'add/metadata',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doAddLinks(
+				request,
+				response,
+				module.context.configuration.predicateRequiredMetadata,
+				false,
+				true
+			)
+		}
+	},
+	'graph-add-metadata'
+)
+	.summary('Add required metadata')
+	.description(dd
+		`
+            **Add required metadata**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to add a set of required metadata references \
+            to an existing descriptor.
+            
+            There are cases in which a particular descriptor requires a set of metadata \
+            indicators to give meaning to its data in a dataset. The metadata indicators \
+            are descriptors that contain data *related to the parent descriptor*: this \
+            means that the parent and its metadata indicators form a single block. \
+            Required indicators are added and shared in the dataset, while metadata \
+            indicators are added to the parent descriptor.
+            
+            The service expects the global identifier of the object type term, and the list of \
+            descriptor global identifiers representing the object's metadata indicators.
+        `
+	)
+	.body(Models.AddDelLinks, dd
+		`
+            **Descriptor and its required metadata indicators**
+            
+            The request body should hold an object containing the following elements:
+            - \`parent\`: The descriptor global identifier.
+            - \`items\`: A set of descriptor term global identifiers representing \
+              the required metadata indicators.
+            
+            The edges will contain a relationship from the parents to the children.
+        `
+	)
+	.response(200, Models.AddEdgesResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - inserted: The number of inserted edges.
+            - existing: The number of existing edges that include subject, object and predicate.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided request is invalid:
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Remove metadata.
+ */
+router.post(
+	'del/metadata',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelLinks(
+				request,
+				response,
+				module.context.configuration.predicateRequiredMetadata,
+				false
+			)
+		}
+	},
+	'graph-del-metadata'
+)
+	.summary('Remove required indicators')
+	.description(dd
+		`
+            **Remove required metadata indicators**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            This service can be used to remove a set of required metadata indicators from a \
+            descriptor term.
+            
+            There are cases in which a particular descriptor requires a set of metadata \
+            indicators to give meaning to its data in a dataset. The metadata indicators \
+            are descriptors that contain data *related to the parent descriptor*: this \
+            means that the parent and its metadata indicators form a single block. \
+            Required indicators are added and shared in the dataset, while metadata \
+            indicators are added to the parent descriptor.
+            
+            The service expects the global identifier of the object type term, and the list of \
+            descriptor global identifiers representing the object's metadata indicators.
+        `
+	)
+	.body(Models.AddDelLinks, dd
+		`
+            **Object type and properties**
+            
+            The request body should hold an object containing the following elements:
+            - \`parent\`: The descriptor global identifier.
+            - \`items\`: A set of descriptor term global identifiers representing \
+              the required metadata indicators.
+            
+            The edges will contain a relationship from the children to the parent.
+        `
+	)
+	.response(200, Models.DelLinksResponse, dd
+		`
+            **Operations count**
+            
+            The service will return an object containing the following properties:
+            - removed: The number of removed edges.
+            - ignored: The number of ignored edges.
+        `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid parameter**
+            
+            The service will return this code if the provided request is invalid:
         `
 	)
 	.response(401, ErrorModel, dd
@@ -693,7 +1174,7 @@ router.post(
  *
  * @return {void}
  */
-function doAddEdges(
+function doAddEnums(
 	theRequest,
 	theResponse,
 	thePredicate,
@@ -822,7 +1303,7 @@ function doAddEdges(
  *
  * @return {void}
  */
-function doDelEdges(
+function doDelEnums(
 	theRequest,
 	theResponse,
 	thePredicate,
@@ -862,49 +1343,49 @@ function doDelEdges(
 		// requested root.
 		///
 		const edges = K.db._query( aql`
-				WITH ${collection_term}
-				LET branch = FLATTEN(
-				  FOR vertex, edge, path IN 0..10
-				      INBOUND ${dst}
-				      ${collection_edge}
-				      
-				      PRUNE edge._from == ${src} AND
-				            edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-				            ${root} IN edge.${path}
-				  
-				      OPTIONS {
-				        "order": "bfs",
-				        "uniqueVertices": "path"
-				      }
-				  
-				      FILTER (edge._from == ${src} OR edge._to == ${src}) AND
-				             edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-				             ${root} IN edge.${path}
-				            
-				  RETURN path.edges
-				)
-				
-				LET leaves = FLATTEN(
-				  FOR vertex, edge, path IN 0..10
-				      INBOUND ${src}
-				      ${collection_edge}
-				      
-				      PRUNE edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-				            ${root} IN edge.${path}
-				  
-				      OPTIONS {
-				        "order": "bfs",
-				        "uniqueVertices": "path"
-				      }
-				  
-				      FILTER edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-				            ${root} IN edge.${path}
-				      
-				  RETURN path.edges
-				)
-				
-				RETURN APPEND(branch, leaves)
-		    `).toArray()[0]
+			WITH ${collection_term}
+			LET branch = FLATTEN(
+			  FOR vertex, edge, path IN 0..10
+			      INBOUND ${dst}
+			      ${collection_edge}
+			      
+			      PRUNE edge._from == ${src} AND
+			            edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+			            ${root} IN edge.${path}
+			  
+			      OPTIONS {
+			        "order": "bfs",
+			        "uniqueVertices": "path"
+			      }
+			  
+			      FILTER (edge._from == ${src} OR edge._to == ${src}) AND
+			             edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+			             ${root} IN edge.${path}
+			            
+			  RETURN path.edges
+			)
+			
+			LET leaves = FLATTEN(
+			  FOR vertex, edge, path IN 0..10
+			      INBOUND ${src}
+			      ${collection_edge}
+			      
+			      PRUNE edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+			            ${root} IN edge.${path}
+			  
+			      OPTIONS {
+			        "order": "bfs",
+			        "uniqueVertices": "path"
+			      }
+			  
+			      FILTER edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
+			            ${root} IN edge.${path}
+			      
+			  RETURN path.edges
+			)
+			
+			RETURN APPEND(branch, leaves)
+	    `).toArray()[0]
 		
 		///
 		// Iterate found edges.
@@ -952,7 +1433,7 @@ function doDelEdges(
 	
 	theResponse.send(result)
 	
-} // doDelEdges()
+} // doDelEnums()
 
 /**
  * Adds links based on the provided parameters.
@@ -1060,6 +1541,69 @@ function doAddLinks(
 	theResponse.send(result)
 	
 } // doAddDescriptorLinks()
+
+/**
+ * Removes links based on the provided parameters.
+ *
+ * @param theRequest {Object}: The request object.
+ * @param theResponse {Object}: The response object.
+ * @param thePredicate {String}: The predicate for the links.
+ * @param theDirection {Boolean}: `true` many to one; `false` one to many.
+ *
+ * @return {void}
+ */
+function doDelLinks(
+	theRequest,
+	theResponse,
+	thePredicate,
+	theDirection
+){
+	//
+	// Init local storage.
+	//
+	const remove = {}
+	const data = theRequest.body
+	const result = {deleted: 0, ignored: 0}
+	
+	//
+	// Iterate child nodes.
+	//
+	data.items.forEach(child =>
+	{
+		//
+		// Init local identifiers.
+		//
+		const pred = module.context.configuration.predicate
+		const src = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${child}`
+			: `${module.context.configuration.collectionTerm}/${data.parent}`
+		const dst = (theDirection)
+			? `${module.context.configuration.collectionTerm}/${data.parent}`
+			: `${module.context.configuration.collectionTerm}/${child}`
+		const key = Utils.getEdgeKey(src, thePredicate, dst)
+		
+		///
+		// Collect edge key.
+		///
+		if(collection_link.exists(key) === false) {
+			result.ignored += 1
+		} else {
+			result.deleted += 1
+			remove[key] = key
+		}
+	})
+	
+	//
+	// Perform removals.
+	//
+	K.db._query( aql`
+        FOR item in ${Object.values(remove)}
+        REMOVE item IN ${collection_link}
+    `)
+	
+	theResponse.send(result)
+	
+} // doDelLinks()
 
 
 //
