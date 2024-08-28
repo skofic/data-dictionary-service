@@ -167,15 +167,15 @@ const TreeModel = joi.array()
 		})
 	)
 
-// Graph insertion elements: root, parent and items to insert.
-const AddEdges = joi.object({
+// Graph insertion and deletion elements: root, parent and items to insert.
+const AddDelEdges = joi.object({
 	root: joi.string().required(),
 	parent: joi.string().required(),
 	items: joi.array().items(joi.string()).required()
 })
 
-// Graph insertion elements: root, parent and items to insert.
-const AddLinks = joi.object({
+// Graph insertion and deletion elements: root, parent and items to insert.
+const AddDelLinks = joi.object({
 	parent: joi.string().required(),
 	items: joi.array().items(joi.string()).required()
 })
@@ -187,10 +187,23 @@ const AddEdgesResponse = joi.object({
 	existing: joi.number()
 })
 
+// Remove elements from a graph response.
+const DelEdgesResponse = joi.object({
+	deleted: joi.number(),
+	updated: joi.number(),
+	ignored: joi.number()
+})
+
 // Add elements to graph response.
 const AddLinksResponse = joi.object({
 	inserted: joi.number(),
 	existing: joi.number()
+})
+
+// Add elements to graph response.
+const DelLinksResponse = joi.object({
+	deleted: joi.number(),
+	ignored: joi.number()
 })
 
 // Descriptor qualification statistics.
@@ -224,11 +237,14 @@ module.exports = {
 	LevelsModel,
 	TreeModel,
 	
-	AddEdges,
-	AddLinks,
+	AddDelEdges,
+	AddDelLinks,
 	
 	AddEdgesResponse,
+	DelEdgesResponse,
+	
 	AddLinksResponse,
+	DelLinksResponse,
 	
 	DescriptorQualifications
 }
