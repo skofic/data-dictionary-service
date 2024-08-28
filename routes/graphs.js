@@ -423,8 +423,6 @@ router.post(
 				request,
 				response,
 				module.context.configuration.predicateProperty,
-				'parent',
-				'children',
 				true,
 				true
 			)
@@ -456,13 +454,13 @@ router.post(
             descriptor global identifiers representing the object's properties.
         `
 	)
-	.body(Models.AddChildrenToParent, dd
+	.body(Models.AddLinks, dd
 		`
             **Object type and properties**
             
             The request body should hold an object containing the following elements:
             - \`parent\`: The parent node: the global identifier of the object.
-            - \`children\`: A set of descriptor term global identifiers representing \
+            - \`items\`: A set of descriptor term global identifiers representing \
               the object's properties.
             
             The edges will contain a relationship from the children to the parent.
@@ -517,8 +515,6 @@ router.post(
 				request,
 				response,
 				module.context.configuration.predicateRequiredIndicator,
-				'child',
-				'parents',
 				false,
 				true
 			)
@@ -547,13 +543,13 @@ router.post(
             descriptor global identifiers representing the object's properties.
         `
 	)
-	.body(Models.AddParentsToChild, dd
+	.body(Models.AddLinks, dd
 		`
             **Descriptor and its required indicators**
             
             The request body should hold an object containing the following elements:
-            - \`child\`: The descriptor global identifier.
-            - \`parents\`: A set of descriptor term global identifiers representing \
+            - \`parent\`: The descriptor global identifier.
+            - \`items\`: A set of descriptor term global identifiers representing \
               the required indicators.
             
             The edges will contain a relationship from the parents to the children.
@@ -737,8 +733,6 @@ function doAddEdges(
  * @param theRequest {Onject}: The request object.
  * @param theResponse {Onject}: The response object.
  * @param thePredicate {String}: The predicate for the links.
- * @param theNodeRef {String}: The single node.
- * @param theNodesRef {String[]}: The list of nodes.
  * @param theDirection {Boolean}: `true` many to one; `false` one to many.
  * @param allLinksDescriptors {Boolean}: Assert all links are descriptors.
  *
@@ -748,8 +742,6 @@ function doAddLinks(
 	theRequest,
 	theResponse,
 	thePredicate,
-	theNodeRef,
-	theNodesRef,
 	theDirection,
 	allLinksDescriptors = false
 ){
@@ -762,8 +754,9 @@ function doAddLinks(
 	//
 	// Check for missing terms.
 	//
-	const missing = getLinksMissingKeys(data, theNodeRef, theNodesRef, terms)
+	const missing = getLinksMissingKeys(data, terms)
 	if(missing.length > 0) {
+		
 		const message =
 			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
 				.replace('@@@', missing.join(", "))
@@ -776,6 +769,7 @@ function doAddLinks(
 	// Ensure all terms are descriptors.
 	//
 	if(allLinksDescriptors) {
+		
 		const found = getNotDescriptorKeys(terms)
 		if(found.length > 0) {
 			const message =
@@ -792,16 +786,16 @@ function doAddLinks(
 	//
 	const edges = []
 	const result = {inserted: 0, existing: 0}
-	data[theNodesRef].forEach(item =>
+	data.items.forEach(item =>
 	{
 		//
 		// Init local identifiers.
 		//
 		const src = (theDirection)
 			? `${module.context.configuration.collectionTerm}/${item}`
-			: `${module.context.configuration.collectionTerm}/${data[theNodeRef]}`
+			: `${module.context.configuration.collectionTerm}/${data.parent}`
 		const dst = (theDirection)
-			? `${module.context.configuration.collectionTerm}/${data[theNodeRef]}`
+			? `${module.context.configuration.collectionTerm}/${data.parent}`
 			: `${module.context.configuration.collectionTerm}/${item}`
 		const key = Utils.getEdgeKey(src, thePredicate, dst)
 		
@@ -881,23 +875,21 @@ function getEdgeMissingKeys(theData)
  * Assert links request keys exist.
  * This function will return the list of keys that are missing from terms collection.
  * @param theData {Object}: Object containing subject and object terms.
- * @param target {String}: Body object target key.
- * @param links {[String]}: Body object link keys.
  * @param terms {String[]}: Receives list of term global identifiers.
  *
  * @return {String[]}: List of missing keys
  */
-function getLinksMissingKeys(theData, target, links, terms)
+function getLinksMissingKeys(theData, terms)
 {
 	//
 	// Ensure items are a set.
 	//
-	theData[links] = [... new Set(theData[links])]
+	theData.items = [... new Set(theData.items)]
 	
 	//
 	// Collect keys.
 	//
-	terms = [theData[target]].concat(theData[links])
+	terms = [theData.parent].concat(theData.items)
 	
 	//
 	// Assert all terms exist.
@@ -909,7 +901,7 @@ function getLinksMissingKeys(theData, target, links, terms)
             RETURN term._key
         `).toArray()
 	
-	return terms.filter(x => !found.includes(x))                        // ==>
+	return terms.filter(x => !found.includes(x))                // ==>
 	
 } // getLinksMissingKeys()
 
