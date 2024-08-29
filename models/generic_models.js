@@ -181,18 +181,44 @@ const AddDelLinks = joi.object({
 })
 
 // Add elements to graph response.
-const AddEdgesResponse = joi.object({
-	inserted: joi.number(),
-	updated: joi.number(),
-	existing: joi.number()
-})
+const AddEdgesResponse = joi.alternatives()
+	.try(
+		joi.object({
+			inserted: joi.number(),
+			updated: joi.number(),
+			existing: joi.number()
+		}),
+		joi.object({
+			stats: joi.object({
+				inserted: joi.number(),
+				updated: joi.number(),
+				existing: joi.number()
+			}),
+			inserted: joi.array(),
+			updated: joi.array(),
+			existing: joi.array()
+		})
+	)
 
 // Remove elements from a graph response.
-const DelEdgesResponse = joi.object({
-	deleted: joi.number(),
-	updated: joi.number(),
-	ignored: joi.number()
-})
+const DelEdgesResponse = joi.alternatives()
+	.try(
+		joi.object({
+			deleted: joi.number(),
+			updated: joi.number(),
+			ignored: joi.number()
+		}),
+		joi.object({
+			stats: joi.object({
+				deleted: joi.number().integer().required(),
+				updated: joi.number().integer().required(),
+				ignored: joi.number().integer().required()
+			}),
+			deleted: joi.array(),
+			updated: joi.array(),
+			ignored: joi.array()
+		})
+	)
 
 // Add elements to graph response.
 const AddLinksResponse = joi.object({

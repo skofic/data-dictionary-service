@@ -64,13 +64,14 @@ const ParamDefNamespace = joi.boolean()
 const ParamSaveTerm = joi.boolean()
 	.default(true)
 	.description(
-		"**Flag to determine whether to save the term or not**.\n\
-		This option can be used when inserting or updating terms: if the flag \
-		is set, if all the required validations tests pass, the term will be \
-		either inserted or updated. If the flag is not set, you will get the \
-		status of the validation process. This flag is useful if you just need \
-		to check if the term is valid, or if you want to see if the updated term \
-		structure before persisting the object to the data dictionary."
+		"**Flag to determine whether to save the term or not**.\n" +
+		"This option can be used when inserting or updating terms: \
+		if the flag is set, if all the required validations tests pass, the \
+		term will be either inserted or updated. If the flag is not set, you \
+		will get the status of the validation process. This flag is useful if \
+		you just need to check if the term is valid, or if you want to see if \
+		the updated term structure before persisting the object to the data \
+		dictionary."
 	)
 
 const ParamResolve = joi.boolean()
