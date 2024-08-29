@@ -24,13 +24,17 @@ const HTTP_CONFLICT = status('conflict');
 const K = require('../utils/constants')
 const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
-const Dictionary = require("../utils/dictionary");
 
 //
 // Models.
 //
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic");
+const SaveModel = joi.boolean().default(true).description(
+	`If *set*, the edges will be created, updated or deleted; if *not set*, \
+	the service will return the inserted, updated or deleted edges.
+	`
+)
 
 //
 // Collections.
@@ -49,6 +53,7 @@ const view_reference = {
 // Instantiate router.
 //
 const createRouter = require('@arangodb/foxx/router');
+const TermValidation = require("../models/validation_parameters.");
 const router = createRouter();
 module.exports = router;
 router.tag('Graphs');
@@ -94,6 +99,7 @@ router.post(
             *parent* node within the *root* graph.
         `
 	)
+	.queryParam('save', SaveModel)
 	.body(Models.AddDelEdges, dd
 		`
             **Root, parent and elements**
@@ -180,6 +186,7 @@ router.post(
             *parent* node within the *root* graph.
         `
 	)
+	.queryParam('save', SaveModel)
 	.body(Models.AddDelEdges, dd
 		`
             **Root, parent and elements**
@@ -1203,7 +1210,12 @@ function doAddEnums(
 	// Create list of expected edges.
 	//
 	const edges = []
+	const inserted = []
+	const updated = []
+	const existing = []
 	const result = {inserted: 0, updated: 0, existing: 0}
+	const path = module.context.configuration.sectionPath
+	const pred = module.context.configuration.predicate
 	data.items.forEach(item =>
 	{
 		//
@@ -1231,30 +1243,31 @@ function doAddEnums(
 			///
 			// Handle existing.
 			//
-			if(found._path.includes(root))
+			if(found[path].includes(root))
 			{
 				result.existing += 1
+				existing.push(found)
 			}
 				
-				///
-				// Add root.
+			///
+			// Add root.
 			///
 			else
 			{
 				result.updated += 1
-				edges.push({
+				updated.push({
 					_key: key,
 					_from: src,
 					_to: dst,
-					_predicate: thePredicate,
-					_path: found._path.concat([root])
+					[pred]: thePredicate,
+					[path]: found[path].concat([root])
 				})
 			}
 		}
 			
-			///
-			// New edge.
-			///
+		///
+		// New edge.
+		///
 		catch (error)
 		{
 			//
@@ -1269,27 +1282,62 @@ function doAddEnums(
 			// Insert edge.
 			//
 			result.inserted += 1
-			edges.push({
+			inserted.push({
 				_key: key,
 				_from: src,
 				_to: dst,
-				_predicate: thePredicate,
-				_path: [ root ]
+				[pred]: thePredicate,
+				[path]: [ root ]
 			})
 		}
 	})
 	
-	//
-	// Perform query.
-	//
-	K.db._query( aql`
-        FOR item in ${edges}
-            INSERT item
-            INTO ${collection_edge}
-            OPTIONS { overwriteMode: "update", keepNull: false, mergeObjects: false }
-    `)
+	///
+	// Handle connection from root to parent.
+	///
 	
-	theResponse.send(result)
+	
+	///
+	// Insert edges.
+	///
+	if(theRequest.queryParams.save)
+	{
+		//
+		// Insert new edges.
+		//
+		K.db._query( aql`
+			FOR item in ${inserted}
+			    INSERT item
+			    INTO ${collection_edge}
+			    OPTIONS { overwriteMode: "update", keepNull: false }
+		`)
+		
+		//
+		// Update existing edges.
+		//
+		K.db._query( aql`
+			FOR item in ${updated}
+			    UPDATE {
+			        "_key": item._key,
+			        ${path}: item,${path}
+			    }
+			    IN ${collection_edge}
+			    OPTIONS { keepNull: false, mergeObjects: false }
+		`)
+		
+		theResponse.send(result)
+		return                                                          // ==>
+	}
+	
+	//
+	// Return information.
+	//
+	theResponse.send({
+		stats: result,
+		inserted,
+		updated,
+		existing
+	})
 	
 } // doAddEdges()
 
@@ -1312,10 +1360,18 @@ function doDelEnums(
 	//
 	// Init local storage.
 	//
-	const remove = {}
-	const update = {}
+	const edges = {}
+	const remove = []
+	const update = []
+	const ignore = []
+	
 	const data = theRequest.body
 	const result = {deleted: 0, updated: 0, ignored: 0}
+	
+	const pred = module.context.configuration.predicate
+	const path = module.context.configuration.sectionPath
+	const pred_bridge = module.context.configuration.predicateBridge
+	const root = `${module.context.configuration.collectionTerm}/${data.root}`
 	
 	//
 	// Iterate child nodes.
@@ -1325,113 +1381,150 @@ function doDelEnums(
 		//
 		// Init local identifiers.
 		//
-		const root = `${module.context.configuration.collectionTerm}/${data.root}`
 		const src = (theDirection)
 			? `${module.context.configuration.collectionTerm}/${child}`
 			: `${module.context.configuration.collectionTerm}/${data.parent}`
 		const dst = (theDirection)
 			? `${module.context.configuration.collectionTerm}/${data.parent}`
 			: `${module.context.configuration.collectionTerm}/${child}`
-		// const key = Utils.getEdgeKey(src, thePredicate, dst)
-		const pred = module.context.configuration.predicate
-		const pred_bridge = module.context.configuration.predicateBridge
-		const path = module.context.configuration.sectionPath
 		
 		///
 		// Get all edges between the parent and the current child and
 		// all edges stemming from child to the leaf nodes having the
 		// requested root.
 		///
-		const edges = K.db._query( aql`
+		const items = K.db._query( aql`
 			WITH ${collection_term}
+			
 			LET branch = FLATTEN(
-			  FOR vertex, edge, path IN 0..10
-			      INBOUND ${dst}
-			      ${collection_edge}
-			      
-			      PRUNE edge._from == ${src} AND
-			            edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-			            ${root} IN edge.${path}
-			  
-			      OPTIONS {
-			        "order": "bfs",
-			        "uniqueVertices": "path"
-			      }
-			  
-			      FILTER (edge._from == ${src} OR edge._to == ${src}) AND
-			             edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-			             ${root} IN edge.${path}
-			            
-			  RETURN path.edges
+			  FOR vertex, edge, path IN 0..100
+			    INBOUND ${dst}
+			    ${collection_edge}
+			    
+			    PRUNE edge._from == ${src} AND
+			          edge.${pred} IN [ ${thePredicate}, ${pred_bridge} ] AND
+			          ${root} IN edge.${path}
+			
+			    OPTIONS {
+			      "order": "bfs",
+			      "uniqueVertices": "path"
+			    }
+			
+			    FILTER edge._from == ${src} AND
+			           edge.${pred} IN [ ${thePredicate}, ${pred_bridge} ] AND
+			           ${root} IN edge.${path}
+			
+			  RETURN path.edges[*]._key
 			)
 			
 			LET leaves = FLATTEN(
-			  FOR vertex, edge, path IN 0..10
+			  FOR vertex, edge, path IN 0..100
 			      INBOUND ${src}
 			      ${collection_edge}
 			      
-			      PRUNE edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-			            ${root} IN edge.${path}
+			      PRUNE ${root} NOT IN edge.${path}
 			  
 			      OPTIONS {
-			        "order": "bfs",
+			        "order": "dfs",
 			        "uniqueVertices": "path"
 			      }
 			  
-			      FILTER edge.${pred} IN [${thePredicate}, ${pred_bridge} ] AND
-			            ${root} IN edge.${path}
+			      FILTER ${root} IN edge.${path}
 			      
-			  RETURN path.edges
+			  RETURN path.edges[*]._key
 			)
 			
-			RETURN APPEND(branch, leaves)
-	    `).toArray()[0]
+			FOR key IN UNIQUE( APPEND( branch, leaves ) )
+			  FOR edge in edges
+			    FILTER edge._key == key
+			  RETURN edge
+	    `).toArray()
 		
 		///
-		// Iterate found edges.
-		// For each edge:
-		// if the root is not in the path, discard element;
-		// if the root is in the path remove it from the path and
-		// if the path becomes empty,  add to delete elements,
-		// if the path does not become empty, add to update elements.
+		// Add edges to edge set.
 		///
-		edges.forEach( (edge) => {
-			if(edge[path].includes(root)) {
-				const elements = edge[path].filter(x => x !== root)
-				if(elements.length > 0) {
-					result.updated += 1
-					update[edge._key] = {
-						_key: edge._key,
-						[path]: elements
-					}
-				} else {
-					result.deleted += 1
-					remove[edge._key] = edge._key
-				}
-			} else {
-				result.ignored += 1
-			}
+		items.forEach( (item) => {
+			edges[item._key] = item
 		})
 	})
 	
-	//
-	// Perform updates.
-	//
-	K.db._query( aql`
-        FOR item in ${Object.values(update)}
-        UPDATE item IN ${collection_edge}
-        OPTIONS { keepNull: false, mergeObjects: false }
-    `)
+	///
+	// Iterate found edges.
+	// For each edge:
+	// if the root is not in the path, discard element;
+	// if the root is in the path remove it from the path and
+	// if the path becomes empty,  add to delete elements,
+	// if the path does not become empty, add to update elements.
+	///
+	// Iterate edges.
+	Object.values(edges).forEach( (edge) => {
+		// Check if edge path contains root.
+		if(edge[path].includes(root)) {
+			// Remove root from edge path.
+			const elements = edge[path].filter(x => x !== root)
+			// Other paths are left.
+			if(elements.length > 0) {
+				// Add updated edge.
+				result.updated += 1
+				update.push({
+					_key: edge._key,
+					[path]: elements
+				})
+			}
+			// No paths are left.
+			else {
+				// Add deleted edge.
+				result.deleted += 1
+				remove.push(edge._key)
+			}
+		} else {
+			result.ignored += 1
+			ignore.push(edge)
+		}
+	})
 	
-	//
-	// Perform removals.
-	//
-	K.db._query( aql`
-        FOR item in ${Object.values(remove)}
-        REMOVE item IN ${collection_edge}
-    `)
+	///
+	// Persist edges.
+	///
+	if(theRequest.queryParams.save)
+	{
+		//
+		// Perform updates.
+		//
+		K.db._query( aql`
+			FOR item in ${update}
+			UPDATE item IN ${collection_edge}
+			OPTIONS { keepNull: false, mergeObjects: false }
+		`)
+		
+		//
+		// Perform removals.
+		//
+		K.db._query( aql`
+	        FOR item in ${remove}
+	        REMOVE item IN ${collection_edge}
+	    `)
+		
+		theResponse.send(result)
+		return                                                          // ==>
+	}
 	
-	theResponse.send(result)
+	///
+	// Show information.
+	///
+	theResponse.send({
+		stats: result,
+		deleted: remove.map( (item) => {
+			return edges[item]
+		}),
+		updated: update.map( (item) => {
+			return {
+				...edges[item._key],
+				[path]: item[path]
+			}
+		}),
+		ignored: ignore
+	})
 	
 } // doDelEnums()
 
