@@ -343,17 +343,17 @@
             "required": true,
             "default": "_type_boolean"
         },
-        "typeInteger": {
-            "description": "Integer data type key",
-            "type": "string",
-            "required": true,
-            "default": "_type_integer"
-        },
         "typeNumber": {
             "description": "Number data type key",
             "type": "string",
             "required": true,
             "default": "_type_number"
+        },
+        "typeInteger": {
+            "description": "Integer data type key",
+            "type": "string",
+            "required": true,
+            "default": "_type_number_integer"
         },
         "typeTypestamp": {
             "description": "Timestamp data type key",
