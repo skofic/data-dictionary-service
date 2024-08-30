@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 //
 // Imports.
@@ -100,7 +100,7 @@ router.post(
         `
 	)
 	.queryParam('save', SaveModel)
-	.body(Models.AddDelEdges, dd
+	.body(Models.AddEdges, dd
 		`
             **Root, parent and elements**
             
@@ -108,25 +108,47 @@ router.post(
             - \`root\`: The global identifier of the term that represents the \
               enumeration type, root or path.
             - \`parent\`: The global identifier of the term that represents \
-              the parent of the enumeration elements.
-            - \`items\`: A set of term global identifiers, each representing an enumeration.
+                          the parent of the enumeration elements.
+            - \`items\`: A key/value dictionary in which the key represents the \
+                         global identifier of the child element and the value \
+                         represents the data associated to that child in the \
+                         current root path.
             
-            The *root* represents the type or name of the graph.
-            The *parent* represents a node in the graph, at any level, to which the provided \
-            enumeration options belong.
-            The *items* represent the identifiers of the terms that represent valid enumeration \
-            options for the *parent* node.
+            The \`items\` dictionary is used to provide the references to the \
+            parent children, and to provide data related to both to the child and \
+            the path root. The *keys* represent the global identifiers of the \
+            valid enumerations of the parent node. The *values* are custom data \
+            related to the current child, referenced by the key, and to the current \
+            root, referenced by the root parameter. By default edges should have one \
+            dictionary entry for each path element.
+            
+            If you provide \`null\` as the \`items\` element value, it means that \
+            you are not interested in the data. This means that a new edge will \
+            get a default empty object as the corresponding root value. An existing \
+            edge will not have its corresponding root entry modified.
         `
 	)
 	.response(200, Models.AddEdgesResponse, dd
 		`
-            **Operations count**
+            **Operation status**
             
             The service will return an object containign the following properties:
-            - inserted: The number of inserted edges.
-            - updated: The number of existing edges to which the root has been added to their path.
-            - existing: The number of already existing edges that include subject, object predicate and path.
-        `
+            
+            - \`inserted\`: The number of inserted edges.
+            - \`updated\`: The number of updated edges.
+            - \`existing\`: The number of ignored existing edges.
+            
+            If the \`save\` parameter is \`false\`, no changes to the database will \
+            occur, instead, the service will return the following object:
+            
+            - \`stats\`: Expected operations statistics:
+              - \`inserted\`: The number of inserted edges.
+              - \`updated\`: The number of updated edges.
+              - \`existing\`: The number of ignored existing edges.
+            - \`inserted\`: The list of inserted edges.
+            - \`updated\`: The list of updated edges.
+            - \`existing\`: The list of ignored existing edges.
+       `
 	)
 	.response(400, joi.object(), dd
 		`
@@ -1190,46 +1212,50 @@ function doAddEnums(
 	//
 	// Init local storage.
 	//
-	const data = theRequest.body
-	
+	const body = theRequest.body
+
 	//
 	// Check for missing terms.
 	//
-	const missing = getEdgeMissingKeys(data)
+	const missing = getEdgeMissingKeys(body)
 	if(missing.length > 0) {
-		
+
 		const message =
 			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
 				.replace('@@@', missing.join(", "))
-		
+
 		theResponse.throw(400, message)
 		return                                                          // ==>
 	}
-	
+
+	///
+	// Init local storage.
+	///
+	const path = module.context.configuration.sectionPath
+	const data = module.context.configuration.sectionPathData
+	const pred = module.context.configuration.predicate
+	const root = `${module.context.configuration.collectionTerm}/${body.root}`
+
 	//
 	// Create list of expected edges.
 	//
-	const edges = []
 	const inserted = []
 	const updated = []
 	const existing = []
-	const result = {inserted: 0, updated: 0, existing: 0}
-	const path = module.context.configuration.sectionPath
-	const pred = module.context.configuration.predicate
-	data.items.forEach(item =>
+	const result = { inserted: 0, updated: 0, existing: 0 }
+	Object.entries(body.items).forEach( ([item, payload]) =>
 	{
 		//
 		// Init local identifiers.
 		//
-		const root = `${module.context.configuration.collectionTerm}/${data.root}`
 		const src = (theDirection)
 			? `${module.context.configuration.collectionTerm}/${item}`
-			: `${module.context.configuration.collectionTerm}/${data.parent}`
+			: `${module.context.configuration.collectionTerm}/${body.parent}`
 		const dst = (theDirection)
-			? `${module.context.configuration.collectionTerm}/${data.parent}`
+			? `${module.context.configuration.collectionTerm}/${body.parent}`
 			: `${module.context.configuration.collectionTerm}/${item}`
 		const key = Utils.getEdgeKey(src, thePredicate, dst)
-		
+
 		//
 		// Check if it exists.
 		//
@@ -1239,34 +1265,73 @@ function doAddEnums(
 			// Get edge.
 			///
 			const found = collection_edge.document(key)
-			
+
 			///
-			// Handle existing.
+			// Root is already there.
 			//
 			if(found[path].includes(root))
 			{
-				result.existing += 1
-				existing.push(found)
+				///
+				// Add or update path data.
+				//
+				let modified = false
+				if(!found.hasOwnProperty(data)) {
+					if(payload !== null) {
+						modified = true
+						found[data] = { [root]: payload }
+					}
+				} else {
+					if(payload !== null) {
+						modified = true
+						found[data][root] = payload
+					}
+				}
+
+				///
+				// Add edge to existing or updated list.
+				///
+				if(modified) {
+					result.updated += 1
+					updated.push(found)
+				} else {
+					result.existing += 1
+					existing.push(found)
+				}
 			}
-				
+
 			///
-			// Add root.
+			// Root is missing.
 			///
 			else
 			{
+				///
+				// Add root to path.
+				///
+				found[path] = found[path].concat([root])
+
+				///
+				// Add or update path data.
+				//
+				if(!found.hasOwnProperty(data)) {
+					if(payload !== null) {
+						found[data] = { [root]: payload }
+					}
+				} else {
+					if(payload !== null) {
+						found[data][root] = payload
+					}
+				}
+
+				///
+				// Add edge to updated list.
+				///
 				result.updated += 1
-				updated.push({
-					_key: key,
-					_from: src,
-					_to: dst,
-					[pred]: thePredicate,
-					[path]: found[path].concat([root])
-				})
+				updated.push(found)
 			}
 		}
-			
+
 		///
-		// New edge.
+		// Edge not found.
 		///
 		catch (error)
 		{
@@ -1277,26 +1342,27 @@ function doAddEnums(
 				response.throw(500, error.message)
 				return                                                  // ==>
 			}
-			
+
 			//
 			// Insert edge.
 			//
 			result.inserted += 1
-			inserted.push({
+			const edge = {
 				_key: key,
 				_from: src,
 				_to: dst,
 				[pred]: thePredicate,
-				[path]: [ root ]
-			})
+				[path]: [ root ],
+				[data]: { [root]: (payload !== null) ? payload : {} }
+			}
+			inserted.push(edge)
 		}
 	})
-	
+
 	///
-	// Handle connection from root to parent.
+	// TODO: Handle connection from root to parent.
 	///
-	
-	
+
 	///
 	// Insert edges.
 	///
@@ -1311,7 +1377,7 @@ function doAddEnums(
 			    INTO ${collection_edge}
 			    OPTIONS { overwriteMode: "update", keepNull: false }
 		`)
-		
+
 		//
 		// Update existing edges.
 		//
@@ -1324,11 +1390,11 @@ function doAddEnums(
 			    IN ${collection_edge}
 			    OPTIONS { keepNull: false, mergeObjects: false }
 		`)
-		
+
 		theResponse.send(result)
 		return                                                          // ==>
 	}
-	
+
 	//
 	// Return information.
 	//
@@ -1712,14 +1778,9 @@ function doDelLinks(
 function getEdgeMissingKeys(theData)
 {
 	//
-	// Ensure items are a set.
-	//
-	theData.items = [... new Set(theData.items)]
-	
-	//
 	// Collect keys.
 	//
-	const terms = Array.from(new Set(theData.items.concat([theData.root, theData.parent])))
+	const terms = Array.from(new Set(Object.keys(theData.items).concat([theData.root, theData.parent])))
 	
 	//
 	// Assert all terms exist.
