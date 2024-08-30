@@ -168,6 +168,13 @@ const TreeModel = joi.array()
 	)
 
 // Graph insertion and deletion elements: root, parent and items to insert.
+const AddEdges = joi.object({
+	root: joi.string().required(),
+	parent: joi.string().required(),
+	items: joi.object().required()
+})
+
+// Graph insertion and deletion elements: root, parent and items to insert.
 const AddDelEdges = joi.object({
 	root: joi.string().required(),
 	parent: joi.string().required(),
@@ -263,6 +270,7 @@ module.exports = {
 	LevelsModel,
 	TreeModel,
 	
+	AddEdges,
 	AddDelEdges,
 	AddDelLinks,
 	
