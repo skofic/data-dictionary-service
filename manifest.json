@@ -235,6 +235,12 @@
             "required": true,
             "default": "_path"
         },
+        "sectionPathData": {
+            "description": "Term edge path data section key",
+            "type": "string",
+            "required": true,
+            "default": "_path_data"
+        },
         "predicate": {
             "description": "Predicate descriptor key",
             "type": "string",
