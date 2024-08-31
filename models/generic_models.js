@@ -10,51 +10,62 @@ const joi = require('joi')
 ///
 
 // Term model to be inserted.
-const TermModel = joi.object({
-	_code: joi.object({
-		_nid: joi.string().allow(''),
-		_lid: joi.string().required(),
-		_gid: joi.string(),
-		_aid: joi.array().items(joi.string()),
-		_pid: joi.array().items(joi.string()),
-		_name: joi.string()
-	}).required(),
-	_info: joi.object({
-		_title: joi.object().required(),
-		_definition: joi.object(),
-		_description: joi.object(),
-		_examples: joi.object(),
-		_notes: joi.object(),
-		_provider: joi.string()
-	}).required(),
-	_data: joi.object(),
-	_rule: joi.object()
-})
+// TODO: Need to allow properties other than default ones.
+const TermModel = joi.object()
+// const TermModel = joi.object({
+// 	_code: joi.object({
+// 		_nid: joi.string().allow(''),
+// 		_lid: joi.string().required(),
+// 		_gid: joi.string(),
+// 		_aid: joi.array().items(joi.string()),
+// 		_pid: joi.array().items(joi.string()),
+// 		_name: joi.string()
+// 	}).required(),
+// 	_info: joi.object({
+// 		_title: joi.object().required(),
+// 		_definition: joi.object(),
+// 		_description: joi.object(),
+// 		_examples: joi.object(),
+// 		_notes: joi.object(),
+// 		_provider: joi.string()
+// 	}).required(),
+// 	_data: joi.object(),
+// 	_rule: joi.object()
+// })
 
 // Term model that was saved.
 const TermInsertedModel = joi.object({
 	_id: joi.string().required(),
 	_key: joi.string().required(),
 	_rev: joi.string().required(),
-	_code: joi.object({
-		_nid: joi.string().allow(''),
-		_lid: joi.string().required(),
-		_gid: joi.string(),
-		_aid: joi.array().items(joi.string()),
-		_pid: joi.array().items(joi.string()),
-		_name: joi.string()
-	}).required(),
-	_info: joi.object({
-		_title: joi.object().required(),
-		_definition: joi.object(),
-		_description: joi.object(),
-		_examples: joi.object(),
-		_notes: joi.object(),
-		_provider: joi.string()
-	}).required(),
+	_code: joi.object().required(),
+	_info: joi.object().required(),
 	_data: joi.object(),
 	_rule: joi.object()
 })
+// const TermInsertedModel = joi.object({
+// 	_id: joi.string().required(),
+// 	_key: joi.string().required(),
+// 	_rev: joi.string().required(),
+// 	_code: joi.object({
+// 		_nid: joi.string().allow(''),
+// 		_lid: joi.string().required(),
+// 		_gid: joi.string(),
+// 		_aid: joi.array().items(joi.string()),
+// 		_pid: joi.array().items(joi.string()),
+// 		_name: joi.string()
+// 	}).required(),
+// 	_info: joi.object({
+// 		_title: joi.object().required(),
+// 		_definition: joi.object(),
+// 		_description: joi.object(),
+// 		_examples: joi.object(),
+// 		_notes: joi.object(),
+// 		_provider: joi.string()
+// 	}).required(),
+// 	_data: joi.object(),
+// 	_rule: joi.object()
+// })
 
 // Array of terms to be inserted model.
 const TermsArrayModel = joi.array()
