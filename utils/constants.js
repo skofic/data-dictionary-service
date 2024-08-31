@@ -57,7 +57,10 @@ module.exports = Object.freeze({
             index: [
                 {
                     type: 'persistent',
-                    fields: ['_predicate', '_path[*]'],
+                    fields: [
+                        module.context.configuration.predicate,
+                        `${module.context.configuration.predicate}[*]`
+                    ],
                     deduplicate: true,
                     estimates: true,
                     name: "idx_path_predicate",
@@ -65,7 +68,11 @@ module.exports = Object.freeze({
                 },
                 {
                     type: 'persistent',
-                    fields: ['_from', '_predicate', '_path[*]'],
+                    fields: [
+                        '_from',
+                        module.context.configuration.predicate,
+                        `${module.context.configuration.predicate}[*]`
+                    ],
                     deduplicate: true,
                     estimates: true,
                     name: "idx_from_predicate_path",
@@ -79,7 +86,7 @@ module.exports = Object.freeze({
             index: [
                 {
                     type: 'persistent',
-                    fields: ['_predicate'],
+                    fields: [module.context.configuration.predicate],
                     deduplicate: true,
                     estimates: true,
                     name: "idx-schema-predicate",
@@ -93,7 +100,10 @@ module.exports = Object.freeze({
             index: [
                 {
                     type: 'persistent',
-                    fields: ['_path[*]', '_predicate'],
+                    fields: [
+                        module.context.configuration.predicate,
+                        `${module.context.configuration.predicate}[*]`
+                    ],
                     deduplicate: true,
                     estimates: true,
                     name: "idx-topo-path-predicate",
