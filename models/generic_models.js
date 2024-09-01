@@ -172,7 +172,14 @@ const TreeModel = joi.array()
 const AddEdges = joi.object({
 	root: joi.string().required(),
 	parent: joi.string().required(),
-	items: joi.object().required()
+	children: joi.object().pattern(
+		joi.string(),
+		joi.alternatives()
+			.try(
+				joi.object(),
+				joi.valid(null)
+			)
+	).required()
 })
 
 // Graph insertion and deletion elements: root, parent and items to insert.
