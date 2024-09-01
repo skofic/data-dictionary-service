@@ -71,7 +71,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEnums(
+			doSetEnums(
 				request,
 				response,
 				module.context.configuration.predicateEnumeration,
@@ -89,6 +89,9 @@ router.post(
             ***In order to use this service, the current user must have the \`dict\` role.***
             
             Enumerations are controlled vocabularies structured as many-to-one graphs. \
+            These graphs have a bested tree structure in which a parent node is pointed \
+            to by its children.
+            
             This service can be used to add children to a parent node in a specific graph. \
             These relationships are implemented by *edges*, which are structures identified \
             by the *subject-predicate-object* that feature the *list of paths* that \
@@ -100,9 +103,9 @@ router.post(
             custom data with the provided data.
             
             The service expects the graph *root* document handle, the document handle \
-            of the target node and the list of document handles representing the child \
-            nodes pointing to the target node, along with custom data associated with \
-            the subject-predicate-object combination in the current path.
+            of the parent node and the list of document handles representing the child \
+            nodes pointing to the parent node, along with custom data associated with \
+            the subject-predicate-object combination for the current path.
         `
 	)
 	.queryParam('save', SaveModel)
@@ -111,22 +114,26 @@ router.post(
             **Root, target and items**
             
             The request body should hold an object containing the following elements:
+            
             - \`root\`: The document handle of the root graph node, which is the last \
-                        target in the graph.
-            - \`target\`: The document handle of the node that represents the target \
-                          to which the provided list of items point.
-            - \`items\`: A key/value dictionary providing the references to the child \
-                         elements pointing to the target node and the custom data \
-                         associated with the child element in the current graph.
+                        target in the graph. This represents the path traversing the edge.
+            - \`parent\`: The document handle of the node that represents the parent \
+                          to which the provided list of child nodes point to.
+            - \`children\`: A key/value dictionary in which the key represents the \
+                            child node document handle and the value represents \
+                            custom data associated with the subject-predicate-object \
+                            combination for the current graph path, represented by the \
+                            root.
             
             The service will iterate the \`items\` keys trying to locate an edge \
-            that has the target node and the node from the dictionary key. If the \
-            edge does not exist, it will be created and the data corresponding to \
-            the key will become the custom data for the relationship in the current \
-            graph. If the edge exists: if the root is not already in the edge, it \
-            will be added and the data will be associated with the root; if the root \
-            exists in the edge, the data associated with the key will replace the \
-            existing data.
+            that has this key pointing to the provided parent node, If the edge does \
+            not exist, it will be created and the data corresponding to the key value \
+            will become the custom data for the relationship in the current graph, \
+            identified by the provided root. If the edge exists, and the root is not \
+            already listed in the edge path elements, this root will be added and the \
+            data will be set for that root. If the root already exists in the edge, the \
+            data associated with the key will replace the existing data associated with \
+            that root.
             
             The dictionary values must either be objects, or they can be \`null\`, \
             in which case the value will be reset to an empty object.
@@ -271,7 +278,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEnums(
+			doSetEnums(
 				request,
 				response,
 				module.context.configuration.predicateField,
@@ -437,7 +444,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEnums(
+			doSetEnums(
 				request,
 				response,
 				module.context.configuration.predicateSection,
@@ -614,7 +621,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddEnums(
+			doSetEnums(
 				request,
 				response,
 				module.context.configuration.predicateBridge,
@@ -1207,11 +1214,11 @@ router.post(
  *
  * @return {void}
  */
-function doAddEnums(
+function doSetEnums(
 	theRequest,
 	theResponse,
 	thePredicate,
-	theDirection
+	theDirection = true
 ){
 	//
 	// Init local storage.
@@ -1235,9 +1242,9 @@ function doAddEnums(
 	///
 	// Init local storage.
 	///
+	const pred = module.context.configuration.predicate
 	const path = module.context.configuration.sectionPath
 	const data = module.context.configuration.sectionPathData
-	const pred = module.context.configuration.predicate
 	const root = `${module.context.configuration.collectionTerm}/${body.root}`
 
 	//
@@ -1249,16 +1256,20 @@ function doAddEnums(
 	const result = { inserted: 0, updated: 0, existing: 0 }
 	Object.entries(body.items).forEach( ([item, payload]) =>
 	{
+		///
+		// Normalise payload.
+		///
+		const value = (payload !== null) ? payload : {}
+		
 		//
 		// Init local identifiers.
 		//
 		const src = (theDirection)
-			? `${module.context.configuration.collectionTerm}/${item}`
-			: `${module.context.configuration.collectionTerm}/${body.parent}`
+			? `${module.context.configuration.collectionTerm}/${item}`          // Child
+			: `${module.context.configuration.collectionTerm}/${body.parent}`   // Parent.
 		const dst = (theDirection)
-			? `${module.context.configuration.collectionTerm}/${body.parent}`
-			: `${module.context.configuration.collectionTerm}/${item}`
-		const key = Utils.getEdgeKey(src, thePredicate, dst)
+			? `${module.context.configuration.collectionTerm}/${body.parent}`   // Parent.
+			: `${module.context.configuration.collectionTerm}/${item}`          // Child.
 
 		//
 		// Check if it exists.
@@ -1266,7 +1277,14 @@ function doAddEnums(
 		try
 		{
 			///
+			// Set edge key.
+			///
+			const key = Utils.getEdgeKey(src, thePredicate, dst)
+			
+			///
 			// Get edge.
+			///
+			// TODO: compare two objects.
 			///
 			const found = collection_edge.document(key)
 
@@ -1280,14 +1298,14 @@ function doAddEnums(
 				//
 				let modified = false
 				if(!found.hasOwnProperty(data)) {
-					if(payload !== null) {
-						modified = true
-						found[data] = { [root]: payload }
-					}
+					modified = true
+					found[data] = { [root]: value }
 				} else {
-					if(payload !== null) {
+					if(!found[data].hasOwnProperty(root)) {
 						modified = true
-						found[data][root] = payload
+						found[data][root] = value
+					} else {
+					
 					}
 				}
 
@@ -1301,7 +1319,8 @@ function doAddEnums(
 					result.existing += 1
 					existing.push(found)
 				}
-			}
+			
+			} // Edge found including root.
 
 			///
 			// Root is missing.
@@ -1331,11 +1350,12 @@ function doAddEnums(
 				///
 				result.updated += 1
 				updated.push(found)
-			}
+			
+			} // Edge found excluding root.
 		}
 
 		///
-		// Edge not found.
+		// Edge not found or error.
 		///
 		catch (error)
 		{
