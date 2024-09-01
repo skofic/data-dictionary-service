@@ -67,7 +67,7 @@ router.tag('Graphs');
  * Add enumerations.
  */
 router.post(
-	'add/enum',
+	'set/enum',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
@@ -79,53 +79,57 @@ router.post(
 			)
 		}
 	},
-	'graph-add-enum'
+	'graph-set-enum'
 )
-	.summary('Add enumerations')
+	.summary('Set enumerations')
 	.description(dd
 		`
-            **Add enumerations**
+            **Set enumerations**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
-             
-            This service can be used to add a set of child enumerations to a parent \
-            node in a specific graph path.
             
-            Enumerations are controlled vocabularies that can have several nested levels.
+            Enumerations are controlled vocabularies structured as many-to-one graphs. \
+            This service can be used to add children to a parent node in a specific graph. \
+            These relationships are implemented by *edges*, which are structures identified \
+            by the *subject-predicate-object* that feature the *list of paths* that \
+            *traverse* the current *edge*.
             
-            The service expects the graph root global identifier, the \
-            parent global identifier and its children global identifiers in the request body. \
-            The *child* elements will be considered *valid enumeration options* of the \
-            *parent* node within the *root* graph.
+            If the edge does not exist it will be created and the custom data associated \
+            with the relationship will be set. If the subject-predicate-object relationship \
+            for the provided graph already exists, the service will only replace the existing \
+            custom data with the provided data.
+            
+            The service expects the graph *root* document handle, the document handle \
+            of the target node and the list of document handles representing the child \
+            nodes pointing to the target node, along with custom data associated with \
+            the subject-predicate-object combination in the current path.
         `
 	)
 	.queryParam('save', SaveModel)
 	.body(Models.AddEdges, dd
 		`
-            **Root, parent and elements**
+            **Root, target and items**
             
             The request body should hold an object containing the following elements:
-            - \`root\`: The global identifier of the term that represents the \
-              enumeration type, root or path.
-            - \`parent\`: The global identifier of the term that represents \
-                          the parent of the enumeration elements.
-            - \`items\`: A key/value dictionary in which the key represents the \
-                         global identifier of the child element and the value \
-                         represents the data associated to that child in the \
-                         current root path.
+            - \`root\`: The document handle of the root graph node, which is the last \
+                        target in the graph.
+            - \`target\`: The document handle of the node that represents the target \
+                          to which the provided list of items point.
+            - \`items\`: A key/value dictionary providing the references to the child \
+                         elements pointing to the target node and the custom data \
+                         associated with the child element in the current graph.
             
-            The \`items\` dictionary is used to provide the references to the \
-            parent children, and to provide data related to both to the child and \
-            the path root. The *keys* represent the global identifiers of the \
-            valid enumerations of the parent node. The *values* are custom data \
-            related to the current child, referenced by the key, and to the current \
-            root, referenced by the root parameter. By default edges should have one \
-            dictionary entry for each path element.
+            The service will iterate the \`items\` keys trying to locate an edge \
+            that has the target node and the node from the dictionary key. If the \
+            edge does not exist, it will be created and the data corresponding to \
+            the key will become the custom data for the relationship in the current \
+            graph. If the edge exists: if the root is not already in the edge, it \
+            will be added and the data will be associated with the root; if the root \
+            exists in the edge, the data associated with the key will replace the \
+            existing data.
             
-            If you provide \`null\` as the \`items\` element value, it means that \
-            you are not interested in the data. This means that a new edge will \
-            get a default empty object as the corresponding root value. An existing \
-            edge will not have its corresponding root entry modified.
+            The dictionary values must either be objects, or they can be \`null\`, \
+            in which case the value will be reset to an empty object.
         `
 	)
 	.response(200, Models.AddEdgesResponse, dd
