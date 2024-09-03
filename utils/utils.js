@@ -30,11 +30,11 @@ function getEdgeKey(theSubject, thePredicate, theObject)
 {
     const key =
         crypto.md5(
-            theSubject
-            + K.token.tok
-            + thePredicate
-            + K.token.tok
-            + theObject
+            theSubject +
+            K.token.tok +
+            thePredicate +
+            K.token.tok +
+            theObject
         )
 
     return key                                                                  // ==>
@@ -74,8 +74,24 @@ function termLanguage(theTerm, theLanguage)
 
 } // termLanguage()
 
+/**
+ * The method will return `true` if the provided value is an empty object.
+ * @param theValue {Array|Object|Number|String}: The value to test.
+ * @return {Boolean}: `true` if empty object, `false` if anything else.
+ */
+function isEmptyObject(theValue)
+{
+    if (typeof theValue === 'object' && theValue !== null) {
+        return Object.keys(theValue).length === 0                   // ==>
+    }
+    
+    return false                                                    // ==>
+    
+} // Validator::isEmptyObject()
+
 
 module.exports = {
     getEdgeKey,
-    termLanguage
+    termLanguage,
+    isEmptyObject
 }
