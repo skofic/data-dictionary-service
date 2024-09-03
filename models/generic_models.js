@@ -172,7 +172,14 @@ const TreeModel = joi.array()
 const AddEdges = joi.object({
 	root: joi.string().required(),
 	parent: joi.string().required(),
-	children: joi.object().required()
+	children: joi.object().pattern(
+		joi.string(),
+		joi.alternatives().try(
+			joi.object(),
+			joi.valid(null),
+			joi.valid(false)
+		)
+	).required()
 })
 
 // Graph insertion and deletion elements: root, parent and items to insert.
@@ -189,24 +196,16 @@ const AddDelLinks = joi.object({
 })
 
 // Add elements to graph response.
-const AddEdgesResponse = joi.alternatives()
-	.try(
-		joi.object({
-			inserted: joi.number(),
-			updated: joi.number(),
-			existing: joi.number()
-		}),
-		joi.object({
-			stats: joi.object({
-				inserted: joi.number(),
-				updated: joi.number(),
-				existing: joi.number()
-			}),
-			inserted: joi.array(),
-			updated: joi.array(),
-			existing: joi.array()
-		})
-	)
+const AddEdgesResponse = joi.object({
+	stats: joi.object({
+		inserted: joi.number(),
+		updated: joi.number(),
+		existing: joi.number()
+	}).required(),
+	inserted: joi.array(),
+	updated: joi.array(),
+	existing: joi.array()
+})
 
 // Remove elements from a graph response.
 const DelEdgesResponse = joi.alternatives()
