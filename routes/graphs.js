@@ -25,7 +25,6 @@ const HTTP_CONFLICT = status('conflict');
 const K = require('../utils/constants')
 const Utils = require('../utils/utils')
 const Session = require('../utils/sessions')
-const Validator = require("../library/Validator")
 
 //
 // Models.
@@ -131,13 +130,13 @@ router.post(
             
             - If the subject-predicate-object combination does not exist, it will create \
               an edge with the combination of the provided parent, the current child and \
-              the predicate, that is managed by the service, for the provided root. The \
-              custom data will replace existing data if required.
+              the predicate, which is managed by the service, for the provided root. If \
+              custom data was provided, it will be set, or an empty object will be set.
             - If the subject-predicate-object combination exists:
               - If the root is not among the paths it will be added, and the eventual \
-                custom data will replace existing data if required.
-              - If the root is in the list of paths, the service will only replace \
-                existing data if required.
+                custom data will replace or reset existing data.
+              - If the root is in the list of paths, the service will only set or replace \
+                existing data.
         `
 	)
 	.queryParam('save', SaveModel)
@@ -148,33 +147,33 @@ router.post(
 		`
         **Root, parent, children and data**
         
-        The request body should be provided with an object containing the following
+        The request body should be provided with an object containing the following \
         elements:
-        - \`root\`: The document handle of the *root graph node*, which is the last
+        - \`root\`: The document handle of the *root graph node*, which is the last \
                     target in the graph. This represents the path traversing the edge.
-        - \`parent\`: The document handle of the node that represents the *parent*
+        - \`parent\`: The document handle of the node that represents the *parent* \
                       to which the provided list of child nodes point to.
-        - \`children\`: A key/value dictionary in which the key represents the
-                        *child node document handle* and the value represents
+        - \`children\`: A key/value dictionary in which the key represents the \
+                        *child node document handle* and the value represents \
                         *custom data* associated with the corresponding *edge*.
         
-        The service will iterate the \`children\` keys trying to locate an edge
-        that has this key pointing to the provided parent node, If the edge does
-        not exist, it will be created and the data corresponding to the key value
-        will become the custom data for the relationship. If the edge exists, and
-        the root is not already listed in the edge path elements, this root will
-        be added to the edge path elements, and the data will replace the existing
-        edge data. If the root already exists in the edge path elements, the data
-        associated with the key will replace the existing data associated with
+        The service will iterate the \`children\` keys trying to locate an edge \
+        that has this key pointing to the provided parent node, If the edge does \
+        not exist, it will be created and the data corresponding to the key value \
+        will become the custom data for the relationship. If the edge exists, and \
+        the root is not already listed in the edge path elements, this root will \
+        be added to the edge path elements, and the data will replace the existing \
+        edge data. If the root already exists in the edge path elements, the data \
+        associated with the key will replace the existing data associated with \
         that edge.
         
         The values of the \`children\` elements can be the following:
-        - \`object\`: This represents valid data for the edge, the value will
+        - \`object\`: This represents valid data for the edge, the value will \
 					  replace existing data or be set in new edges.
-        - \`null\`: This value indicates that data will be ignored, which means
-					that only the container will be created in new edges and existing
+        - \`null\`: This value indicates that data will be ignored, which means \
+					that only the container will be created in new edges and existing \
 					edges will have their data untouched.
-        - \`false\`: This value indicates that we want to reset custom data, so in
+        - \`false\`: This value indicates that we want to reset custom data, so in \
                      all cases the container will be reset to an empty object.
         `
 	)
@@ -188,11 +187,12 @@ router.post(
               - \`inserted\`: The number of inserted edges.
               - \`updated\`: The number of updated edges.
               - \`existing\`: The number of ignored existing edges.
-            - \`inserted\`: The list of inserted edges, if the \`inserted\`
+            - \`inserted\`: The list of inserted edges, if the \`inserted\` \
                             parameter was set.
-            - \`updated\`: The list of updated edger, if the \`updated\` \
+            - \`updated\`: The list of updated edger, if the \`updated\` \ \
                            parameter was set.
             - \`existing\`: The list of existing edges, if the \`existing\` \
+                            parameter was set.
        `
 	)
 	.response(400, joi.object(), dd
@@ -1248,7 +1248,6 @@ router.post(
  *
  * @return {void}
  */
-// TODO: Convert key references to handles.
 function doSetEnums(
 	theRequest,
 	theResponse,
@@ -1281,7 +1280,6 @@ function doSetEnums(
 	const bridge = module.context.configuration.predicateBridge
 	const path = module.context.configuration.sectionPath
 	const data = module.context.configuration.sectionPathData
-	const parent =  `${module.context.configuration.collectionTerm}/${body.parent}`
 	
 	///
 	// Two ways to do it:
@@ -1292,7 +1290,7 @@ function doSetEnums(
 		? K.db._query(aql`
 					WITH ${collection_term}
 					FOR vertex, edge, path IN 1..10
-						OUTBOUND ${parent}
+						OUTBOUND ${body.parent}
 						${collection_edge}
 
 						PRUNE edge._to == ${body.root} AND
@@ -1303,7 +1301,7 @@ function doSetEnums(
 		: K.db._query(aql`
 					WITH ${collection_term}
 					FOR vertex, edge, path IN 1..10
-						INBOUND ${parent}
+						INBOUND ${body.parent}
 						${collection_edge}
 
 						PRUNE edge._to == ${body.root} AND
@@ -1313,8 +1311,12 @@ function doSetEnums(
 				`).toArray()
 	if(found.length === 0)
 	{
+		const message = dd`
+			Cannot create edges: the parent node, [${body.parent}], is not \
+			connected to the graph root [${body.root}].
+		`
 		theResponse.status(400)
-		theResponse.send(`Parent [${parent}] is not connected to body.root [${root}].`)
+		theResponse.send(message)
 		
 		return                                                          // ==>
 	}
@@ -1337,12 +1339,8 @@ function doSetEnums(
 		//
 		// Init local identifiers.
 		//
-		const src = (theDirection)
-			? `${module.context.configuration.collectionTerm}/${item}`
-			: parent
-		const dst = (theDirection)
-			? parent
-			: `${module.context.configuration.collectionTerm}/${item}`
+		const src = (theDirection) ? item : body.parent
+		const dst = (theDirection) ? body.parent : item
 		
 		///
 		// Init local storage.
@@ -1383,7 +1381,7 @@ function doSetEnums(
 					///
 					// Edge has path data.
 					///
-					if(!Validator.isEmptyObject(found[data]))
+					if(!Utils.isEmptyObject(found[data]))
 					{
 						// Reset path data.
 						found[data] = {}
@@ -1405,9 +1403,11 @@ function doSetEnums(
 			// Handle updates.
 			///
 			if(Object.keys(edge).length > 0) {
+				// Add key of not there.
 				if(!edge.hasOwnProperty('_key')) {
 					edge._key = key
 				}
+				// Add update and update stats.
 				updates.push(edge)
 				result.updated += 1
 				if(theRequest.queryParams.updated) {
@@ -1419,10 +1419,6 @@ function doSetEnums(
 					existing.push(found)
 				}
 			}
-			
-			///
-			// Add edge key if nnot there already.
-			///
 		
 		} // Edge found.
 
@@ -1472,7 +1468,7 @@ function doSetEnums(
 			FOR item in ${inserted}
 			    INSERT item
 			    INTO ${collection_edge}
-			    OPTIONS { keepNull: false, overwriteMode: "update" }
+			    OPTIONS { keepNull: false, overwriteMode: "conflict" }
 		`)
 
 		//
@@ -1887,16 +1883,15 @@ function getEdgeMissingKeys(theData)
 					.concat([theData.root, theData.parent])
 			)
 		)
-	
+
 	//
 	// Assert all terms exist.
-	// TODO: Update script to use handles instead of keys.
 	//
 	const found =
 		K.db._query( aql`
-            LET terms = DOCUMENT(${collection_term}, ${terms})
-            FOR term IN terms
-            RETURN term._key
+            LET items = DOCUMENT(${terms})
+            FOR item IN items
+            RETURN item._id
         `).toArray()
 	
 	return terms.filter(x => !found.includes(x))                        // ==>
