@@ -168,8 +168,8 @@ const TreeModel = joi.array()
 		})
 	)
 
-// Graph insertion and deletion elements: root, parent and items to insert.
-const AddEdges = joi.object({
+// Graph insertion and deletion elements.
+const SetDelEnums = joi.object({
 	root: joi.string().required(),
 	parent: joi.string().required(),
 	children: joi.object().pattern(
@@ -178,6 +178,19 @@ const AddEdges = joi.object({
 			joi.object(),
 			joi.valid(null),
 			joi.valid(false)
+		)
+	).required()
+})
+
+// Graph update elements.
+const UpdEnums = joi.object({
+	root: joi.string().required(),
+	parent: joi.string().required(),
+	children: joi.object().pattern(
+		joi.string(),
+		joi.alternatives().try(
+			joi.object(),
+			joi.valid(null)
 		)
 	).required()
 })
@@ -196,7 +209,7 @@ const AddDelLinks = joi.object({
 })
 
 // Add elements to graph response.
-const AddEdgesResponse = joi.object({
+const SetEnumsResponse = joi.object({
 	stats: joi.object({
 		inserted: joi.number(),
 		updated: joi.number(),
@@ -207,8 +220,18 @@ const AddEdgesResponse = joi.object({
 	existing: joi.array()
 })
 
+// Add elements to graph response.
+const UpdEnumsResponse = joi.object({
+	stats: joi.object({
+		updated: joi.number(),
+		ignored: joi.number()
+	}).required(),
+	updated: joi.array(),
+	ignored: joi.array()
+})
+
 // Remove elements from a graph response.
-const DelEdgesResponse = joi.alternatives()
+const DelEnumsResponse = joi.alternatives()
 	.try(
 		joi.object({
 			deleted: joi.number(),
@@ -270,12 +293,14 @@ module.exports = {
 	LevelsModel,
 	TreeModel,
 	
-	AddEdges,
+	SetDelEnums,
+	UpdEnums,
 	AddDelEdges,
 	AddDelLinks,
 	
-	AddEdgesResponse,
-	DelEdgesResponse,
+	SetEnumsResponse,
+	UpdEnumsResponse,
+	DelEnumsResponse,
 	
 	AddLinksResponse,
 	DelLinksResponse,
