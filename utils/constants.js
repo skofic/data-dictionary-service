@@ -781,6 +781,15 @@ module.exports = Object.freeze({
                 iso_639_3_fra: "Date invalide, prévu AAAAMMJJ où le mois et le jour sont facultatifs.",
                 iso_639_3_esp: "Fecha no válida: esperando AAAAMMDD donde el mes y el día son opcionales."
             }
+        },
+        kMSG_ERROR_MISSING_DOC_HANDLES: {
+            code: 45,
+            message: {
+                iso_639_3_eng: "The following referenced document handles do not exist: @@@.",
+                iso_639_3_ita: "Riferimenti invalidi. I seguenti documenti non esistono: @@@.",
+                iso_639_3_fra: "Références invalides. Les documents suivants n'existent pas: @@@.",
+                iso_639_3_esp: "Los siguientes documentos referenciados no existen: @@@e."
+            }
         }
     }
 
