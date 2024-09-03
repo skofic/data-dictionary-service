@@ -44,6 +44,12 @@ const InsertedEdgesModel = joi.boolean()
 		"If *set*, the the service will return the list of inserted edges, \
 		if not set, the service will only return operation statistics."
 	)
+const DeletedEdgesModel = joi.boolean()
+	.default(false)
+	.description(
+		"If *set*, the the service will return the list of deleted edges, \
+		if not set, the service will only return operation statistics."
+	)
 const UpdatedEdgesModel = joi.boolean()
 	.default(false)
 	.description(
@@ -54,6 +60,12 @@ const ExistingEdgesModel = joi.boolean()
 	.default(false)
 	.description(
 		"If *set*, the the service will return the list of existing edges, \
+		if not set, the service will only return operation statistics."
+	)
+const IgnoredEdgesModel = joi.boolean()
+	.default(false)
+	.description(
+		"If *set*, the the service will return the list of ignored edges, \
 		if not set, the service will only return operation statistics."
 	)
 
@@ -128,6 +140,7 @@ router.post(
             
             The service will do the following:
             
+            - Assert that the parent node is connected to the root node.
             - If the subject-predicate-object combination does not exist, it will create \
               an edge with the combination of the provided parent, the current child and \
               the predicate, which is managed by the service, for the provided root. If \
@@ -149,6 +162,7 @@ router.post(
         
         The request body should be provided with an object containing the following \
         elements:
+        
         - \`root\`: The document handle of the *root graph node*, which is the last \
                     target in the graph. This represents the path traversing the edge.
         - \`parent\`: The document handle of the node that represents the *parent* \
@@ -157,19 +171,12 @@ router.post(
                         *child node document handle* and the value represents \
                         *custom data* associated with the corresponding *edge*.
         
-        The service will iterate the \`children\` keys trying to locate an edge \
-        that has this key pointing to the provided parent node, If the edge does \
-        not exist, it will be created and the data corresponding to the key value \
-        will become the custom data for the relationship. If the edge exists, and \
-        the root is not already listed in the edge path elements, this root will \
-        be added to the edge path elements, and the data will replace the existing \
-        edge data. If the root already exists in the edge path elements, the data \
-        associated with the key will replace the existing data associated with \
-        that edge.
-        
         The values of the \`children\` elements can be the following:
+        
         - \`object\`: This represents valid data for the edge, the value will \
-					  replace existing data or be set in new edges.
+					  replace existing data or be set in new edges. Note that \
+					  the object will *not be merged* with existing objects, \
+					  use the update service for that.
         - \`null\`: This value indicates that data will be ignored, which means \
 					that only the container will be created in new edges and existing \
 					edges will have their data untouched.
@@ -242,45 +249,94 @@ router.post(
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            This service can be used to remove a set of child enumerations from a parent \
-            node in a specific graph path.
+            Enumerations are controlled vocabularies structured as many-to-one graphs. \
+            These graphs have a nested tree structure in which a parent node is pointed \
+            to by its children.
             
-            Enumerations are controlled vocabularies that can have several nested levels.
+            Graph node connections are implemented by edges, these are uniquely identified \
+            by the subject-predicate-object combination in which the subject is the child, \
+            and the object is the parent. These edges may be traversed by several paths, \
+            each originating from different root nodes in the graph. The edge also features \
+            a property that contains custom data that can be used during graph traversals.
+
+            This service can be used to remove a child from its parent in a specific \
+            graph path, and to ignore, replace or reset the contents of custom data \
+            associated with an edge.
             
-            The service expects the graph root global identifier, the \
-            parent global identifier and its children global identifiers in the request body. \
-            The *child* elements will be considered *valid enumeration options* of the \
-            *parent* node within the *root* graph.
+            The service expects the graph *root* document handle, the document handle \
+            of the *parent* node and the list of document handles representing the *child \
+            nodes* pointing to the parent node, along with custom data associated with \
+            the subject-predicate-object combination.
+            
+            The service will do the following:
+            
+            - Locate the edge containing the current child pointing to the parent.
+            - Remove the current root from the list of roots in the edge path:
+              - If the path becomes empty:
+                - Delete the edge.
+                - Recurse the operation for all branches under the child node.
+              - If the path is not empty:
+                - Ignore, reset or set the edge data.
+                - Update the edge.
+            
+            *Note: this service will only remove the relationships, the nodes will not \
+            be deleted. It is the responsability of the caller to manage orphans. \
+            Eventual root bridge predicates might be left dangling: this is \
+            intended, since one could connect these dangling relationships after \
+            the deletions. Finally, edges that do not feature the provided root will \
+            be ignored, meaning that custom edge data will be left untouched: this is \
+            intended, since custom edge data is implicitly connected to the graph root.*
         `
 	)
 	.queryParam('save', SaveModel)
-	.body(Models.AddDelEdges, dd
+	.queryParam('deleted', InsertedEdgesModel)
+	.queryParam('updated', UpdatedEdgesModel)
+	.queryParam('ignored', IgnoredEdgesModel)
+	.body(Models.AddEdges, dd
 		`
-            **Root, parent and elements**
-            
-            The request body should hold an object containing the following elements:
-            - \`root\`: The global identifier of the term that represents the \
-              enumeration type, root or path.
-            - \`parent\`: The global identifier of the term that represents \
-              the parent of the enumeration elements.
-            - \`items\`: A set of term global identifiers, each representing an enumeration.
-            
-            The *root* represents the type or name of the graph.
-            The *parent* represents a node in the graph, at any level, to which the provided \
-            enumeration options belong.
-            The *items* represent the identifiers of the terms that represent valid enumeration \
-            options for the *parent* node.
+        **Root, parent, children and data**
+        
+        The request body should be provided with an object containing the following \
+        elements:
+        
+        - \`root\`: The document handle of the *root graph node*, which is the last \
+                    target in the graph. This represents the path traversing the edge.
+        - \`parent\`: The document handle of the node that represents the *parent* \
+                      to which the provided list of child nodes point to.
+        - \`children\`: A key/value dictionary in which the key represents the \
+                        *child node document handle* and the value represents \
+                        *custom data* associated with the corresponding *edge*.
+        
+        The values of the \`children\` elements can be the following:
+        
+        - \`object\`: This represents valid data for the edge, the value will \
+					  replace existing data or be set in new edges. Note that \
+					  the object will *not be merged* with existing objects, \
+					  use the update service for that.
+        - \`null\`: This value indicates that data will be ignored, which means \
+					that only the container will be created in new edges and existing \
+					edges will have their data untouched.
+        - \`false\`: This value indicates that we want to reset custom data, so in \
+                     all cases the container will be reset to an empty object.
         `
 	)
 	.response(200, Models.DelEdgesResponse, dd
 		`
-            **Operations count**
+            **Operation status**
             
             The service will return an object containing the following properties:
-            - deleted: The number of deleted edges.
-            - updated: The number of existing edges in which the root was removed from their path.
-            - ignored: The number of edges that were not found.
-        `
+            
+            - \`stats\`:
+              - \`deleted\`: The number of deleted edges.
+              - \`updated\`: The number of updated edges.
+              - \`ignored\`: The number of ignored edges.
+            - \`deleted\`: The list of inserted edges, if the \`deleted\` \
+                           parameter was set.
+            - \`updated\`: The list of updated edger, if the \`updated\` \ \
+                           parameter was set.
+            - \`ignored\`: The list of existing edges, if the \`ignored\` \
+                           parameter was set.
+       `
 	)
 	.response(400, joi.object(), dd
 		`
@@ -308,7 +364,7 @@ router.post(
  * Add fields.
  */
 router.post(
-	'add/field',
+	'set/field',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
@@ -320,15 +376,15 @@ router.post(
 			)
 		}
 	},
-	'graph-add-field'
+	'graph-set-field'
 )
 	.summary('Add fields')
 	.description(dd
 		`
             **Add fields**
-             
+            
             ***In order to use this service, the current user must have the \`dict\` role.***
-             
+            
             This service can be used to add a set of child fields to a parent \
             node in a specific graph path.
             
@@ -1239,11 +1295,32 @@ router.post(
 //
 
 /**
- * Add edges or set custom edge data.
+ * Set enumerations and their edge data.
+ *
+ * This function will create new edges or update existing edges to
+ * connect a parent node to a set of child nodes in a specific graph.
+ *
+ * The request body must contain the following elements:
+ * - `root`: The document handle of the graph root or type.
+ * - `parent`: The document handle of the node to which child nodes will point.
+ * - `children`: A key/value dictionary in which the keys are the document
+ *               handles of the nodes pointing to the parent, and the values are
+ *               the corresponding custom edge data associated to the relationship.
+ *
+ * Edge custom data can be an object, in which case it will replace eventual existing
+ * data, or `false` to reset the custom data to its default value, which is an empty
+ * object, or `null` to ignore edge data.
+ *
+ * theDirection is used to determine the direction of relationships: `true` will
+ * have children pointing to the parent, while `false` will have the parent point
+ * to the children.
+ *
+ * The function will assert that all document handles are valid, and that the
+ * parent node is connected to the root node in the graph.
  *
  * @param theRequest {Object}: The request object.
  * @param theResponse {Object}: The response object.
- * @param thePredicate {String}: The predicate for the edges.
+ * @param thePredicate {String}: The predicate global identifier.
  * @param theDirection {Boolean}: `true` many to one; `false` one to many.
  *
  * @return {void}
@@ -1258,21 +1335,21 @@ function doSetEnums(
 	// Init local storage.
 	//
 	const body = theRequest.body
-
+	
 	//
-	// Check for missing terms.
+	// Check for missing document handles.
 	//
-	const missing = getEdgeMissingKeys(body)
+	const missing = getOrphanHandles(body)
 	if(missing.length > 0) {
-
+		
 		const message =
-			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
+			K.error.kMSG_ERROR_MISSING_DOC_HANDLES.message[module.context.configuration.language]
 				.replace('@@@', missing.join(", "))
-
+		
 		theResponse.throw(400, message)
 		return                                                          // ==>
 	}
-
+	
 	///
 	// Init local storage.
 	///
@@ -1419,12 +1496,12 @@ function doSetEnums(
 					existing.push(found)
 				}
 			}
-		
+			
 		} // Edge found.
-
-		///
-		// Edge not found or error.
-		///
+			
+			///
+			// Edge not found or error.
+			///
 		catch (error)
 		{
 			//
@@ -1455,7 +1532,7 @@ function doSetEnums(
 			}
 		}
 	})
-
+	
 	///
 	// Insert edges.
 	///
@@ -1470,7 +1547,7 @@ function doSetEnums(
 			    INTO ${collection_edge}
 			    OPTIONS { keepNull: false, overwriteMode: "conflict" }
 		`)
-
+		
 		//
 		// Update existing edges.
 		//
@@ -1495,13 +1572,351 @@ function doSetEnums(
 	if(theRequest.queryParams.existing) {
 		message['existing'] = existing
 	}
-
+	
 	//
 	// Return information.
 	//
 	theResponse.send(message)
 	
-} // doAddEdges()
+} // doSetEnums()
+
+/**
+ * Delete enumerations and their edge data.
+ *
+ * This function will delete or update edges in order to remove the relationship
+ * between a parent node and its child nodes for a specific graph.
+ *
+ * The request body must contain the following elements:
+ * - `root`: The document handle of the graph root or type.
+ * - `parent`: The document handle of the node to which child nodes point.
+ * - `children`: A key/value dictionary in which the keys are the document
+ *               handles of the nodes pointing to the parent, and the values are
+ *               the corresponding custom edge data associated to the relationship.
+ *
+ * The function will first remove the relationships between the parent and its
+ * children: if no other root paths pass through the edge, this will be deleted;
+ * if there are root paths left, the function will ignore, replace or reset
+ * custom edge data after removing the current root from the current edge.
+ *
+ * Edge custom data can be an object, in which case it will replace eventual existing
+ * data, or `false` to reset the custom data to its default value, which is an empty
+ * object, or `null` to ignore edge data.
+ *
+ * theDirection is used to determine the direction of relationships: `true` will
+ * have children pointing to the parent, while `false` will have the parent point
+ * to the children.
+ *
+ * The function will assert that all document handles are valid, and that the
+ * parent node is connected to the root node in the graph.
+ *
+ * Note: if the parent-child edge does not feature the root, it will be ignored.
+ *
+ * @param theRequest {Object}: The request object.
+ * @param theResponse {Object}: The response object.
+ * @param thePredicate {String}: The predicate global identifier.
+ * @param theDirection {Boolean}: `true` many to one; `false` one to many.
+ *
+ * @return {void}
+ */
+function doDelEnums(
+	theRequest,
+	theResponse,
+	thePredicate,
+	theDirection = true
+){
+	//
+	// Init local storage.
+	//
+	const body = theRequest.body
+	
+	//
+	// Check for missing document handles.
+	//
+	const missing = getOrphanHandles(body)
+	if(missing.length > 0) {
+		
+		const message =
+			K.error.kMSG_ERROR_MISSING_DOC_HANDLES.message[module.context.configuration.language]
+				.replace('@@@', missing.join(", "))
+		
+		theResponse.throw(400, message)
+		return                                                          // ==>
+	}
+	
+	///
+	// Init local storage.
+	///
+	const pred = module.context.configuration.predicate
+	const bridge = module.context.configuration.predicateBridge
+	const path = module.context.configuration.sectionPath
+	const data = module.context.configuration.sectionPathData
+	
+	///
+	// Two ways to do it:
+	// - Find parent in _from and predicate enum or bridge and check if root is there.
+	// - Traverse graph from parent to root with predicate enum or bridge.
+	///
+	const found = (theDirection)
+		? K.db._query(aql`
+					WITH ${collection_term}
+					FOR vertex, edge, path IN 1..10
+						OUTBOUND ${body.parent}
+						${collection_edge}
+
+						PRUNE edge._to == ${body.root} AND
+						      edge.${pred} IN [ ${thePredicate}, ${bridge} ]
+
+					RETURN edge._key
+				`).toArray()
+		: K.db._query(aql`
+					WITH ${collection_term}
+					FOR vertex, edge, path IN 1..10
+						INBOUND ${body.parent}
+						${collection_edge}
+
+						PRUNE edge._to == ${body.root} AND
+						      edge.${pred} IN [ ${thePredicate}, ${bridge} ]
+
+					RETURN edge._key
+				`).toArray()
+	if(found.length === 0)
+	{
+		const message = dd`
+			Cannot delete edges: the parent node, [${body.parent}], is not \
+			connected to the graph root [${body.root}].
+		`
+		theResponse.status(400)
+		theResponse.send(message)
+		
+		return                                                          // ==>
+	}
+	
+	//
+	// Create list of operations.
+	//
+	const deletes = []
+	const updates = []
+	
+	//
+	// Create list of expected edges.
+	//
+	const deleted = []
+	const updated = []
+	const ignored = []
+	const result = { deleted: 0, updated: 0, ignored: 0 }
+	Object.entries(body.children).forEach( ([item, payload]) =>
+	{
+		//
+		// Init local identifiers.
+		//
+		const src = (theDirection) ? item : body.parent
+		const dst = (theDirection) ? body.parent : item
+		
+		///
+		// Init local storage.
+		///
+		const edge = {}
+		const key = Utils.getEdgeKey(src, thePredicate, dst)
+		
+		//
+		// Check if it exists.
+		//
+		try
+		{
+			///
+			// Get edge.
+			///
+			const found = collection_edge.document(key)
+			
+			///
+			// Edge does not have root.
+			// In this case we ignore the edge,
+			// since it does not belong to the desired graph.
+			///
+			if(!found[path].includes(body.root)) {
+				result.ignored += 1
+				if(theRequest.queryParams.ignored) {
+					ignored.push(found)
+				}
+				return                                              // =>
+			}
+			
+			///
+			// Remove root from path.
+			// We blindly ise indexOf() because we know the root is there.
+			///
+			found[path] = found[path].filter(element => element !== body.root)
+			
+			///
+			// Delete edge.
+			///
+			if(found[path].length === 0)
+			{
+				deletes.push(found._key)
+				result.deleted += 1
+				if(theRequest.queryParams.deleted) {
+					deleted.push(found)
+				}
+			}
+			
+			///
+			// Update edge.
+			///
+			else
+			{
+				///
+				// Init edge to update.
+				///
+				edge['_key'] = found._key
+				edge[path] = found[path]
+				
+				///
+				// Do not ignore path data.
+				///
+				if(payload !== null)
+				{
+					///
+					// Reset path data.
+					///
+					if(payload === false)
+					{
+						///
+						// Edge has path data.
+						///
+						if(!Utils.isEmptyObject(found[data]))
+						{
+							// Reset path data.
+							found[data] = {}
+							// Add path data.
+							edge[data] = {}
+						}
+					} else {
+						if(!_.isEqual(found[data], payload))
+						{
+							// Replace path data.
+							found[data] = payload
+							// Add path data.
+							edge[data] = found[data]
+						}
+					}
+				}
+				
+				///
+				// Add update and update stats.
+				///
+				updates.push(edge)
+				result.updated += 1
+				if(theRequest.queryParams.updated) {
+					updated.push(found)
+				}
+				
+				///
+				// Collect and process all edges from child to leaf nodes.
+				///
+				K.db._query(aql`
+					FOR vertex, edge, path IN 0..10
+					  INBOUND ${item}
+					  ${collection_edge}
+					  
+					  PRUNE ${body.root} NOT IN edge.${path}
+					
+					  OPTIONS {
+					    "order": "dfs",
+					    "uniqueVertices": "path"
+					  }
+					
+					  FILTER ${body.root} IN edge.${path}
+					RETURN edge
+                `)
+					.toArray()
+					.forEach( (element) => {
+						if(element[path].includes(body.root)) {
+							element[path] = element[path].filter(it => it !== body.root)
+							if(element[path].length === 0) {
+								deletes.push(element._key)
+								result.deleted += 1
+								if(theRequest.queryParams.deleted) {
+									deleted.push(element)
+								}
+							} else {
+								updates.push({
+									_key: element._key,
+									[path]: element[path]
+								})
+								result.updated += 1
+								if(theRequest.queryParams.updated) {
+									updated.push(element)
+								}
+							}
+						}
+					})
+				
+			} // There are elements left in the path.
+			
+		} // Edge found.
+			
+		///
+		// Edge not found or error.
+		///
+		catch (error)
+		{
+			//
+			// Handle unexpected errors.
+			//
+			if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
+				theResponse.throw(500, error.message)
+				return                                                  // ==>
+			}
+			
+			///
+			// Do nothing if edge does not exist.
+			///
+		}
+	})
+	
+	///
+	// Delete edges.
+	///
+	if(theRequest.queryParams.save)
+	{
+		//
+		// Perform updates.
+		//
+		K.db._query( aql`
+			FOR item in ${updates}
+			UPDATE item IN ${collection_edge}
+			OPTIONS { keepNull: false, mergeObjects: false }
+		`)
+		
+		//
+		// Perform removals.
+		//
+		K.db._query( aql`
+	        FOR item in ${deletes}
+	        REMOVE item IN ${collection_edge}
+	    `)
+	}
+	
+	///
+	// Build response.
+	///
+	const message = { stats: result }
+	if(theRequest.queryParams.deleted) {
+		message['deleted'] = deleted
+	}
+	if(theRequest.queryParams.updated) {
+		message['updated'] = updated
+	}
+	if(theRequest.queryParams.ignored) {
+		message['ignored'] = ignored
+	}
+	
+	//
+	// Return information.
+	//
+	theResponse.send(message)
+	
+} // doDelEnums()
 
 /**
  * Removes edges based on the provided parameters.
@@ -1513,7 +1928,7 @@ function doSetEnums(
  *
  * @return {void}
  */
-function doDelEnums(
+function oldDoDelEnums(
 	theRequest,
 	theResponse,
 	thePredicate,
@@ -1688,7 +2103,7 @@ function doDelEnums(
 		ignored: ignore
 	})
 	
-} // doDelEnums()
+} // oldDoDelEnums()
 
 /**
  * Adds links based on the provided parameters.
@@ -1866,17 +2281,20 @@ function doDelLinks(
 //
 
 /**
- * Assert edgem request keys exist.
- * This function will return the list of keys that are missing from terms collection.
- * @param theData {Object}: Object containing `root`, `parent` and `items` term handles.
- * @return {Array<String>}: List of missing handles
+ * Assert edge set, update and delete request handles exist.
+ *
+ * This function will return the list of orphan document handles.
+ *
+ * @param theData {Object}: Object containing `root`, `parent` and `children`.
+ *
+ * @return {Array<String>}: List of orphan handles
  */
-function getEdgeMissingKeys(theData)
+function getOrphanHandles(theData)
 {
 	//
 	// Collect keys.
 	//
-	const terms =
+	const handles =
 		Array.from(
 			new Set(
 				Object.keys(theData.children)
@@ -1885,18 +2303,18 @@ function getEdgeMissingKeys(theData)
 		)
 
 	//
-	// Assert all terms exist.
+	// Query all handles.
 	//
 	const found =
 		K.db._query( aql`
-            LET items = DOCUMENT(${terms})
-            FOR item IN items
-            RETURN item._id
+            LET documents = DOCUMENT(${handles})
+            FOR document IN documents
+            RETURN document._id
         `).toArray()
 	
-	return terms.filter(x => !found.includes(x))                        // ==>
+	return handles.filter(handle => !found.includes(handle))    // ==>
 	
-} // getEdgeMissingKeys()
+} // getOrphanHandles()
 
 /**
  * Assert links request keys exist.
