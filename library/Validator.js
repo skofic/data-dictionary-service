@@ -6291,22 +6291,6 @@ class Validator
 		return _.isPlainObject(theValue)                            // ==>
 
 	} // Validator::IsObject()
-	
-	/**
-	 * isEmptyObject
-	 * The method will return `true` if the provided value is an empty object.
-	 * @param theValue {Array|Object|Number|String}: The value to test.
-	 * @return {Boolean}: `true` if object, `false` if not.
-	 */
-	static isEmptyObject(theValue)
-	{
-		if (typeof theValue === 'object' && theValue !== null) {
-			return Object.keys(theValue).length === 0                   // ==>
-		}
-
-		return false                                                    // ==>
-		
-	} // Validator::isEmptyObject()
 
 	/**
 	 * IsEnum
