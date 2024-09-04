@@ -76,7 +76,9 @@ function termLanguage(theTerm, theLanguage)
 
 /**
  * The method will return `true` if the provided value is an empty object.
+ *
  * @param theValue {Array|Object|Number|String}: The value to test.
+ *
  * @return {Boolean}: `true` if empty object, `false` if anything else.
  */
 function isEmptyObject(theValue)
@@ -87,7 +89,35 @@ function isEmptyObject(theValue)
     
     return false                                                    // ==>
     
-} // Validator::isEmptyObject()
+} // isEmptyObject()
+
+/**
+ * The method will merge source into target.
+ * Note: theSource cannot have enumerable properties in its prototype chain.
+ *
+ * @param theSource {Object}: The object to merge.
+ * @param theTarget {Object}: The merged object.
+ *
+ * @return {Object}: The merged object.
+ */
+// TODO: Must review well!.
+function recursiveMergeObjects(theSource, theTarget)
+{
+    Object.keys(source).forEach(key => {
+        if (source[key] === null) {
+            delete target[key];
+        } else if (isObject(source[key])) {
+            if (!target[key]) {
+                target[key] = {};
+            }
+            recursiveMergeObjects(target[key], source[key]);
+        } else if (source[key] !== undefined) {
+            target[key] = source[key];
+        }
+    });
+    return target;
+
+} // recursiveMergeObjects()
 
 
 module.exports = {
