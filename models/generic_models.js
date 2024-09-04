@@ -176,8 +176,7 @@ const SetDelEnums = joi.object({
 		joi.string(),
 		joi.alternatives().try(
 			joi.object(),
-			joi.valid(null),
-			joi.valid(false)
+			joi.valid(null)
 		)
 	).required()
 })
