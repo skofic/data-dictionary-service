@@ -103,19 +103,20 @@ function isEmptyObject(theValue)
 // TODO: Must review well!.
 function recursiveMergeObjects(theSource, theTarget)
 {
-    Object.keys(source).forEach(key => {
-        if (source[key] === null) {
-            delete target[key];
-        } else if (isObject(source[key])) {
-            if (!target[key]) {
-                target[key] = {};
+    Object.keys(theSource).forEach(key => {
+        if (theSource[key] === null) {
+            delete theTarget[key];
+        } else if (isObject(theSource[key])) {
+            if (!theTarget[key]) {
+                theTarget[key] = {};
             }
-            recursiveMergeObjects(target[key], source[key]);
-        } else if (source[key] !== undefined) {
-            target[key] = source[key];
+            recursiveMergeObjects(theTarget[key], theSource[key]);
+        } else if (theSource[key] !== undefined) {
+            theTarget[key] = theSource[key];
         }
-    });
-    return target;
+    })
+    
+    return theTarget                                                    // ==>
 
 } // recursiveMergeObjects()
 
