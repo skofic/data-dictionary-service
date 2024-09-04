@@ -173,15 +173,17 @@ router.post(
         
         The values of the \`children\` elements can be the following:
         
-        - \`object\`: This represents valid data for the edge, the value will \
-					  replace existing data or be set in new edges. Note that \
-					  the object will *not be merged* with existing objects, \
-					  use the update service for that.
-        - \`null\`: This value indicates that data will be ignored, which means \
-					that only the container will be created in new edges and existing \
-					edges will have their data untouched.
-        - \`false\`: This value indicates that we want to reset custom data, so in \
-                     all cases the container will be reset to an empty object.
+        - \`object\`: This represents valid data for the edge, the provided \
+					  object will be merged with the existing one, if you set \
+					  a provided property value to \`null\`, the service will \
+					  delete that property from the existing data, if there. \
+					  If you want to ignore the value, pass an empty object.
+		- \`null\`: If you provide this value the custom data container will \
+					be reset to an empty object.
+        
+        Note that this data may be set in a new edge, or it may be merged with
+        the data of an existing edge, so, *if necessary*, first create the edge,
+        then set its data.
         `
 	)
 	.response(200, Models.SetEnumsResponse, dd
@@ -1418,9 +1420,9 @@ router.post(
  *               handles of the nodes pointing to the parent, and the values are
  *               the corresponding custom edge data associated to the relationship.
  *
- * Edge custom data can be an object, in which case it will replace eventual existing
- * data, or `false` to reset the custom data to its default value, which is an empty
- * object, or `null` to ignore edge data.
+ * Edge custom data can be an object, in which case it will be merged with the
+ * existing data. To delete object properties, provide the property with a
+ * `null` value.
  *
  * theDirection is used to determine the direction of relationships: `true` will
  * have children pointing to the parent, while `false` will have the parent point
@@ -1466,6 +1468,7 @@ function doSetEnums(
 	///
 	const pred = module.context.configuration.predicate
 	const bridge = module.context.configuration.predicateBridge
+	const section = module.context.configuration.predicateSection
 	const path = module.context.configuration.sectionPath
 	const data = module.context.configuration.sectionPathData
 	
@@ -1482,7 +1485,7 @@ function doSetEnums(
 						${collection_edge}
 
 						PRUNE edge._to == ${body.root} AND
-						      edge.${pred} IN [ ${thePredicate}, ${bridge} ]
+						      edge.${pred} IN [ ${thePredicate}, ${section}, ${bridge} ]
 
 					RETURN edge._key
 				`).toArray()
@@ -1493,7 +1496,7 @@ function doSetEnums(
 						${collection_edge}
 
 						PRUNE edge._to == ${body.root} AND
-						      edge.${pred} IN [ ${thePredicate}, ${bridge} ]
+						      edge.${pred} IN [ ${thePredicate}, ${section}, ${bridge} ]
 
 					RETURN edge._key
 				`).toArray()
@@ -1547,13 +1550,28 @@ function doSetEnums(
 			const found = collection_edge.document(key)
 			
 			///
-			// Edge does not have root.
+			// Add root to edge paths.
 			///
 			if(!found[path].includes(body.root)) {
 				// Add root to path.
 				found[path] = found[path].concat([body.root])
 				// Update edge.
 				edge[path] = found[path]
+			}
+			
+			///
+			// Set or update edge path data.
+			// Note: if payload is null, replace edge;
+			// if payload is not null, update edge.
+			///
+			if(payload === null) {
+				if(!Utils.isEmptyObject(found[data])) {
+					edge[data] = {}
+					found[data] = {}
+				}
+			} else {
+				edge[data] = payload
+				found[data] = payload
 			}
 			
 			///
@@ -1666,7 +1684,7 @@ function doSetEnums(
 			FOR item in ${updated}
 			    UPDATE item
 			    IN ${collection_edge}
-			    OPTIONS { keepNull: false, mergeObjects: false }
+			    OPTIONS { keepNull: false, mergeObjects: true }
 		`)
 	}
 	
