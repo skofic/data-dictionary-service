@@ -93,30 +93,41 @@ function isEmptyObject(theValue)
 
 /**
  * The method will merge source into target.
- * Note: theSource cannot have enumerable properties in its prototype chain.
+ *
+ * Both parameters should be objects.
+ * The `theSource` object will be traversed: if the property value is `null`,
+ * the corresponding property in `theTarget` will be deleted, if the value is
+ * anything else, the `theSource` value will replace the `theTarget` value.
+ *
+ * If you provide an object with a single property having a `null` value as the
+ * source and the corresponding target value is not an object, the target will
+ * be replaced with an empty object.
+ *
+ * The `theTarget` parameter will be modified in place.
  *
  * @param theSource {Object}: The object to merge.
  * @param theTarget {Object}: The merged object.
  *
- * @return {Object}: The merged object.
+ * @return {Boolean}: `true` if merged object did not change.
  */
-// TODO: Must review well!.
 function recursiveMergeObjects(theSource, theTarget)
 {
+    const original = _.cloneDeep(theTarget)
+    
     Object.keys(theSource).forEach(key => {
         if (theSource[key] === null) {
-            delete theTarget[key];
-        } else if (isObject(theSource[key])) {
-            if (!theTarget[key]) {
-                theTarget[key] = {};
+            delete theTarget[key]
+        } else if(Validator.IsObject(theSource[key])) {
+            if(!Validator.IsObject(theTarget[key])) {
+                theTarget[key] = {}
             }
-            recursiveMergeObjects(theTarget[key], theSource[key]);
+            recursiveMergeObjects(theTarget[key], theSource[key])
         } else if (theSource[key] !== undefined) {
-            theTarget[key] = theSource[key];
+            theTarget[key] = theSource[key]
         }
     })
     
-    return theTarget                                                    // ==>
+    return (_.isEqual(original, theTarget))                             // ==>
 
 } // recursiveMergeObjects()
 
@@ -124,5 +135,6 @@ function recursiveMergeObjects(theSource, theTarget)
 module.exports = {
     getEdgeKey,
     termLanguage,
-    isEmptyObject
+    isEmptyObject,
+    recursiveMergeObjects
 }
