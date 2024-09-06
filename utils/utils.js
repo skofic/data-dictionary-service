@@ -112,17 +112,53 @@ function isEmptyObject(theValue)
  */
 function recursiveMergeObjects(theSource, theTarget)
 {
+    ///
+    // If the source is an empty object ignore.
+    ///
+    if(isEmptyObject(theSource)) {
+        return true                                                     // ==>
+    }
+    
+    ///
+    // Clone target.
+    ///
     const original = _.cloneDeep(theTarget)
     
+    ///
+    // Iterate source properties.
+    ///
     Object.keys(theSource).forEach(key => {
-        if (theSource[key] === null) {
+        ///
+        // Delete value.
+        ///
+        if (theSource[key] === null)
+        {
             delete theTarget[key]
-        } else if(Validator.IsObject(theSource[key])) {
-            if(!Validator.IsObject(theTarget[key])) {
+        }
+        ///
+        // Source value is object.
+        ///
+        else if(Validator.IsObject(theSource[key]))
+        {
+            ///
+            // Target value is not an object.
+            ///
+            if(!Validator.IsObject(theTarget[key]))
+            {
                 theTarget[key] = {}
             }
+            
+            ///
+            // Merge source and target objects.
+            ///
             recursiveMergeObjects(theTarget[key], theSource[key])
-        } else if (theSource[key] !== undefined) {
+        }
+        
+        ///
+        // Source exists.
+        ///
+        else if (theSource[key] !== undefined)
+        {
             theTarget[key] = theSource[key]
         }
     })
