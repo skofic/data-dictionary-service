@@ -102,7 +102,6 @@ const view_reference = {
 // Instantiate router.
 //
 const createRouter = require('@arangodb/foxx/router');
-const TermValidation = require("../models/validation_parameters.");
 const router = createRouter();
 module.exports = router;
 router.tag('Graphs');
@@ -1491,29 +1490,18 @@ function doSetEdges(
 	// - Find parent in _from and predicate enum or bridge and check if root is there.
 	// - Traverse graph from parent to root with predicate enum or bridge.
 	///
-	const found = (theDirection)
-		? K.db._query(aql`
-					WITH ${collection_term}
-					FOR vertex, edge, path IN 1..10
-						OUTBOUND ${body.parent}
-						${collection_edge}
+	const bound = (theDirection) ? aql`OUTBOUND` : aql`INBOUND`
+	const found = K.db._query(aql`
+        WITH ${collection_term}
+        FOR vertex, edge, path IN 1..10
+            ${bound} ${body.parent}
+            ${collection_edge}
 
-						PRUNE edge._to == ${body.root} AND
-						      edge.${pred} IN [ ${predicate}, ${section}, ${bridge} ]
+            PRUNE edge._to == ${body.root} AND
+                  edge.${pred} IN [ ${predicate}, ${section}, ${bridge} ]
 
-					RETURN edge._key
-				`).toArray()
-		: K.db._query(aql`
-					WITH ${collection_term}
-					FOR vertex, edge, path IN 1..10
-						INBOUND ${body.parent}
-						${collection_edge}
-
-						PRUNE edge._to == ${body.root} AND
-						      edge.${pred} IN [ ${predicate}, ${section}, ${bridge} ]
-
-					RETURN edge._key
-				`).toArray()
+        RETURN edge._key
+    `).toArray()
 	if(found.length === 0)
 	{
 		const message = dd`
