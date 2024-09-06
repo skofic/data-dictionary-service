@@ -128,37 +128,14 @@ function recursiveMergeObjects(theSource, theTarget)
     // Iterate source properties.
     ///
     Object.keys(theSource).forEach(key => {
-        ///
-        // Delete value.
-        ///
-        if (theSource[key] === null)
-        {
+       if (theSource[key] === null) {
             delete theTarget[key]
-        }
-        ///
-        // Source value is object.
-        ///
-        else if(Validator.IsObject(theSource[key]))
-        {
-            ///
-            // Target value is not an object.
-            ///
-            if(!Validator.IsObject(theTarget[key]))
-            {
-                theTarget[key] = {}
+        } else if (Validator.IsObject(theSource[key])) {
+            if(!Validator.IsObject(theTarget[key])) {
+                 theTarget[key] = {}
             }
-            
-            ///
-            // Merge source and target objects.
-            ///
-            recursiveMergeObjects(theTarget[key], theSource[key])
-        }
-        
-        ///
-        // Source exists.
-        ///
-        else if (theSource[key] !== undefined)
-        {
+            recursiveMergeObjects(theSource[key], theTarget[key])
+        } else {
             theTarget[key] = theSource[key]
         }
     })
