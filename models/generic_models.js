@@ -178,7 +178,14 @@ const SetDelEnums = joi.object({
 			joi.object(),
 			joi.valid(null)
 		)
-	).required()
+	).required(),
+	sections: joi.array()
+		.items(joi.string())
+		.default([
+			module.context.configuration.predicateSection,
+			module.context.configuration.predicateBridge
+		])
+		.required()
 })
 
 // Graph update elements.
