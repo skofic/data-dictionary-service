@@ -34,14 +34,25 @@ const ErrorModel = require("../models/error_generic");
 const PredicateModel = joi.string()
 	.required()
 	.description(
-		"This parameter represents the list of available predicates for edge \
-		creation. Edges are documents representing relationships that share \
-		several paths. These predicates represent concrete node instances and \
-		not connection predicates such as sections and bridges. Here are a \
-		couple of examples:\n\
+		"This parameter represents the *functional* predicate to be used in the \
+		current operation. A graph path is composed of edges featuring functional \
+		and section predicates. A functional predicate represents the nature and \
+		function of the relationship, it qualifies the target node as functional \
+		in the graph.  Here are a couple of examples:\n\
 		- `_predicate_enum-of`: Valid enumeration element.\n\
 		- `_predicate_field-of`: Valid field element.\n\
 		- `_predicate_property-of`: Valid property element."
+	)
+const SectionModel = joi.string()
+	.required()
+	.description(
+		"This parameter represents the *section* predicate to be used in the \
+		current operation. A graph path is composed of edges featuring functional \
+		and section predicates. A section predicate represents a connection, it \
+		does not indicate function, it is used to group functional elements, or \
+		to connect a root to an existing graph. Here are a couple of examples:\n\
+		- `_predicate_section-of`: The target node is a section, not a functional element.\n\
+		- `_predicate_bridge-of`: The source node is used as a bridge to the target node."
 	)
 const SaveModel = joi.boolean()
 	.default(true)
@@ -376,7 +387,7 @@ router.post(
  * Add sections.
  */
 router.post(
-	'add/section',
+	'set/section',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
@@ -388,12 +399,12 @@ router.post(
 			)
 		}
 	},
-	'graph-add-section'
+	'graph-set-section'
 )
 	.summary('Add sections')
 	.description(dd
 		`
-            **Add sections**
+            **Set sections**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
              
@@ -411,7 +422,12 @@ router.post(
             within the *root* graph.
         `
 	)
-	.body(Models.AddDelEdges, dd
+	.queryParam('section', SectionModel)
+	.queryParam('save', SaveModel)
+	.queryParam('inserted', InsertedEdgesModel)
+	.queryParam('updated', UpdatedEdgesModel)
+	.queryParam('existing', ExistingEdgesModel)
+	.body(Models.SetDelEnums, dd
 		`
             **Root, parent and elements**
             
@@ -1523,13 +1539,15 @@ function doDelEdges(
 					${collection_edge}
 				
 					PRUNE ${body.root} NOT IN edge.${path}
-				
-				OPTIONS {
-					"order": "dfs",
-					"uniqueVertices": "path"
-				}
-				
-				FILTER ${body.root} IN edge.${path}
+					
+					OPTIONS {
+						"order": "dfs",
+						"uniqueVertices": "path"
+					}
+					
+					FILTER ${body.root} IN edge.${path} AND
+						   edge.${pred} IN ${predicates}
+	
 				RETURN edge
             `)
 				.toArray()
