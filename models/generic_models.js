@@ -170,8 +170,6 @@ const TreeModel = joi.array()
 
 // Graph insertion and deletion elements.
 const SetDelEnums = joi.object({
-	root: joi.string().required(),
-	parent: joi.string().required(),
 	children: joi.object().pattern(
 		joi.string(),
 		joi.alternatives().try(
