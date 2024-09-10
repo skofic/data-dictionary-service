@@ -31,6 +31,19 @@ const Session = require('../utils/sessions')
 //
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic");
+const RootModel = joi.string()
+	.required()
+	.description(
+		"This parameter represents the *document handle* of the *root graph node*. \
+		This identifies the path traversing the current edge."
+	)
+const ParentModel = joi.string()
+	.required()
+	.description(
+		"This parameter represents the *document handle* of the *node* that \
+		represents the *parent* to which the child nodes point to, or that \
+		points to the child nodes."
+	)
 const PredicateModel = joi.string()
 	.required()
 	.description(
@@ -135,10 +148,10 @@ router.post(
 	},
 	'graph-set-edges'
 )
-	.summary('Set edge')
+	.summary('Set functional edge')
 	.description(dd
 		`
-            **Set edges**
+            **Set functional edges**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
             
@@ -149,10 +162,15 @@ router.post(
             graph traversals.
             
             This service can be used to create relationships between a parent and its \
-            children, the relationships may be many-to-one, or one-to-many. The service \
-            can also be used to update the contents of custom data associated with an edge. \
-            The service expects the graph *root* document handle, the document handle \
-            of the *parent* node and the list of document handles representing the *child \
+            children, the relationships may be many-to-one, or one-to-many. The \
+            relationship is characterised by its predicate: in this service we expect \
+            a functional predicate. A functional predicate is one that defines the function \
+            of the relationship, while section predicates serve the purpose of grouping \
+            child nodes or connecting one graph to another. The service can also be used \
+            to update the contents of custom data associated with an edge.
+            
+            The service expects the graph *root* document handle, the document handle of \
+            the *parent* node and the list of document handles representing the *child \
             nodes*, along with custom data associated with the subject-predicate-object \
             combination.
             
@@ -160,30 +178,28 @@ router.post(
             
             - Assert that the parent node is connected to the root node.
             - If the subject-predicate-object combination does not exist, it will create \
-              an edge with the combination of the provided parent, the current child and \
-              the predicate, which is managed by the service, for the provided root. If \
-              custom data was provided, it will be set, or an empty object will be set.
+              an edge with the combination of the provided parent, the provided predicate \
+              and the current child, for the provided root. If custom data was provided, \
+              it will be set, or an empty object will be set.
             - If the subject-predicate-object combination exists:
               - If the root is not among the paths it will be added, and the eventual \
                 custom data will replace or reset existing data.
-              - If the root is in the list of paths, the service will only set or replace \
-                existing data.
+              - If the root is in the list of paths, the service will only set or eventually \
+                update existing data.
         `
 	)
+	.queryParam('root', RootModel)
+	.queryParam('parent', ParentModel)
 	.queryParam('predicate', PredicateModel)
 	.queryParam('save', SaveModel)
 	.queryParam('inserted', InsertedEdgesModel)
 	.queryParam('updated', UpdatedEdgesModel)
 	.queryParam('existing', ExistingEdgesModel)
 	.body(Models.SetDelEnums, dd`
-**Root, parent, children and data**
+**Children, sections and data**
 
 The request body should be provided with an object containing the following elements:
 
-- \`root\`: The document handle of the *root graph node*. This represents the path \
-traversing the edge to which the relationship belongs.
-- \`parent\`: The document handle of the node that represents the *parent* to which \
-the provided list of child nodes point to, or that points to the children.
 - \`children\`: A key/value dictionary in which the key represents the *child node \
 document handle* and the value represents *custom data* associated with the \
 corresponding *edge*.
@@ -302,7 +318,7 @@ router.post(
                 - Update the edge.
             
             *Note: this service will only remove the relationships, the nodes will not \
-            be deleted. It is the responsability of the caller to manage orphans. \
+            be deleted. It is the responsibility of the caller to manage orphans. \
             Eventual root bridge predicates might be left dangling: this is \
             intended, since one could connect these dangling relationships after \
             the deletions. Finally, edges that do not feature the provided root will \
@@ -310,39 +326,39 @@ router.post(
             intended, since custom edge data is implicitly connected to the graph root.*
         `
 	)
+	.queryParam('root', RootModel)
+	.queryParam('parent', ParentModel)
 	.queryParam('predicate', PredicateModel)
 	.queryParam('save', SaveModel)
 	.queryParam('deleted', DeletedEdgesModel)
 	.queryParam('updated', UpdatedEdgesModel)
 	.queryParam('existing', ExistingEdgesModel)
-	.body(Models.SetDelEnums, dd
-		`
-        **Root, parent, children and data**
-        
-        The request body should be provided with an object containing the following \
-        elements:
-        
-        - \`root\`: The document handle of the *root graph node*, which is the last \
-                    target in the graph. This represents the path traversing the edge.
-        - \`parent\`: The document handle of the node that represents the *parent* \
-                      to which the provided list of child nodes point to.
-        - \`children\`: A key/value dictionary in which the key represents the \
-                        *child node document handle* and the value represents \
-                        *custom data* associated with the corresponding *edge*.
-        
-        The values of the \`children\` elements can be the following:
-        
-        - \`object\`: This represents valid data for the edge, the value will \
-					  replace existing data or be set in new edges. Note that \
-					  the object will *not be merged* with existing objects, \
-					  use the update service for that.
-        - \`null\`: This value indicates that data will be ignored, which means \
-					that only the container will be created in new edges and existing \
-					edges will have their data untouched.
-        - \`false\`: This value indicates that we want to reset custom data, so in \
-                     all cases the container will be reset to an empty object.
-        `
-	)
+	.body(Models.SetDelEnums, dd`
+**Children, sections and data**
+
+The request body should be provided with an object containing the following elements:
+
+- \`children\`: A key/value dictionary in which the key represents the *child node \
+document handle* and the value represents *custom data* associated with the \
+corresponding *edge*.
+- \`sections\`: Graphs have predicates that indicate the type of graph: enumeration, \
+field, etc. There are other predicates, however, whose goal is to link nodes which \
+will not have the function of the main predicate. The provided default values indicate \
+sections, that represent display or category nodes used for subdividing child nodes, \
+and bridges, which allow one node to connect to another node through a bridge node.
+
+The values of the \`children\` dictionary can be the following:
+
+- \`object\`: This represents valid data for the edge, the provided object will be merged \
+with the existing one. If you set a provided property value to \`null\`, if the property \
+exists in the edge data, the service will delete that property from the existing data. \
+If you want to ignore the value, pass an empty object.
+- \`null\`: If you provide this value the whole custom data container will be reset to \
+an empty object.
+
+The edges that feature other roots in their path will be updated with the provided \
+custom value..
+	`)
 	.response(200, Models.DelEnumsResponse, dd
 		`
             **Operation status**
@@ -401,28 +417,48 @@ router.post(
 	},
 	'graph-set-section'
 )
-	.summary('Add sections')
+	.summary('Set section edges')
 	.description(dd
 		`
-            **Set sections**
-             
-            ***In order to use this service, the current user must have the \`dict\` role.***
-             
-            This service can be used to add a set of child sections to a parent \
-            node in a specific graph path. *Sections* are used to create \
-            *non-functional groups of elements* that can be used as subdivisions \
-            for display purposes, such as sections in a list of child enumeration \
-			elements, or sections in a form.
-			
-			*This means that you should not add sections to a data structure*.
+            **Set section edges**
             
-            The service expects the graph root global identifier, the \
-            parent global identifier and its children sections global identifiers. \
-            The *child* elements will be considered *sections* of the *parent* node \
-            within the *root* graph.
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            Graph node connections are implemented by edges, these are uniquely identified \
+            by the subject-predicate-object combination. These edges may be traversed by \
+            several paths, each originating from different root nodes in the graph. The \
+            edge also features a property that contains custom data that can be used during \
+            graph traversals.
+            
+            This service can be used to create relationships between a parent and its \
+            children, the relationships may be many-to-one, or one-to-many. The \
+            relationship is characterised by its predicate: in this service we expect \
+            a section predicate. A functional predicate is one that defines the function \
+            of the relationship, while section predicates serve the purpose of grouping \
+            child nodes or connecting one graph to another. The service can also be used \
+            to update the contents of custom data associated with an edge.
+            
+            The service expects the graph *root* document handle, the document handle of \
+            the *parent* node and the list of document handles representing the *child \
+            nodes*, along with custom data associated with the subject-predicate-object \
+            combination.
+            
+            The service will do the following:
+            
+            - Assert that the parent node is connected to the root node.
+            - If the subject-predicate-object combination does not exist, it will create \
+              an edge with the combination of the provided parent, the provided predicate \
+              and the current child, for the provided root. If custom data was provided, \
+              it will be set, or an empty object will be set.
+            - If the subject-predicate-object combination exists:
+              - If the root is not among the paths it will be added, and the eventual \
+                custom data will replace or reset existing data.
+              - If the root is in the list of paths, the service will only set or eventually \
+                update existing data.
         `
 	)
 	.queryParam('section', SectionModel)
+	.queryParam('predicate', PredicateModel)
 	.queryParam('save', SaveModel)
 	.queryParam('inserted', InsertedEdgesModel)
 	.queryParam('updated', UpdatedEdgesModel)
@@ -1112,6 +1148,8 @@ function doSetEdges(
 	// Init local storage.
 	//
 	const body = theRequest.body
+	const root = theRequest.queryParams.root
+	const parent = theRequest.queryParams.parent
 	const predicate = theRequest.queryParams.predicate
 	const predicates = (body.sections.includes(predicate))
 		? body.sections
@@ -1120,7 +1158,7 @@ function doSetEdges(
 	//
 	// Check for missing document handles.
 	//
-	const missing = getOrphanHandles(body)
+	const missing = getOrphanHandles(root, parent, body)
 	if(missing.length > 0) {
 		
 		const message =
@@ -1146,10 +1184,10 @@ function doSetEdges(
 	const bound = (theDirection) ? aql`OUTBOUND` : aql`INBOUND`
 	const found = K.db._query(aql`
         FOR vertex, edge, path IN 1..10
-            ${bound} ${body.parent}
+            ${bound} ${parent}
             ${collection_edge}
 
-            PRUNE edge._to == ${body.root} AND
+            PRUNE edge._to == ${root} AND
                   edge.${pred} IN ${predicates}
 
         RETURN edge._key
@@ -1157,8 +1195,8 @@ function doSetEdges(
 	if(found.length === 0)
 	{
 		const message = dd`
-			Cannot create edges: the parent node, [${body.parent}], is not \
-			connected to the graph root [${body.root}].
+			Cannot create edges: the parent node, [${parent}], is not \
+			connected to the graph root [${root}].
 		`
 		theResponse.status(400)
 		theResponse.send(message)
@@ -1184,8 +1222,8 @@ function doSetEdges(
 		//
 		// Init local identifiers.
 		//
-		const src = (theDirection) ? item : body.parent
-		const dst = (theDirection) ? body.parent : item
+		const src = (theDirection) ? item : parent
+		const dst = (theDirection) ? parent : item
 		
 		///
 		// Init local storage.
@@ -1207,9 +1245,9 @@ function doSetEdges(
 			///
 			// Add root to edge paths.
 			///
-			if(!found[path].includes(body.root)) {
+			if(!found[path].includes(root)) {
 				modified = true
-				found[path] = found[path].concat([body.root])
+				found[path] = found[path].concat([root])
 			}
 			
 			///
@@ -1267,7 +1305,7 @@ function doSetEdges(
 			edge._from = src
 			edge._to = dst
 			edge[pred] = predicate
-			edge[path] = [ body.root ]
+			edge[path] = [ root ]
 			edge[data] = {}
 			if(payload !== null) {
 				Utils.recursiveMergeObjects(payload, edge[data])
@@ -1382,6 +1420,8 @@ function doDelEdges(
 	// Init local storage.
 	//
 	const body = theRequest.body
+	const root = theRequest.queryParams.root
+	const parent = theRequest.queryParams.parent
 	const predicate = theRequest.queryParams.predicate
 	const predicates = (body.sections.includes(predicate))
 		? body.sections
@@ -1390,7 +1430,7 @@ function doDelEdges(
 	//
 	// Check for missing document handles.
 	//
-	const missing = getOrphanHandles(body)
+	const missing = getOrphanHandles(root, parent, body)
 	if(missing.length > 0) {
 		
 		const message =
@@ -1416,10 +1456,10 @@ function doDelEdges(
 	const bound = (theDirection) ? aql`OUTBOUND` : aql`INBOUND`
 	const found = K.db._query(aql`
         FOR vertex, edge, path IN 1..10
-            ${bound} ${body.parent}
+            ${bound} ${parent}
             ${collection_edge}
 
-            PRUNE edge._to == ${body.root} AND
+            PRUNE edge._to == ${root} AND
                   edge.${pred} IN ${predicates}
 
         RETURN edge._key
@@ -1427,8 +1467,8 @@ function doDelEdges(
 	if(found.length === 0)
 	{
 		const message = dd`
-			Cannot delete edges: the parent node, [${body.parent}], is not \
-			connected to the graph root [${body.root}].
+			Cannot delete edges: the parent node, [${parent}], is not \
+			connected to the graph root [${root}].
 		`
 		theResponse.status(400)
 		theResponse.send(message)
@@ -1454,8 +1494,8 @@ function doDelEdges(
 		//
 		// Init local identifiers.
 		//
-		const src = (theDirection) ? item : body.parent
-		const dst = (theDirection) ? body.parent : item
+		const src = (theDirection) ? item : parent
+		const dst = (theDirection) ? parent : item
 		
 		///
 		// Init local storage.
@@ -1478,7 +1518,7 @@ function doDelEdges(
 			// In this case we ignore the edge,
 			// since it does not belong to the desired graph.
 			///
-			if(!found[path].includes(body.root)) {
+			if(!found[path].includes(root)) {
 				result.ignored += 1
 				if(theRequest.queryParams.ignored) {
 					ignored.push(found)
@@ -1490,7 +1530,7 @@ function doDelEdges(
 			// Remove root from path.
 			// We blindly ise indexOf() because we know the root is there.
 			///
-			found[path] = found[path].filter(element => element !== body.root)
+			found[path] = found[path].filter(element => element !== root)
 			
 			///
 			// Delete edge.
@@ -1538,22 +1578,22 @@ function doDelEdges(
 					${outbound} ${src}
 					${collection_edge}
 				
-					PRUNE ${body.root} NOT IN edge.${path}
+					PRUNE ${root} NOT IN edge.${path}
 					
 					OPTIONS {
 						"order": "dfs",
 						"uniqueVertices": "path"
 					}
 					
-					FILTER ${body.root} IN edge.${path} AND
+					FILTER ${root} IN edge.${path} AND
 						   edge.${pred} IN ${predicates}
 	
 				RETURN edge
             `)
 				.toArray()
 				.forEach( (element) => {
-					if(element[path].includes(body.root)) {
-						element[path] = element[path].filter(it => it !== body.root)
+					if(element[path].includes(root)) {
+						element[path] = element[path].filter(it => it !== root)
 						if(element[path].length === 0) {
 							deletes.push(element._key)
 							result.deleted += 1
@@ -1818,22 +1858,25 @@ function doDelLinks(
  *
  * This function will return the list of orphan document handles.
  *
- * @param theData {Object}: Object containing `root`, `parent` and `children`.
+ * @param theRoot {Object}: `root` parameter, graph root node reference.
+ * @param theParent {Object}: `parent` parameter, aggregator node reference.
+ * @param theBody {Object}: Object containing `children` with custom data.
  * @param theCollections {String[]|null}: Will receive the list of collections in document handles.
  *
  * @return {Array<String>}: List of orphan handles
  */
-function getOrphanHandles(theData,theCollections = null)
+function getOrphanHandles(theRoot, theParent, theBody,theCollections = null)
 {
 	//
 	// Collect keys.
 	//
 	const handles =
 		Array.from(
-			new Set(
-				Object.keys(theData.children)
-					.concat([theData.root, theData.parent])
-			)
+			new Set([
+				...Object.keys(theBody.children),
+				theRoot,
+				theParent
+			])
 		)
 	
 	///
