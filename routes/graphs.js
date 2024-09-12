@@ -55,14 +55,14 @@ const PredicateModel = joi.string()
 		- `_predicate_field-of`: Valid field element.\n\
 		- `_predicate_property-of`: Valid property element."
 	)
-const SectionModel = joi.string()
+const ContainerModel = joi.string()
 	.required()
 	.default("_predicate_section-of")
 	.description(
-		"This parameter represents the *section* predicate to be used in the \
-		current operation. A section predicate does not have any specific function, \
-		except that of serving as a common category for a set of children. Here is \
-		an example:\n\
+		"This parameter represents the *container* predicate to be used in the \
+		current operation. A container predicate does not have any specific function, \
+		except that of serving as a container or common category for a set of children. \
+		Here is  an example:\n\
 		- `_predicate_section-of`: The target node is a section, not a functional element."
 	)
 const BridgeModel = joi.string().allow(null)
@@ -162,7 +162,7 @@ router.tag('Graphs');
  * Set edges.
  */
 router.post(
-	'set/edges',
+	'set/edge',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
@@ -171,7 +171,7 @@ router.post(
 	},
 	'graph-set-edges'
 )
-	.summary('Set edge')
+	.summary('Set edges')
 	.description(dd
 		`
             **Set edges**
@@ -183,10 +183,10 @@ router.post(
             that many paths can traverse the same edge: these paths are identified by the \
             graph root node, and the functional predicate characterising its path.
             
-            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Predicates are of three types: *functional*, *container* and *bridge*. \
             Functional predicates determine what the current graph represents: \
             a controlled vocabulary, a data structure type, etc. Nodes connected with \
-            such predicates are valid choices for that predicate. Section predicates are \
+            such predicates are valid choices for that predicate. Container predicates are \
             used to group child nodes under a common category that has no function, other
             than to collect a set of choices. Bridge predicates are used to allow another \
             graph (different root) to share the structure of the current graph. Edges also \
@@ -292,7 +292,7 @@ router.post(
  * Delete edges.
  */
 router.post(
-	'del/edges',
+	'del/edge',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
@@ -313,10 +313,10 @@ router.post(
             that many paths can traverse the same edge: these paths are identified by the \
             graph root node, and the functional predicate characterising its path.
             
-            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Predicates are of three types: *functional*, *container* and *bridge*. \
             Functional predicates determine what the current graph represents: \
             a controlled vocabulary, a data structure type, etc. Nodes connected with \
-            such predicates are valid choices for that predicate. Section predicates are \
+            such predicates are valid choices for that predicate. Container predicates are \
             used to group child nodes under a common category that has no function, other
             than to collect a set of choices. Bridge predicates are used to allow another \
             graph (different root) to share the structure of the current graph. Edges also \
@@ -429,16 +429,16 @@ router.post(
  * Add sections.
  */
 router.post(
-	'set/section',
+	'set/container',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doSetEdges(request, response, request.queryParams.section)
+			doSetEdges(request, response, request.queryParams.container)
 		}
 	},
-	'graph-set-section'
+	'graph-set-containers'
 )
-	.summary('Set sections')
+	.summary('Set containers')
 	.description(dd
 		`
             **Set sections**
@@ -450,19 +450,19 @@ router.post(
             that many paths can traverse the same edge: these paths are identified by the \
             graph root node, and the functional predicate characterising its path.
             
-            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Predicates are of three types: *functional*, *container* and *bridge*. \
             Functional predicates determine what the current graph represents: \
             a controlled vocabulary, a data structure type, etc. Nodes connected with \
-            such predicates are valid choices for that predicate. Section predicates are \
+            such predicates are valid choices for that predicate. Container predicates are \
             used to group child nodes under a common category that has no function, other
             than to collect a set of choices. Bridge predicates are used to allow another \
             graph (different root) to share the structure of the current graph. Edges also \
             feature an object property that holds data that can be used during traversals.
             
-            This service can be used to create edges with section predicates. \
+            This service can be used to create edges with container predicates. \
             The service expects the graph root node reference, which identifies the graph \
             path, the parent and children node references to be connected, the functional \
-            predicate which identifies the functional paths of the graph, the section \
+            predicate which identifies the functional paths of the graph, the container \
             predicate to be set, the list of section and bridge predicates expected during \
             traversals, the custom data associated with the edge and a set of flags governing \
             the operation.
@@ -471,7 +471,7 @@ router.post(
             
             - Assert that the parent node is connected to the root node.
             - If the subject-predicate-object combination does not exist, it will create \
-              an edge with the combination of the provided parent, the provided predicate \
+              an edge with the combination of the provided parent, the container predicate \
               and the current child, for the provided root. If custom data was provided, \
               it will be set, or an empty object will be set.
             - If the subject-predicate-object combination exists:
@@ -483,7 +483,7 @@ router.post(
 	)
 	.queryParam('root', RootModel)
 	.queryParam('parent', ParentModel)
-	.queryParam('section', SectionModel)
+	.queryParam('container', ContainerModel)
 	.queryParam('predicate', PredicateModel)
 	.queryParam('direction', DirectionModel)
 	.queryParam('save', SaveModel)
@@ -553,19 +553,19 @@ router.post(
  * Delete edges.
  */
 router.post(
-	'del/section',
+	'del/container',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doDelEdges(request, response, request.queryParams.section)
+			doDelEdges(request, response, request.queryParams.container)
 		}
 	},
-	'graph-del-sections'
+	'graph-del-containers'
 )
-	.summary('Delete sections')
+	.summary('Delete containers')
 	.description(dd
 		`
-            **Delete sections**
+            **Delete containers**
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
@@ -574,27 +574,27 @@ router.post(
             that many paths can traverse the same edge: these paths are identified by the \
             graph root node, and the functional predicate characterising its path.
             
-            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Predicates are of three types: *functional*, *container* and *bridge*. \
             Functional predicates determine what the current graph represents: \
             a controlled vocabulary, a data structure type, etc. Nodes connected with \
-            such predicates are valid choices for that predicate. Section predicates are \
+            such predicates are valid choices for that predicate. Container predicates are \
             used to group child nodes under a common category that has no function, other
             than to collect a set of choices. Bridge predicates are used to allow another \
             graph (different root) to share the structure of the current graph. Edges also \
             feature an object property that holds data that can be used during traversals.
             
-            This service can be used to delete edges with functional predicates. \
+            This service can be used to delete edges with container predicates. \
             The service expects the graph root node reference, which identifies the graph \
             path, the parent and children node references to be connected, the functional \
-            predicate which identifies the functional paths of the graph, the section \
-            predicate to be set, the list of section and bridge predicates expected during \
+            predicate which identifies the functional paths of the graph, the container \
+            predicate to be matched, the list of section and bridge predicates expected during \
             traversals, the custom data associated with the edge and a set of flags governing \
             the operation.
             
             The service will do the following:
             
             - Locate the edge containing the current child pointing to the parent with \
-              the section predicate.
+              the container predicate.
             - Remove the current root from the list of roots in the edge path:
               - If the path becomes empty:
                 - Delete the edge.
@@ -617,7 +617,7 @@ router.post(
 	)
 	.queryParam('root', RootModel)
 	.queryParam('parent', ParentModel)
-	.queryParam('section', SectionModel)
+	.queryParam('container', ContainerModel)
 	.queryParam('predicate', PredicateModel)
 	.queryParam('direction', DirectionModel)
 	.queryParam('save', SaveModel)
