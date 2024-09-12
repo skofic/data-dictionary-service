@@ -34,8 +34,9 @@ const ErrorModel = require("../models/error_generic");
 const RootModel = joi.string()
 	.required()
 	.description(
-		"This parameter represents the *document handle* of the *root graph node*. \
-		This identifies the path traversing the current edge."
+		"This parameter represents the *document handle* of the *graph root node*. \
+		The root, along with the functional predicate, identifies the path that \
+		traverses the current edge."
 	)
 const ParentModel = joi.string()
 	.required()
@@ -47,11 +48,9 @@ const ParentModel = joi.string()
 const PredicateModel = joi.string()
 	.required()
 	.description(
-		"This parameter represents the *functional* predicate to be used in the \
-		current operation. A graph path is composed of edges featuring functional \
-		and section predicates. A functional predicate represents the nature and \
-		function of the relationship, it qualifies the target node as functional \
-		in the graph.  Here are a couple of examples:\n\
+		"This parameter represents the *functional* predicate of the current edge. \
+		A functional predicate determines what function the child node has. \
+		Here are a couple of examples:\n\
 		- `_predicate_enum-of`: Valid enumeration element.\n\
 		- `_predicate_field-of`: Valid field element.\n\
 		- `_predicate_property-of`: Valid property element."
@@ -61,11 +60,20 @@ const SectionModel = joi.string()
 	.default("_predicate_section-of")
 	.description(
 		"This parameter represents the *section* predicate to be used in the \
-		current operation. A graph path is composed of edges featuring functional \
-		and section predicates. A section predicate collects a set of nodes under a \
-		category that has no function except to categorise or function as a collection. \
-		Here are a couple of examples:\n\
+		current operation. A section predicate does not have any specific function, \
+		except that of serving as a common category for a set of children. Here is \
+		an example:\n\
 		- `_predicate_section-of`: The target node is a section, not a functional element."
+	)
+const BridgeModel = joi.string().allow(null)
+	.required()
+	.default("_predicate_bridge-of")
+	.description(
+		"This parameter represents the *bridge* predicate to be used in the \
+		current operation. A bridge predicate is neither a functional nor a section \
+		predicate, it allows skipping the connected node and land on the next functional \
+		or section node. Here is an example:\n\
+		- `_predicate_bridge-of`: The target node will be skipped and ignored."
 	)
 const PruneModel = joi.boolean()
 	.default(true)
@@ -89,7 +97,9 @@ const DirectionModel = joi.boolean()
 		"This parameter determines the direction of relationships for the \
 		provided predicate: `true` indicates that children point to the parent, \
 		`false` indicates that the parent points to the children. By default \
-		this parameter assumes many to one relationships, `true`."
+		this parameter assumes many to one relationships, `true`. \
+		*Note that the direction should be consistent with all predicates \
+		used in the graph."
 	)
 const InsertedEdgesModel = joi.boolean()
 	.default(false)
@@ -149,7 +159,7 @@ router.tag('Graphs');
 //
 
 /**
- * Add enumerations.
+ * Set edges.
  */
 router.post(
 	'set/edges',
@@ -161,31 +171,32 @@ router.post(
 	},
 	'graph-set-edges'
 )
-	.summary('Set functional edge')
+	.summary('Set edge')
 	.description(dd
 		`
-            **Set functional edges**
+            **Set edges**
              
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            Graph node connections are implemented by edges, these are uniquely identified \
-            by the subject-predicate-object combination. These edges may be traversed by \
-            several paths, each originating from different root nodes in the graph. The \
-            edge also features a property that contains custom data that can be used during \
-            graph traversals.
+            Graphs are networks of *nodes* connected to each other by *edges*. An edge is \
+            uniquely identified by its *subject-predicate-object* relationship. This means \
+            that many paths can traverse the same edge: these paths are identified by the \
+            graph root node, and the functional predicate characterising its path.
             
-            This service can be used to create relationships between a parent and its \
-            children, the relationships may be many-to-one, or one-to-many. The \
-            relationship is characterised by its predicate: in this service we expect \
-            a functional predicate. A functional predicate is one that defines the function \
-            of the relationship, while section predicates serve the purpose of grouping \
-            child nodes or connecting one graph to another. The service can also be used \
-            to update the contents of custom data associated with an edge.
+            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Functional predicates determine what the current graph represents: \
+            a controlled vocabulary, a data structure type, etc. Nodes connected with \
+            such predicates are valid choices for that predicate. Section predicates are \
+            used to group child nodes under a common category that has no function, other
+            than to collect a set of choices. Bridge predicates are used to allow another \
+            graph (different root) to share the structure of the current graph. Edges also \
+            feature an object property that holds data that can be used during traversals.
             
-            The service expects the graph *root* document handle, the document handle of \
-            the *parent* node, the functional *predicate* , the direction of the \
-            relationships and the list of document handles representing the *child nodes*, \
-            along with custom data associated with the subject-predicate-object combination.
+            This service can be used to create edges with functional predicates. \
+            The service expects the graph root node reference, which identifies the graph \
+            path, the parent and children node references to be connected, the functional \
+            predicate, the list of section predicates expected during traversals, the custom \
+            data associated with the edge and a set of flags governing the operation.
             
             The service will do the following:
             
@@ -197,8 +208,8 @@ router.post(
             - If the subject-predicate-object combination exists:
               - If the root is not among the paths it will be added, and the eventual \
                 custom data will replace or reset existing data.
-              - If the root is in the list of paths, the service will only set or eventually \
-                update existing data.
+              - If the root is in the list of paths, the service will only handle the \
+                edge data.
         `
 	)
 	.queryParam('root', RootModel)
@@ -210,32 +221,32 @@ router.post(
 	.queryParam('updated', UpdatedEdgesModel)
 	.queryParam('existing', ExistingEdgesModel)
 	.body(Models.SetDelEnums, dd`
-**Children, sections and data**
+        **Children, sections and data**
 
-The request body should be provided with an object containing the following elements:
+        The request body should be provided with an object containing the following elements:
 
-- \`children\`: A key/value dictionary in which the key represents the *child node \
-document handle* and the value represents *custom data* associated with the \
-corresponding *edge*.
-- \`sections\`: Graphs have predicates that indicate the type of graph: enumeration, \
-field, etc. There are other predicates, however, whose goal is to link nodes which \
-will not have the function of the main predicate. The provided default values indicate \
-sections, that represent display or category nodes used for subdividing child nodes, \
-and bridges, which allow one node to connect to another node through a bridge node.
-
-The values of the \`children\` dictionary can be the following:
-
-- \`object\`: This represents valid data for the edge, the provided object will be merged \
-with the existing one. If you set a provided property value to \`null\`, if the property \
-exists in the edge data, the service will delete that property from the existing data. \
-If you want to ignore the value, pass an empty object.
-- \`null\`: If you provide this value the whole custom data container will be reset to \
-an empty object.
-
-If the edge does not exist, the provided data will be set in the edge, except for the \
-properties that have a *null* value. If the edge exists, the parameters of the provided \
-data will replace eventual existing matching parameters, or will be erased, if the value \
-is *null*.
+        - \`children\`: A key/value dictionary in which the key represents the *child node
+          document handle* and the value represents *custom data* associated with the
+          corresponding *edge*.
+        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration,
+          field, etc. There are other predicates, however, whose goal is to link nodes which
+          will not have the function of the main predicate. The provided default values indicate
+          sections, that represent display or category nodes used for subdividing child nodes,
+          and bridges, which allow one node to connect to another node through a bridge node.
+        
+        The values of the \`children\` dictionary can be the following:
+        
+        - \`object\`: This represents valid data for the edge, the provided object will be merged
+          with the existing one. If you set a provided property value to \`null\`, if the property
+          exists in the edge data, the service will delete that property from the existing data.
+          If you want to ignore the value, pass an empty object.
+        - \`null\`: If you provide this value the whole custom data container will be reset to
+          an empty object.
+        
+        If the edge does not exist, the provided data will be set in the edge, except for the
+        properties that have a *null* value. If the edge exists, the parameters of the provided
+        data will replace eventual existing matching parameters, or will be erased, if the value
+        is *null*.
 	`)
 	.response(200, Models.SetEnumsResponse, dd
 		`
@@ -278,7 +289,7 @@ is *null*.
 	)
 
 /**
- * Delete enumerations.
+ * Delete edges.
  */
 router.post(
 	'del/edges',
@@ -297,24 +308,25 @@ router.post(
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            Enumerations are controlled vocabularies structured as many-to-one graphs. \
-            These graphs have a nested tree structure in which a parent node is pointed \
-            to by its children.
+            Graphs are networks of *nodes* connected to each other by *edges*. An edge is \
+            uniquely identified by its *subject-predicate-object* relationship. This means \
+            that many paths can traverse the same edge: these paths are identified by the \
+            graph root node, and the functional predicate characterising its path.
             
-            Graph node connections are implemented by edges, these are uniquely identified \
-            by the subject-predicate-object combination in which the subject is the child, \
-            and the object is the parent. These edges may be traversed by several paths, \
-            each originating from different root nodes in the graph. The edge also features \
-            a property that contains custom data that can be used during graph traversals.
-
-            This service can be used to remove a child from its parent in a specific \
-            graph path, and to ignore, replace or reset the contents of custom data \
-            associated with an edge.
+            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Functional predicates determine what the current graph represents: \
+            a controlled vocabulary, a data structure type, etc. Nodes connected with \
+            such predicates are valid choices for that predicate. Section predicates are \
+            used to group child nodes under a common category that has no function, other
+            than to collect a set of choices. Bridge predicates are used to allow another \
+            graph (different root) to share the structure of the current graph. Edges also \
+            feature an object property that holds data that can be used during traversals.
             
-            The service expects the graph *root* document handle, the document handle of \
-            the *parent* node, the functional *predicate*, the *direction* of the \
-            relationships and the list of document handles representing the *child nodes*, \
-            along with custom data associated with the subject-predicate-object combination.
+            This service can be used to delete edges with functional predicates. \
+            The service expects the graph root node reference, which identifies the graph \
+            path, the parent and children node references to be connected, the functional \
+            predicate, the list of section predicates expected during traversals, the custom \
+            data associated with the edge and a set of flags governing the operation.
             
             The service will do the following:
             
@@ -347,30 +359,31 @@ router.post(
 	.queryParam('updated', UpdatedEdgesModel)
 	.queryParam('existing', ExistingEdgesModel)
 	.body(Models.SetDelEnums, dd`
-**Children, sections and data**
+        **Children, sections and data**
 
-The request body should be provided with an object containing the following elements:
+        The request body should be provided with an object containing the following elements:
 
-- \`children\`: A key/value dictionary in which the key represents the *child node \
-document handle* and the value represents *custom data* associated with the \
-corresponding *edge*.
-- \`sections\`: Graphs have predicates that indicate the type of graph: enumeration, \
-field, etc. There are other predicates, however, whose goal is to link nodes which \
-will not have the function of the main predicate. The provided default values indicate \
-sections, that represent display or category nodes used for subdividing child nodes, \
-and bridges, which allow one node to connect to another node through a bridge node.
-
-The values of the \`children\` dictionary can be the following:
-
-- \`object\`: This represents valid data for the edge, the provided object will be merged \
-with the existing one. If you set a provided property value to \`null\`, if the property \
-exists in the edge data, the service will delete that property from the existing data. \
-If you want to ignore the value, pass an empty object.
-- \`null\`: If you provide this value the whole custom data container will be reset to \
-an empty object.
-
-The edges that feature other roots in their path will be updated with the provided \
-custom value..
+        - \`children\`: A key/value dictionary in which the key represents the *child node
+          document handle* and the value represents *custom data* associated with the
+          corresponding *edge*.
+        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration,
+          field, etc. There are other predicates, however, whose goal is to link nodes which
+          will not have the function of the main predicate. The provided default values indicate
+          sections, that represent display or category nodes used for subdividing child nodes,
+          and bridges, which allow one node to connect to another node through a bridge node.
+        
+        The values of the \`children\` dictionary can be the following:
+        
+        - \`object\`: This represents valid data for the edge, the provided object will be merged
+          with the existing one. If you set a provided property value to \`null\`, if the property
+          exists in the edge data, the service will delete that property from the existing data.
+          If you want to ignore the value, pass an empty object.
+        - \`null\`: If you provide this value the whole custom data container will be reset to
+          an empty object.
+        
+        If the edge exists, the provided root is removed from the edge path: if there are \
+        elements left in the path, the parameters of the provided data will replace eventual \
+        existing matching parameters, or will be erased, if the value is *null*.
 	`)
 	.response(200, Models.DelEnumsResponse, dd
 		`
@@ -420,53 +433,52 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doSetSections(
-				request,
-				response,
-				true
-			)
+			doSetEdges(request, response, request.queryParams.section)
 		}
 	},
 	'graph-set-section'
 )
-	.summary('Set section edges')
+	.summary('Set sections')
 	.description(dd
 		`
-            **Set section edges**
+            **Set sections**
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            Graph node connections are implemented by edges, these are uniquely identified \
-            by the subject-predicate-object combination. These edges may be traversed by \
-            several paths, each originating from different root nodes in the graph. The \
-            edge also features a property that contains custom data that can be used during \
-            graph traversals.
+            Graphs are networks of *nodes* connected to each other by *edges*. An edge is \
+            uniquely identified by its *subject-predicate-object* relationship. This means \
+            that many paths can traverse the same edge: these paths are identified by the \
+            graph root node, and the functional predicate characterising its path.
             
-            This service can be used to group a set of child nodes under a category or \
-            section. This represents a purely categorical division used to cluster \
-            categories of child nodes when their number becomes too large. These nodes \
-            have a purely presentation function, they ensure a user does not get an \
-            overwhelming number of choices to consider.
+            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Functional predicates determine what the current graph represents: \
+            a controlled vocabulary, a data structure type, etc. Nodes connected with \
+            such predicates are valid choices for that predicate. Section predicates are \
+            used to group child nodes under a common category that has no function, other
+            than to collect a set of choices. Bridge predicates are used to allow another \
+            graph (different root) to share the structure of the current graph. Edges also \
+            feature an object property that holds data that can be used during traversals.
             
-            The service expects the graph *root* document handle, the document handle of \
-            the *parent* node, the *functional predicate*, the *section predicate*, the \
-            *direction* of the predicate relationship and the list of document handles \
-            representing the *child nodes*, along with custom data associated with the \
-            subject-predicate-object combination.
+            This service can be used to create edges with section predicates. \
+            The service expects the graph root node reference, which identifies the graph \
+            path, the parent and children node references to be connected, the functional \
+            predicate which identifies the functional paths of the graph, the section \
+            predicate to be set, the list of section and bridge predicates expected during \
+            traversals, the custom data associated with the edge and a set of flags governing \
+            the operation.
             
             The service will do the following:
             
-            - Assert that the parent node is connected to the root node in a path \
-              featuring the functional predicate and root.
+            - Assert that the parent node is connected to the root node.
             - If the subject-predicate-object combination does not exist, it will create \
-              an edge with the combination of the provided parent, the provided section \
+              an edge with the combination of the provided parent, the provided predicate \
               and the current child, for the provided root. If custom data was provided, \
               it will be set, or an empty object will be set.
             - If the subject-predicate-object combination exists:
               - If the root is not among the paths it will be added, and the eventual \
                 custom data will replace or reset existing data.
-              - If the root is in the list of paths, the service will only set or eventually \
-                update existing data.
+              - If the root is in the list of paths, the service will only handle the \
+                edge data.
         `
 	)
 	.queryParam('root', RootModel)
@@ -538,22 +550,17 @@ router.post(
 	)
 
 /**
- * Delete sections.
+ * Delete edges.
  */
 router.post(
 	'del/section',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doDelEdges(
-				request,
-				response,
-				module.context.configuration.predicateSection,
-				true
-			)
+			doDelEdges(request, response, request.queryParams.section)
 		}
 	},
-	'graph-del-section'
+	'graph-del-sections'
 )
 	.summary('Delete sections')
 	.description(dd
@@ -562,46 +569,106 @@ router.post(
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            This service can be used to remove a set of child sections from a parent \
-            node in a specific graph path.
+            Graphs are networks of *nodes* connected to each other by *edges*. An edge is \
+            uniquely identified by its *subject-predicate-object* relationship. This means \
+            that many paths can traverse the same edge: these paths are identified by the \
+            graph root node, and the functional predicate characterising its path.
             
-            *Sections* are used to create *non-functional groups of elements* that \
-            can be used as subdivisions for display purposes, such as sections in a \
-            list of child enumeration elements, or sections in a form.
+            Predicates are of three types: *functional*, *section* and *bridge*. \
+            Functional predicates determine what the current graph represents: \
+            a controlled vocabulary, a data structure type, etc. Nodes connected with \
+            such predicates are valid choices for that predicate. Section predicates are \
+            used to group child nodes under a common category that has no function, other
+            than to collect a set of choices. Bridge predicates are used to allow another \
+            graph (different root) to share the structure of the current graph. Edges also \
+            feature an object property that holds data that can be used during traversals.
             
-            The service expects the graph root global identifier, the \
-            parent global identifier and its children global identifiers in the request body. \
-            The *child* elements will be considered *sections* of the \
-            *parent* node within the *root* graph.
+            This service can be used to delete edges with functional predicates. \
+            The service expects the graph root node reference, which identifies the graph \
+            path, the parent and children node references to be connected, the functional \
+            predicate which identifies the functional paths of the graph, the section \
+            predicate to be set, the list of section and bridge predicates expected during \
+            traversals, the custom data associated with the edge and a set of flags governing \
+            the operation.
+            
+            The service will do the following:
+            
+            - Locate the edge containing the current child pointing to the parent with \
+              the section predicate.
+            - Remove the current root from the list of roots in the edge path:
+              - If the path becomes empty:
+                - Delete the edge.
+                - If the *prune* parameter is set:
+                  - Recurse the operation for all branches stemming from the child node. \
+                    Note that the predicates used to traverse the graph will be the provided \
+                    functional predicate and list of section predicates.
+              - If the path is not empty:
+                - Ignore, reset or set the edge data.
+                - Update the edge.
+            
+            *Note: this service will only remove the relationships, the nodes will not \
+            be deleted. It is the responsibility of the caller to manage orphans. \
+            Eventual root bridge predicates might be left dangling: this is \
+            intended, since one could connect these dangling relationships after \
+            the deletions. Finally, edges that do not feature the provided root will \
+            be ignored, meaning that custom edge data will be left untouched: this is \
+            intended, since custom edge data is implicitly connected to the graph root.*
         `
 	)
-	.body(Models.AddDelEdges, dd
-		`
-            **Root, parent and elements**
-            
-            The request body should hold an object containing the following elements:
-            - \`root\`: The global identifier of the term that represents the \
-              form.
-            - \`parent\`: The global identifier of the term that represents \
-              the parent of the items.
-            - \`items\`: A set of term global identifiers, each representing a field.
-            
-            The *root* represents the type or name of the graph.
-            The *parent* represents a node in the graph, at any level, to which the provided \
-            enumeration options belong.
-            The *items* represent the identifiers of the terms that represent sections \
-            of the *parent* node.
-        `
-	)
+	.queryParam('root', RootModel)
+	.queryParam('parent', ParentModel)
+	.queryParam('section', SectionModel)
+	.queryParam('predicate', PredicateModel)
+	.queryParam('direction', DirectionModel)
+	.queryParam('save', SaveModel)
+	.queryParam('prune', PruneModel)
+	.queryParam('deleted', DeletedEdgesModel)
+	.queryParam('updated', UpdatedEdgesModel)
+	.queryParam('existing', ExistingEdgesModel)
+	.body(Models.SetDelEnums, dd`
+        **Children, sections and data**
+
+        The request body should be provided with an object containing the following elements:
+
+        - \`children\`: A key/value dictionary in which the key represents the *child node
+          document handle* and the value represents *custom data* associated with the
+          corresponding *edge*.
+        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration,
+          field, etc. There are other predicates, however, whose goal is to link nodes which
+          will not have the function of the main predicate. The provided default values indicate
+          sections, that represent display or category nodes used for subdividing child nodes,
+          and bridges, which allow one node to connect to another node through a bridge node.
+        
+        The values of the \`children\` dictionary can be the following:
+        
+        - \`object\`: This represents valid data for the edge, the provided object will be merged
+          with the existing one. If you set a provided property value to \`null\`, if the property
+          exists in the edge data, the service will delete that property from the existing data.
+          If you want to ignore the value, pass an empty object.
+        - \`null\`: If you provide this value the whole custom data container will be reset to
+          an empty object.
+        
+        If the edge exists, the provided root is removed from the edge path: if there are \
+        elements left in the path, the parameters of the provided data will replace eventual \
+        existing matching parameters, or will be erased, if the value is *null*.
+	`)
 	.response(200, Models.DelEnumsResponse, dd
 		`
-            **Operations count**
+            **Operation status**
             
             The service will return an object containing the following properties:
-            - deleted: The number of deleted edges.
-            - updated: The number of existing edges in which the root was removed from their path.
-            - ignored: The number of edges that were not found.
-        `
+            
+            - \`stats\`:
+              - \`deleted\`: The number of deleted edges.
+              - \`updated\`: The number of updated edges.
+              - \`ignored\`: The number of ignored edges.
+            - \`deleted\`: The list of inserted edges, if the \`deleted\` \
+                           parameter was set.
+            - \`updated\`: The list of updated edger, if the \`updated\` \ \
+                           parameter was set.
+            - \`ignored\`: The list of existing edges, if the \`ignored\` \
+                           parameter was set.
+       `
 	)
 	.response(400, joi.object(), dd
 		`
@@ -1169,10 +1236,11 @@ router.post(
  *
  * @param theRequest {Object}: The request object.
  * @param theResponse {Object}: The response object.
+ * @param theSection {String|null}: The section predicate.
  *
  * @return {void}
  */
-function doSetEdges(theRequest, theResponse)
+function doSetEdges(theRequest, theResponse, theSection = null)
 {
 	//
 	// Init local storage.
@@ -1260,7 +1328,12 @@ function doSetEdges(theRequest, theResponse)
 		// Init local storage.
 		///
 		const edge = {}
-		const key = Utils.getEdgeKey(src, predicate, dst)
+		const key =
+			Utils.getEdgeKey(
+				src,
+				(theSection === null) ? predicate : theSection,
+				dst
+			)
 		
 		//
 		// Check if it exists.
@@ -1315,7 +1388,7 @@ function doSetEdges(theRequest, theResponse)
 			}
 			
 		} // Edge found.
-			
+		
 		///
 		// Edge not found or error.
 		///
@@ -1335,7 +1408,7 @@ function doSetEdges(theRequest, theResponse)
 			edge._key = key
 			edge._from = src
 			edge._to = dst
-			edge[pred] = predicate
+			edge[pred] = (theSection === null) ? predicate : theSection
 			edge[path] = [ root ]
 			edge[data] = {}
 			if(payload !== null) {
@@ -1414,7 +1487,8 @@ function doSetEdges(theRequest, theResponse)
  * The path query parameters contain the following information:
  * - `root`: The document handle of the graph root or type.
  * - `parent`: The document handle of the node to which child nodes will point.
- * - `predicate`: The predicate associated with the graph.
+ * - `section`: The eventual section predicate.
+ * - `predicate`: The functional predicate associated with the graph.
  * - `direction`: A boolean used to determine the direction of relationships:
  *                `true` will have children pointing to the parent, while
  *                `false` will have the parent point to the children.
@@ -1454,10 +1528,11 @@ function doSetEdges(theRequest, theResponse)
  *
  * @param theRequest {Object}: The request object.
  * @param theResponse {Object}: The response object.
+ * @param theSection {String|null}: The section predicate.
  *
  * @return {void}
  */
-function doDelEdges(theRequest, theResponse)
+function doDelEdges(theRequest, theResponse, theSection = null)
 {
 	//
 	// Init local storage.
@@ -1546,7 +1621,12 @@ function doDelEdges(theRequest, theResponse)
 		// Init local storage.
 		///
 		const edge = {}
-		const key = Utils.getEdgeKey(src, predicate, dst)
+		const key =
+			Utils.getEdgeKey(
+				src,
+				(theSection === null) ? predicate : theSection,
+				dst
+			)
 		
 		//
 		// Check if it exists.
@@ -1589,30 +1669,37 @@ function doDelEdges(theRequest, theResponse)
 						deleted.push(found)
 					}
 				}
-				return                                              // =>
-			}
-			
+				
+			} // No more paths left.
+				
 			///
-			// Reset custom data.
+			// Update edge.
 			///
-			if(payload === null) {
-				if(!Utils.isEmptyObject(found[data])) {
-					found[data] = {}
+			else
+			{
+				///
+				// Reset custom data.
+				///
+				if(payload === null) {
+					if(!Utils.isEmptyObject(found[data])) {
+						found[data] = {}
+					}
+				} else {
+					Utils.recursiveMergeObjects(payload, found[data])
 				}
-			} else {
-				Utils.recursiveMergeObjects(payload, found[data])
-			}
-			
-			///
-			// Add update and update stats.
-			///
-			if(!updates.hasOwnProperty(found._key)) {
-				updates[found._key] = found
-				result.updated += 1
-				if(theRequest.queryParams.updated) {
-					updated.push(found)
+				
+				///
+				// Add update and update stats.
+				///
+				if(!updates.hasOwnProperty(found._key)) {
+					updates[found._key] = found
+					result.updated += 1
+					if(theRequest.queryParams.updated) {
+						updated.push(found)
+					}
 				}
-			}
+				
+			} // Paths left in edge.
 			
 			///
 			// Prune relationships originating from children.
