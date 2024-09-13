@@ -788,7 +788,34 @@ module.exports = Object.freeze({
                 iso_639_3_eng: "The following referenced document handles do not exist: @@@.",
                 iso_639_3_ita: "Riferimenti invalidi. I seguenti documenti non esistono: @@@.",
                 iso_639_3_fra: "Références invalides. Les documents suivants n'existent pas: @@@.",
-                iso_639_3_esp: "Los siguientes documentos referenciados no existen: @@@e."
+                iso_639_3_esp: "Los siguientes documentos referenciados no existen: @@@."
+            }
+        },
+        kMSG_ERROR_MISSING_TERM_REFS: {
+            code: 46,
+            message: {
+                iso_639_3_eng: "The following referenced terms do not exist: @@@.",
+                iso_639_3_ita: "Riferimenti invalidi. I seguenti termini non esistono: @@@.",
+                iso_639_3_fra: "Références invalides. Les termes suivants n'existent pas: @@@.",
+                iso_639_3_esp: "Los siguientes terminos referenciados no existen: @@@."
+            }
+        },
+        kMSG_ERROR_NOT_TERMS: {
+            code: 47,
+            message: {
+                iso_639_3_eng: "The following references are not terms: @@@.",
+                iso_639_3_ita: "Riferimenti invalidi. I seguenti riferimenti non sono termini: @@@.",
+                iso_639_3_fra: "Références invalides. Les référemces suivantes ne sont pas des termes: @@@.",
+                iso_639_3_esp: "Las siguientes referencias no son terminos: @@@."
+            }
+        },
+        kMSG_ERROR_NOT_DESCRIPTORS: {
+            code: 48,
+            message: {
+                iso_639_3_eng: "The following terms are not descriptors: @@@.",
+                iso_639_3_ita: "Riferimenti invalidi. I seguenti termini non sono descrittpori: @@@.",
+                iso_639_3_fra: "Références invalides. Les termes suivants ne sont pas des descripteurs: @@@.",
+                iso_639_3_esp: "Las siguientes terminos no son descriptores: @@@."
             }
         }
     }

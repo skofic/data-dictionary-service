@@ -186,6 +186,20 @@ const SetDelEnums = joi.object({
 		.required()
 })
 
+// Bridge edge deletion.
+const DelBridge = joi.object({
+	sections: joi.array()
+		.items(joi.string())
+		.default([
+			module.context.configuration.predicateSection,
+			module.context.configuration.predicateBridge
+		])
+		.required(),
+	data: joi.object()
+		.allow(null)
+		.required()
+})
+
 // Graph update elements.
 const UpdEnums = joi.object({
 	root: joi.string().required(),
@@ -206,11 +220,21 @@ const AddDelEdges = joi.object({
 	items: joi.array().items(joi.string()).required()
 })
 
-// Graph insertion and deletion elements: root, parent and items to insert.
-const AddDelLinks = joi.object({
-	parent: joi.string().required(),
-	items: joi.array().items(joi.string()).required()
+// Links insertion with custom data.
+const SetLinks = joi.object({
+	children: joi.object().pattern(
+		joi.string(),
+		joi.alternatives().try(
+			joi.object(),
+			joi.valid(null)
+		)
+	).required()
 })
+
+// Links deletion.
+const DelLinks = joi.array()
+	.items(joi.string())
+	.required()
 
 // Add elements to graph response.
 const SetEnumsResponse = joi.object({
@@ -239,17 +263,14 @@ const DelEnumsResponse = joi.alternatives()
 	.try(
 		joi.object({
 			deleted: joi.number(),
-			updated: joi.number(),
 			ignored: joi.number()
 		}),
 		joi.object({
 			stats: joi.object({
 				deleted: joi.number().integer().required(),
-				updated: joi.number().integer().required(),
 				ignored: joi.number().integer().required()
 			}),
 			deleted: joi.array(),
-			updated: joi.array(),
 			ignored: joi.array()
 		})
 	)
@@ -300,7 +321,9 @@ module.exports = {
 	SetDelEnums,
 	UpdEnums,
 	AddDelEdges,
-	AddDelLinks,
+	DelBridge,
+	SetLinks,
+	DelLinks,
 	
 	SetEnumsResponse,
 	UpdEnumsResponse,

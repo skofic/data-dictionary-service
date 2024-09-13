@@ -45,6 +45,13 @@ const ParentModel = joi.string()
 		represents the *parent* to which the child nodes point to, or that \
 		points to the child nodes."
 	)
+const BridgedModel = joi.string()
+	.required()
+	.description(
+		"This parameter represents the *document handle* of the *node* that \
+		will become the bridge for the root node. If node A wants to use node \
+		B's graph, node A will be the root and node B will be this node."
+	)
 const PredicateModel = joi.string()
 	.required()
 	.description(
@@ -54,6 +61,14 @@ const PredicateModel = joi.string()
 		- `_predicate_enum-of`: Valid enumeration element.\n\
 		- `_predicate_field-of`: Valid field element.\n\
 		- `_predicate_property-of`: Valid property element."
+	)
+const LinkModel = joi.string()
+	.required()
+	.description(
+		"This parameter represents the predicate of the current link. \
+		Here are a couple of examples:\n\
+		- `_predicate_requires_indicator`: Required indicator predicate.\n\
+		- `_predicate_requires_metadata`: Required metadata indicator predicate."
 	)
 const ContainerModel = joi.string()
 	.required()
@@ -65,7 +80,7 @@ const ContainerModel = joi.string()
 		Here is  an example:\n\
 		- `_predicate_section-of`: The target node is a section, not a functional element."
 	)
-const BridgeModel = joi.string().allow(null)
+const BridgeModel = joi.string()
 	.required()
 	.default("_predicate_bridge-of")
 	.description(
@@ -100,6 +115,23 @@ const DirectionModel = joi.boolean()
 		this parameter assumes many to one relationships, `true`. \
 		*Note that the direction should be consistent with all predicates \
 		used in the graph."
+	)
+const LinkDirectionModel = joi.boolean()
+	.default(false)
+	.description(
+		"This parameter determines the direction of relationships for the \
+		provided predicate: `true` indicates that children point to the parent, \
+		`false` indicates that the parent points to the children. By default \
+		this parameter assumes many to one relationships, `true`. \
+		*Note that the direction should be consistent with all predicates \
+		used in the graph."
+	)
+const DescriptorModel = joi.boolean()
+	.default(false)
+	.description(
+		"This parameter determines whether all link nodes must be descriptors: \
+		`true` indicates that parent and children must be descriptors; `false` \
+		indicates that parent and children need not be descriptors"
 	)
 const InsertedEdgesModel = joi.boolean()
 	.default(false)
@@ -441,7 +473,7 @@ router.post(
 	.summary('Set containers')
 	.description(dd
 		`
-            **Set sections**
+            **Set containers**
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
@@ -550,7 +582,7 @@ router.post(
 	)
 
 /**
- * Delete edges.
+ * Delete containers.
  */
 router.post(
 	'del/container',
@@ -693,231 +725,85 @@ router.post(
 	)
 
 /**
- * Add properties.
+ * Add bridges.
  */
 router.post(
-	'add/property',
+	'set/bridge',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doAddLinks(
-				request,
-				response,
-				module.context.configuration.predicateProperty,
-				true,
-				true
-			)
+			doSetBridge(request, response)
 		}
 	},
-	'graph-add-property'
+	'graph-set-bridge'
 )
-	.summary('Add properties')
+	.summary('Set bridge')
 	.description(dd
 		`
-            **Add properties**
+            **Set bridge**
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            This service can be used to add a set of properties to an object structure type.
+            Graphs are networks of *nodes* connected to each other by *edges*. An edge is \
+            uniquely identified by its *subject-predicate-object* relationship. This means \
+            that many paths can traverse the same edge: these paths are identified by the \
+            graph root node, and the functional predicate characterising its path.
             
-            Object structures are represented by a term that holds the list of restrictions \
-            and constraints the structure should obey. This term represents the object type.
-            The graph is a one level tree where the children are all the properties that the \
-            object type parent might feature. This list is only indicative, it should be used \
-            as a suggestion of which properties to set in the object.
-            The constraints will be listed in the rule (_rule) section of the object type \
-            term. Note that, by design, an object type can only have one level, which means \
-            that if an object contains another object, there must be a type at both levels.
+            Predicates are of three types: *functional*, *container* and *bridge*. \
+            Functional predicates determine what the current graph represents: \
+            a controlled vocabulary, a data structure type, etc. Nodes connected with \
+            such predicates are valid choices for that predicate. Container predicates are \
+            used to group child nodes under a common category that has no function, other
+            than to collect a set of choices. Bridge predicates are used to allow another \
+            graph (different root) to share the structure of the current graph. Edges also \
+            feature an object property that holds data that can be used during traversals.
             
-            The service expects the global identifier of the object type term, and the list of \
-            descriptor global identifiers representing the object's properties.
+            This service can be used to create an edge with bridge predicate. \
+            The service expects the *root* node that will traverse the *bridged* root \
+            graph and the *bridge* predicate. The custom edge data is provided in the \
+            request body.
+            
+            The service will do the following:
+            
+            - If the subject-predicate-object combination does not exist, it will create \
+              an edge with the *bridged* and the *root* nodes, with the provided *bridge* \
+              predicate as the predicate. If custom data was provided,  it will be set, or \
+              an empty object will be set.
+            - If the subject-predicate-object combination exists, it will update the \
+              custom data.
         `
 	)
-	.body(Models.AddDelLinks, dd
+	.queryParam('root', RootModel)
+	.queryParam('bridged', BridgedModel)
+	.queryParam('bridge', BridgeModel)
+	.queryParam('direction', DirectionModel)
+	.queryParam('save', SaveModel)
+	.queryParam('inserted', InsertedEdgesModel)
+	.queryParam('updated', UpdatedEdgesModel)
+	.queryParam('existing', ExistingEdgesModel)
+	.body(joi.object().allow(null), dd
 		`
-            **Object type and properties**
+            **Custom data**
             
-            The request body should hold an object containing the following elements:
-            - \`parent\`: The parent node: the global identifier of the object.
-            - \`items\`: A set of descriptor term global identifiers representing \
-              the object's properties.
+            The body should contain the custom data relating to the current edge. It can \
+            take the following values:
             
-            The edges will contain a relationship from the children to the parent.
-        `
-	)
-	.response(200, Models.AddLinksResponse, dd
-		`
-            **Operations count**
-            
-            The service will return an object containing the following properties:
-            - inserted: The number of inserted edges.
-            - existing: The number of existing edges that include subject, object and predicate.
-        `
-	)
-	.response(400, joi.object(), dd
-		`
-            **Invalid parameter**
-            
-            The service will return this code if the provided request is invalid:
-        `
-	)
-	.response(401, ErrorModel, dd
-		`
-            **No current user**
-            
-            The service will return this code if no user is currently logged in.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **Unauthorised user**
-            
-            The service will return this code if the current user is not a dictionary user.
-        `
-	)
-
-/**
- * Remove properties.
- */
-router.post(
-	'del/property',
-	(request, response) => {
-		const roles = [K.environment.role.dict]
-		if(Session.hasPermission(request, response, roles)) {
-			doDelLinks(
-				request,
-				response,
-				module.context.configuration.predicateProperty,
-				true,
-			)
-		}
-	},
-	'graph-del-property'
-)
-	.summary('Remove properties')
-	.description(dd
-		`
-            **Remove properties**
-            
-            ***In order to use this service, the current user must have the \`dict\` role.***
-            
-            This service can be used to remove a set of properties from an object structure type.
-            
-            Object structures are represented by a term that holds the list of restrictions \
-            and constraints the structure should obey. This term represents the object type.
-            The graph is a one level tree where the children are all the properties that the \
-            object type parent might feature. This list is only indicative, it should be used \
-            as a suggestion of which properties to set in the object.
-            The constraints will be listed in the rule (_rule) section of the object type \
-            term. Note that, by design, an object type can only have one level, which means \
-            that if an object contains another object, there must be a type at both levels.
-            
-            The service expects the global identifier of the object type term, and the list of \
-            descriptor global identifiers representing the object's properties.
-        `
-	)
-	.body(Models.AddDelLinks, dd
-		`
-            **Object type and properties**
-            
-            The request body should hold an object containing the following elements:
-            - \`parent\`: The parent node: the global identifier of the object.
-            - \`items\`: A set of descriptor term global identifiers representing \
-              the object's properties.
-            
-            The edges will contain a relationship from the children to the parent.
-        `
-	)
-	.response(200, Models.DelLinksResponse, dd
-		`
-            **Operations count**
-            
-            The service will return an object containing the following properties:
-            - removed: The number of removed edges.
-            - ignored: The number of ignored edges.
-        `
-	)
-	.response(400, joi.object(), dd
-		`
-            **Invalid parameter**
-            
-            The service will return this code if the provided request is invalid:
-        `
-	)
-	.response(401, ErrorModel, dd
-		`
-            **No current user**
-            
-            The service will return this code if no user is currently logged in.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **Unauthorised user**
-            
-            The service will return this code if the current user is not a dictionary user.
-        `
-	)
-
-/**
- * Add indicators.
- */
-router.post(
-	'add/indicator',
-	(request, response) => {
-		const roles = [K.environment.role.dict]
-		if(Session.hasPermission(request, response, roles)) {
-			doAddLinks(
-				request,
-				response,
-				module.context.configuration.predicateRequiredIndicator,
-				false,
-				true
-			)
-		}
-	},
-	'graph-add-indicator'
-)
-	.summary('Add required indicators')
-	.description(dd
-		`
-            **Add required indicators**
-            
-            ***In order to use this service, the current user must have the \`dict\` role.***
-            
-            This service can be used to add a set of required indicator references \
-            to an existing descriptor.
-            
-            There are cases in which a particular descriptor requires a set of other \
-            indicators to give meaning to its data in a dataset. For instance we could \
-            link date to temperature, so that whenever we include temperature in a dataset \
-            we also make sure to add the date in which the temperature was recorded. \
-            This feature is useful when building data submission templates or \
-            aggregating datasets.
-            
-            The service expects the global identifier of the object type term, and the list of \
-            descriptor global identifiers representing the object's properties.
-        `
-	)
-	.body(Models.AddDelLinks, dd
-		`
-            **Descriptor and its required indicators**
-            
-            The request body should hold an object containing the following elements:
-            - \`parent\`: The descriptor global identifier.
-            - \`items\`: A set of descriptor term global identifiers representing \
-              the required indicators.
-            
-            The edges will contain a relationship from the parents to the children.
+            - \`object\`: This represents valid data for the edge, the provided object will be \
+              merged with the existing one. If you set a provided property value to \`null\`, \
+              if the property exists in the edge data, the service will delete that property \
+              from the existing data. If you want to ignore the value, pass an empty object.
+            - \`null\`: If you provide this value the whole custom data container will be reset \
+              to an empty object.
         `
 	)
 	.response(200, Models.SetEnumsResponse, dd
 		`
             **Operations count**
             
-            The service will return an object containing the following properties:
+            The service will return an object containign the following properties:
             - inserted: The number of inserted edges.
-            - existing: The number of existing edges that include subject, object and predicate.
+            - updated: The number of existing edges to which the root has been added to their path.
+            - existing: The number of existing edges that include subject, object predicate and path.
         `
 	)
 	.response(400, joi.object(), dd
@@ -943,146 +829,95 @@ router.post(
 	)
 
 /**
- * Remove properties.
+ * Delete bridges.
  */
 router.post(
-	'del/indicator',
+	'del/bridge',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doDelLinks(
-				request,
-				response,
-				module.context.configuration.predicateRequiredIndicator,
-				false
-			)
+			doDelBridge(request, response)
 		}
 	},
-	'graph-del-indicator'
+	'graph-del-bridge'
 )
-	.summary('Remove required indicators')
+	.summary('Delete bridge')
 	.description(dd
 		`
-            **Remove required indicators**
+            **Delete bridge**
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            This service can be used to remove a set of required indicators from a \
-            descriptor term.
+            Graphs are networks of *nodes* connected to each other by *edges*. An edge is \
+            uniquely identified by its *subject-predicate-object* relationship. This means \
+            that many paths can traverse the same edge: these paths are identified by the \
+            graph root node, and the functional predicate characterising its path.
             
-            There are cases in which a particular descriptor requires a set of other \
-            indicators to give meaning to its data in a dataset. For instance we could \
-            link date to temperature, so that whenever we include temperature in a dataset \
-            we also make sure to add the date in which the temperature was recorded. \
-            This feature is useful when building data submission templates or \
-            aggregating datasets.
+            Predicates are of three types: *functional*, *container* and *bridge*. \
+            Functional predicates determine what the current graph represents: \
+            a controlled vocabulary, a data structure type, etc. Nodes connected with \
+            such predicates are valid choices for that predicate. Container predicates are \
+            used to group child nodes under a common category that has no function, other
+            than to collect a set of choices. Bridge predicates are used to allow another \
+            graph (different root) to share the structure of the current graph. Edges also \
+            feature an object property that holds data that can be used during traversals.
             
-            The service expects the global identifier of the object type term, and the list of \
-            descriptor global identifiers representing the object's properties.
+            This service can be used to delete an edge with bridge predicate. \
+            The service expects the *root* node that will traverse the *bridged* root \
+            graph and the *bridge* predicate. The custom edge data is provided in the \
+            request body. The service also expects the functional predicate, that will \
+            be traversed if the *prune* flag was set, to delete leaf branches.
+            
+            The service will do the following:
+            
+            - If the subject-predicate-object combination exists, it will delete \
+              the edge.
+              - If the *prune* flag is set, the service will delete all \
+                instances of the root in all paths featuring the provided *predicate*.
         `
 	)
-	.body(Models.AddDelLinks, dd
+	.queryParam('root', RootModel)
+	.queryParam('bridged', BridgedModel)
+	.queryParam('bridge', BridgeModel)
+	.queryParam('predicate', PredicateModel)
+	.queryParam('direction', DirectionModel)
+	.queryParam('save', SaveModel)
+	.queryParam('prune', PruneModel)
+	.queryParam('deleted', DeletedEdgesModel)
+	.queryParam('updated', UpdatedEdgesModel)
+	.queryParam('existing', ExistingEdgesModel)
+	.body(Models.DelBridge, dd
 		`
-            **Object type and properties**
+            **Custom data and sections**
             
-            The request body should hold an object containing the following elements:
-            - \`parent\`: The parent node: the global identifier of the object.
-            - \`items\`: A set of descriptor term global identifiers representing \
-              the object's properties.
+            The body contains two properties:
             
-            The edges will contain a relationship from the children to the parent.
-        `
-	)
-	.response(200, Models.DelLinksResponse, dd
-		`
-            **Operations count**
+            - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration, \
+              field, etc. There are other predicates, however, whose goal is to link nodes which \
+              will not have the function of the main predicate. The provided default values \
+              indicate sections, that represent display or category nodes used for subdividing \
+              child nodes, and bridges, which allow one node to connect to another node through \
+              a bridge node.
+            - \`data\`: An object containing the custom data for the current edge.
             
-            The service will return an object containing the following properties:
-            - removed: The number of removed edges.
-            - ignored: The number of ignored edges.
-        `
-	)
-	.response(400, joi.object(), dd
-		`
-            **Invalid parameter**
-            
-            The service will return this code if the provided request is invalid:
-        `
-	)
-	.response(401, ErrorModel, dd
-		`
-            **No current user**
-            
-            The service will return this code if no user is currently logged in.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **Unauthorised user**
-            
-            The service will return this code if the current user is not a dictionary user.
-        `
-	)
-
-/**
- * Add metadata.
- */
-router.post(
-	'add/metadata',
-	(request, response) => {
-		const roles = [K.environment.role.dict]
-		if(Session.hasPermission(request, response, roles)) {
-			doAddLinks(
-				request,
-				response,
-				module.context.configuration.predicateRequiredMetadata,
-				false,
-				true
-			)
-		}
-	},
-	'graph-add-metadata'
-)
-	.summary('Add required metadata')
-	.description(dd
-		`
-            **Add required metadata**
-            
-            ***In order to use this service, the current user must have the \`dict\` role.***
-            
-            This service can be used to add a set of required metadata references \
-            to an existing descriptor.
-            
-            There are cases in which a particular descriptor requires a set of metadata \
-            indicators to give meaning to its data in a dataset. The metadata indicators \
-            are descriptors that contain data *related to the parent descriptor*: this \
-            means that the parent and its metadata indicators form a single block. \
-            Required indicators are added and shared in the dataset, while metadata \
-            indicators are added to the parent descriptor.
-            
-            The service expects the global identifier of the object type term, and the list of \
-            descriptor global identifiers representing the object's metadata indicators.
-        `
-	)
-	.body(Models.AddDelLinks, dd
-		`
-            **Descriptor and its required metadata indicators**
-            
-            The request body should hold an object containing the following elements:
-            - \`parent\`: The descriptor global identifier.
-            - \`items\`: A set of descriptor term global identifiers representing \
-              the required metadata indicators.
-            
-            The edges will contain a relationship from the parents to the children.
+            The body \`data\` property take the following values:
+           
+            - \`object\`: This represents valid data for the edge, the provided object will be \
+              merged with the existing one. If you set a provided property value to \`null\`, \
+              if the property exists in the edge data, the service will delete that property \
+              from the existing data. If you want to ignore the value, pass an empty object.
+            - \`null\`: If you provide this value the whole custom data container will be reset \
+              to an empty object.
         `
 	)
 	.response(200, Models.SetEnumsResponse, dd
 		`
             **Operations count**
             
-            The service will return an object containing the following properties:
+            The service will return an object containign the following properties:
             - inserted: The number of inserted edges.
-            - existing: The number of existing edges that include subject, object and predicate.
+            - updated: The number of existing edges to which the root has been added to their path.
+            - existing: The number of existing edges that include subject, object predicate and path.
         `
 	)
 	.response(400, joi.object(), dd
@@ -1108,63 +943,63 @@ router.post(
 	)
 
 /**
- * Remove metadata.
+ * Set links.
  */
 router.post(
-	'del/metadata',
+	'set/link',
 	(request, response) => {
 		const roles = [K.environment.role.dict]
 		if(Session.hasPermission(request, response, roles)) {
-			doDelLinks(
-				request,
-				response,
-				module.context.configuration.predicateRequiredMetadata,
-				false
-			)
+			doSetLinks(request, response)
 		}
 	},
-	'graph-del-metadata'
+	'graph-set-links'
 )
-	.summary('Remove required indicators')
+	.summary('Set links')
 	.description(dd
 		`
-            **Remove required metadata indicators**
+            **Set links**
             
             ***In order to use this service, the current user must have the \`dict\` role.***
             
-            This service can be used to remove a set of required metadata indicators from a \
-            descriptor term.
+            Links are one-level graphs in which nodes are connected with \
+            subject-predicate-object links that contain a custom data record. Unlike edges, \
+            only one link can exist and there is no root or path concept. Linked items \
+            are eikther linked or unlinked, or their custom data updated.
             
-            There are cases in which a particular descriptor requires a set of metadata \
-            indicators to give meaning to its data in a dataset. The metadata indicators \
-            are descriptors that contain data *related to the parent descriptor*: this \
-            means that the parent and its metadata indicators form a single block. \
-            Required indicators are added and shared in the dataset, while metadata \
-            indicators are added to the parent descriptor.
-            
-            The service expects the global identifier of the object type term, and the list of \
-            descriptor global identifiers representing the object's metadata indicators.
+            This service allows creating new links, or updating the custom data of an \
+            existing link. The service expects the *parent* node, the link predicate, \
+            the direction of the predicate, a flag indicating whether all nodes must be \
+            descriptors, and a set of other flags governing the operation. The service \
+            will return the number of inserted, modified or ignored links.
         `
 	)
-	.body(Models.AddDelLinks, dd
+	.queryParam('parent', ParentModel)
+	.queryParam('predicate', LinkModel)
+	.queryParam('direction', LinkDirectionModel)
+	.queryParam('descriptors', DescriptorModel)
+	.queryParam('save', SaveModel)
+	.queryParam('inserted', InsertedEdgesModel)
+	.queryParam('updated', UpdatedEdgesModel)
+	.queryParam('existing', ExistingEdgesModel)
+	.body(Models.SetLinks, dd
 		`
-            **Object type and properties**
+            **Link children and data**
             
             The request body should hold an object containing the following elements:
-            - \`parent\`: The descriptor global identifier.
-            - \`items\`: A set of descriptor term global identifiers representing \
-              the required metadata indicators.
-            
-            The edges will contain a relationship from the children to the parent.
+            - \`children\`: A key/value dictionary in which the key represents the *child node \
+              document handle*, which represents the linked node, and the value represents \
+              *custom data* associated with the corresponding *link*.
         `
 	)
-	.response(200, Models.DelLinksResponse, dd
+	.response(200, Models.SetEnumsResponse, dd
 		`
             **Operations count**
             
-            The service will return an object containing the following properties:
-            - removed: The number of removed edges.
-            - ignored: The number of ignored edges.
+            The service will return an object containign the following properties:
+            - inserted: The number of inserted edges.
+            - updated: The number of existing edges to which the root has been added to their path.
+            - existing: The number of existing edges that include subject, object predicate and path.
         `
 	)
 	.response(400, joi.object(), dd
@@ -1172,6 +1007,87 @@ router.post(
             **Invalid parameter**
             
             The service will return this code if the provided request is invalid:
+        `
+	)
+	.response(401, ErrorModel, dd
+		`
+            **No current user**
+            
+            The service will return this code if no user is currently logged in.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **Unauthorised user**
+            
+            The service will return this code if the current user is not a dictionary user.
+        `
+	)
+
+/**
+ * Delete linkxs.
+ */
+router.post(
+	'del/link',
+	(request, response) => {
+		const roles = [K.environment.role.dict]
+		if(Session.hasPermission(request, response, roles)) {
+			doDelLinks(request, response)
+		}
+	},
+	'graph-del-link'
+)
+	.summary('Delete links')
+	.description(dd
+		`
+            **Delete links**
+            
+            ***In order to use this service, the current user must have the \`dict\` role.***
+            
+            Links are one-level graphs in which nodes are connected with \
+            subject-predicate-object links that contain a custom data record. Unlike edges, \
+            only one link can exist and there is no root or path concept. Linked items \
+            are eikther linked or unlinked, or their custom data updated.
+            
+            This service will delete a link between two nodes The service expects the *parent* node, the link predicate, \
+            the direction of the predicate, a flag indicating whether all nodes must be \
+            descriptors, and a set of other flags governing the operation. The service \
+            will return the number of inserted, modified or ignored links.
+        `
+	)
+	.queryParam('parent', ParentModel)
+	.queryParam('predicate', LinkModel)
+	.queryParam('direction', LinkDirectionModel)
+	.queryParam('save', SaveModel)
+	.queryParam('deleted', DeletedEdgesModel)
+	.queryParam('ignored', IgnoredEdgesModel)
+	.body(Models.DelLinks, dd`
+        **Children node references**
+
+        The request body is an array containing the child node document handles. \
+        If a link exists between the parent, the current child and the predicate, \
+        the service will delete the link.
+	`)
+	.response(200, Models.DelEnumsResponse, dd
+		`
+            **Operation status**
+            
+            The service will return an object containing the following properties:
+            
+            - \`stats\`:
+              - \`deleted\`: The number of deleted edges.
+              - \`ignored\`: The number of not found edges.
+            - \`deleted\`: The list of inserted edges, if the \`deleted\` \
+                           parameter was set.
+            - \`ignored\`: The list of not found edges, if the \`ignored\` \
+                           parameter was set.
+       `
+	)
+	.response(400, joi.object(), dd
+		`
+            **Invalid reference**
+
+            The service will return this code any of the provided term references are invalid.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -1195,7 +1111,7 @@ router.post(
 //
 
 /**
- * Set enumerations and their edge data.
+ * Set edges and their data.
  *
  * This function will create new edges or update existing edges to
  * connect a parent node to a set of child nodes in a specific graph.
@@ -1257,7 +1173,7 @@ function doSetEdges(theRequest, theResponse, theSection = null)
 	//
 	// Check for missing document handles.
 	//
-	const missing = getOrphanHandles(root, parent, body)
+	let missing = getOrphanHandles(root, parent, body)
 	if(missing.length > 0) {
 		
 		const message =
@@ -1818,39 +1734,30 @@ function doDelEdges(theRequest, theResponse, theSection = null)
 } // doDelEdges()
 
 /**
- * Set section edges and their data.
+ * Set bridge edge and its data.
  *
- * This function will create new section edges or update existing section edges
- * to connect a parent node to a set of child section nodes in a specific graph.
+ * This function will create new bridge edge or update an existing bridge edge
+ * custom data.
  *
  * The path query parameters contain the following information:
- * - `root`: The document handle of the graph root or type.
- * - `parent`: The document handle of the node to which child nodes will point.
- * - `section`: The section predicate to be used.
- * - `predicate`: The functional predicate associated with the graph.
+ * - `root`: The document handle of the node that represents the new path root.
+ * - `bridged`: The document handle of the root node that will borrow its graph.
+ * - `bridge`: The bridge predicate to be used.
+ * - `direction`: Relationship direction: *true* means from bridged to root.
+ * - `save`: A boolean indicating whether to perform the operation, or only
+ *           return the list of expected operations.
+ * - `inserted`: Return list of inserted, actual or planned, edge records.
+ * - `updated`: Return list of updated, actual or planned, edge records.
+ * - `existing`: Return list of existing, actual or planned, edge records.
  *
- * The request body must contain the following elements:
- * - `children`: A key/value dictionary in which the keys are the document
- *               handles of the nodes pointing to the parent, and the values are
- *               the corresponding custom edge data associated to the relationship.
- * - `sections`: A list of predicates representing the sections and bridges that
- *               could be encountered while traversing the graph: this will allow
- *               traversals that span from root to leaves.
+ * The request body must contain an object representing the edge custom data.
  *
  * Edge custom data can be an object, in which case it will be merged with the
  * existing data. To delete object properties, provide the property with a
  * `null` value.
  *
- * theDirection is used to determine the direction of relationships: `true` will
- * have children pointing to the parent, while `false` will have the parent point
- * to the children.
- *
  * The function will assert that all document handles are valid, and that the
  * parent node is connected to the root node in the graph.
- *
- * Although you will find "updates" variables and descriptions, any update will
- * be actually a "replace" in the database, this means that the "found" variable
- * will be set to the actual updated contents of the object.
  *
  * The function assumes the nodes collection to be terms.
  *
@@ -1859,25 +1766,21 @@ function doDelEdges(theRequest, theResponse, theSection = null)
  *
  * @return {void}
  */
-function doSetSections(theRequest, theResponse)
+function doSetBridge(theRequest, theResponse)
 {
 	//
 	// Init local storage.
 	//
 	const body = theRequest.body
 	const root = theRequest.queryParams.root
-	const parent = theRequest.queryParams.parent
-	const section = theRequest.queryParams.section
+	const bridge = theRequest.queryParams.bridge
+	const bridged = theRequest.queryParams.bridged
 	const direction = theRequest.queryParams.direction
-	const predicate = theRequest.queryParams.predicate
-	const predicates = (body.sections.includes(predicate))
-		? body.sections
-		: body.sections.concat(predicate)
 	
 	//
 	// Check for missing document handles.
 	//
-	const missing = getOrphanHandles(root, parent, body)
+	const missing = getOrphanHandles(root, bridged, body)
 	if(missing.length > 0) {
 		
 		const message =
@@ -1895,34 +1798,6 @@ function doSetSections(theRequest, theResponse)
 	const path = module.context.configuration.sectionPath
 	const data = module.context.configuration.sectionPathData
 	
-	///
-	// Two ways to do it:
-	// - Find parent in _from and predicate enum or bridge and check if root is there.
-	// - Traverse graph from parent to root with predicate enum or bridge.
-	///
-	const bound = (direction) ? aql`OUTBOUND` : aql`INBOUND`
-	const found = K.db._query(aql`
-        FOR vertex, edge, path IN 1..10
-            ${bound} ${parent}
-            ${collection_edge}
-
-            PRUNE edge._to == ${root} AND
-                  edge.${pred} IN ${predicates}
-
-        RETURN edge._key
-    `).toArray()
-	if(found.length === 0)
-	{
-		const message = dd`
-			Cannot create sections: the parent node, [${parent}], is not \
-			connected to the graph root [${root}].
-		`
-		theResponse.status(400)
-		theResponse.send(message)
-		
-		return                                                          // ==>
-	}
-	
 	//
 	// Create list of operations.
 	//
@@ -1936,113 +1811,111 @@ function doSetSections(theRequest, theResponse)
 	let updated = []
 	let existing = []
 	const result = { inserted: 0, updated: 0, existing: 0 }
-	Object.entries(body.children).forEach( ([item, payload]) =>
+	
+	//
+	// Init local identifiers.
+	//
+	const src = (direction) ? bridged : root
+	const dst = (direction) ? root : bridged
+	
+	///
+	// Init local storage.
+	///
+	const edge = {}
+	const key = Utils.getEdgeKey(src, bridge, dst)
+	
+	//
+	// Check if it exists.
+	//
+	try
 	{
-		//
-		// Init local identifiers.
-		//
-		const src = (direction) ? item : parent
-		const dst = (direction) ? parent : item
+		///
+		// Get edge.
+		///
+		let modified = false
+		const found = collection_edge.document(key)
 		
 		///
-		// Init local storage.
+		// Add root to edge paths.
 		///
-		const edge = {}
-		const key = Utils.getEdgeKey(src, section, dst)
+		if(!found[path].includes(root)) {
+			modified = true
+			found[path] = found[path].concat([root])
+		}
 		
-		//
-		// Check if it exists.
-		//
-		try
-		{
-			///
-			// Get edge.
-			///
-			let modified = false
-			const found = collection_edge.document(key)
-			
-			///
-			// Add root to edge paths.
-			///
-			if(!found[path].includes(root)) {
+		///
+		// Reset custom data.
+		///
+		if(body === null) {
+			if(!Utils.isEmptyObject(found[data])) {
 				modified = true
-				found[path] = found[path].concat([root])
+				found[data] = {}
 			}
-			
-			///
-			// Reset custom data.
-			///
-			if(payload === null) {
-				if(!Utils.isEmptyObject(found[data])) {
-					modified = true
-					found[data] = {}
-				}
-			} else {
-				if(!Utils.recursiveMergeObjects(payload, found[data])) {
-					modified = true
-				}
-			}
-			
-			///
-			// Handle updates.
-			///
-			if(modified) {
-				result.updated += 1
-				if(theRequest.queryParams.save) {
-					updates.push(found)
-				} else {
-					if(theRequest.queryParams.updated) {
-						updated.push(found)
-					}
-				}
-			} else {
-				result.existing += 1
-				if(theRequest.queryParams.existing) {
-					existing.push(found)
-				}
-			}
-			
-		} // Edge found.
-			
-			///
-			// Edge not found or error.
-			///
-		catch (error)
-		{
-			//
-			// Handle unexpected errors.
-			//
-			if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
-				theResponse.throw(500, error.message)
-				return                                                  // ==>
-			}
-			
-			///
-			// Create edge.
-			///
-			edge._key = key
-			edge._from = src
-			edge._to = dst
-			edge[pred] = section
-			edge[path] = [ root ]
-			edge[data] = {}
-			if(payload !== null) {
-				Utils.recursiveMergeObjects(payload, edge[data])
-			}
-			
-			//
-			// Insert edge.
-			//
-			result.inserted += 1
-			if(theRequest.queryParams.save) {
-				inserts.push(edge)
-			} else {
-				if(theRequest.queryParams.inserted) {
-					inserted.push(edge)
-				}
+		} else {
+			if(!Utils.recursiveMergeObjects(body, found[data])) {
+				modified = true
 			}
 		}
-	})
+		
+		///
+		// Handle updates.
+		///
+		if(modified) {
+			result.updated += 1
+			if(theRequest.queryParams.save) {
+				updates.push(found)
+			} else {
+				if(theRequest.queryParams.updated) {
+					updated.push(found)
+				}
+			}
+		} else {
+			result.existing += 1
+			if(theRequest.queryParams.existing) {
+				existing.push(found)
+			}
+		}
+		
+	} // Edge found.
+	
+	///
+	// Edge not found or error.
+	///
+	catch (error)
+	{
+		//
+		// Handle unexpected errors.
+		//
+		if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
+			theResponse.throw(500, error.message)
+			return                                                  // ==>
+		}
+		
+		///
+		// Create edge.
+		///
+		edge._key = key
+		edge._from = src
+		edge._to = dst
+		edge[pred] = bridge
+		edge[path] = [ root ]
+		edge[data] = {}
+		if(body !== null) {
+			Utils.recursiveMergeObjects(body, edge[data])
+		}
+		
+		//
+		// Insert edge.
+		//
+		result.inserted += 1
+		if(theRequest.queryParams.save) {
+			inserts.push(edge)
+		} else {
+			if(theRequest.queryParams.inserted) {
+				inserted.push(edge)
+			}
+		}
+	}
 	
 	///
 	// Insert edges.
@@ -2091,175 +1964,690 @@ function doSetSections(theRequest, theResponse)
 	//
 	theResponse.send(message)
 	
-} // doSetSections()
+} // doSetBridge()
 
 /**
- * Adds links based on the provided parameters.
+ * Delete bridge edge.
+ *
+ * This function will dekete a bridge edge.
+ *
+ * The path query parameters contain the following information:
+ * - `root`: The document handle of the node that represents the new path root.
+ * - `bridged`: The document handle of the root node that will borrow its graph.
+ * - `bridge`: The bridge predicate to be used.
+ * - `predicate`: The functional predicate of the bridged node.
+ * - `direction`: Relationship direction: *true* means from bridged to root.
+ * - `save`: A boolean indicating whether to perform the operation, or only
+ *           return the list of expected operations.
+ * - `inserted`: Return list of inserted, actual or planned, edge records.
+ * - `updated`: Return list of updated, actual or planned, edge records.
+ * - `existing`: Return list of existing, actual or planned, edge records.
+ *
+ * The request body contains the edge custom data.
+ *
+ * The function will first remove the bridge edge, then if the *prune* flag was set,
+ * it will traverse the *bridged* graph towards the leaf nodes for the provided
+ * *predicate* removing all instances of the root in the edges paths.
+ *
+ * Edge custom data is only used if the matched bridge edge has more than one
+ * element in its path..
+ *
+ * The function will assert that all document handles are valid, and that the
+ * parent node is connected to the root node in the graph.
  *
  * @param theRequest {Object}: The request object.
  * @param theResponse {Object}: The response object.
- * @param thePredicate {String}: The predicate for the links.
- * @param theDirection {Boolean}: `true` many to one; `false` one to many.
- * @param allLinksDescriptors {Boolean}: Assert all links are descriptors.
  *
  * @return {void}
  */
-function doAddLinks(
-	theRequest,
-	theResponse,
-	thePredicate,
-	theDirection,
-	allLinksDescriptors = false
-){
+function doDelBridge(theRequest, theResponse)
+{
 	//
 	// Init local storage.
 	//
-	const data = theRequest.body
-	const terms = []
+	const body = theRequest.body
+	const root = theRequest.queryParams.root
+	const prune = theRequest.queryParams.prune
+	const bridge = theRequest.queryParams.bridge
+	const bridged = theRequest.queryParams.bridged
+	const direction = theRequest.queryParams.direction
+	const predicate = theRequest.queryParams.predicate
+	const predicates = (body.sections.includes(predicate))
+		? body.sections
+		: body.sections.concat(predicate)
 	
 	//
-	// Check for missing terms.
+	// Check for missing document handles.
 	//
-	const missing = getLinksMissingKeys(data, terms)
+	const missing = getOrphanHandles(root, bridged, body)
 	if(missing.length > 0) {
 		
 		const message =
-			K.error.kMSG_ERROR_MISSING_TERM_REFS.message[module.context.configuration.language]
+			K.error.kMSG_ERROR_MISSING_DOC_HANDLES.message[module.context.configuration.language]
 				.replace('@@@', missing.join(", "))
 		
 		theResponse.throw(400, message)
 		return                                                          // ==>
 	}
 	
+	///
+	// Init local storage.
+	///
+	const pred = module.context.configuration.predicate
+	const path = module.context.configuration.sectionPath
+	const data = module.context.configuration.sectionPathData
+	
 	//
-	// Ensure all terms are descriptors.
+	// Create list of operations.
 	//
-	if(allLinksDescriptors) {
+	const deletes = []
+	const updates = {}
+	
+	//
+	// Create list of expected edges.
+	//
+	const deleted = []
+	const updated = []
+	const ignored = []
+	const result = { deleted: 0, updated: 0, ignored: 0 }
+	
+	//
+	// Init local identifiers.
+	//
+	const src = (direction) ? bridged : root
+	const dst = (direction) ? root : bridged
+	
+	///
+	// Init local storage.
+	///
+	const edge = {}
+	const key = Utils.getEdgeKey(src, bridge, dst)
+	
+	//
+	// Check if it exists.
+	//
+	try
+	{
+		///
+		// Get edge.
+		///
+		const found = collection_edge.document(key)
 		
-		const found = getNotDescriptorKeys(terms)
-		if(found.length > 0) {
+		///
+		// Edge does not have root.
+		// In this case we ignore the edge,
+		// since it does not belong to the desired graph.
+		///
+		if(!found[path].includes(root)) {
+			result.ignored += 1
+			if(theRequest.queryParams.ignored) {
+				ignored.push(found)
+			}
+			return                                                  // =>
+		}
+		
+		///
+		// Remove root from path.
+		// We blindly ise indexOf() because we know the root is there.
+		///
+		found[path] = found[path].filter(element => element !== root)
+		
+		///
+		// Delete edge.
+		///
+		if(found[path].length === 0)
+		{
+			if(!deletes.includes(found._key)) {
+				deletes.push(found._key)
+				result.deleted += 1
+				if(theRequest.queryParams.deleted) {
+					deleted.push(found)
+				}
+			}
+			
+		} // No more paths left.
+			
+		///
+		// Update edge.
+		///
+		else
+		{
+			///
+			// Reset custom data.
+			///
+			if(payload === null) {
+				if(!Utils.isEmptyObject(found[data])) {
+					found[data] = {}
+				}
+			} else {
+				Utils.recursiveMergeObjects(payload, found[data])
+			}
+			
+			///
+			// Add update and update stats.
+			///
+			if(!updates.hasOwnProperty(found._key)) {
+				updates[found._key] = found
+				result.updated += 1
+				if(theRequest.queryParams.updated) {
+					updated.push(found)
+				}
+			}
+			
+		} // Paths left in edge.
+		
+		///
+		// Prune relationships originating from children.
+		///
+		if(prune)
+		{
+			///
+			// Collect and process all edges from child to leaf nodes.
+			///
+			const bound = (direction) ? aql`INBOUND` : aql`OUTBOUND`
+			K.db._query(aql`
+				FOR vertex, edge, path IN 0..10
+					${bound} ${src}
+					${collection_edge}
+				
+					PRUNE ${root} NOT IN edge.${path}
+					
+					OPTIONS {
+						"order": "dfs",
+						"uniqueVertices": "path"
+					}
+					
+					FILTER ${root} IN edge.${path} AND
+						   edge.${pred} IN ${predicates}
+	
+				RETURN edge
+            `)
+				.toArray()
+				.forEach( (element) => {
+					if(element[path].includes(root)) {
+						element[path] = element[path].filter(it => it !== root)
+						if(element[path].length === 0) {
+							deletes.push(element._key)
+							result.deleted += 1
+							if(theRequest.queryParams.deleted) {
+								deleted.push(element)
+							}
+						} else {
+							if(!updates.hasOwnProperty(element._key)) {
+								updates[element._key] = element
+								result.updated += 1
+								if(theRequest.queryParams.updated) {
+									updated.push(element)
+								}
+							}
+						}
+					}
+				})
+			
+		} // Prune branches.
+		
+	} // Edge found.
+		
+	///
+	// Edge not found or error.
+	///
+	catch (error)
+	{
+		//
+		// Handle unexpected errors.
+		//
+		if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
+			theResponse.throw(500, error.message)
+			return                                                  // ==>
+		}
+		
+		///
+		// Do nothing if edge does not exist.
+		///
+	}
+	
+	///
+	// Delete edges.
+	///
+	if(theRequest.queryParams.save)
+	{
+		//
+		// Perform updates.
+		//
+		K.db._query( aql`
+			FOR item in ${Object.values(updates)}
+		    REPLACE item
+		    IN ${collection_edge}
+		    OPTIONS { keepNull: false }
+		`)
+		
+		//
+		// Perform removals.
+		//
+		K.db._query( aql`
+	        FOR item in ${deletes}
+	        REMOVE item IN ${collection_edge}
+	    `)
+	}
+	
+	///
+	// Build response.
+	///
+	const message = { stats: result }
+	if(theRequest.queryParams.deleted) {
+		message['deleted'] = deleted
+	}
+	if(theRequest.queryParams.updated) {
+		message['updated'] = updated
+	}
+	if(theRequest.queryParams.ignored) {
+		message['ignored'] = ignored
+	}
+	
+	//
+	// Return information.
+	//
+	theResponse.send(message)
+	
+} // doDelBridge()
+
+/**
+ * Set links and their data.
+ *
+ * This function will create new links or update existing links data.
+ *
+ * The path query parameters contain the following information:
+ * - `parent`: The document handle of the node to which child nodes will point.
+ * - `predicate`: The predicate associated with the graph.
+ * - `direction`: A boolean used to determine the direction of relationships:
+ *                `true` will have children pointing to the parent, while
+ *                `false` will have the parent point to the children.
+ * - `descriptors`: A flag indicating wether all nodes must be descriptors.
+ * - `save`: A boolean indicating whether to perform the operation, or only
+ *           return the list of expected operations.
+ * - `inserted`: Return list of inserted, actual or planned, edge records.
+ * - `updated`: Return list of updated, actual or planned, edge records.
+ * - `existing`: Return list of existing, actual or planned, edge records.
+ *
+ * The request body must contain the following elements:
+ * - `children`: A key/value dictionary in which the keys are the document
+ *               handles of the nodes pointing to the parent, and the values are
+ *               the corresponding custom edge data associated to the relationship.
+ *
+ * Link custom data can be an object, in which case it will be merged with the
+ * existing data. To delete object properties, provide the property with a
+ * `null` value.
+ *
+ * The function will assert that all document handles are validh.
+ *
+ * Although you will find "updates" variables and descriptions, any update will
+ * be actually a "replace" in the database, this means that the "found" variable
+ * will be set to the actual updated contents of the object.
+ *
+ * The function assumes the nodes collection to be terms.
+ *
+ * @param theRequest {Object}: The request object.
+ * @param theResponse {Object}: The response object.
+  *
+ * @return {void}
+ */
+function doSetLinks(theRequest, theResponse)
+{
+	//
+	// Init local storage.
+	//
+	const body = theRequest.body
+	const parent = theRequest.queryParams.parent
+	const direction = theRequest.queryParams.direction
+	const predicate = theRequest.queryParams.predicate
+	const descriptors = theRequest.queryParams.descriptors
+	
+	//
+	// Check for missing document handles.
+	//
+	const missing = getOrphanHandles(null, parent, body)
+	if(missing.length > 0) {
+		
+		const message =
+			K.error.kMSG_ERROR_MISSING_DOC_HANDLES.message[module.context.configuration.language]
+				.replace('@@@', missing.join(", "))
+		
+		theResponse.throw(400, message)
+		return                                                          // ==>
+	}
+	
+	///
+	// Assert all nodes are descriptor terms.
+	///
+	if(descriptors) {
+		const not_terms = []
+		const not_descriptors = []
+		getNotDescriptorKeys(parent, body, not_terms, not_descriptors)
+		
+		if(not_terms.length > 0) {
 			const message =
-				K.error.kMSG_NOT_DESCRIPTORS.message[module.context.configuration.language]
-					.replace('@@@', found.join(", "))
+				K.error.kMSG_ERROR_NOT_TERMS.message[module.context.configuration.language]
+					.replace('@@@', not_terms.join(", "))
+			
+			theResponse.throw(400, message)
+			return                                                      // ==>
+		}
+		
+		if(not_descriptors.length > 0) {
+			const message =
+				K.error.kMSG_ERROR_NOT_DESCRIPTORS.message[module.context.configuration.language]
+					.replace('@@@', not_descriptors.join(", "))
 			
 			theResponse.throw(400, message)
 			return                                                      // ==>
 		}
 	}
 	
+	///
+	// Init local storage.
+	///
+	const pred = module.context.configuration.predicate
+	const data = module.context.configuration.sectionPathData
+	
+	//
+	// Create list of operations.
+	//
+	const inserts = []
+	const updates = []
+	
 	//
 	// Create list of expected edges.
 	//
-	const edges = []
-	const result = {inserted: 0, existing: 0}
-	data.items.forEach(item =>
+	let inserted = []
+	let updated = []
+	let existing = []
+	const result = { inserted: 0, updated: 0, existing: 0 }
+	Object.entries(body.children).forEach( ([item, payload]) =>
 	{
 		//
 		// Init local identifiers.
 		//
-		const src = (direction)
-			? `${module.context.configuration.collectionTerm}/${item}`
-			: `${module.context.configuration.collectionTerm}/${data.parent}`
-		const dst = (direction)
-			? `${module.context.configuration.collectionTerm}/${data.parent}`
-			: `${module.context.configuration.collectionTerm}/${item}`
-		const key = Utils.getEdgeKey(src, thePredicate, dst)
+		const src = (direction) ? item : parent
+		const dst = (direction) ? parent : item
+		
+		///
+		// Init local storage.
+		///
+		const edge = {}
+		const key = Utils.getEdgeKey(src, predicate, dst)
 		
 		//
-		// Check if it does not exist.
+		// Check if it exists.
 		//
-		if(collection_link.exists(key) === false)
+		try
+		{
+			///
+			// Get edge.
+			///
+			let modified = false
+			const found = collection_link.document(key)
+			
+			///
+			// Reset custom data.
+			///
+			if(payload === null) {
+				if(!Utils.isEmptyObject(found[data])) {
+					modified = true
+					found[data] = {}
+				}
+			} else {
+				if(!Utils.recursiveMergeObjects(payload, found[data])) {
+					modified = true
+				}
+			}
+			
+			///
+			// Handle updates.
+			///
+			if(modified) {
+				result.updated += 1
+				if(theRequest.queryParams.save) {
+					updates.push(found)
+				} else {
+					if(theRequest.queryParams.updated) {
+						updated.push(found)
+					}
+				}
+			} else {
+				result.existing += 1
+				if(theRequest.queryParams.existing) {
+					existing.push(found)
+				}
+			}
+			
+		} // Edge found.
+			
+		///
+		// Edge not found or error.
+		///
+		catch (error)
 		{
 			//
-			// Add edge to list.
+			// Handle unexpected errors.
+			//
+			if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
+				theResponse.throw(500, error.message)
+				return                                                  // ==>
+			}
+			
+			///
+			// Create edge.
+			///
+			edge._key = key
+			edge._from = src
+			edge._to = dst
+			edge[pred] = predicate
+			edge[data] = {}
+			if(payload !== null) {
+				Utils.recursiveMergeObjects(payload, edge[data])
+			}
+			
+			//
+			// Insert edge.
 			//
 			result.inserted += 1
-			edges.push({
-				_key: key,
-				_from: src,
-				_to: dst,
-				_predicate: thePredicate
-			})
-			
-		} else {
-			result.existing += 1
+			if(theRequest.queryParams.save) {
+				inserts.push(edge)
+			} else {
+				if(theRequest.queryParams.inserted) {
+					inserted.push(edge)
+				}
+			}
 		}
 	})
 	
-	//
-	// Perform query.
-	//
-	K.db._query( aql`
-        FOR item in ${edges}
-            INSERT item
-            INTO ${collection_link}
-            OPTIONS { overwriteMode: "update", keepNull: false, mergeObjects: false }
-    `)
+	///
+	// Insert edges.
+	///
+	if(theRequest.queryParams.save)
+	{
+		//
+		// Insert new edges.
+		//
+		inserted = K.db._query( aql`
+			FOR item in ${inserts}
+			    INSERT item
+			    INTO ${collection_link}
+			    OPTIONS { keepNull: false, overwriteMode: "conflict" }
+			RETURN NEW
+		`).toArray()
+		
+		//
+		// Update existing edges.
+		//
+		updated = K.db._query( aql`
+			FOR item in ${updates}
+			    REPLACE item
+			    IN ${collection_link}
+			    OPTIONS { keepNull: false }
+			RETURN NEW
+		`).toArray()
+	}
 	
-	theResponse.send(result)
+	///
+	// Build response.
+	///
+	const message = { stats: result }
+	if(theRequest.queryParams.inserted) {
+		message['inserted'] = inserted
+	}
+	if(theRequest.queryParams.updated) {
+		message['updated'] = updated
+	}
+	if(theRequest.queryParams.existing) {
+		message['existing'] = existing
+	}
 	
-} // doAddDescriptorLinks()
+	//
+	// Return information.
+	//
+	theResponse.send(message)
+	
+} // doSetLinks()
 
 /**
- * Removes links based on the provided parameters.
+ * Delete links.
+ *
+ * This function will delete links.
+ *
+ * The path query parameters contain the following information:
+ * - `parent`: The document handle of the node to which child nodes will point.
+ * - `section`: The eventual section predicate.
+ * - `predicate`: The functional predicate associated with the graph.
+ * - `direction`: A boolean used to determine the direction of relationships:
+ *                `true` will have children pointing to the parent, while
+ *                `false` will have the parent point to the children.
+ * - `save`: A boolean indicating whether to perform the operation, or only
+ *           return the list of expected operations.
+ * - `prune`: A boolean determining whether to prune branches originating from
+ *            child nodes, `true`, or leave these branches untouched, `false`.
+ * - `deleted`: Return list of deleted, actual or planned, edge records.
+ * - `updated`: Return list of updated, actual or planned, edge records.
+ * - `existing`: Return list of existing, actual or planned, edge records.
+ *
+ * The request body must contain the following elements:
+ * - `children`: An array of document handles representing the nodes connected
+ *   to the parent.
  *
  * @param theRequest {Object}: The request object.
  * @param theResponse {Object}: The response object.
- * @param thePredicate {String}: The predicate for the links.
- * @param theDirection {Boolean}: `true` many to one; `false` one to many.
  *
  * @return {void}
  */
-function doDelLinks(
-	theRequest,
-	theResponse,
-	thePredicate,
-	theDirection
-){
+function doDelLinks(theRequest, theResponse)
+{
 	//
 	// Init local storage.
 	//
-	const remove = {}
-	const data = theRequest.body
-	const result = {deleted: 0, ignored: 0}
+	const body = theRequest.body
+	const parent = theRequest.queryParams.parent
+	const direction = theRequest.queryParams.direction
+	const predicate = theRequest.queryParams.predicate
 	
 	//
-	// Iterate child nodes.
+	// Create list of operations.
 	//
-	data.items.forEach(child =>
-	{
+	const deletes = []
+	
+	//
+	// Create list of expected edges.
+	//
+	const deleted = []
+	const ignored = []
+	const result = { deleted: 0, ignored: 0 }
+	body.forEach( (item) => {
+		
 		//
 		// Init local identifiers.
 		//
-		const pred = module.context.configuration.predicate
-		const src = (direction)
-			? `${module.context.configuration.collectionTerm}/${child}`
-			: `${module.context.configuration.collectionTerm}/${data.parent}`
-		const dst = (direction)
-			? `${module.context.configuration.collectionTerm}/${data.parent}`
-			: `${module.context.configuration.collectionTerm}/${child}`
-		const key = Utils.getEdgeKey(src, thePredicate, dst)
+		const src = (direction) ? item : parent
+		const dst = (direction) ? parent : item
+		const key = Utils.getEdgeKey(src, predicate, dst)
+		
+		//
+		// Check if it exists.
+		//
+		try
+		{
+			///
+			// Get link.
+			///
+			const found = collection_link.document(key)
+			
+			///
+			// Delete link.
+			///
+			if(!deletes.includes(found._key)) {
+				deletes.push(found._key)
+				result.deleted += 1
+				if(theRequest.queryParams.deleted) {
+					deleted.push(found)
+				}
+			}
+			
+		} // Edge found.
 		
 		///
-		// Collect edge key.
+		// Edge not found or error.
 		///
-		if(collection_link.exists(key) === false) {
+		catch (error)
+		{
+			//
+			// Handle unexpected errors.
+			//
+			if((!error.isArangoError) || (error.errorNum !== ARANGO_NOT_FOUND)) {
+				theResponse.throw(500, error.message)
+				return                                                  // ==>
+			}
+			
+			///
+			// Just log unfound link.
+			///
 			result.ignored += 1
-		} else {
-			result.deleted += 1
-			remove[key] = key
+			if(theRequest.queryParams.ignored) {
+				ignored.push({
+					_from: src,
+					_predicate: predicate,
+					_to: dst
+				})
+			}
 		}
 	})
 	
-	//
-	// Perform removals.
-	//
-	K.db._query( aql`
-        FOR item in ${Object.values(remove)}
-        REMOVE item IN ${collection_link}
-    `)
+	///
+	// Delete edges.
+	///
+	if(theRequest.queryParams.save)
+	{
+		//
+		// Perform removals.
+		//
+		K.db._query( aql`
+	        FOR item in ${deletes}
+	        REMOVE item IN ${collection_link}
+	    `)
+	}
 	
-	theResponse.send(result)
+	///
+	// Build response.
+	///
+	const message = { stats: result }
+	if(theRequest.queryParams.deleted) {
+		message['deleted'] = deleted
+	}
+	if(theRequest.queryParams.ignored) {
+		message['ignored'] = ignored
+	}
+	
+	//
+	// Return information.
+	//
+	theResponse.send(message)
 	
 } // doDelLinks()
 
@@ -2286,13 +2674,33 @@ function getOrphanHandles(theRoot, theParent, theBody,theCollections = null)
 	// Collect keys.
 	//
 	const handles =
-		Array.from(
-			new Set([
-				...Object.keys(theBody.children),
-				theRoot,
-				theParent
-			])
-		)
+		(theRoot !== null)
+			?   (theBody.hasOwnProperty('children'))
+				?   Array.from(
+						new Set([
+							...Object.keys(theBody.children),
+							theRoot,
+							theParent
+						])
+					)
+				:   Array.from(
+						new Set([
+							theRoot,
+							theParent
+						])
+					)
+			:   (theBody.hasOwnProperty('children'))
+				?   Array.from(
+						new Set([
+							...Object.keys(theBody.children),
+							theParent
+						])
+					)
+				:   Array.from(
+						new Set([
+							theParent
+						])
+					)
 	
 	///
 	// Collect collection names.
@@ -2321,38 +2729,60 @@ function getOrphanHandles(theRoot, theParent, theBody,theCollections = null)
 } // getOrphanHandles()
 
 /**
- * Assert links request keys exist.
- * This function will return the list of keys that are missing from terms collection.
- * @param theData {Object}: Object containing subject and object terms.
- * @param terms {String[]}: Receives list of term global identifiers.
+ * Assert link set, update and delete request handles exist.
  *
- * @return {String[]}: List of missing keys
+ * This function will return the list of orphan document handles.
+ *
+ * @param theParent {Object}: `parent` parameter, aggregator node reference.
+ * @param theBody {Object}: Object containing `children` with custom data.
+ * @param theCollections {String[]|null}: Will receive the list of collections in document handles.
+ *
+ * @return {Array<String>}: List of orphan handles
  */
-function getLinksMissingKeys(theData, terms)
+function getLinkOrphanHandles(theParent, theBody,theCollections = null)
 {
-	//
-	// Ensure items are a set.
-	//
-	theData.items = [... new Set(theData.items)]
-	
 	//
 	// Collect keys.
 	//
-	terms = [theData.parent].concat(theData.items)
+	const handles =
+		(theBody.hasOwnProperty('children'))
+			?   Array.from(
+				new Set([
+					...Object.keys(theBody.children),
+					theParent
+				])
+			)
+			:   Array.from(
+				new Set([
+					theParent
+				])
+			)
+	
+	///
+	// Collect collection names.
+	///
+	if(theCollections !== null) {
+		handles.forEach( (handle) => {
+			const collection = handle.split('/', 2)[0]
+			if(!theCollections.includes(collection)) {
+				theCollections.push(collection)
+			}
+		})
+	}
 	
 	//
-	// Assert all terms exist.
+	// Query all handles.
 	//
 	const found =
 		K.db._query( aql`
-            LET terms = DOCUMENT(${collection_term}, ${terms})
-            FOR term IN terms
-            RETURN term._key
+            LET documents = DOCUMENT(${handles})
+            FOR document IN documents
+            RETURN document._id
         `).toArray()
 	
-	return terms.filter(x => !found.includes(x))                // ==>
+	return handles.filter(handle => !found.includes(handle))    // ==>
 	
-} // getLinksMissingKeys()
+} // getLinkOrphanHandles()
 
 /**
  * Return edge matching keys.
@@ -2391,22 +2821,65 @@ function getMatchingKeys(theKeys)
  * Check list of descriptor keys.
  * Provided a list of term keys, this function will return those which are not descriptors.
  * Note that the function expects all keys to match a term.
- * @param theKeys {Array<String>}: OList of edge keys.
- * @return {Array<String>}: List of keys that do not refer to descriptors.
+ *
+ * @param theParent {Object}: `parent` parameter, aggregator node reference.
+ * @param theBody {Object}: Object containing `children` with custom data.
+ * @param theNotTerms {String[]}: Will receive list of non-term handles.
+ * @param theNotDescriptors {String[]}: Will receive list of non-descriptor handles.
  */
-function getNotDescriptorKeys(theKeys)
+function getNotDescriptorKeys(
+	theParent,
+	theBody,
+	theNotTerms,
+	theNotDescriptors)
 {
+	//
+	// Collect keys.
+	//
+	const handles =
+		(theBody.hasOwnProperty('children'))
+			?   Array.from(
+				new Set([
+					...Object.keys(theBody.children),
+					theParent
+				])
+			)
+			:   Array.from(
+				new Set([
+					theParent
+				])
+			)
+	
+	///
+	// Collect document keys and check of all are terms.
+	///
+	const terms = []
+	handles.forEach( (handle) => {
+		const collection = handle.split('/', 2)[0]
+		if(collection !== module.context.configuration.collectionTerm) {
+			theNotTerms.push(handle)
+		} else {
+			const term = handle.split('/', 2)[1]
+			if(!terms.includes(term)) {
+				terms.push(term)
+			}
+		}
+	})
+	
 	//
 	// Filter terms without data section.
 	//
-	const result =
+	const temp =
 		K.db._query( aql`
-			FOR term IN ${K.db._collection(module.context.configuration.collectionTerm)}
-			    FILTER term._key IN ${theKeys}
+			FOR term IN ${collection_term}
+			    FILTER term._key IN ${terms}
 			    FILTER NOT HAS(term, ${module.context.configuration.sectionData})
 			RETURN term._key
         `).toArray()
-
-	return result                                                               // ==>
+	if(temp.length > 0) {
+		temp.forEach( (item) => {
+			theNotDescriptors.push(item)
+		})
+	}
 
 } // getNotDescriptorKeys()
