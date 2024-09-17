@@ -398,6 +398,15 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
  */
 function getEnumerationDescriptorTrees(theKind, theLevels)
 {
+    ///
+    // Init local storage.
+    ///
+    const predicates = [
+        "_predicate_enum-of",
+        "_predicate_section-of",
+        "_predicate_bridge-of"
+    ]
+    
     //
     // Query schema.
     //
@@ -420,7 +429,7 @@ function getEnumerationDescriptorTrees(theKind, theLevels)
                                 "order": "bfs"
                             }
                             
-                            FILTER edge._predicate IN ["_predicate_enum-of", "_predicate_bridge-of" ]
+                            FILTER edge._predicate IN ${predicates}
                             FILTER handle IN edge._path
                             
                             COLLECT parent = PARSE_IDENTIFIER(edge._to).key, predicate = edge._predicate
