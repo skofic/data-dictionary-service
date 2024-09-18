@@ -295,7 +295,7 @@ class Validator
 	 *
 	 * - Zipped: the value is an array of values and the descriptor was
 	 *           provided.
-	 * - Objects array: and array of objects wasprovided without a descriptor.
+	 * - Objects array: and array of objects was provided without a descriptor.
 	 * - Object: an object was provided without descriptor.
 	 * - Descriptor and value: both descriptor and value were provided.
 	 *
@@ -418,7 +418,7 @@ class Validator
 			// Init idle status report.
 			///
 			this.setStatusReport('kOK', '', null, index)
-
+			
 			///
 			// Validate descriptor value.
 			///
@@ -544,6 +544,13 @@ class Validator
 		// Init current idle status report.
 		///
 		this.setStatusReport('kOK', '', null, theReportIndex)
+		
+		///
+		// Intercept edges and links.
+		///
+		if(!this.checkEdgeKey(theContainer, null, null, theReportIndex)) {
+			return false                                                // ==>
+		}
 		
 		///
 		// Validate object.
@@ -2628,7 +2635,7 @@ class Validator
 					)                                                   // ==>
 				}
 			}
-
+			
 			///
 			// Validate object properties.
 			///
@@ -2642,7 +2649,7 @@ class Validator
 					this.cache.getTerm(
 						property, this.useCache, this.cacheMissing
 					)
-
+				
 				///
 				// Term not found.
 				///
@@ -3676,7 +3683,7 @@ class Validator
 		return true                                                     // ==>
 
 	} // checkArrayElements()
-
+	
 	/**
 	 * checkRegexp
 	 *
@@ -3707,7 +3714,7 @@ class Validator
 		const value = (theKey !== null)
 			? theContainer[theKey]
 			: theContainer
-
+		
 		///
 		// Check regular expression.
 		///
@@ -3718,7 +3725,7 @@ class Validator
 			//
 			const regexpstr = theSection[module.context.configuration.regularExpression]
 			const regexp = new RegExp(regexpstr)
-
+			
 			//
 			// Match value.
 			//
@@ -3731,12 +3738,128 @@ class Validator
 					{ "regexp": regexpstr }
 				)                                                       // ==>
 			}
-
+			
 		} // Has regular expression.
-
+		
 		return true                                                     // ==>
-
+		
 	} // checkRegexp()
+	
+	/**
+	 * checkEdgeKey
+	 *
+	 * This method will check whether the provided edge key is valid.
+	 *
+	 * The method assumes that `theContainer` is an object with a single
+	 * property whose name matches either the edge or the link name, and the
+	 * value is either the edge or the link.
+	 *
+	 * The method also assumes the descriptor provided in the constructor is
+	 * either an edge or a link.
+	 *
+	 * The method will assert that the key is the correct hash of the
+	 * subject-predicate-object combination; if any of the prior elements are
+	 * missing, the method will assume the value is correct and let the other
+	 * validation methods catch the error.
+	 *
+	 * Since this method is called at the beginning or the validation workflow,
+	 * `theKey` and `theSection` will be empty.
+	 *
+	 * The method will return `true` if there were no errors, or `false`.
+	 *
+	 * @param theContainer {Object}: The value container.
+	 * @param theKey {String|Number|null}: The key to the value in the container.
+	 * @param theSection {Object}: Data or array term section.
+	 * @param theReportIndex {Number}: Container key for value, defaults to null.
+	 *
+	 * @return {Boolean}: `true` if valid, `false` if not.
+	 */
+	checkEdgeKey(
+		theContainer,
+		theKey,
+		theSection,
+		theReportIndex)
+	{
+		///
+		// Init local storage.
+		///
+		const value = (theKey !== null)
+			? theContainer[theKey]
+			: theContainer
+		
+		///
+		// Intercept edges and links.
+		///
+		if(this.hasOwnProperty('term'))
+		{
+			///
+			// Is it an edge or a link?
+			///
+			if([module.context.configuration.edgeObjectDefinition,
+				module.context.configuration.linkObjectDefinition
+			   ].includes(this.term._key)) {
+				///
+				// Does the container have the term key as property?
+				///
+				if(value.hasOwnProperty(this.term._key))
+				{
+					///
+					// Check if all required properties are there.
+					///
+					if(value[this.term._key].hasOwnProperty('_from') &&
+						value[this.term._key].hasOwnProperty('_to') &&
+						value[this.term._key].hasOwnProperty(module.context.configuration.predicate))
+					{
+						///
+						// Hash key.
+						///
+						const key = Validator.GetEdgeKey(
+							value[this.term._key]['_from'],
+							value[this.term._key][module.context.configuration.predicate],
+							value[this.term._key]['_to']
+						)
+						
+						///
+						// Check edge key.
+						///
+						if(value[this.term._key].hasOwnProperty('_key'))
+						{
+							if(value[this.term._key]._key !== key) {
+								return this.setStatusReport(
+									'kBAD_EDGE_KEY',
+									'_key',
+									value[this.term._key]._key,
+									theReportIndex,
+									{"correct": key}
+								)                                       // ==>
+							}
+							
+						} // Edge has key.
+						
+						///
+						// Set edge key.
+						///
+						else
+						{
+							value[this.term._key]['_key'] = key
+							this.logResolvedValues(
+								'_key',
+								null, key,
+								theReportIndex
+							)
+						}
+					
+					} // Has all required properties.
+				
+				} // The container is an edge or a link.
+			
+			} // Is an edge or a link.
+		
+		} // Validation was called with a descriptor.
+		
+		return true                                                     // ==>
+		
+	} // checkEdgeKey()
 
 
 	/**
@@ -6015,7 +6138,7 @@ class Validator
 		)                                                               // ==>
 
 	} // Validator::MergeTermUpdates()
-
+	
 	/**
 	 * GetValueByPath
 	 *
@@ -6063,7 +6186,7 @@ class Validator
 		if(Object.keys(theObject) === 0) {
 			return { "path": thePath }                                  // ==>
 		}
-
+		
 		///
 		// Get path components.
 		// The regular expression splits the string on dots and opening brackets.
@@ -6072,14 +6195,14 @@ class Validator
 		// having properties made exclusively of digits.
 		///
 		const elements = thePath.split(/\.|\[/).filter(Boolean)
-
+		
 		///
 		// Handle empty path.
 		///
 		if(elements.length === 0) {
 			return { "path": thePath }                                  // ==>
 		}
-
+		
 		///
 		// Iterate path elements.
 		///
@@ -6111,10 +6234,42 @@ class Validator
 				}
 			}
 		}
-
+		
 		return { value, keys }                                          // ==>
-
+		
 	} // Validator::GetValueByPath()
+	
+	/**
+	 * GetEdgeKey
+	 *
+	 * The method will return the provided edge or link key.
+	 *
+	 * The method expects the subject, object and predicate of the edge or link
+	 * to be provided, and will return the valid `_key` value.
+	 *
+	 * The method makes no assumption of what is in the provided parameters.
+	 *
+	 * @param theSubject {String}: The `_from`.
+	 * @param thePredicate {String}: The `_predicate`.
+	 * @param theObject {String}: The `_to`.
+	 *
+	 * @return {String}: The resulting edge `_key`.
+	 */
+	static GetEdgeKey(theSubject, thePredicate, theObject)
+	{
+		///
+		// Make key.
+		///
+		const key =
+			theSubject
+			+ module.context.configuration.tokenSeparator
+			+ thePredicate
+			+ module.context.configuration.tokenSeparator
+			+ theObject
+		
+		return crypto.md5(key)                                          // ==>
+		
+	} // Validator::GetEdgeKey()
 
 	/**
 	 * TraverseTermDataSection

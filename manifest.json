@@ -103,6 +103,24 @@
             "required": true,
             "default": "you have to guess it..."
         },
+        "tokenNamespace": {
+            "description": "Token used to separate namespace from local identifier",
+            "type": "string",
+            "required": true,
+            "default": "_"
+        },
+        "tokenSeparator": {
+            "description": "Token used to separate elements in hashed keys",
+            "type": "string",
+            "required": true,
+            "default": "/"
+        },
+        "tokenDefaultNamespace": {
+            "description": "Default namespace key",
+            "type": "string",
+            "required": true,
+            "default": ";"
+        },
         "sectionCode": {
             "description": "Term codes section name key",
             "type": "string",
@@ -600,6 +618,18 @@
             "type": "string",
             "required": true,
             "default": "_term"
+        },
+        "edgeObjectDefinition": {
+            "description": "Edge object definition",
+            "type": "string",
+            "required": true,
+            "default": "_edge"
+        },
+        "linkObjectDefinition": {
+            "description": "Link object definition",
+            "type": "string",
+            "required": true,
+            "default": "_link"
         },
         "termScalarFormat": {
             "description": "Term scalar section value format",

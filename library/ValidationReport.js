@@ -443,6 +443,12 @@ class ValidationStatus
 			"statusMessage": {
 				"iso_639_3_eng": "Property is missing entry in the default language."
 			}
+		},
+		"kBAD_EDGE_KEY": {
+			"statusCode": 43,
+			"statusMessage": {
+				"iso_639_3_eng": "Invalid edge or link document key."
+			}
 		}
 	}
 
