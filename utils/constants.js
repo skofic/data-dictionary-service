@@ -791,17 +791,8 @@ module.exports = Object.freeze({
                 iso_639_3_esp: "Los siguientes documentos referenciados no existen: @@@."
             }
         },
-        kMSG_ERROR_MISSING_TERM_REFS: {
-            code: 46,
-            message: {
-                iso_639_3_eng: "The following referenced terms do not exist: @@@.",
-                iso_639_3_ita: "Riferimenti invalidi. I seguenti termini non esistono: @@@.",
-                iso_639_3_fra: "Références invalides. Les termes suivants n'existent pas: @@@.",
-                iso_639_3_esp: "Los siguientes terminos referenciados no existen: @@@."
-            }
-        },
         kMSG_ERROR_NOT_TERMS: {
-            code: 47,
+            code: 46,
             message: {
                 iso_639_3_eng: "The following references are not terms: @@@.",
                 iso_639_3_ita: "Riferimenti invalidi. I seguenti riferimenti non sono termini: @@@.",
@@ -810,7 +801,7 @@ module.exports = Object.freeze({
             }
         },
         kMSG_ERROR_NOT_DESCRIPTORS: {
-            code: 48,
+            code: 47,
             message: {
                 iso_639_3_eng: "The following terms are not descriptors: @@@.",
                 iso_639_3_ita: "Riferimenti invalidi. I seguenti termini non sono descrittpori: @@@.",
