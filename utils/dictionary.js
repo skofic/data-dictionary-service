@@ -46,7 +46,7 @@ function getAllEnumerationKeys(theRoot)
     //
     // Init local storage.
     //
-    const path = K.collection.term.name + '/' + theRoot;
+    const path = K.collection.term.name + '/' + theRoot
 
     //
     // Query schema.
@@ -54,12 +54,12 @@ function getAllEnumerationKeys(theRoot)
     const result =
         K.db._query( aql`
             FOR edge IN ${collection_edges}
-                FILTER ${path} IN edge._path
-                FILTER edge._predicate == "_predicate_enum-of"
+                FILTER ${path} IN edge.${module.context.configuration.sectionPath}
+                FILTER edge.${module.context.configuration.predicate} == ${module.context.configuration.predicateEnumeration}
             RETURN PARSE_IDENTIFIER(edge._from).key
-        `).toArray();
+        `).toArray()
 
-    return result;                                                              // ==>
+    return result                                                       // ==>
 
 } // getAllEnumerationKeys()
 
@@ -86,12 +86,12 @@ function getAllKindEnumerationKeys(theKind)
             FOR root IN ${theKind}
                 LET handle = CONCAT_SEPARATOR("/", ${K.collection.term.name}, root)
                 FOR edge IN ${collection_edges}
-                    FILTER handle IN edge._path
-                    FILTER edge._predicate == ${module.context.configuration.predicateEnumeration}
+                    FILTER handle IN edge.${module.context.configuration.sectionPath}
+                    FILTER edge.${module.context.configuration.predicate} == ${module.context.configuration.predicateEnumeration}
                 RETURN PARSE_IDENTIFIER(edge._from).key
-        `).toArray();
+        `).toArray()
 
-    return result                                                               // ==>
+    return result                                                       // ==>
 
 } // getAllKindEnumerationKeys()
 
@@ -150,12 +150,12 @@ function getDescriptorQualificationKeys(theDescriptors)
             FOR doc IN ${view_terms}
                 SEARCH
                     doc._key IN ${theDescriptors} AND
-                    EXISTS(doc._data)
+                    EXISTS(doc.${module.context.configuration.sectionData})
                 
-                COLLECT AGGREGATE classes = UNIQUE(doc._data._class),
-                                  domains = UNIQUE(doc._data._domain),
-                                  tags = UNIQUE(doc._data._tag),
-                                  subjects = UNIQUE(doc._data._subject)
+                COLLECT AGGREGATE classes = UNIQUE(doc.${module.context.configuration.sectionData}.${module.context.configuration.sectionDataClass}),
+                                  domains = UNIQUE(doc.${module.context.configuration.sectionData}.${module.context.configuration.sectionDataDomain}),
+                                  tags = UNIQUE(doc.${module.context.configuration.sectionData}.${module.context.configuration.sectionDataTag}),
+                                  subjects = UNIQUE(doc.${module.context.configuration.sectionData}.${module.context.configuration.sectionDataSubject})
             RETURN {
                 classes: REMOVE_VALUE(classes, null),
                 domains: REMOVE_VALUE(FLATTEN(domains), null),
@@ -211,7 +211,7 @@ function getAllEnumerations(theRoot, theLanguage)
     //
     // Init local storage.
     //
-    const path = K.collection.term.name + '/' + theRoot;
+    const path = K.collection.term.name + '/' + theRoot
 
     //
     // Query schema.
@@ -219,10 +219,10 @@ function getAllEnumerations(theRoot, theLanguage)
     const result =
         K.db._query( aql`
             FOR edge IN ${collection_edges}
-                FILTER ${path} IN edge._path
-                FILTER edge._predicate == "_predicate_enum-of"
+                FILTER ${path} IN edge.${module.context.configuration.sectionPath}
+                FILTER edge.${module.context.configuration.predicate} == ${module.context.configuration.predicateEnumeration}
             RETURN DOCUMENT(edge._from)
-        `).toArray();
+        `).toArray()
 
     //
     // Filter language.
@@ -235,7 +235,7 @@ function getAllEnumerations(theRoot, theLanguage)
 
     } // Provided language.
 
-    return result;                                                              // ==>
+    return result                                                       // ==>
 
 } // getAllEnumerations()
 
@@ -337,11 +337,11 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
     //
     // Init local storage.
     //
-    const path = K.collection.term.name + '/' + theRoot;
+    const path = K.collection.term.name + '/' + theRoot
     const predicates = [
-        "_predicate_enum-of",
-        "_predicate_section-of",
-        "_predicate_bridge-of"
+        module.context.configuration.predicateEnumeration,
+        module.context.configuration.predicateSection,
+        module.context.configuration.predicateBridge
     ]
 
     //
@@ -356,16 +356,16 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
                         INBOUND ${path}
                         ${collection_edges}
             
-                        PRUNE ${path} NOT IN edge._path
+                        PRUNE ${path} NOT IN edge.${module.context.configuration.sectionPath}
                     
                         OPTIONS {
                             "order": "bfs"
                         }
                         
-                        FILTER edge._predicate IN ${predicates}
-                        FILTER ${path} IN edge._path
+                        FILTER edge.${module.context.configuration.predicate} IN ${predicates}
+                        FILTER ${path} IN edge.${module.context.configuration.sectionPath}
                         
-                        COLLECT parent = PARSE_IDENTIFIER(edge._to).key, predicate = edge._predicate
+                        COLLECT parent = PARSE_IDENTIFIER(edge._to).key, predicate = edge.${module.context.configuration.predicate}
                         INTO children
                     
                     RETURN {
@@ -377,9 +377,9 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
             )
             
             RETURN HAS(tree, ${theRoot}) ? tree : []
-        `).toArray();
+        `).toArray()
 
-    return result;                                                              // ==>
+    return result                                                       // ==>
 
 } // getEnumerationDescriptorKeys()
 
@@ -710,28 +710,49 @@ function traverseFieldPath(thePath, theCode, theField)
     //
     const path = K.collection.term.name + '/' + thePath
     const predicate = module.context.configuration.predicateEnumeration
-
-    //
+    const fields = [
+        module.context.configuration.officialIdentifiers,
+        module.context.configuration.providerIdentifiers
+    ]
+    
+    ///
     // Query database.
-    //
-    const result = K.db._query( aql`
-            WITH ${collection_terms}
-            FOR vertex, edge, path IN 0..10
-                INBOUND ${path}
-                ${collection_edges}
-                PRUNE ${path} IN edge._path AND
-                      edge._predicate == ${predicate} AND
-                      ${theCode} IN vertex._code._aid
-                OPTIONS {
-                    "uniqueVertices": "path"
-                }
-                FILTER ${path} IN edge._path AND
-                       edge._predicate == ${predicate} AND
-                       ${theCode} IN vertex._code.${theField}
-            RETURN path
-        `).toArray()
+    ///
+    const result = (fields.includes(theField))
+        ?   K.db._query( aql`
+                WITH ${collection_terms}
+                FOR vertex, edge, path IN 0..10
+                    INBOUND ${path}
+                    ${collection_edges}
+                    PRUNE ${path} IN edge.${module.context.configuration.sectionPath} AND
+                          edge.${module.context.configuration.predicate} == ${predicate} AND
+                          ${theCode} IN vertex.${module.context.configuration.sectionCode}.${theField}
+                    OPTIONS {
+                        "uniqueVertices": "path"
+                    }
+                    FILTER ${path} IN edge.${module.context.configuration.sectionPath} AND
+                           edge.${module.context.configuration.predicate} == ${predicate} AND
+                           ${theCode} IN vertex.${module.context.configuration.sectionCode}.${theField}
+                RETURN path
+            `).toArray()
+        :   K.db._query( aql`
+                WITH ${collection_terms}
+                FOR vertex, edge, path IN 0..10
+                    INBOUND ${path}
+                    ${collection_edges}
+                    PRUNE ${path} IN edge.${module.context.configuration.sectionPath} AND
+                          edge.${module.context.configuration.predicate} == ${predicate} AND
+                          vertex.${module.context.configuration.sectionCode}.${theField} == ${theCode}
+                    OPTIONS {
+                        "uniqueVertices": "path"
+                    }
+                    FILTER ${path} IN edge.${module.context.configuration.sectionPath} AND
+                           edge.${module.context.configuration.predicate} == ${predicate} AND
+                           vertex.${module.context.configuration.sectionCode}.${theField} == ${theCode}
+                RETURN path
+            `).toArray()
 
-    return result;                                                              // ==>
+    return result                                                       // ==>
 
 } // traverseFieldPath()
 
@@ -919,8 +940,8 @@ function checkEnumsByKeys(theKeys, thePath)
                         FOR edge IN ${collection_edges}
                             FILTER ( edge._to == term OR
                                      edge._from == term )
-                            FILTER edge._predicate == "_predicate_enum-of"
-                            FILTER ${path} IN edge._path
+                            FILTER edge.${module.context.configuration.predicate} == ${module.context.configuration.predicateEnumeration}
+                            FILTER ${path} IN edge.${module.context.configuration.sectionPath}
                         RETURN
                             edge._from
                     )
@@ -943,7 +964,7 @@ function checkEnumsByKeys(theKeys, thePath)
             : false
     }
 
-    return dict                                                                 // ==>
+    return dict                                                         // ==>
 
 } // checkEnumsByKeys()
 
@@ -965,7 +986,7 @@ function checkEnumsByCodes(theField, theCodes, thePath)
     //
     const path = `${K.collection.term.name}/${thePath}`
     const prefix = K.collection.term.name.length + 1
-
+    
     //
     // Query schema.
     //
@@ -976,33 +997,24 @@ function checkEnumsByCodes(theField, theCodes, thePath)
                 
                     LET selection = (
                         FOR term IN ${view_terms}
-                            SEARCH term._code.${theField} == code
+                            SEARCH term.${module.context.configuration.sectionCode}.${theField} == code
                 
                             FOR edge in ${collection_edges}
-                                FILTER ( edge._to == term._id OR
-                                         edge._from == term._id )
-                                FILTER edge._predicate == "_predicate_enum-of"
-                                FILTER ${path} IN edge._path
-                            RETURN edge._from )
+                                FILTER edge._from == term._id
+                                FILTER edge.${module.context.configuration.predicate} == ${module.context.configuration.predicateEnumeration}
+                                FILTER ${path} IN edge.${module.context.configuration.sectionPath}
+                            RETURN edge._from
+                    )
                 
                 RETURN
-                    selection[0] )
+                    selection
+            )
             
             RETURN
                 ZIP(${theCodes}, result)
         `).toArray()
-
-    //
-    // Parse handles.
-    //
-    let dict = {}
-    for(const [key, value] of Object.entries(result[0])) {
-        dict[key] = (value !== null)
-            ? value.substring(prefix)
-            : false
-    }
-
-    return dict                                                                 // ==>
+    
+    return result[0]                                                    // ==>
 
 } // checkEnumsByCodes()
 
@@ -1026,14 +1038,14 @@ function doCheckEnumKeysByField(theCode, theField, theType)
         K.db._query( aql`
             LET terms = (
               FOR term IN ${view_terms}
-                SEARCH term._code.${theField} == ${theCode}
+                SEARCH term.${module.context.configuration.sectionCode}.${theField} == ${theCode}
               RETURN CONCAT_SEPARATOR('/', ${K.collection.term.name}, term._key)
             )
             
             FOR edge IN ${collection_edges}
               FILTER edge._from IN terms
-              FILTER edge._predicate == ${module.context.configuration.predicateEnumeration}
-              FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge._path
+              FILTER edge.${module.context.configuration.predicate} == ${module.context.configuration.predicateEnumeration}
+              FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge.${module.context.configuration.sectionPath}
             RETURN PARSE_IDENTIFIER(edge._from)['key']
         `).toArray()
 
@@ -1061,14 +1073,14 @@ function doCheckEnumTermsByField(theCode, theField, theType)
         K.db._query( aql`
             LET terms = (
               FOR term IN ${view_terms}
-                SEARCH term._code.${theField} == ${theCode}
+                SEARCH term.${module.context.configuration.sectionCode}.${theField} == ${theCode}
               RETURN CONCAT_SEPARATOR('/', ${K.collection.term.name}, term._key)
             )
             
             FOR edge IN ${collection_edges}
               FILTER edge._from IN terms
-              FILTER edge._predicate == ${module.context.configuration.predicateEnumeration}
-              FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge._path
+              FILTER edge.${module.context.configuration.predicate} == ${module.context.configuration.predicateEnumeration}
+              FILTER CONCAT_SEPARATOR("/", ${K.collection.term.name}, ${theType}) IN edge.${module.context.configuration.sectionPath}
               
               FOR doc IN ${collection_terms}
                 FILTER doc._id == edge._from
@@ -1196,7 +1208,7 @@ function getDescriptorEnumKind(theData)
         if(scalar.hasOwnProperty(type)) {
             if(scalar[type] === module.context.configuration.typeEnum) {
                 if(scalar.hasOwnProperty(module.context.configuration.dataKind)) {
-                    return scalar[module.context.configuration.dataKind]                              // ==>
+                    return scalar[module.context.configuration.dataKind]    // ==>
                 }
             }
         }
