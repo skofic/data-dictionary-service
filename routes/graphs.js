@@ -257,27 +257,27 @@ router.post(
 
         The request body should be provided with an object containing the following elements:
 
-        - \`children\`: A key/value dictionary in which the key represents the *child node
-          document handle* and the value represents *custom data* associated with the
+        - \`children\`: A key/value dictionary in which the key represents the *child node \
+          document handle* and the value represents *custom data* associated with the \
           corresponding *edge*.
-        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration,
-          field, etc. There are other predicates, however, whose goal is to link nodes which
-          will not have the function of the main predicate. The provided default values indicate
-          sections, that represent display or category nodes used for subdividing child nodes,
+        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration, \
+          field, etc. There are other predicates, however, whose goal is to link nodes which \
+          will not have the function of the main predicate. The provided default values indicate \
+          sections, that represent display or category nodes used for subdividing child nodes, \
           and bridges, which allow one node to connect to another node through a bridge node.
         
         The values of the \`children\` dictionary can be the following:
         
-        - \`object\`: This represents valid data for the edge, the provided object will be merged
-          with the existing one. If you set a provided property value to \`null\`, if the property
-          exists in the edge data, the service will delete that property from the existing data.
+        - \`object\`: This represents valid data for the edge, the provided object will be merged \
+          with the existing one. If you set a provided property value to \`null\`, if the property \
+          exists in the edge data, the service will delete that property from the existing data. \
           If you want to ignore the value, pass an empty object.
-        - \`null\`: If you provide this value the whole custom data container will be reset to
+        - \`null\`: If you provide this value the whole custom data container will be reset to \
           an empty object.
         
-        If the edge does not exist, the provided data will be set in the edge, except for the
-        properties that have a *null* value. If the edge exists, the parameters of the provided
-        data will replace eventual existing matching parameters, or will be erased, if the value
+        If the edge does not exist, the provided data will be set in the edge, except for the \
+        properties that have a *null* value. If the edge exists, the parameters of the provided \
+        data will replace eventual existing matching parameters, or will be erased, if the value \
         is *null*.
 	`)
 	.response(200, Models.SetEnumsResponse, dd
@@ -551,12 +551,20 @@ router.post(
 	)
 	.response(200, Models.SetEnumsResponse, dd
 		`
-            **Operations count**
+            **Operation status**
             
-            The service will return an object containign the following properties:
-            - inserted: The number of inserted edges.
-            - updated: The number of existing edges to which the root has been added to their path.
-            - existing: The number of existing edges that include subject, object predicate and path.
+            The service will return an object containing the following properties:
+            
+            - \`stats\`:
+              - \`inserted\`: The number of inserted edges.
+              - \`updated\`: The number of updated edges.
+              - \`existing\`: The number of ignored existing edges.
+            - \`inserted\`: The list of inserted edges, if the \`inserted\` \
+                            parameter was set.
+            - \`updated\`: The list of updated edger, if the \`updated\` \ \
+                           parameter was set.
+            - \`existing\`: The list of existing edges, if the \`existing\` \
+                            parameter was set.
         `
 	)
 	.response(400, joi.object(), dd
@@ -725,7 +733,7 @@ router.post(
 	)
 
 /**
- * Add bridges.
+ * Set bridges.
  */
 router.post(
 	'set/bridge',
@@ -798,12 +806,20 @@ router.post(
 	)
 	.response(200, Models.SetEnumsResponse, dd
 		`
-            **Operations count**
+            **Operation status**
             
-            The service will return an object containign the following properties:
-            - inserted: The number of inserted edges.
-            - updated: The number of existing edges to which the root has been added to their path.
-            - existing: The number of existing edges that include subject, object predicate and path.
+            The service will return an object containing the following properties:
+            
+            - \`stats\`:
+              - \`inserted\`: The number of inserted edges.
+              - \`updated\`: The number of updated edges.
+              - \`existing\`: The number of ignored existing edges.
+            - \`inserted\`: The list of inserted edges, if the \`inserted\` \
+                            parameter was set.
+            - \`updated\`: The list of updated edger, if the \`updated\` \ \
+                           parameter was set.
+            - \`existing\`: The list of existing edges, if the \`existing\` \
+                            parameter was set.
         `
 	)
 	.response(400, joi.object(), dd
