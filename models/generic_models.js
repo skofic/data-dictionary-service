@@ -156,6 +156,7 @@ const StringModel = joi.string()
 const LevelsModel = joi.number()
 	.integer()
 	.greater(0)
+	.default(10)
 	.required()
 
 // Enumeration tree result model.
