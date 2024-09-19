@@ -30,7 +30,15 @@ const Dictionary = require("../utils/dictionary");
 //
 const Models = require('../models/generic_models')
 const ErrorModel = require("../models/error_generic")
-const ArrayIdentifierFields = joi.string().valid('_aid', '_pid').required()
+const ArrayIdentifierFields = joi.string()
+    .valid(
+         module.context.configuration.localIdentifier,
+        module.context.configuration.globalIdentifier,
+        module.context.configuration.officialIdentifiers,
+        module.context.configuration.providerIdentifiers,
+        module.context.configuration.namespaceIdentifier
+    )
+    .required()
 
 //
 // Collections.
@@ -138,7 +146,7 @@ router.get(
     .summary('Return flattened list of all enumeration terms')
     .description(dd
         `
-            **Get all enumeration terms**
+            **Get all enumeration term records**
             
             ***To use this service, the current user must have the \`read\` role.***
             
@@ -147,19 +155,15 @@ router.get(
             *controlled vocabulary*: the \`path\` parameter is the *global identifier* of this *term*.
             
             The service expects the *global identifier* of that *term* as the \`path\` parameter, and will \
-            return the *flattened list* of *all enumeration terms* belonging to that *controlled vocabulary*.\
-            These elements will be returned as the *term objects*.
+            return the *flattened list* of *all enumeration elements* belonging to that *controlled vocabulary*. \
+            These elements will be returned as *term records*.
             
-            You can try providing \`_type\` in the *path* parameter: this will return the *list* of \
-            *data types* with their descriptions in *English*.
-            You can try providing \`iso_639_1\` in the *path* parameter and \`@\` \
-            in the *lang* parameter: this will return the *list* of *major languages* with their descriptions \
-            in *all available languages*.
+            You can try providing \`_type\`: this will return the *list* of *data type identifiers*.
         `
     )
     .queryParam('path', Models.StringModel, "Enumeration root global identifier")
     .queryParam('lang', Models.DefaultLanguageTokenModel, "Language code, @ for all languages")
-    .response(200, Models.TermsinsertArrayModel, dd
+    .response(200, Models.TermsArrayModel, dd
         `
             **List of enumeration terms**
             
@@ -312,26 +316,21 @@ router.get(
             
             *Use this service if you want to check if a code belonging to a field in the \
             code section of a term resolves into an enumeration element belonging to the \
-            graph whose root is the provided enumeration type global identifier.*
+            graph whose root belongs to the edge path. The service returns the matched \
+            global identifier.*
             
             ***To use this service, the current user must have the \`read\` role.***
             
-            The service expects the *enumeration type term global identifier* as the \`type\` \
+            The service expects the *enumeration type term global identifier* as the \`path\` \
             query parameter, the code provided as the \`code\` query parameter and the \
             *name of the field*, belonging to the code section of the term, in which to match \
-            the code in thew \`field\` query parameter.
-            
-            Good choices for the \`field\` parameter are:
-            
-            - \`_lid\`: Local identifier.
-            - \`_aid\`: List of official codes.
-            - \`_pid\`: List of provider codes.
+            the code in the \`field\` query parameter.
             
             You can try providing:
             
-            - \`_aid\` as the \`field\` parameter (list of official codes).
+            - \`iso_639_1\` as the \`path\` parameter.
             - \`en\` as the \`code\` parameter.
-            - \`iso_639_1\` as the \`type\` parameter.
+            - \`_aid\` as the \`field\` parameter (list of official codes).
             
             You should get \`iso_639_3_eng\` as the result.
             This means that \`en\` is matched in the list of *official codes*,  \
@@ -339,12 +338,17 @@ router.get(
             belonging to the \`iso_639_1\` controlled vocabulary.
         `
     )
-    .queryParam('field', Models.StringModel,
-        "Name of the code section property on which to match the code.")
-    .queryParam('code', Models.StringModel,
-        "The code value to be matched.")
-    .queryParam('type', Models.StringModel,
-        "Enumeration type or root global identifier to which the matched enumeration element must belong.")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration identifier")
+    .queryParam('field', ArrayIdentifierFields, dd`
+        Code section field name where the code should be matched:
+        - \`_lid\`: Local identifier. Match the local identifier code.
+        - \`_gid\`: Global identifier. Match the global identifier code.
+        - \`_aid\`: List of official codes. Match the official code.
+        - \`_pid\`: List of provider codes. Match the provided code.
+        - \`_nid\`: Namespace. Match the namespace code.
+    `
+    )
     .response(200, joi.array().items(joi.string()), dd
         `
             **Check status**
@@ -391,26 +395,21 @@ router.get(
             
             *Use this service if you want to check if a code belonging to a field in the \
             code section of a term resolves into an enumeration element belonging to the \
-            graph whose root is the provided enumeration type global identifier.*
+            graph whose root belongs to the edge path. The service returns the matched \
+            term.*
             
             ***To use this service, the current user must have the \`read\` role.***
             
-            The service expects the *enumeration type term global identifier* as the \`type\` \
+            The service expects the *enumeration type term global identifier* as the \`path\` \
             query parameter, the code provided as the \`code\` query parameter and the \
             *name of the field*, belonging to the code section of the term, in which to match \
-            the code in thew \`field\` query parameter.
-            
-            Good choices for the \`field\` parameter are:
-            
-            - \`_lid\`: Local identifier.
-            - \`_aid\`: List of official codes.
-            - \`_pid\`: List of provider codes.
+            the code in the \`field\` query parameter.
             
             You can try providing:
             
-            - \`_aid\` as the \`field\` parameter (list of official codes).
+            - \`iso_639_1\` as the \`path\` parameter.
             - \`en\` as the \`code\` parameter.
-            - \`iso_639_1\` as the \`type\` parameter.
+            - \`_aid\` as the \`field\` parameter (list of official codes).
             
             You should get \`iso_639_3_eng\` as the result.
             This means that \`en\` is matched in the list of *official codes*,  \
@@ -418,17 +417,22 @@ router.get(
             belonging to the \`iso_639_1\` controlled vocabulary.
         `
     )
-    .queryParam('field', Models.StringModel,
-        "Name of the code section property on which to match the code.")
-    .queryParam('code', Models.StringModel,
-        "The code value to be matched.")
-    .queryParam('type', Models.StringModel,
-        "Enumeration type or root global identifier to which the matched enumeration element must belong.")
+    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
+    .queryParam('code', Models.StringModel, "Target enumeration identifier")
+    .queryParam('field', ArrayIdentifierFields, dd`
+        Code section field name where the code should be matched:
+        - \`_lid\`: Local identifier. Match the local identifier code.
+        - \`_gid\`: Global identifier. Match the global identifier code.
+        - \`_aid\`: List of official codes. Match the official code.
+        - \`_pid\`: List of provider codes. Match the provided code.
+        - \`_nid\`: Namespace. Match the namespace code.
+    `
+    )
     .response(200, joi.array().items(joi.object()), dd
         `
             **Check status**
             
-            The service will return an array of global identifiers representing \
+            The service will return an array of term records representing \
             enumeration elements, if there was no match, the array will be empty.
         `
     )
@@ -443,166 +447,6 @@ router.get(
         `
             **User unauthorised**
             
-            The current user is not authorised to perform the operation.
-        `
-    )
-
-/**
- * Return first enumeration element whose provided field
- * matches the provided code in the provided enumeration path.
- */
-router.get(
-    'traverse/field/keys',
-    (request, response) => {
-        const roles = [K.environment.role.read]
-        if(Session.hasPermission(request, response, roles)) {
-            traverseFieldKeys(request, response)
-        }
-    },
-    'traverse-enum-field-keys'
-)
-    .summary('Return first key in path by code and field')
-    .description(dd
-        `
-            **Get path first match for field, value and enumeration type**
-
-            ***To use this service, the current user must have the \`read\` role.***
-
-            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
-            At the root of the graph is a term that represents the type or definition of this \
-            controlled vocabulary, this term represents the enumeration graph.
-            
-            This service can be used to retrieve the term key matching a specific identifier \
-            in a specific code section field of the term belonging to a specific enumeration graph. \
-            Provide the \`path\` parameter which represents the enumeration root element or enumeration \
-            type, the \`code\` parameter which represents a term identifier you are trying to match \
-            and the code section field name in \`field\`: the service will traverse the enumeration \
-            graph until it finds a term whose field matches the provided identifier. The result will \
-            be the array of term global identifiers.
-            
-            The \`field\` parameter can take two values: \`_aid\` corresponding to the list of \
-            official term identifiers, and \`_pid\` corresponding to the list of provider \
-            identifiers.
-
-            You can try providing \`_type\` as the \`path\`, \`string\` as the code and \`_aid\` \
-            as the field name: this should return the string data type term belonging to the \
-            data types controlled vocabulary.
-
-            Note that this service will honour preferred enumerations, this means that if a term \
-            is matched that has a preferred alternative, the latter will be returned, regardless \
-            if the preferred term does not belong to the provided path.
-
-            You can try providing \`iso_639_1\` as the \`path\` and \`en\` as the code: this should \
-            return the preferred term for the English language which is \`iso_639_3_eng\`, this term \
-            is the preferred choice for the actual match, which is \`iso_639_1_en\`.
-        `
-    )
-    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
-    .queryParam('code', Models.StringModel, "Target enumeration identifier")
-    .queryParam('field', ArrayIdentifierFields, "Code section field name where the code should be matched")
-    .response(200, joi.array().items(joi.string()), dd
-        `
-            **List of matched term global identifiers**
-
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the identifier provided in the \`code\` parameter, \
-            the service will return the term global identifiers in the array result.
-
-            If no term matches the identifier provided in the \`code\` parameter, \
-            the service will return an empty array.
-        `
-    )
-    .response(401, ErrorModel, dd
-        `
-            **No user registered**
-
-            There is no active session.
-        `
-    )
-    .response(403, ErrorModel, dd
-        `
-            **User unauthorised**
-
-            The current user is not authorised to perform the operation.
-        `
-    )
-
-/**
- * Return first enumeration element whose provided field
- * matches the provided code in the provided enumeration path.
- */
-router.get(
-    'traverse/field/terms',
-    (request, response) => {
-        const roles = [K.environment.role.read]
-        if(Session.hasPermission(request, response, roles)) {
-            traverseFieldTerms(request, response)
-        }
-    },
-    'traverse-enum-field-terms'
-)
-    .summary('Return first term in path by code and field')
-    .description(dd
-        `
-            **Get path first match for field, value and enumeration type**
-
-            ***To use this service, the current user must have the \`read\` role.***
-
-            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
-            At the root of the graph is a term that represents the type or definition of this \
-            controlled vocabulary, this term represents the enumeration graph.
-            
-            This service can be used to retrieve the term record matching a specific identifier \
-            in a specific code section field of the term belonging to a specific enumeration graph. \
-            Provide the \`path\` parameter which represents the enumeration root element or enumeration \
-            type, the \`code\` parameter which represents a term identifier you are trying to match \
-            and the code section field name in \`field\`: the service will traverse the enumeration \
-            graph until it finds a term whose field matches the provided identifier. The result will \
-            be the array of term records.
-            
-            The \`field\` parameter can take two values: \`_aid\` corresponding to the list of \
-            official term identifiers, and \`_pid\` corresponding to the list of provider \
-            identifiers.
-
-            You can try providing \`_type\` as the \`path\`, \`string\` as the code and \`_aid\` \
-            as the field name: this should return the string data type term belonging to the \
-            data types controlled vocabulary.
-
-            Note that this service will honour preferred enumerations, this means that if a term \
-            is matched that has a preferred alternative, the latter will be returned, regardless \
-            if the preferred term does not belong to the provided path.
-
-            You can try providing \`iso_639_1\` as the \`path\` and \`en\` as the code: this should \
-            return the preferred term for the English language which is \`iso_639_3_eng\`, this term \
-            is the preferred choice for the actual match, which is \`iso_639_1_en\`.
-        `
-    )
-    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
-    .queryParam('code', Models.StringModel, "Target enumeration identifier")
-    .queryParam('field', ArrayIdentifierFields, "Code section field name where the code should be matched")
-    .response(200, Models.TermsinsertArrayModel, dd
-        `
-            **List of matched term records**
-
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the identifier provided in the \`code\` parameter, \
-            the service will return the term objects in the array result.
-
-            If no term matches the identifier provided in the \`code\` parameter, \
-            the service will return an empty array.
-        `
-    )
-    .response(401, ErrorModel, dd
-        `
-            **No user registered**
-
-            There is no active session.
-        `
-    )
-    .response(403, ErrorModel, dd
-        `
-            **User unauthorised**
-
             The current user is not authorised to perform the operation.
         `
     )
@@ -668,7 +512,15 @@ router.get(
     )
     .queryParam('path', Models.StringModel, "Enumeration root global identifier")
     .queryParam('code', Models.StringModel, "Target enumeration identifier")
-    .queryParam('field', ArrayIdentifierFields, "Code section field name where the code should be matched")
+    .queryParam('field', ArrayIdentifierFields, dd`
+        Code section field name where the code should be matched:
+        - \`_lid\`: Local identifier. Match the local identifier code.
+        - \`_gid\`: Global identifier. Match the global identifier code.
+        - \`_aid\`: List of official codes. Match the official code.
+        - \`_pid\`: List of provider codes. Match the provided code.
+        - \`_nid\`: Namespace. Match the namespace code.
+    `
+    )
     .response(200, Models.GraphPathsModel, dd
         `
             **Path to matched term**
@@ -677,163 +529,6 @@ router.get(
             that match the identifier provided in the \`code\` parameter, \
             the service will return the path starting from the enumeration root element \
             to the terms whose \`_aid\` property contains a match for the identifier \
-            provided in the \`code\` parameter; if there is no match, the service will \
-            return an empty array.
-            
-            The result is an array in which each element is an object representing a path \
-            constituted by a list of edges and a list of vertices.
-        `
-    )
-    .response(401, ErrorModel, dd
-        `
-            **No user registered**
-            
-            There is no active session.
-        `
-    )
-    .response(403, ErrorModel, dd
-        `
-            **User unauthorised**
-            
-            The current user is not authorised to perform the operation.
-        `
-    )
-
-/**
- * Return path from enumeration root to first term matching provided local identifier.
- * The service will return the path from the root pf the enumeration to the first term
- * that matches the provided local identifier in the enumeration corresponding to the provided path.
- */
-router.get(
-    'lid/path',
-    (request, response) => {
-        const roles = [K.environment.role.read]
-        if(Session.hasPermission(request, response, roles)) {
-            matchEnumerationIdentifierPath(request, response)
-        }
-    },
-    'match-enum-lid-path'
-)
-    .summary('Return path from enumeration root to target by local identifier')
-    .description(dd
-        `
-            **Get path from enumeration root to term matching local identifier**
-            
-            ***To use this service, the current user must have the \`read\` role.***
-            
-            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
-            At the root of the graph is a term that represents the type or definition of this \
-            controlled vocabulary, this term represents the enumeration graph.
-            
-            This service can be used to retrieve the path between the enumeration root term \
-            and a term that matches the provided local identifier. The \`path\` parameter represents the \
-            global identifier of the enumeration root or type, the \`code\` parameter is the local identifier \
-            of a term among the enumeration elements that you want to match: if matched, the service \
-            will return the path from the root of the enumeration to the first term whose (\`_lid\`) \
-            matches the provided code. If no match is found, the service will return an empty array.
-            
-            You can try providing \`_type\` as the \`path\` and \`string\` as the code: this should \
-            return the string data type term belonging to the data types controlled vocabulary.
-            
-            Note that this service will honour preferred enumerations, this means that if a term \
-            is matched that has a preferred alternative, the latter will be returned, regardless \
-            if the preferred term does not belong to the provided path.
-            
-            You can try providing \`iso_639_1\` as the \`path\` and \`eng\` as the code: this should \
-            return the preferred term for the English language which is \`iso_639_3_eng\`. Note that \
-            the actual match is \`iso_639_1_en\`, but this term points to a preferred alternative \
-            which is the returned result: this means that the \`en\` local identifier will not be \
-            matched, this service expects only preferred local identifiers.
-        `
-    )
-    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
-    .queryParam('code', Models.StringModel, "Target enumeration local identifier")
-    .response(200, Models.GraphPathsModel, dd
-        `
-            **Path to matched term**
-            
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the local identifier provided in the \`code\` parameter, \
-            the service will return the path starting from the enumeration root element \
-            to the term whose \`_lid\` local identifier property matches the code \
-            provided in the \`code\` parameter; if there is no match, the service will \
-            return an empty array.
-            
-            The result is an array in which each element is an object representing a path \
-            constituted by a list of edges and a list of vertices.
-        `
-    )
-    .response(401, ErrorModel, dd
-        `
-            **No user registered**
-            
-            There is no active session.
-        `
-    )
-    .response(403, ErrorModel, dd
-        `
-            **User unauthorised**
-            
-            The current user is not authorised to perform the operation.
-        `
-    )
-
-/**
- * Return path from enumeration root to first term matching provided local identifier.
- * The service will return the path from the root pf the enumeration to the first term
- * that matches the provided local identifier in the enumeration corresponding to the provided path.
- */
-router.get(
-    'gid/path',
-    (request, response) => {
-        const roles = [K.environment.role.read]
-        if(Session.hasPermission(request, response, roles)) {
-            matchEnumerationTermPath(request, response)
-        }
-    },
-    'match-enum-gid-path'
-)
-    .summary('Return path from enumeration root to target by global identifier')
-    .description(dd
-        `
-            **Get path from enumeration root to term matching global identifier**
-            
-            ***To use this service, the current user must have the \`read\` role.***
-            
-            Enumerations are graphs used as controlled vocabularies whose elements are terms. \
-            At the root of the graph is a term that represents the type or definition of this \
-            controlled vocabulary, this term represents the enumeration graph.
-            
-            This service can be used to retrieve the path between the enumeration root term \
-            and a term that matches the provided global identifier. The \`path\` parameter \
-            represents the global identifier of the enumeration root or type, the \`code\` \
-            parameter is the global identifier of a term among the enumeration elements \
-            that you want to match: if matched, the service will return the path from the root \
-            of the enumeration to the first term whose (\`_gid\`) matches the provided code. \
-            If no match is found, the service will return an empty array.
-            
-            You can try providing \`_type\` as the \`path\` and \`_type_string\` as the code: this should \
-            return the string data type term belonging to the data types controlled vocabulary.
-            
-            Note that this service will honour preferred enumerations, this means that if a term \
-            is matched that has a preferred alternative, the latter will be returned, regardless \
-            if the preferred term does not belong to the provided path.
-            
-            You can try providing \`iso_639_1\` as the \`path\` and \`iso_639_1_en\` as the code: \
-            this should return the preferred term for the English language which is \`iso_639_3_eng\`, \
-            this term is the preferred choice for the actual match, which is \`iso_639_1_en\`.
-        `
-    )
-    .queryParam('path', Models.StringModel, "Enumeration root global identifier")
-    .queryParam('code', Models.StringModel, "Target enumeration global identifier")
-    .response(200, Models.GraphPathsModel, dd
-        `
-            **Path to matched term**
-            
-            If there are terms, in the enumeration defined by the \`path\` parameter, \
-            that match the global identifier provided in the \`code\` parameter, \
-            the service will return the path starting from the enumeration root element \
-            to the term whose \`_gid\` global identifier property matches the code \
             provided in the \`code\` parameter; if there is no match, the service will \
             return an empty array.
             
@@ -882,17 +577,18 @@ router.post(
             
             ***To use this service, the current user must have the \`read\` role.***
             
-            The service expects the enumeration type term key as the last element of the path and
+            The service expects the enumeration type term key as the last element of the path and \
             the list of term keys to match in the POST body.
             
-            The service will return a dictionary with as keys the provided list of identifiers
+            The service will return a dictionary with as keys the provided list of identifiers \
             and as values the matched enumeration element term keys or false if there was no match.
             
-            You can try providing \`iso_639_1\` as the \`path\` and 
+            You can try providing \`iso_639_1\` as the \`path\` and \
             \`["iso_639_1_en", "iso_639_1_fr", "UNKNOWN"]\` as the body.
-            The returned dictionary will have as keys the provided identifiers and as values the
-            matched enumerations, which for the first two elements of the list will be the preferred
-            enumeration and for the last element, that we assume doesn't match, \`false\`.
+            The returned dictionary will have as keys the provided document keys and as values \
+            the matched enumeration elements. You will notice that the first two elements match \
+            a different enumeration, because these elements point to a preferred enumeration, \
+            while the last element we assume doesn't exist, and it has the \`false\` value.
         `
     )
     .queryParam('path', Models.StringModel, "Enumeration root global identifier")
@@ -900,8 +596,8 @@ router.post(
         `
             **Service parameters**
             
-            - \`path\`: The last element of the path should be the enumeration type as its _key.
-            - \`body\`: The POST body should contain an array with the list of keys to check.
+            Provide an array of strings corresponding to term document keys that should \
+            be elements of the enumeration whose root yu provided in the \`path\` parameter.
         `
     )
     .response(200, joi.object(), dd
@@ -970,7 +666,15 @@ router.post(
         `
     )
     .queryParam('path', Models.StringModel, "Enumeration root global identifier")
-    .queryParam('field', Models.StringModel, "Term code section field name")
+    .queryParam('field', ArrayIdentifierFields, dd`
+        Code section field name where the code should be matched:
+        - \`_lid\`: Local identifier. Match the local identifier code.
+        - \`_gid\`: Global identifier. Match the global identifier code.
+        - \`_aid\`: List of official codes. Match the official code.
+        - \`_pid\`: List of provider codes. Match the provided code.
+        - \`_nid\`: Namespace. Match the namespace code.
+    `
+    )
     .body(Models.StringArrayModel, dd
         `
             Provide an array of values to be matched with the contents of the provided field.
@@ -1214,7 +918,7 @@ function doCheckEnumKeysByField(request, response)
     const result = Dictionary.doCheckEnumKeysByField(
         request.queryParams.code,
         request.queryParams.field,
-        request.queryParams.type
+        request.queryParams.path
     )
 
     response.send(result);                                                      // ==>
@@ -1236,7 +940,7 @@ function doCheckEnumTermsByField(request, response)
     const result = Dictionary.doCheckEnumTermsByField(
         request.queryParams.code,
         request.queryParams.field,
-        request.queryParams.type
+        request.queryParams.path
     )
 
     response.send(result);                                                      // ==>
