@@ -1099,12 +1099,12 @@ function doCheckEnumTermsByField(theCode, theField, theType)
  * @param theCodes {Array<String>}: List of descriptor global identifiers.
  * @return {Array<Object>}: List of descriptors required by the provided list of descriptors.
  */
-function getRequiredDescriptors(thePredicate, theCodes)
+function getLinkedTerms(thePredicate, theCodes)
 {
     //
     // Init local storage.
     //
-     const list = theCodes.map( item => { return `${K.collection.term.name}/${item}`})
+    const list = theCodes.map( item => { return `${K.collection.term.name}/${item}`})
 
     //
     // Query schema.
@@ -1119,7 +1119,7 @@ function getRequiredDescriptors(thePredicate, theCodes)
                             FOR vertex, edge IN 1..10
                                 OUTBOUND root
                                 ${collection_links}
-                                FILTER edge._predicate == ${thePredicate}
+                                FILTER edge.${module.context.configuration.predicate} == ${thePredicate}
                             RETURN vertex._id
                     )
                 )
@@ -1129,7 +1129,7 @@ function getRequiredDescriptors(thePredicate, theCodes)
 
     return result                                                               // ==>
 
-} // getRequiredDescriptors()
+} // getLinkedTerms()
 
 /**
  * Return required descriptors associated to provided descriptors list.
@@ -1139,7 +1139,7 @@ function getRequiredDescriptors(thePredicate, theCodes)
  * @param theCodes {Array<String>}: List of descriptor global identifiers.
  * @return {Array<String>}: List of descriptors required by the provided list of descriptors.
  */
-function getRequiredDescriptorKeys(thePredicate, theCodes)
+function getLinkedKeys(thePredicate, theCodes)
 {
     //
     // Init local storage.
@@ -1158,16 +1158,15 @@ function getRequiredDescriptorKeys(thePredicate, theCodes)
                         FOR vertex, edge IN 1..10
                             OUTBOUND root
                             ${collection_links}
-                            FILTER edge._predicate == ${thePredicate}
+                            FILTER edge.${module.context.configuration.predicate} == ${thePredicate}
                         RETURN vertex._key
                 )
             )
-        `)
-            .toArray()[0]
+        `) .toArray()[0]
 
-    return result                                                               // ==>
+    return result                                                       // ==>
 
-} // getRequiredDescriptorKeys()
+} // getLinkedKeys()
 
 /**
  * Return enumeration descriptor _kind property.
@@ -1248,9 +1247,9 @@ module.exports = {
     getProperties,
     getPropertyKeys,
     getPropertyNames,
-
-    getRequiredDescriptors,
-    getRequiredDescriptorKeys,
+    
+    getLinkedTerms,
+    getLinkedKeys,
 
     getDescriptorEnumKind,
 
