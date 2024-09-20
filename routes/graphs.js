@@ -389,28 +389,28 @@ router.post(
 	.queryParam('prune', PruneModel)
 	.queryParam('deleted', DeletedEdgesModel)
 	.queryParam('updated', UpdatedEdgesModel)
-	.queryParam('existing', ExistingEdgesModel)
+	.queryParam('ignored', IgnoredEdgesModel)
 	.body(Models.SetDelEnums, dd`
         **Children, sections and data**
 
         The request body should be provided with an object containing the following elements:
 
-        - \`children\`: A key/value dictionary in which the key represents the *child node
-          document handle* and the value represents *custom data* associated with the
+        - \`children\`: A key/value dictionary in which the key represents the *child node\
+          document handle* and the value represents *custom data* associated with the \
           corresponding *edge*.
-        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration,
-          field, etc. There are other predicates, however, whose goal is to link nodes which
-          will not have the function of the main predicate. The provided default values indicate
-          sections, that represent display or category nodes used for subdividing child nodes,
+        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration, \
+          field, etc. There are other predicates, however, whose goal is to link nodes which \
+          will not have the function of the main predicate. The provided default values indicate \
+          sections, that represent display or category nodes used for subdividing child nodes, \
           and bridges, which allow one node to connect to another node through a bridge node.
         
         The values of the \`children\` dictionary can be the following:
         
-        - \`object\`: This represents valid data for the edge, the provided object will be merged
-          with the existing one. If you set a provided property value to \`null\`, if the property
-          exists in the edge data, the service will delete that property from the existing data.
+        - \`object\`: This represents valid data for the edge, the provided object will be merged \
+          with the existing one. If you set a provided property value to \`null\`, if the property \
+          exists in the edge data, the service will delete that property from the existing data. \
           If you want to ignore the value, pass an empty object.
-        - \`null\`: If you provide this value the whole custom data container will be reset to
+        - \`null\`: If you provide this value the whole custom data container will be reset to \
           an empty object.
         
         If the edge exists, the provided root is removed from the edge path: if there are \
@@ -458,7 +458,7 @@ router.post(
 	)
 
 /**
- * Add sections.
+ * Set containers.
  */
 router.post(
 	'set/container',
@@ -664,28 +664,28 @@ router.post(
 	.queryParam('prune', PruneModel)
 	.queryParam('deleted', DeletedEdgesModel)
 	.queryParam('updated', UpdatedEdgesModel)
-	.queryParam('existing', ExistingEdgesModel)
+	.queryParam('ignored', IgnoredEdgesModel)
 	.body(Models.SetDelEnums, dd`
         **Children, sections and data**
 
         The request body should be provided with an object containing the following elements:
 
-        - \`children\`: A key/value dictionary in which the key represents the *child node
-          document handle* and the value represents *custom data* associated with the
+        - \`children\`: A key/value dictionary in which the key represents the *child node \
+          document handle* and the value represents *custom data* associated with the \
           corresponding *edge*.
-        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration,
-          field, etc. There are other predicates, however, whose goal is to link nodes which
-          will not have the function of the main predicate. The provided default values indicate
-          sections, that represent display or category nodes used for subdividing child nodes,
+        - \`sections\`: Graphs have predicates that indicate the type of graph: enumeration, \
+          field, etc. There are other predicates, however, whose goal is to link nodes which \
+          will not have the function of the main predicate. The provided default values indicate \
+          sections, that represent display or category nodes used for subdividing child nodes, \
           and bridges, which allow one node to connect to another node through a bridge node.
         
         The values of the \`children\` dictionary can be the following:
         
-        - \`object\`: This represents valid data for the edge, the provided object will be merged
-          with the existing one. If you set a provided property value to \`null\`, if the property
-          exists in the edge data, the service will delete that property from the existing data.
+        - \`object\`: This represents valid data for the edge, the provided object will be merged \
+          with the existing one. If you set a provided property value to \`null\`, if the property \
+          exists in the edge data, the service will delete that property from the existing data. \
           If you want to ignore the value, pass an empty object.
-        - \`null\`: If you provide this value the whole custom data container will be reset to
+        - \`null\`: If you provide this value the whole custom data container will be reset to \
           an empty object.
         
         If the edge exists, the provided root is removed from the edge path: if there are \
@@ -901,7 +901,7 @@ router.post(
 	.queryParam('prune', PruneModel)
 	.queryParam('deleted', DeletedEdgesModel)
 	.queryParam('updated', UpdatedEdgesModel)
-	.queryParam('existing', ExistingEdgesModel)
+	.queryParam('ignored', IgnoredEdgesModel)
 	.body(Models.DelBridge, dd
 		`
             **Custom data and sections**
@@ -930,7 +930,7 @@ router.post(
 		`
             **Operations count**
             
-            The service will return an object containign the following properties:
+            The service will return an object containing the following properties:
             - inserted: The number of inserted edges.
             - updated: The number of existing edges to which the root has been added to their path.
             - existing: The number of existing edges that include subject, object predicate and path.
@@ -1512,9 +1512,12 @@ function doDelEdges(theRequest, theResponse, theSection = null)
 	// Two ways to do it:
 	// - Find parent in _from and predicate enum or bridge and check if root is there.
 	// - Traverse graph from parent to root with predicate enum or bridge.
+	//
+	// Assume, if root is same as parent.
 	///
-	const bound = (direction) ? aql`OUTBOUND` : aql`INBOUND`
-	const found = K.db._query(aql`
+	if(root !== parent) {
+		const bound = (direction) ? aql`OUTBOUND` : aql`INBOUND`
+		const found = K.db._query(aql`
         FOR vertex, edge, path IN 1..10
             ${bound} ${parent}
             ${collection_edge}
@@ -1524,16 +1527,17 @@ function doDelEdges(theRequest, theResponse, theSection = null)
 
         RETURN edge._key
     `).toArray()
-	if(found.length === 0)
-	{
-		const message = dd`
+		if(found.length === 0)
+		{
+			const message = dd`
 			Cannot delete edges: the parent node, [${parent}], is not \
 			connected to the graph root [${root}].
 		`
-		theResponse.status(400)
-		theResponse.send(message)
-		
-		return                                                          // ==>
+			theResponse.status(400)
+			theResponse.send(message)
+			
+			return                                                          // ==>
+		}
 	}
 	
 	//
@@ -1649,10 +1653,10 @@ function doDelEdges(theRequest, theResponse, theSection = null)
 				///
 				// Collect and process all edges from child to leaf nodes.
 				///
-				const outbound = (direction) ? aql`INBOUND` : aql`OUTBOUND`
+				const bound = (direction) ? aql`INBOUND` : aql`OUTBOUND`
 				K.db._query(aql`
 				FOR vertex, edge, path IN 0..10
-					${outbound} ${src}
+					${bound} ${src}
 					${collection_edge}
 				
 					PRUNE ${root} NOT IN edge.${path}
@@ -1664,9 +1668,9 @@ function doDelEdges(theRequest, theResponse, theSection = null)
 					
 					FILTER ${root} IN edge.${path} AND
 						   edge.${pred} IN ${predicates}
-	
-				RETURN edge
-            `)
+		
+					RETURN edge
+	            `)
 					.toArray()
 					.forEach( (element) => {
 						if(element[path].includes(root)) {
@@ -1707,8 +1711,17 @@ function doDelEdges(theRequest, theResponse, theSection = null)
 			}
 			
 			///
-			// Do nothing if edge does not exist.
+			// Report in ingnored.
 			///
+			result.ignored += 1
+			if(theRequest.queryParams.ignored) {
+				ignored.push({
+					_key: key,
+					_from: src,
+					_to: dst,
+					[pred]: (theSection === null) ? predicate : theSection
+				})
+			}
 		}
 	})
 	
