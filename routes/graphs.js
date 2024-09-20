@@ -981,7 +981,7 @@ router.post(
             Links are one-level graphs in which nodes are connected with \
             subject-predicate-object links that contain a custom data record. Unlike edges, \
             only one link can exist and there is no root or path concept. Linked items \
-            are eikther linked or unlinked, or their custom data updated.
+            are either linked or unlinked, or their custom data updated.
             
             This service allows creating new links, or updating the custom data of an \
             existing link. The service expects the *parent* node, the link predicate, \
@@ -1010,12 +1010,20 @@ router.post(
 	)
 	.response(200, Models.SetEnumsResponse, dd
 		`
-            **Operations count**
+            **Operation status**
             
-            The service will return an object containign the following properties:
-            - inserted: The number of inserted edges.
-            - updated: The number of existing edges to which the root has been added to their path.
-            - existing: The number of existing edges that include subject, object predicate and path.
+            The service will return an object containing the following properties:
+            
+            - \`stats\`:
+              - \`inserted\`: The number of inserted edges.
+              - \`updated\`: The number of updated edges.
+              - \`existing\`: The number of ignored existing edges.
+            - \`inserted\`: The list of inserted edges, if the \`inserted\` \
+                            parameter was set.
+            - \`updated\`: The list of updated edger, if the \`updated\` \ \
+                           parameter was set.
+            - \`existing\`: The list of existing edges, if the \`existing\` \
+                            parameter was set.
         `
 	)
 	.response(400, joi.object(), dd
