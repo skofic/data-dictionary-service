@@ -11,9 +11,9 @@ const Session = require('./utils/sessions')
 //
 module.context.use('/terms', require('./routes/terms'), 'terms')
 module.context.use('/graph', require('./routes/graphs'), 'graphs')
+module.context.use('/link', require('./routes/links'), 'link')
 module.context.use('/enum', require('./routes/enumerations'), 'enum')
 // module.context.use('/struct', require('./routes/structures'), 'struct')
-module.context.use('/link', require('./routes/links'), 'link')
 module.context.use('/descr', require('./routes/descriptors'), 'descr')
 module.context.use('/check', require('./routes/validation'), 'check')
 
