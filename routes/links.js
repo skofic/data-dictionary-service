@@ -46,49 +46,63 @@ router.tag('Linked types');
 //
 
 /**
- * Return required indicator keys of provided descriptors list.
- * The service will return the list of required indicator keys of the provided list
- * of descriptors. Only the required indicator keys will be returned.
+ * Return linked document keys.
+ * The service will return the list of linked document keys for the provided
+ * predicate and descriptors list.
  */
 router.post(
-	'required/indicator/keys',
+	'keys',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			doGetRequiredIndicatorKeys(request, response)
+			doGetLinkedKeys(request, response)
 		}
 	},
-	'get-required-indicator-keys'
+	'get-linked-keys'
 )
-	.summary('Get list of required indicator keys')
+	.summary('Get list of linked keys')
 	.description(dd
 		`
-**Return list of required indicator keys**
-
-*Use this service if you want to get the full list of indicator keys required by the provided descriptors list.*
-
-***To use this service, the current user must have the \`read\` role.***
-
-The service expects a list of descriptor global identifiers. The service will return the list of additional indicators required by the provided list.
-
-This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional indicators global identifiers* that *must* be *included* in the *dataset*.
-
-The additional descriptors are variables such as date, identifiers and related variables that are required to make sense of the provided list of descriptors.
-
-You can try providing \`chr_EffPopSize\` to get the list of additional descriptors you should add to a dataset that features the \`chr_EffPopSize\` descriptor.        `
+        **Return list of linked keys**
+        
+        Use this service if you want to retrieve the *flattened list* of \
+        *document keys* linked to the provided *list* of *global identifiers* \
+        with the provided *predicate*.
+        
+        ***To use this service, the current user must have the \`read\` role.***
+        
+        The service expects the link predicate as a path query parameter, \
+        and the list of descriptor global identifiers in the request body. \
+        The service will return the list of all the elements linked to the \
+        provided list of keys with the provided predicate.
+        
+        You can try providing \`_predicate_requires_indicator\` as the \
+        predicate, and \`chr_EffPopSize\` in the list of nodes to get the \
+        list of additional descriptors you should add to a dataset that \
+        features the \`chr_EffPopSize\` descriptor.
+    `
+	)
+	.queryParam('predicate', Models.StringModel, dd`
+        Link predicate, here are some examples:
+        
+        - \`_predicate_requires_indicator\`: Requires indicator.
+        - \`_predicate_requires_metadata\`: Required metadata indicator.
+    `
 	)
 	.body(Models.StringArrayModel, dd
 		`
             **Service parameters**
             
-            - \`body\`: The POST body should contain an array with the list of descriptor *global identifiers* to check.
+            The POST body should contain an array with the list of *global \
+            identifiers* for which we want the linked items.
         `
 	)
 	.response(200, [joi.string()], dd
 		`
-            **Check status**
+            **Linked keys**
             
-            The service will return a list of *descriptor global identifiers* to be added to the provided descriptors list.
+            The service will return a list of *descriptor global identifiers* \
+            linked to the provided list of document keys with the provided predicate.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -107,171 +121,62 @@ You can try providing \`chr_EffPopSize\` to get the list of additional descripto
 	)
 
 /**
- * Return required metadata keys of provided descriptors list.
- * The service will return the list of required metadata keys of the provided list
- * of descriptors. Only the required metadata keys will be returned.
- */
+ * Return linked documents.
+ * The service will return the list of linked documents for the provided
+ * predicate and descriptors list. */
 router.post(
-	'required/metadata/keys',
+	'terms',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			doGetRequiredMetadataKeys(request, response)
+			doGetLinkedTerms(request, response)
 		}
 	},
-	'get-required-metadata-keys'
+	'get-linked-terms'
 )
-	.summary('Get list of required metadata keys')
+	.summary('Get list of linked terms')
 	.description(dd
 		`
-**Return list of required metadata keys**
-
-*Use this service if you want to get the full list of metadata keys required by the provided descriptors list.*
-
-***To use this service, the current user must have the \`read\` role.***
-
-The service expects a list of descriptor global identifiers. The service will return the list of additional metadata keys required by the provided list.
-
-This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional metadata global identifiers* that *must* be *included* in the *dataset*.
-
-The additional metadata descriptors are variables such as method, marker type and sample size that are required to make sense of the provided list of descriptors.
-
-You can try providing \`chr_EffPopSize\` to get the list of additional descriptors you should add to a dataset that features the \`chr_EffPopSize\` descriptor.        `
+        **Return list of linked terms**
+        
+        Use this service if you want to retrieve the *flattened list* of \
+        *terms* linked to the provided *list* of *global identifiers* \
+        with the provided *predicate*.
+        
+        ***To use this service, the current user must have the \`read\` role.***
+        
+        The service expects the link predicate as a path query parameter, \
+        and the list of descriptor global identifiers in the request body. \
+        The service will return the list of all the terms linked to the \
+        provided list of keys with the provided predicate.
+        
+        You can try providing \`_predicate_requires_indicator\` as the \
+        predicate, and \`chr_EffPopSize\` in the list of nodes to get the \
+        list of additional descriptors you should add to a dataset that \
+        features the \`chr_EffPopSize\` descriptor.
+    `
+	)
+	.queryParam('predicate', Models.StringModel, dd`
+        Link predicate, here are some examples:
+        
+        - \`_predicate_requires_indicator\`: Requires indicator.
+        - \`_predicate_requires_metadata\`: Required metadata indicator.
+    `
 	)
 	.body(Models.StringArrayModel, dd
 		`
             **Service parameters**
             
-            - \`body\`: The POST body should contain an array with the list of descriptor *global identifiers* to check.
+            The POST body should contain an array with the list of *global \
+            identifiers* for which we want the linked items.
         `
 	)
-	.response(200, [joi.string()], dd
+	.response(200, [joi.object()], dd
 		`
-            **Check status**
+            **Linked terms**
             
-            The service will return a list of *descriptor global identifiers* to be added to the provided descriptors list.
-        `
-	)
-	.response(401, ErrorModel, dd
-		`
-            **No user registered**
-            
-            There is no active session.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **User unauthorised**
-            
-            The current user is not authorised to perform the operation.
-        `
-	)
-
-/**
- * Return required descriptors of provided descriptors list.
- * The service will return the list of required descriptors of the provided list
- * of descriptors. Only the required descriptors will be returned.
- */
-router.post(
-	'required/indicator/terms',
-	(request, response) => {
-		const roles = [K.environment.role.read]
-		if(Session.hasPermission(request, response, roles)) {
-			doGetRequiredIndicators(request, response)
-		}
-	},
-	'get-required-indicators'
-)
-	.summary('Get list of required descriptor terms')
-	.description(dd
-		`
-**Return list of required descriptors**
-
-*Use this service if you want to get the full list of indicators required by the provided descriptors list.*
-
-***To use this service, the current user must have the \`read\` role.***
-
-The service expects a list of descriptor global identifiers. The service will return the list of additional descriptors required by the provided list.
-
-This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional descriptor global identifiers* that *must* be *included* in the *dataset*.
-
-The additional descriptors are variables such as date, identifiers and related variables that are required to make sense of the provided list of descriptors.
-
-You can try providing \`chr_EffPopSize\` to get the list of additional descriptors you should add to a dataset that features the \`chr_EffPopSize\` descriptor.        `
-	)
-	.body(Models.StringArrayModel, dd
-		`
-            **Service parameters**
-            
-            - \`body\`: The POST body should contain an array with the list of descriptor *global identifiers* to check.
-        `
-	)
-	.response(200, joi.object(), dd
-		`
-            **Check status**
-            
-            The service will return a list of *descriptors* to be added to the provided descriptors list.
-        `
-	)
-	.response(401, ErrorModel, dd
-		`
-            **No user registered**
-            
-            There is no active session.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **User unauthorised**
-            
-            The current user is not authorised to perform the operation.
-        `
-	)
-
-/**
- * Return required metadata terms of provided descriptors list.
- * The service will return the list of required metadata terms of the provided list
- * of descriptors. Only the required metadata terms will be returned.
- */
-router.post(
-	'required/metadata/terms',
-	(request, response) => {
-		const roles = [K.environment.role.read]
-		if(Session.hasPermission(request, response, roles)) {
-			doGetRequiredMetadata(request, response)
-		}
-	},
-	'get-required-metadata'
-)
-	.summary('Get list of required metadata terms')
-	.description(dd
-		`
-**Return list of required metadata terms**
-
-*Use this service if you want to get the full list of metadata terms required by the provided descriptors list.*
-
-***To use this service, the current user must have the \`read\` role.***
-
-The service expects a list of descriptor global identifiers. The service will return the list of additional descriptors required by the provided list.
-
-This service is used when compiling a dataset: provide the list of *descriptor global identifiers* that you want to *include* in the *dataset* and the service will return the eventual *additional descriptor global identifiers* that *must* be *included* in the *dataset*.
-
-The additional descriptors are variables such as date, identifiers and related variables that are required to make sense of the provided list of descriptors.
-
-You can try providing \`chr_EffPopSize\` to get the list of additional descriptors you should add to a dataset that features the \`chr_EffPopSize\` descriptor.        `
-	)
-	.body(Models.StringArrayModel, dd
-		`
-            **Service parameters**
-            
-            - \`body\`: The POST body should contain an array with the list of descriptor *global identifiers* to check.
-        `
-	)
-	.response(200, joi.object(), dd
-		`
-            **Check status**
-            
-            The service will return a list of *descriptors* to be added to the provided descriptors list.
+            The service will return a list of *terms*  linked to the provided \
+            list of document keys with the provided predicate.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -299,38 +204,38 @@ You can try providing \`chr_EffPopSize\` to get the list of additional descripto
  * @param request: API request.
  * @param response: API response.
  */
-function doGetRequiredIndicators(request, response)
+function doGetLinkedTerms(request, response)
 {
 	//
 	// Query database.
 	//
-	const result = Dictionary.getRequiredDescriptors(
+	const result = Dictionary.getLinkedTerms(
 		'_predicate_requires_indicator',
 		request.body
 	)
 
 	response.send(result);                                                      // ==>
 
-} // doGetRequiredDescriptors()
+} // doGetLinkedTerms()
 
 /**
  * Return list of indicator keys required by provided list of variables.
  * @param request: API request.
  * @param response: API response.
  */
-function doGetRequiredIndicatorKeys(request, response)
+function doGetLinkedKeys(request, response)
 {
 	//
 	// Query database.
 	//
-	const result = Dictionary.getRequiredDescriptorKeys(
-		'_predicate_requires_indicator',
+	const result = Dictionary.getLinkedKeys(
+		request.queryParams.predicate,
 		request.body
 	)
 
 	response.send(result);                                                      // ==>
 
-} // doGetRequiredDescriptorKeys()
+} // doGetLinkedKeys()
 
 /**
  * Return list of metadata descriptors required by provided list of variables.
@@ -342,7 +247,7 @@ function doGetRequiredMetadata(request, response)
 	//
 	// Query database.
 	//
-	const result = Dictionary.getRequiredDescriptors(
+	const result = Dictionary.getLinkedTerms(
 		'_predicate_requires_metadata',
 		request.body
 	)
