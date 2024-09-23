@@ -23,7 +23,7 @@ class MyRequestController {
             "defns": "false",
             "resolve": "true",
             "resfld": "_lid",
-            "save": "false",
+            "save": "true",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
@@ -119,7 +119,7 @@ class MyRequestController {
             "defns": "false",
             "resolve": "true",
             "resfld": "_aid",
-            "save": "false",
+            "save": "true",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
@@ -210,13 +210,13 @@ class MyRequestController {
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms") else {return}
         let URLParams = [
-            "key": "_set_scalar",
+            "key": "test-01",
             "terms": "true",
             "types": "false",
             "defns": "false",
             "resolve": "true",
             "resfld": "_lid",
-            "save": "false",
+            "save": "true",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
@@ -224,28 +224,13 @@ class MyRequestController {
 
         // Headers
 
-        request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
         request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
-        // JSON Body
+        // Body
 
-        let bodyObject: [String : Any] = [
-            "updates": [
-                "_code": [
-                    "_aid": [
-                        "iso"
-                    ]
-                ],
-                "_data": [
-                    "_class": "identifier"
-                ]
-            ],
-            "references": [
-                "_code._aid",
-                "_data._class"
-            ]
-        ]
-        request.httpBody = try! JSONSerialization.data(withJSONObject: bodyObject, options: [])
+        let bodyString = "{\n  \"updates\": {\n    \"_code\": {\n      \"_aid\": [\n        \"test_one\"\n      ]\n    },\n    \"_info\": {\n      \"_title\": { \"iso_639_3_ita\": \"Termine di prova uno.\" }\n    }\n  },\n  \"references\": [\n    \"_code._aid\",\n    \"_info._title.iso_639_3_ita\"\n  ]\n}"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -411,17 +396,13 @@ class MyRequestController {
 
         // Headers
 
-        request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
         request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
-        // JSON Body
+        // Body
 
-        let bodyObject: [String : Any] = [
-            "test-01",
-            "test-02",
-            "INKNOWN TERM"
-        ]
-        request.httpBody = try! JSONSerialization.data(withJSONObject: bodyObject, options: [])
+        let bodyString = "[\n  \"test-01\",\n  \"test-02\",\n  \"INKNOWN TERM\"\n]"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -557,10 +538,10 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Get terms by key (POST http://localhost:8529/_db/EUFGIS/dict/terms/many)
+           Get terms by key (POST http://localhost:8529/_db/EUFGIS/dict/terms/dict)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms/many") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms/dict") else {return}
         let URLParams = [
             "lang": "iso_639_3_eng",
         ]
@@ -575,7 +556,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "[ \"_type\", \"_code\", \"UNKNOWN\" ]"
+        let bodyString = "[\n  \"_type\",\n  \"_code\",\n  \"UNKNOWN\"\n]"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -648,10 +629,10 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Query term keys (POST http://localhost:8529/_db/EUFGIS/dict/terms/key)
+           Query term keys (POST http://localhost:8529/_db/EUFGIS/dict/terms/query/keys)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms/key") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms/query/keys") else {return}
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -699,10 +680,10 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Query term records (POST http://localhost:8529/_db/EUFGIS/dict/terms)
+           Query term records (POST http://localhost:8529/_db/EUFGIS/dict/terms/query/terms)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/terms/query/terms") else {return}
         let URLParams = [
             "lang": "iso_639_3_eng",
         ]
@@ -790,10 +771,21 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Add enumerations (POST http://localhost:8529/_db/EUFGIS/dict/graph/add/enum)
+           Set edges (POST http://localhost:8529/_db/EUFGIS/dict/graph/set/edge)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/add/enum") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/set/edge") else {return}
+        let URLParams = [
+            "root": "terms/_type",
+            "parent": "terms/_type_string",
+            "predicate": "_predicate_enum-of",
+            "direction": "true",
+            "save": "false",
+            "inserted": "true",
+            "updated": "true",
+            "existing": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -804,7 +796,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-01\",\n    \"test-02\"\n  ]\n}"
+        let bodyString = "{\n  \"children\": {\n    \"terms/_predicate_enum-of\": {\"_name\": \"Enumeration\"},\n    \"terms/_predicate_field-of\": {\"_name\": \"Field.\"},\n    \"terms/_type_string_enum\": {\"_title\": {\"iso_639_3_eng\": \"This is custom data.\"}},\n    \"terms/_type_string_key\": null\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -825,6 +817,42 @@ class MyRequestController {
 }
 
 
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
 
 class MyRequestController {
     func sendRequest() {
@@ -841,10 +869,22 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Add fields (POST http://localhost:8529/_db/EUFGIS/dict/graph/add/field)
+           Delete edges (POST http://localhost:8529/_db/EUFGIS/dict/graph/del/edge)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/add/field") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/del/edge") else {return}
+        let URLParams = [
+            "root": "terms/_type",
+            "parent": "terms/_type",
+            "predicate": "_predicate_enum-of",
+            "direction": "true",
+            "save": "false",
+            "prune": "false",
+            "deleted": "true",
+            "updated": "true",
+            "ignored": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -855,7 +895,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"count\",\n    \"species\"\n  ]\n}"
+        let bodyString = "{\n  \"children\": {\n    \"terms/_type_string\": {\"_name\": \"Pippo\"},\n    \"terms/_type_string_enum\": null,\n    \"terms/_type_number\": null\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -876,6 +916,42 @@ class MyRequestController {
 }
 
 
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
 
 class MyRequestController {
     func sendRequest() {
@@ -892,10 +968,22 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Add properties (POST http://localhost:8529/_db/EUFGIS/dict/graph/add/property)
+           Set containers (POST http://localhost:8529/_db/EUFGIS/dict/graph/set/container)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/add/property") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/set/container") else {return}
+        let URLParams = [
+            "root": "terms/_type",
+            "parent": "terms/_type_string",
+            "container": "_predicate_section-of",
+            "predicate": "_predicate_enum-of",
+            "direction": "true",
+            "save": "false",
+            "inserted": "true",
+            "updated": "true",
+            "existing": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -906,7 +994,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"parent\": \"test-02\",\n  \"items\": [\n    \"count\",\n    \"species\"\n  ]\n}"
+        let bodyString = "{\n  \"children\": {\n    \"terms/_type_string_enum\": {\"_name\": \"Enumeration type.\"}\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -927,6 +1015,42 @@ class MyRequestController {
 }
 
 
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
 
 class MyRequestController {
     func sendRequest() {
@@ -943,10 +1067,23 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Add sections (POST http://localhost:8529/_db/EUFGIS/dict/graph/add/section)
+           Delete containers (POST http://localhost:8529/_db/EUFGIS/dict/graph/del/container)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/add/section") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/del/container") else {return}
+        let URLParams = [
+            "root": "terms/_predicate",
+            "parent": "terms/_predicate",
+            "container": "_predicate_section-of",
+            "predicate": "_predicate_enum-of",
+            "direction": "true",
+            "save": "false",
+            "prune": "true",
+            "deleted": "true",
+            "updated": "true",
+            "ignored": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -957,7 +1094,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-02\"\n  ]\n}"
+        let bodyString = "{\n  \"children\": {\n    \"terms/_predicate_functional\": null,\n    \"terms/_predicate_requires\": {\"_name\": \"Custom data.\"},\n    \"terms/_type_string\": null\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -978,6 +1115,42 @@ class MyRequestController {
 }
 
 
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
 
 class MyRequestController {
     func sendRequest() {
@@ -994,10 +1167,21 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Add bridge (POST http://localhost:8529/_db/EUFGIS/dict/graph/add/bridge)
+           Set bridge (POST http://localhost:8529/_db/EUFGIS/dict/graph/set/bridge)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/add/bridge") else {return}
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/set/bridge") else {return}
+        let URLParams = [
+            "root": "terms/_predicate",
+            "bridged": "terms/_type",
+            "bridge": "_predicate_bridge-of",
+            "direction": "true",
+            "save": "false",
+            "inserted": "true",
+            "updated": "true",
+            "existing": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -1008,7 +1192,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-03\"\n  ]\n}"
+        let bodyString = "{\n  \"_name\": \"This is custom data.\"\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -1029,6 +1213,42 @@ class MyRequestController {
 }
 
 
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
 
 class MyRequestController {
     func sendRequest() {
@@ -1045,7 +1265,483 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Enumeration path flat list of keys  (GET http://localhost:8529/_db/EUFGIS/dict/enum/all/keys)
+           Delete bridge (POST http://localhost:8529/_db/EUFGIS/dict/graph/del/bridge)
+         */
+
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/del/bridge") else {return}
+        let URLParams = [
+            "root": "terms/iso_639_2",
+            "bridged": "terms/iso_639_2_srr",
+            "bridge": "_predicate_bridge-of",
+            "predicate": "_predicate_enum-of",
+            "direction": "true",
+            "save": "false",
+            "prune": "true",
+            "deleted": "true",
+            "updated": "true",
+            "ignored": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
+        var request = URLRequest(url: URL)
+        request.httpMethod = "POST"
+
+        // Headers
+
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
+        // Body
+
+        let bodyString = "{\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ],\n  \"data\": {\"_name\": \"Custom data.\"}\n}"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+
+        /* Start a new Task */
+        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+            if (error == nil) {
+                // Success
+                let statusCode = (response as! HTTPURLResponse).statusCode
+                print("URL Session Task Succeeded: HTTP \(statusCode)")
+            }
+            else {
+                // Failure
+                print("URL Session Task Failed: %@", error!.localizedDescription);
+            }
+        })
+        task.resume()
+        session.finishTasksAndInvalidate()
+    }
+}
+
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
+
+class MyRequestController {
+    func sendRequest() {
+        /* Configure session, choose between:
+           * defaultSessionConfiguration
+           * ephemeralSessionConfiguration
+           * backgroundSessionConfigurationWithIdentifier:
+         And set session-wide properties, such as: HTTPAdditionalHeaders,
+         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
+         */
+        let sessionConfig = URLSessionConfiguration.default
+
+        /* Create session, and optionally set a URLSessionDelegate. */
+        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+
+        /* Create the Request:
+           Set links (POST http://localhost:8529/_db/EUFGIS/dict/graph/set/link)
+         */
+
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/set/link") else {return}
+        let URLParams = [
+            "parent": "terms/chr_LeafAreaIndex",
+            "predicate": "_predicate_requires_indicator",
+            "direction": "false",
+            "descriptors": "true",
+            "save": "false",
+            "inserted": "true",
+            "updated": "true",
+            "existing": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
+        var request = URLRequest(url: URL)
+        request.httpMethod = "POST"
+
+        // Headers
+
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
+        // Body
+
+        let bodyString = "{\n  \"children\": {\n    \"terms/std_date\": {\"_name\": \"Custom data.\"}\n  }\n}"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+
+        /* Start a new Task */
+        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+            if (error == nil) {
+                // Success
+                let statusCode = (response as! HTTPURLResponse).statusCode
+                print("URL Session Task Succeeded: HTTP \(statusCode)")
+            }
+            else {
+                // Failure
+                print("URL Session Task Failed: %@", error!.localizedDescription);
+            }
+        })
+        task.resume()
+        session.finishTasksAndInvalidate()
+    }
+}
+
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
+
+class MyRequestController {
+    func sendRequest() {
+        /* Configure session, choose between:
+           * defaultSessionConfiguration
+           * ephemeralSessionConfiguration
+           * backgroundSessionConfigurationWithIdentifier:
+         And set session-wide properties, such as: HTTPAdditionalHeaders,
+         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
+         */
+        let sessionConfig = URLSessionConfiguration.default
+
+        /* Create session, and optionally set a URLSessionDelegate. */
+        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+
+        /* Create the Request:
+           Delete links (POST http://localhost:8529/_db/EUFGIS/dict/graph/del/link)
+         */
+
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/graph/del/link") else {return}
+        let URLParams = [
+            "parent": "terms/chr_LeafAreaIndex",
+            "predicate": "_predicate_requires_indicator",
+            "direction": "false",
+            "save": "false",
+            "deleted": "true",
+            "ignored": "true",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
+        var request = URLRequest(url: URL)
+        request.httpMethod = "POST"
+
+        // Headers
+
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
+        // Body
+
+        let bodyString = "[\n   \"terms/std_date\",\n   \"terms/_type\"\n]"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+
+        /* Start a new Task */
+        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+            if (error == nil) {
+                // Success
+                let statusCode = (response as! HTTPURLResponse).statusCode
+                print("URL Session Task Succeeded: HTTP \(statusCode)")
+            }
+            else {
+                // Failure
+                print("URL Session Task Failed: %@", error!.localizedDescription);
+            }
+        })
+        task.resume()
+        session.finishTasksAndInvalidate()
+    }
+}
+
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
+
+class MyRequestController {
+    func sendRequest() {
+        /* Configure session, choose between:
+           * defaultSessionConfiguration
+           * ephemeralSessionConfiguration
+           * backgroundSessionConfigurationWithIdentifier:
+         And set session-wide properties, such as: HTTPAdditionalHeaders,
+         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
+         */
+        let sessionConfig = URLSessionConfiguration.default
+
+        /* Create session, and optionally set a URLSessionDelegate. */
+        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+
+        /* Create the Request:
+           Get linked keys (POST http://localhost:8529/_db/EUFGIS/dict/link/keys)
+         */
+
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/link/keys") else {return}
+        let URLParams = [
+            "predicate": "_predicate_requires_indicator",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
+        var request = URLRequest(url: URL)
+        request.httpMethod = "POST"
+
+        // Headers
+
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
+        // Body
+
+        let bodyString = "[ \"chr_EffPopSize\" ]"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+
+        /* Start a new Task */
+        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+            if (error == nil) {
+                // Success
+                let statusCode = (response as! HTTPURLResponse).statusCode
+                print("URL Session Task Succeeded: HTTP \(statusCode)")
+            }
+            else {
+                // Failure
+                print("URL Session Task Failed: %@", error!.localizedDescription);
+            }
+        })
+        task.resume()
+        session.finishTasksAndInvalidate()
+    }
+}
+
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
+
+class MyRequestController {
+    func sendRequest() {
+        /* Configure session, choose between:
+           * defaultSessionConfiguration
+           * ephemeralSessionConfiguration
+           * backgroundSessionConfigurationWithIdentifier:
+         And set session-wide properties, such as: HTTPAdditionalHeaders,
+         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
+         */
+        let sessionConfig = URLSessionConfiguration.default
+
+        /* Create session, and optionally set a URLSessionDelegate. */
+        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+
+        /* Create the Request:
+           Get linked terms (POST http://localhost:8529/_db/EUFGIS/dict/link/terms)
+         */
+
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/link/terms") else {return}
+        let URLParams = [
+            "predicate": "_predicate_requires_indicator",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
+        var request = URLRequest(url: URL)
+        request.httpMethod = "POST"
+
+        // Headers
+
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
+        // Body
+
+        let bodyString = "[ \"chr_EffPopSize\" ]"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+
+        /* Start a new Task */
+        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+            if (error == nil) {
+                // Success
+                let statusCode = (response as! HTTPURLResponse).statusCode
+                print("URL Session Task Succeeded: HTTP \(statusCode)")
+            }
+            else {
+                // Failure
+                print("URL Session Task Failed: %@", error!.localizedDescription);
+            }
+        })
+        task.resume()
+        session.finishTasksAndInvalidate()
+    }
+}
+
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
+
+class MyRequestController {
+    func sendRequest() {
+        /* Configure session, choose between:
+           * defaultSessionConfiguration
+           * ephemeralSessionConfiguration
+           * backgroundSessionConfigurationWithIdentifier:
+         And set session-wide properties, such as: HTTPAdditionalHeaders,
+         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
+         */
+        let sessionConfig = URLSessionConfiguration.default
+
+        /* Create session, and optionally set a URLSessionDelegate. */
+        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+
+        /* Create the Request:
+           Flat list of keys (GET http://localhost:8529/_db/EUFGIS/dict/enum/all/keys)
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/enum/all/keys") else {return}
@@ -1130,12 +1826,13 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Enumeration path flat list of terms  (GET http://localhost:8529/_db/EUFGIS/dict/enum/all/terms)
+           Flat list of terms (GET http://localhost:8529/_db/EUFGIS/dict/enum/all/terms)
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/enum/all/terms") else {return}
         let URLParams = [
             "path": "_type",
+            "lang": "iso_639_3_eng",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
@@ -1215,12 +1912,12 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Enumeration keys tree  (GET http://localhost:8529/_db/EUFGIS/dict/enum/tree/keys)
+           Enumeration tree  (GET http://localhost:8529/_db/EUFGIS/dict/enum/tree/keys)
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/enum/tree/keys") else {return}
         let URLParams = [
-            "path": "_type",
+            "path": "_predicate",
             "levels": "10",
         ]
         URL = URL.appendingQueryParameters(URLParams)
@@ -1301,14 +1998,14 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Get enumeration key by code, field and path (GET http://localhost:8529/_db/EUFGIS/dict/enum/match/field/keys)
+           Match enumeration keys by code, field and path (GET http://localhost:8529/_db/EUFGIS/dict/enum/match/field/keys)
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/enum/match/field/keys") else {return}
         let URLParams = [
-            "field": "_aid",
+            "path": "iso_639_1",
             "code": "en",
-            "type": "iso_639_1",
+            "field": "_aid",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
@@ -1388,14 +2085,14 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Get enumeration term by code, field and path (GET http://localhost:8529/_db/EUFGIS/dict/enum/match/field/terms)
+           Get enumeration terms by code, field and path (GET http://localhost:8529/_db/EUFGIS/dict/enum/match/field/terms)
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/enum/match/field/terms") else {return}
         let URLParams = [
-            "field": "_aid",
+            "path": "iso_639_1",
             "code": "en",
-            "type": "iso_639_1",
+            "field": "_aid",
         ]
         URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
@@ -1562,178 +2259,6 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Enumeration path by local identifier  (GET http://localhost:8529/_db/EUFGIS/dict/enum/lid/path)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/enum/lid/path") else {return}
-        let URLParams = [
-            "path": "iso_639_1",
-            "code": "eng",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
-
-        // Headers
-
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Enumeration path by global identifier  (GET http://localhost:8529/_db/EUFGIS/dict/enum/gid/path)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/enum/gid/path") else {return}
-        let URLParams = [
-            "path": "iso_639_1",
-            "code": "iso_639_1_en",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
-
-        // Headers
-
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
            Check enumeration element global identifiers  (POST http://localhost:8529/_db/EUFGIS/dict/enum/check/keys)
          */
 
@@ -1747,17 +2272,13 @@ class MyRequestController {
 
         // Headers
 
-        request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
         request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
 
-        // JSON Body
+        // Body
 
-        let bodyObject: [String : Any] = [
-            "iso_639_1_en",
-            "iso_639_1_fr",
-            "UNKNOWN"
-        ]
-        request.httpBody = try! JSONSerialization.data(withJSONObject: bodyObject, options: [])
+        let bodyString = "[\n  \"iso_639_1_en\",\n  \"iso_639_1_fr\",\n  \"UNKNOWN\"\n]"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
         let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
@@ -1921,364 +2442,6 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Required descriptor keys (POST http://localhost:8529/_db/EUFGIS/dict/link/required/keys)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/link/required/keys") else {return}
-        var request = URLRequest(url: URL)
-        request.httpMethod = "POST"
-
-        // Headers
-
-        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        // Body
-
-        let bodyString = "[ \"chr_EffPopSize\" ]"
-        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Required descriptor records (POST http://localhost:8529/_db/EUFGIS/dict/link/required/terms)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/link/required/terms") else {return}
-        var request = URLRequest(url: URL)
-        request.httpMethod = "POST"
-
-        // Headers
-
-        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        // Body
-
-        let bodyString = "[ \"chr_EffPopSize\" ]"
-        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Descriptor enumeration flat list of keys  (GET http://localhost:8529/_db/EUFGIS/dict/descr/enum/key)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/descr/enum/key") else {return}
-        let URLParams = [
-            "key": "_type",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
-
-        // Headers
-
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Descriptor enumeration flat list of records  (GET http://localhost:8529/_db/EUFGIS/dict/descr/enum/term)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/descr/enum/term") else {return}
-        let URLParams = [
-            "key": "_type",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
-
-        // Headers
-
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Descriptor enumeration tree of keys  (GET http://localhost:8529/_db/EUFGIS/dict/descr/enum/tree)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/descr/enum/tree") else {return}
-        let URLParams = [
-            "key": "_type",
-            "levels": "10",
-        ]
-        URL = URL.appendingQueryParameters(URLParams)
-        var request = URLRequest(url: URL)
-        request.httpMethod = "GET"
-
-        // Headers
-
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-protocol URLQueryParameterStringConvertible {
-    var queryParameters: String {get}
-}
-
-extension Dictionary : URLQueryParameterStringConvertible {
-    /**
-     This computed property returns a query parameters string from the given NSDictionary. For
-     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
-     string will be @"day=Tuesday&month=January".
-     @return The computed parameters string.
-    */
-    var queryParameters: String {
-        var parts: [String] = []
-        for (key, value) in self {
-            let part = String(format: "%@=%@",
-                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
-                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
-            parts.append(part as String)
-        }
-        return parts.joined(separator: "&")
-    }
-    
-}
-
-extension URL {
-    /**
-     Creates a new URL by adding the given query parameters.
-     @param parametersDictionary The query parameter dictionary to add.
-     @return A new URL.
-    */
-    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
-        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
-        return URL(string: URLString)!
-    }
-}
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
            Descriptor categories  (POST http://localhost:8529/_db/EUFGIS/dict/descr/qual/keys)
          */
 
@@ -2330,65 +2493,21 @@ class MyRequestController {
         let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
 
         /* Create the Request:
-           Validate value by descriptor (POST http://localhost:8529/_db/EUFGIS/dict/check/descriptor)
+           Validate value by descriptor (POST http://localhost:8529/_db/EUFGIS/dict/check/descriptor/value)
          */
 
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/check/descriptor") else {return}
-        var request = URLRequest(url: URL)
-        request.httpMethod = "POST"
-
-        // Headers
-
-        request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
-
-        // JSON Body
-
-        let bodyObject: [String : Any] = [
-            "descriptor": "_type",
-            "value": "string",
-            "language": "all"
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/check/descriptor/value") else {return}
+        let URLParams = [
+            "descriptor": "_term",
+            "cache": "true",
+            "miss": "true",
+            "terms": "true",
+            "types": "false",
+            "defns": "false",
+            "resolve": "true",
+            "resfld": "_aid",
         ]
-        request.httpBody = try! JSONSerialization.data(withJSONObject: bodyObject, options: [])
-
-        /* Start a new Task */
-        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            if (error == nil) {
-                // Success
-                let statusCode = (response as! HTTPURLResponse).statusCode
-                print("URL Session Task Succeeded: HTTP \(statusCode)")
-            }
-            else {
-                // Failure
-                print("URL Session Task Failed: %@", error!.localizedDescription);
-            }
-        })
-        task.resume()
-        session.finishTasksAndInvalidate()
-    }
-}
-
-
-
-class MyRequestController {
-    func sendRequest() {
-        /* Configure session, choose between:
-           * defaultSessionConfiguration
-           * ephemeralSessionConfiguration
-           * backgroundSessionConfigurationWithIdentifier:
-         And set session-wide properties, such as: HTTPAdditionalHeaders,
-         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
-         */
-        let sessionConfig = URLSessionConfiguration.default
-
-        /* Create session, and optionally set a URLSessionDelegate. */
-        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
-
-        /* Create the Request:
-           Validate value by data definition (POST http://localhost:8529/_db/EUFGIS/dict/check/definition)
-         */
-
-        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/check/definition") else {return}
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -2399,7 +2518,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"definition\": {\n    \"_class\": \"_class_category\",\n    \"_scalar\": {\n      \"_type\": \"_type_string_enum\",\n      \"_kind\": [\n        \"_type\"\n      ]\n    }\n  },\n  \"value\": \"string\",\n  \"language\": \"all\"\n}"
+        let bodyString = "{\n    \"_key\": \"TEST-03\",\n    \"_code\": {\n        \"_lid\": \"TEST-03\",\n        \"_gid\": \"TEST-03\",\n        \"_aid\": [ \"TEST-03\" ],\n        \"_name\": \"My test object descriptor\"\n    },\n    \"_info\": {\n        \"_title\": {\"en\": \"Test descriptor.\"}\n    },\n    \"_data\": {\n        \"_scalar\": {\n            \"_type\": \"object\",\n            \"_kind\": [\"TEST-03\"]\n        }\n    }\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -2419,6 +2538,140 @@ class MyRequestController {
     }
 }
 
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
+
+
+class MyRequestController {
+    func sendRequest() {
+        /* Configure session, choose between:
+           * defaultSessionConfiguration
+           * ephemeralSessionConfiguration
+           * backgroundSessionConfigurationWithIdentifier:
+         And set session-wide properties, such as: HTTPAdditionalHeaders,
+         HTTPCookieAcceptPolicy, requestCachePolicy or timeoutIntervalForRequest.
+         */
+        let sessionConfig = URLSessionConfiguration.default
+
+        /* Create session, and optionally set a URLSessionDelegate. */
+        let session = URLSession(configuration: sessionConfig, delegate: nil, delegateQueue: nil)
+
+        /* Create the Request:
+           Validate values by descriptor (POST http://localhost:8529/_db/EUFGIS/dict/check/descriptor/values)
+         */
+
+        guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/check/descriptor/values") else {return}
+        let URLParams = [
+            "descriptor": "_type",
+            "cache": "true",
+            "miss": "true",
+            "terms": "true",
+            "types": "false",
+            "defns": "false",
+            "resolve": "true",
+            "resfld": "_aid",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
+        var request = URLRequest(url: URL)
+        request.httpMethod = "POST"
+
+        // Headers
+
+        request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.addValue("FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb", forHTTPHeaderField: "Cookie")
+
+        // Body
+
+        let bodyString = "[\n  \"_type_string_enum\",\n  12,\n  \"object\"\n]"
+        request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
+
+        /* Start a new Task */
+        let task = session.dataTask(with: request, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
+            if (error == nil) {
+                // Success
+                let statusCode = (response as! HTTPURLResponse).statusCode
+                print("URL Session Task Succeeded: HTTP \(statusCode)")
+            }
+            else {
+                // Failure
+                print("URL Session Task Failed: %@", error!.localizedDescription);
+            }
+        })
+        task.resume()
+        session.finishTasksAndInvalidate()
+    }
+}
+
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
 
 
 class MyRequestController {
@@ -2440,6 +2693,16 @@ class MyRequestController {
          */
 
         guard var URL = URL(string: "http://localhost:8529/_db/EUFGIS/dict/check/object") else {return}
+        let URLParams = [
+            "cache": "true",
+            "miss": "true",
+            "terms": "false",
+            "types": "false",
+            "defns": "false",
+            "resolve": "true",
+            "resfld": "_aid",
+        ]
+        URL = URL.appendingQueryParameters(URLParams)
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
@@ -2450,7 +2713,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"value\": {\n    \"_code\": {\n      \"_lid\": \"test-01\",\n      \"_gid\": \"test-01\",\n      \"_aid\": [\n        \"test-01\"\n      ]\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    },\n    \"custom_value\": 42\n  },\n  \"language\": \"iso_639_3_eng\"\n}"
+        let bodyString = "{\n  \"_info\": {\n    \"_title\": {\n      \"en\": \"Test term 1\"\n    }\n  },\n  \"_data\": {\n    \"_scalar\": {\n      \"_type\": \"object\"\n    }\n  },\n  \"language\": \"eng\",\n  \"custom_value\": 42\n}"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */
@@ -2470,6 +2733,42 @@ class MyRequestController {
     }
 }
 
+
+protocol URLQueryParameterStringConvertible {
+    var queryParameters: String {get}
+}
+
+extension Dictionary : URLQueryParameterStringConvertible {
+    /**
+     This computed property returns a query parameters string from the given NSDictionary. For
+     example, if the input is @{@"day":@"Tuesday", @"month":@"January"}, the output
+     string will be @"day=Tuesday&month=January".
+     @return The computed parameters string.
+    */
+    var queryParameters: String {
+        var parts: [String] = []
+        for (key, value) in self {
+            let part = String(format: "%@=%@",
+                String(describing: key).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+            parts.append(part as String)
+        }
+        return parts.joined(separator: "&")
+    }
+    
+}
+
+extension URL {
+    /**
+     Creates a new URL by adding the given query parameters.
+     @param parametersDictionary The query parameter dictionary to add.
+     @return A new URL.
+    */
+    func appendingQueryParameters(_ parametersDictionary : Dictionary<String, String>) -> URL {
+        let URLString : String = String(format: "%@?%@", self.absoluteString, parametersDictionary.queryParameters)
+        return URL(string: URLString)!
+    }
+}
 
 
 class MyRequestController {
@@ -2501,7 +2800,7 @@ class MyRequestController {
 
         // Body
 
-        let bodyString = "{\n  \"value\": [\n    {\n      \"_code\": {\n        \"_lid\": \"test-01\",\n        \"_gid\": \"test-01\",\n        \"_aid\": [\n          \"test-01\"\n        ]\n      },\n      \"_info\": {\n        \"_title\": {\n          \"iso_639_3_eng\": \"Test term 1\"\n        }\n      },\n      \"_data\": {\n        \"_scalar\": {\n          \"_type\": \"_type_object\"\n        }\n      }\n    },\n    {\n      \"_code\": {\n        \"_gid\": \"test-01\",\n        \"_aid\": [\n          \"test-01\"\n        ]\n      }\n    },\n    {\n      \"_type\": \"UNKNOWN\"\n    },\n    {\n      \"CUSTOM\": \"VALUE\"\n    },\n    {\n      \"_type\": \"string\"\n    }\n  ],\n  \"language\": \"iso_639_3_eng\"\n}"
+        let bodyString = "[\n    {\n        \"_info\": {\n            \"_title\": {\"iso_639_3_eng\": \"Test term 1\"}\n        },\n        \"_data\": {\n            \"_scalar\": {\"_type\": \"_type_object\"}\n        },\n        \"language\": \"eng\",\n        \"custom_value\": 42\n    },\n    {\n        \"_info\": {\n            \"_title\": {\"iso_639_3_eng\": \"Test term 2\"}\n        },\n        \"_data\": {\n            \"_scalar\": {\"_type\": \"_type_string\"}\n        }\n    }\n]"
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
 
         /* Start a new Task */

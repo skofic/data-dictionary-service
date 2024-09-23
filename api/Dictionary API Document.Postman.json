@@ -12,7 +12,7 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert?terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=false",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert?terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=true",
               "query": [
                 {
                   "key": "terms",
@@ -46,7 +46,7 @@
                 },
                 {
                   "key": "save",
-                  "value": "false",
+                  "value": "true",
                   "disabled": false,
                   "description": "Flag to determine whether to save the term or not.\nThis option can be used when inserting or updating terms: if the flag is set, if all the required validations tests pass, the term will be either inserted or updated. If the flag is not set, you will get the status of the validation provess. This flag is useful if you just need to check if the term is valid, or if you want to see if the updated term structure before persisting the object to the data dictionary."
                 }
@@ -58,7 +58,7 @@
               "port": null,
               "path": null
             },
-            "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term, or to check if the provided term would be accepted.\n\nThe service expects the term object in the body. It is required to have at least the `_code` and `_info` data blocks. The `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` property. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value: you will have to provide by default the *entry* in the *default language* (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section should be included depending on what type of term you are creating.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The provided term with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The provided term with the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The provided term.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
+            "description": "Use this service to create a new term.\n\n*In order to create a term, the current user must have the `dict` role*.\n\nThis service can be used to create a new term, or to check if the provided term would be accepted.\n\nThe service expects the term object in the body. It is required to have at least the `_code` and `_info` data blocks. The `_code` block is required to have at least the `_lid`. The global identifier will be set, and overwritten, by the service. The list of official identifiers will also be set if missing.\n\nThe `_info` block requires the `_title` property. Remember that all elements, except `_provider`, are dictionaries with the *language code* as the dictionary key and the text as the dictionary value: you will have to provide by default the *entry* in the *default language* (`language` *entry in the service settings*).\n\nThe `_data` section and the `_rule` section should be included depending on what type of term you are creating.\n\nThe document key will be automatically set and overwritten with the value of the global identifier.\n\nThere are a number of option parameters that govern the service, these are described in the URL parameters section.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the inserted term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `value`: The provided term with the global identifier and document key set.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The provided term with the resolved fields, and the document `_id` and `_rev` properties if the `save` parameter was *set*.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The provided term.\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
             "header": [],
             "body": {
               "mode": "raw",
@@ -79,7 +79,7 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert/many?terms=true&types=false&defns=false&resolve=true&resfld=_aid&save=false",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/insert/many?terms=true&types=false&defns=false&resolve=true&resfld=_aid&save=true",
               "query": [
                 {
                   "key": "terms",
@@ -113,7 +113,7 @@
                 },
                 {
                   "key": "save",
-                  "value": "false",
+                  "value": "true",
                   "disabled": false,
                   "description": "Flag to determine whether to save the term or not.\nThis option can be used when inserting or updating terms: if the flag is set, if all the required validations tests pass, the term will be either inserted or updated. If the flag is not set, you will get the status of the validation provess. This flag is useful if you just need to check if the term is valid, or if you want to see if the updated term structure before persisting the object to the data dictionary."
                 }
@@ -146,11 +146,11 @@
           "request": {
             "method": "PATCH",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?key=_set_scalar&terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=false",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?key=test-01&terms=true&types=false&defns=false&resolve=true&resfld=_lid&save=true",
               "query": [
                 {
                   "key": "key",
-                  "value": "_set_scalar",
+                  "value": "test-01",
                   "disabled": false,
                   "description": "Term global identifier."
                 },
@@ -186,7 +186,7 @@
                 },
                 {
                   "key": "save",
-                  "value": "false",
+                  "value": "true",
                   "disabled": false,
                   "description": "Flag to determine whether to save the term or not.\nThis option can be used when inserting or updating terms: if the flag is set, if all the required validations tests pass, the term will be either inserted or updated. If the flag is not set, you will get the status of the validation process. This flag is useful if you just need to check if the term is valid, or if you want to see if the updated term structure before persisting the object to the data dictionary."
                 }
@@ -199,18 +199,11 @@
               "path": null
             },
             "description": "Use this service to update a term.\n\n*In order to update terms, the current user must have the `dict` role*.\n\nThis service can be used to update an existing term. The body consists of an object with two properties: one contains the *term updates*, the other contains the *list of path keys* to the fields to be updated.\n\nIf the service is successful [`200`] it will return a value depending whether the `save` parameter was *set* or not:\n\n- `save` was *set*: The service will return the updated term including the `_id` and the `_rev` properties.\n- `save` was *not set*: The service will return an object structured as follows:\n    - `status`: The status of the operation: `0` for success.\n    - `term`: The updated term.\n\nIf the `resolve` parameter was *set* and at least one value in the provided term was updated, the service will return an HTTP status of [`202`] and object with the following properties:\n\n- `status`: The validation status which is one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code, that will be zero.\n      - `message`: The status message.\n    - `changes`: An object containing the list of resolved fields.\n- `value`: The updated term with the resolved fields.\n\nIf the validation failed, the service will return a [`400`] status and an object with the following properties:\n\n- `status`: The validation status which is minus one.\n- `report`: The status report comprised of the following elements:\n    - `status`: The status report:\n      - `status`: The status code.\n      - `message`: The status message describing the error.\n    - `descriptor`: The name of the property that contains the error.\n    - `value`: The value of the incorrect property\n- `value`: The updated term.\n\nThe service will also assert that the updates, although formally valid, will not reduce the term's options, excluding eventual data associated with the term. In that case the service will fail with a [`400`] HTTP status and return an object structured as follows:\n\n- `status`: The service status message indicating the error is not a validation error.\n- `report`: The status report comprised of the following elements:\n    - `message`: The status message describing the error.\n    - `data`: Original and updated data which triggered the error.\n      - *property name*: The name of the property that triggered the error.\n      - `old`: The original value of the latter property.\n      - `new`: The updated value of the latter property.\n\n\nOther status codes are the following:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `409`: **Term exists**: the service will return this code if the provided term already exists.\n- `500`: For other types of error.\n",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "disabled": false,
-                "description": null
-              }
-            ],
+            "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\"updates\":{\"_code\":{\"_aid\":[\"iso\"]},\"_data\":{\"_class\":\"identifier\"}},\"references\":[\"_code._aid\",\"_data._class\"]}"
+              "raw": "{\n  \"updates\": {\n    \"_code\": {\n      \"_aid\": [\n        \"test_one\"\n      ]\n    },\n    \"_info\": {\n      \"_title\": { \"iso_639_3_ita\": \"Termine di prova uno.\" }\n    }\n  },\n  \"references\": [\n    \"_code._aid\",\n    \"_info._title.iso_639_3_ita\"\n  ]\n}"
             },
             "auth": null
           },
@@ -269,18 +262,11 @@
               "path": null
             },
             "description": "Use this service to delete a list of terms.\n\n*In order to delete terms, the current user must have the `dict` role*.\n\nThis service can be used to delete an list of terms.\n\nThis service can be used to remove the terms matching the provided list of global identifiers in the body. The value should correspond to the `_gid` property in the *code section*, which corresponds to the record `_key`.\n\n**Deleting a term from the data dictionary can have serious consequences, from breaking the integrity of the data dictionary to removing metadata referencing data in other collections or databases. So only use this service if you know what you are doing and you are absolutely sure you want to do it.**\n\n**One safe way to try the service is to create a new term and then delete it.**\n\nIf the service is successful it will return the number of deleted terms and the number of ignored keys [`200`].\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "disabled": false,
-                "description": null
-              }
-            ],
+            "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "[\"test-01\",\"test-02\",\"INKNOWN TERM\"]"
+              "raw": "[\n  \"test-01\",\n  \"test-02\",\n  \"INKNOWN TERM\"\n]"
             },
             "auth": null
           },
@@ -346,7 +332,7 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/many?lang=iso_639_3_eng",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/dict?lang=iso_639_3_eng",
               "query": [
                 {
                   "key": "lang",
@@ -357,7 +343,7 @@
               ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/many"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/dict"
               ],
               "port": null,
               "path": null
@@ -367,7 +353,7 @@
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "[ \"_type\", \"_code\", \"UNKNOWN\" ]"
+              "raw": "[\n  \"_type\",\n  \"_code\",\n  \"UNKNOWN\"\n]"
             },
             "auth": null
           },
@@ -383,11 +369,11 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/key",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/query/keys",
               "query": null,
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/key"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/query/keys"
               ],
               "port": null,
               "path": null
@@ -413,7 +399,7 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms?lang=iso_639_3_eng",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/query/terms?lang=iso_639_3_eng",
               "query": [
                 {
                   "key": "lang",
@@ -424,7 +410,7 @@
               ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/terms/query/terms"
               ],
               "port": null,
               "path": null
@@ -453,25 +439,74 @@
       "name": "GRAPHS",
       "item": [
         {
-          "name": "Add enumerations",
+          "name": "Set edges",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/enum",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/edge?root=terms/_type&parent=terms/_type_string&predicate=_predicate_enum-of&direction=true&save=false&inserted=true&updated=true&existing=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "parent",
+                  "value": "terms/_type_string",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the parent to which the child nodes point to, or that points to the child nodes."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "inserted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of inserted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "updated",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of updated edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "existing",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of existing edges, if not set, the service will only return operation statistics."
+                }
+              ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/enum"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/edge"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to add elements to an enumeration.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a set of *child enumerations* to a *parent node* in a specific *graph path*.\n\n*Enumerations* are *controlled vocabularies* that can have several *nested levels*.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the enumeration type, root or path.\n- `parent`: The global identifier of the term that represents the parent of the enumeration elements.\n- `items`: An array of term global identifiers, each representing an enumeration.\n\nThe `root` represents the type or name of the graph.\nThe `parent` represents a node in the graph, at any level, to which the provided enumeration options belong.\nThe `items` represent the identifiers of the terms that represent valid enumeration options for the parent node.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nGraphs are networks of nodes connected to each other by edges. An edge is uniquely identified by its subject-predicate-object relationship. This means that many paths can traverse the same edge: these paths are identified by the graph root node, and the functional predicate characterising its path.\n\nPredicates are of three types: functional, container and bridge. Functional predicates determine what the current graph represents: a controlled vocabulary, a data structure type, etc. Nodes connected with such predicates are valid choices for that predicate. Container predicates are used to group child nodes under a common category that has no function, other\nthan to collect a set of choices. Bridge predicates are used to allow another graph (different root) to share the structure of the current graph. Edges also feature an object property that holds data that can be used during traversals.\n\nThis service can be used to create edges with functional predicates. The service expects the graph root node reference, which identifies the graph path, the parent and children node references to be connected, the functional predicate, the list of section predicates expected during traversals, the custom data associated with the edge and a set of flags governing the operation.\n\nThe request body should be provided with an object containing the following elements:\n\n- `children`: A key/value dictionary in which the key represents the child node document handle and the value represents custom data associated with the corresponding edge.\n  - `sections`: Graphs have predicates that indicate the type of graph: enumeration, field, etc. There are other predicates, however, whose goal is to link nodes which\nwill not have the function of the main predicate. The provided default values indicate sections, that represent display or category nodes used for subdividing child nodes, and bridges, which allow one node to connect to another node through a bridge node.\n\nThe values of the children dictionary can be the following:\n\n- `object`: This represents valid data for the edge, the provided object will be merged with the existing one. If you set a provided property value to null, if the property exists in the edge data, the service will delete that property from the existing data. If you want to ignore the value, pass an empty object.\n- `null`: If you provide this value the whole custom data container will be reset to an empty object.\n\nIf the edge does not exist, the provided data will be set in the edge, except for the properties that have a null value. If the edge exists, the parameters of the provided data will replace eventual existing matching parameters, or will be erased, if the value is null.\n\nThe service will do the following:\n\n- Assert that the parent node is connected to the root node.\n- If the subject-predicate-object combination does not exist, it will create an edge with the combination of the provided parent, the provided predicate and the current child, for the provided root. If custom data was provided, it will be set, or an empty object will be set.\n- If the subject-predicate-object combination exists:\n    - If the root is not among the paths it will be added, and the eventual custom data will replace or reset existing data.\n    - If the root is in the list of paths, the service will only handle the edge data.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `inserted`: The number of inserted edges.\n    - `updated`: The number of updated edges.\n    - `existing`: The number of ignored existing edges.\n  - `inserted`: The list of inserted edges, if the inserted parameter was set.\n  - `updated`: The list of updated edger, if the updated \\ parameter was set.\n  - `existing`: The list of existing edges, if the existing parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-01\",\n    \"test-02\"\n  ]\n}"
+              "raw": "{\n  \"children\": {\n    \"terms/_predicate_enum-of\": {\"_name\": \"Enumeration\"},\n    \"terms/_predicate_field-of\": {\"_name\": \"Field.\"},\n    \"terms/_type_string_enum\": {\"_title\": {\"iso_639_3_eng\": \"This is custom data.\"}},\n    \"terms/_type_string_key\": null\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
             },
             "auth": null
           },
@@ -483,25 +518,80 @@
           "response": []
         },
         {
-          "name": "Add fields",
+          "name": "Delete edges",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/field",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/edge?root=terms/_type&parent=terms/_type&predicate=_predicate_enum-of&direction=true&save=false&prune=false&deleted=true&updated=true&ignored=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "parent",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the parent to which the child nodes point to, or that points to the child nodes."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "prune",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "This parameter is used when deleting edges: if set, after deleting the edges connecting parent to chindren, all edges from children to leaf nodes will also be deleted, preventing dangling relationships; if not set, branches originating from child nodes will be left intact, which can be useful if you want to attach the children to another parent."
+                },
+                {
+                  "key": "deleted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of deleted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "updated",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of updated edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "ignored",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of existing edges, if not set, the service will only return operation statistics."
+                }
+              ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/field"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/edge"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to to add fields to a form.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a set of *child fields* to a *parent node* in a specific *graph path*.\n\nA *graph* of *fields* represents a *form* in which you may have *sections* containing a set of *descriptors* representing *data input fields*.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the form.\n- `parent`: The global identifier of the term that represents either the form itself, or the container section for the list of fields.\n- `items`: A set of term global identifiers, *each representing a descriptor*, that represent the data input fields.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nGraphs are networks of nodes connected to each other by edges. An edge is uniquely identified by its subject-predicate-object relationship. This means that many paths can traverse the same edge: these paths are identified by the graph root node, and the functional predicate characterising its path.\n\nPredicates are of three types: functional, container and bridge. Functional predicates determine what the current graph represents: a controlled vocabulary, a data structure type, etc. Nodes connected with such predicates are valid choices for that predicate. Container predicates are used to group child nodes under a common category that has no function, other\nthan to collect a set of choices. Bridge predicates are used to allow another graph (different root) to share the structure of the current graph. Edges also feature an object property that holds data that can be used during traversals.\n\nThis service can be used to delete edges with functional predicates. The service expects the graph root node reference, which identifies the graph path, the parent and children node references to be connected, the functional predicate, the list of section predicates expected during traversals, the custom data associated with the edge and a set of flags governing the operation.\n\nThe request body should be provided with an object containing the following elements:\n\n- `children`: A key/value dictionary in which the key represents the child nodedocument handle and the value represents custom data associated with the corresponding edge.\n- `sections`: Graphs have predicates that indicate the type of graph: enumeration, field, etc. There are other predicates, however, whose goal is to link nodes which will not have the function of the main predicate. The provided default values indicate sections, that represent display or category nodes used for subdividing child nodes, and bridges, which allow one node to connect to another node through a bridge node.\n\nThe values of the children dictionary can be the following:\n\n- `object`: This represents valid data for the edge, the provided object will be merged with the existing one. If you set a provided property value to null, if the property exists in the edge data, the service will delete that property from the existing data. If you want to ignore the value, pass an empty object.\n- `null`: If you provide this value the whole custom data container will be reset to an empty object.\n\nIf the edge exists, the provided root is removed from the edge path: if there are elements left in the path, the parameters of the provided data will replace eventual existing matching parameters, or will be erased, if the value is null.\n\nThe service will do the following:\n\n- Locate the edge containing the current child pointing to the parent.\n- Remove the current root from the list of roots in the edge path:\n    - If the path becomes empty:\n      - Delete the edge.\n      - If the prune parameter is set:\n        - Recurse the operation for all branches stemming from the child node.\n    - If the path is not empty:\n      - Ignore, reset or set the edge data.\n      - Update the edge.\n\n*Note: this service will only remove the relationships, the nodes will not be deleted. It is the responsibility of the caller to manage orphans. Eventual root bridge predicates might be left dangling: this is intended, since one could connect these dangling relationships after the deletions. Finally, edges that do not feature the provided root will be ignored, meaning that custom edge data will be left untouched: this is intended, since custom edge data is implicitly connected to the graph root.*\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `inserted`: The number of inserted edges.\n    - `updated`: The number of updated edges.\n    - `existing`: The number of ignored existing edges.\n  - `inserted`: The list of inserted edges, if the inserted parameter was set.\n  - `updated`: The list of updated edger, if the updated \\ parameter was set.\n  - `existing`: The list of existing edges, if the existing parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"count\",\n    \"species\"\n  ]\n}"
+              "raw": "{\n  \"children\": {\n    \"terms/_type_string\": {\"_name\": \"Pippo\"},\n    \"terms/_type_string_enum\": null,\n    \"terms/_type_number\": null\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
             },
             "auth": null
           },
@@ -513,25 +603,80 @@
           "response": []
         },
         {
-          "name": "Add properties",
+          "name": "Set containers",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/property",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/container?root=terms/_type&parent=terms/_type_string&container=_predicate_section-of&predicate=_predicate_enum-of&direction=true&save=false&inserted=true&updated=true&existing=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "parent",
+                  "value": "terms/_type_string",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the parent to which the child nodes point to, or that points to the child nodes."
+                },
+                {
+                  "key": "container",
+                  "value": "_predicate_section-of",
+                  "disabled": false,
+                  "description": "This parameter represents the container predicate to be used in the current operation. A container predicate does not have any specific function, except that of serving as a container or common category for a set of children. Here is an example:\n- _predicate_section-of: The target node is a section, not a functional element."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "inserted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of inserted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "updated",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of updated edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "existing",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of existing edges, if not set, the service will only return operation statistics."
+                }
+              ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/property"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/container"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to to add properties to a structure type.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a *set of properties* to an *object structure type*.\n\n*Object structures* are represented by a *term* that *holds* the *list of restrictions and constraints* the *structure should obey*. This term represents the *object type*. The graph is a *one level tree* where the *children* are all the *properties* that the object type *parent* might *feature*. This list is only indicative, it should be used as a suggestion of which properties to set in the object. The constraints will be listed in the rule (`_rule`) section of the object type term. Note that, by design, an object type can only have *one level*, which means that if an object contains another object, there must be a type at both levels.\n\nThe service expects the following parameters in the request body:\n\n- `parent`: The global identifier of the object type term; *must be a descriptor of type object*, `_type_object`.\n- `items`: An array of term global identifiers, *each representing a descriptor*, that represent the data input fields.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nGraphs are networks of nodes connected to each other by edges. An edge is uniquely identified by its subject-predicate-object relationship. This means that many paths can traverse the same edge: these paths are identified by the graph root node, and the functional predicate characterising its path.\n\nPredicates are of three types: functional, container and bridge. Functional predicates determine what the current graph represents: a controlled vocabulary, a data structure type, etc. Nodes connected with such predicates are valid choices for that predicate. Container predicates are used to group child nodes under a common category that has no function, other\nthan to collect a set of choices. Bridge predicates are used to allow another graph (different root) to share the structure of the current graph. Edges also feature an object property that holds data that can be used during traversals.\n\nThis service can be used to create edges with container predicates. The service expects the graph root node reference, which identifies the graph path, the parent and children node references to be connected, the functional predicate which identifies the functional paths of the graph, the container predicate to be set, the list of section and bridge predicates expected during traversals, the custom data associated with the edge and a set of flags governing the operation.\n\nThe request body should be provided with an object containing the following elements:\n\n- `children`: A key/value dictionary in which the key represents the child node document handle and the value represents custom data associated with the corresponding edge.\n- `sections`: Graphs have predicates that indicate the type of graph: enumeration, field, etc. There are other predicates, however, whose goal is to link nodes which\nwill not have the function of the main predicate. The provided default values indicate sections, that represent display or category nodes used for subdividing child nodes, and bridges, which allow one node to connect to another node through a bridge node.\n\nThe values of the children dictionary can be the following:\n\n- `object`: This represents valid data for the edge, the provided object will be merged with the existing one. If you set a provided property value to null, if the property exists in the edge data, the service will delete that property from the existing data. If you want to ignore the value, pass an empty object.\n- `null`: If you provide this value the whole custom data container will be reset to an empty object.\n\nIf the edge does not exist, the provided data will be set in the edge, except for the properties that have a null value. If the edge exists, the parameters of the provided data will replace eventual existing matching parameters, or will be erased, if the value is null.\n\nThe service will do the following:\n\n- Assert that the parent node is connected to the root node.\n- If the subject-predicate-object combination does not exist, it will create an edge with the combination of the provided parent, the container predicate and the current child, for the provided root. If custom data was provided, it will be set, or an empty object will be set.\n- If the subject-predicate-object combination exists:\n    - If the root is not among the paths it will be added, and the eventual custom data will replace or reset existing data.\n    - If the root is in the list of paths, the service will only handle the edge data.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `inserted`: The number of inserted edges.\n    - `updated`: The number of updated edges.\n    - `existing`: The number of ignored existing edges.\n  - `inserted`: The list of inserted edges, if the inserted parameter was set.\n  - `updated`: The list of updated edger, if the updated \\ parameter was set.\n  - `existing`: The list of existing edges, if the existing parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"parent\": \"test-02\",\n  \"items\": [\n    \"count\",\n    \"species\"\n  ]\n}"
+              "raw": "{\n  \"children\": {\n    \"terms/_type_string_enum\": {\"_name\": \"Enumeration type.\"}\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
             },
             "auth": null
           },
@@ -543,25 +688,86 @@
           "response": []
         },
         {
-          "name": "Add sections",
+          "name": "Delete containers",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/section",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/container?root=terms/_predicate&parent=terms/_predicate&container=_predicate_section-of&predicate=_predicate_enum-of&direction=true&save=false&prune=true&deleted=true&updated=true&ignored=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_predicate",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "parent",
+                  "value": "terms/_predicate",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the parent to which the child nodes point to, or that points to the child nodes."
+                },
+                {
+                  "key": "container",
+                  "value": "_predicate_section-of",
+                  "disabled": false,
+                  "description": "This parameter represents the container predicate to be used in the current operation. A container predicate does not have any specific function, except that of serving as a container or common category for a set of children. Here is an example:\n- _predicate_section-of: The target node is a section, not a functional element.\nDefault value : _predicate_section-of"
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "prune",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter is used when deleting edges: if set, after deleting the edges connecting parent to chindren, all edges from children to leaf nodes will also be deleted, preventing dangling relationships; if not set, branches originating from child nodes will be left intact, which can be useful if you want to attach the children to another parent."
+                },
+                {
+                  "key": "deleted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of deleted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "updated",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of updated edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "ignored",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of existing edges, if not set, the service will only return operation statistics."
+                }
+              ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/section"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/container"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to to add sections to an enumeration.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a set of *child sections* to a *parent node* in a specific *graph path*. The child elements will be considered *sections of the parent node within the root graph*.\n\n*Sections* are used to create *non-functional groups of elements* that can be used as subdivisions *for display purposes*, such as *sections* in a list of child enumeration elements, or sections in a form. *This means that you should not add sections to a data structure*.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the enumeration type, root or path.\n- `parent`: The global identifier of the term that represents the parent of the section elements.\n- `items`: An array of term global identifiers, each representing a section.\n\nThe `root` represents the type or name of the graph.\nThe `parent` represents a node in the graph, at any level, to which the provided sections belong.\nThe `items` represent the identifiers of the terms that represent sections of the parent node.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nGraphs are networks of nodes connected to each other by edges. An edge is uniquely identified by its subject-predicate-object relationship. This means that many paths can traverse the same edge: these paths are identified by the graph root node, and the functional predicate characterising its path.\n\nPredicates are of three types: functional, container and bridge. Functional predicates determine what the current graph represents: a controlled vocabulary, a data structure type, etc. Nodes connected with such predicates are valid choices for that predicate. Container predicates are used to group child nodes under a common category that has no function, other\nthan to collect a set of choices. Bridge predicates are used to allow another graph (different root) to share the structure of the current graph. Edges also feature an object property that holds data that can be used during traversals.\n\nThis service can be used to delete edges with container predicates. The service expects the graph root node reference, which identifies the graph path, the parent and children node references to be connected, the functional predicate which identifies the functional paths of the graph, the container predicate to be matched, the list of section and bridge predicates expected during traversals, the custom data associated with the edge and a set of flags governing the operation.\n\nThe request body should be provided with an object containing the following elements:\n\n- `children`: A key/value dictionary in which the key represents the child node document handle and the value represents custom data associated with the corresponding edge.\n- `sections`: Graphs have predicates that indicate the type of graph: enumeration, field, etc. There are other predicates, however, whose goal is to link nodes which will not have the function of the main predicate. The provided default values indicate sections, that represent display or category nodes used for subdividing child nodes, and bridges, which allow one node to connect to another node through a bridge node.\n\nThe values of the children dictionary can be the following:\n\n- `object`: This represents valid data for the edge, the provided object will be merged with the existing one. If you set a provided property value to null, if the property exists in the edge data, the service will delete that property from the existing data. If you want to ignore the value, pass an empty object.\n- `null`: If you provide this value the whole custom data container will be reset to an empty object.\n\nIf the edge exists, the provided root is removed from the edge path: if there are elements left in the path, the parameters of the provided data will replace eventual existing matching parameters, or will be erased, if the value is null.\n\nThe service will do the following:\n\n- Locate the edge containing the current child pointing to the parent.\n- Remove the current root from the list of roots in the edge path:\n    - If the path becomes empty:\n      - Delete the edge.\n      - If the prune parameter is set:\n        - Recurse the operation for all branches stemming from the child node. *Note that the predicates used to traverse the graph will be the provided functional predicate and list of section predicates*.\n    - If the path is not empty:\n      - Ignore, reset or set the edge data.\n      - Update the edge.\n\n*Note: this service will only remove the relationships, the nodes will not be deleted. It is the responsibility of the caller to manage orphans. Eventual root bridge predicates might be left dangling: this is intended, since one could connect these dangling relationships after the deletions. Finally, edges that do not feature the provided root will be ignored, meaning that custom edge data will be left untouched: this is intended, since custom edge data is implicitly connected to the graph root.*\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `inserted`: The number of inserted edges.\n    - `updated`: The number of updated edges.\n    - `existing`: The number of ignored existing edges.\n  - `inserted`: The list of inserted edges, if the inserted parameter was set.\n  - `updated`: The list of updated edger, if the updated \\ parameter was set.\n  - `existing`: The list of existing edges, if the existing parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-02\"\n  ]\n}"
+              "raw": "{\n  \"children\": {\n    \"terms/_predicate_functional\": null,\n    \"terms/_predicate_requires\": {\"_name\": \"Custom data.\"},\n    \"terms/_type_string\": null\n  },\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ]\n}"
             },
             "auth": null
           },
@@ -573,25 +779,392 @@
           "response": []
         },
         {
-          "name": "Add bridge",
+          "name": "Set bridge",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/bridge",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/bridge?root=terms/_predicate&bridged=terms/_type&bridge=_predicate_bridge-of&direction=true&save=false&inserted=true&updated=true&existing=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_predicate",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "bridged",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that will become the bridge for the root node. If node A wants to use node B's graph, node A will be the root and node B will be this node."
+                },
+                {
+                  "key": "bridge",
+                  "value": "_predicate_bridge-of",
+                  "disabled": false,
+                  "description": "This parameter represents the bridge predicate to be used in the current operation. A bridge predicate is neither a functional nor a section predicate, it allows skipping the connected node and land on the next functional or section node. Here is an example:\n- _predicate_bridge-of: The target node will be skipped and ignored."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "inserted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of inserted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "updated",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of updated edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "existing",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of existing edges, if not set, the service will only return operation statistics."
+                }
+              ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/add/bridge"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/bridge"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to to add sections to an enumeration.\n\n*In order to use this service, the current user must have the `dict` role*.\n\nThis service can be used to *add* a *set of child aliases* to a *parent node* in a specific *graph path*.\n\nA *bridge* is a *connection between two nodes* which *does not identify* as an *enumeration*, *property*, *field* or other *significant predicate*. When evaluating bridge predicates, the traversal will skip the element connected by the bridge predicate and resume searching for significant predicates. Such connections are used to connect a new root to the graph of an existing one, or to point to a preferred choice.\n\nThe service expects the following parameters in the request body:\n\n- `root`: The global identifier of the term that represents the enumeration type, root or path.\n- `parent`: The global identifier of the term that represents the parent of the relationship.\n- `items`: An array of term global identifiers, each representing a bridge node.\n\nThe `root` represents the type or name of the graph.\nThe `parent` represents the parent node in the relationships.\nThe `items` represent the nodes that will be ignored during graph traversals.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n- `inserted`: Number of inserted edges.\n- `updated`: Number of existing edges to which the root has been added to their path.\n- `existing`: Number of already existing edges that include subject, object predicate and path.\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code any of the provided term references are invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nGraphs are networks of nodes connected to each other by edges. An edge is uniquely identified by its subject-predicate-object relationship. This means that many paths can traverse the same edge: these paths are identified by the graph root node, and the functional predicate characterising its path.\n\nPredicates are of three types: functional, container and bridge. Functional predicates determine what the current graph represents: a controlled vocabulary, a data structure type, etc. Nodes connected with such predicates are valid choices for that predicate. Container predicates are used to group child nodes under a common category that has no function, other\nthan to collect a set of choices. Bridge predicates are used to allow another graph (different root) to share the structure of the current graph. Edges also feature an object property that holds data that can be used during traversals.\n\nThis service can be used to create an edge with bridge predicate. The service expects the root node that will traverse the bridged root graph and the bridge predicate. The custom edge data is provided in the request body.\n\nThe body should contain the custom data relating to the current edge. It can take the following values:\n\n- `object`: This represents valid data for the edge, the provided object will be merged with the existing one. If you set a provided property value to null, if the property exists in the edge data, the service will delete that property from the existing data. If you want to ignore the value, pass an empty object.\n- `null`: If you provide this value the whole custom data container will be reset to an empty object.\n\nIf the edge does not exist, the provided data will be set in the edge, except for the properties that have a null value. If the edge exists, the parameters of the provided data will replace eventual existing matching parameters, or will be erased, if the value is null.\n\nThe service will do the following:\n\n- If the subject-predicate-object combination does not exist, it will create an edge with the bridged and the root nodes, with the provided bridge predicate as the predicate. If custom data was provided, it will be set, or an empty object will be set.\n- If the subject-predicate-object combination exists, it will update the custom data.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `inserted`: The number of inserted edges.\n    - `updated`: The number of updated edges.\n    - `existing`: The number of ignored existing edges.\n  - `inserted`: The list of inserted edges, if the inserted parameter was set.\n  - `updated`: The list of updated edger, if the updated \\ parameter was set.\n  - `existing`: The list of existing edges, if the existing parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"root\": \"test\",\n  \"parent\": \"test\",\n  \"items\": [\n    \"test-03\"\n  ]\n}"
+              "raw": "{\n  \"_name\": \"This is custom data.\"\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Delete bridge",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/bridge?root=terms/iso_639_2&bridged=terms/iso_639_2_srr&bridge=_predicate_bridge-of&predicate=_predicate_enum-of&direction=true&save=false&prune=true&deleted=true&updated=true&ignored=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/iso_639_2",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "bridged",
+                  "value": "terms/iso_639_2_srr",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that will become the bridge for the root node. If node A wants to use node B's graph, node A will be the root and node B will be this node."
+                },
+                {
+                  "key": "bridge",
+                  "value": "_predicate_bridge-of",
+                  "disabled": false,
+                  "description": "This parameter represents the bridge predicate to be used in the current operation. A bridge predicate is neither a functional nor a section predicate, it allows skipping the connected node and land on the next functional or section node. Here is an example:\n- _predicate_bridge-of: The target node will be skipped and ignored."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "prune",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter is used when deleting edges: if set, after deleting the edges connecting parent to chindren, all edges from children to leaf nodes will also be deleted, preventing dangling relationships; if not set, branches originating from child nodes will be left intact, which can be useful if you want to attach the children to another parent."
+                },
+                {
+                  "key": "deleted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of deleted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "updated",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of updated edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "ignored",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of ignored edges, if not set, the service will only return operation statistics."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/bridge"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nGraphs are networks of nodes connected to each other by edges. An edge is uniquely identified by its subject-predicate-object relationship. This means that many paths can traverse the same edge: these paths are identified by the graph root node, and the functional predicate characterising its path.\n\nPredicates are of three types: functional, container and bridge. Functional predicates determine what the current graph represents: a controlled vocabulary, a data structure type, etc. Nodes connected with such predicates are valid choices for that predicate. Container predicates are used to group child nodes under a common category that has no function, other\nthan to collect a set of choices. Bridge predicates are used to allow another graph (different root) to share the structure of the current graph. Edges also feature an object property that holds data that can be used during traversals.\n\nThis service can be used to delete an edge with bridge predicate. The service expects the root node that will traverse the bridged root graph and the bridge predicate. The custom edge data is provided in the request body. The service also expects the functional predicate, that will be traversed if the prune flag was set, to delete leaf branches.\n\nThe body contains two properties:\n\n- `sections`: Graphs have predicates that indicate the type of graph: enumeration, field, etc. There are other predicates, however, whose goal is to link nodes which will not have the function of the main predicate. The provided default values indicate sections, that represent display or category nodes used for subdividing child nodes, and bridges, which allow one node to connect to another node through a bridge node.\n- `data`: An object containing the custom data for the current edge.\n\nThe body data property take the following values:\n\n- `object`: This represents valid data for the edge, the provided object will be merged with the existing one. If you set a provided property value to null, if the property exists in the edge data, the service will delete that property from the existing data. If you want to ignore the value, pass an empty object.\n- `null`: If you provide this value the whole custom data container will be reset to an empty object.\n\nThe service will do the following:\n\n- If the subject-predicate-object combination exists, it will delete the edge.\n    - If the prune flag is set, the service will delete all instances of the root in all paths featuring the provided predicate.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `inserted`: The number of inserted edges.\n    - `updated`: The number of updated edges.\n    - `existing`: The number of ignored existing edges.\n  - `inserted`: The list of inserted edges, if the inserted parameter was set.\n  - `updated`: The list of updated edger, if the updated \\ parameter was set.\n  - `existing`: The list of existing edges, if the existing parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"sections\": [\n    \"_predicate_section-of\",\n    \"_predicate_bridge-of\"\n  ],\n  \"data\": {\"_name\": \"Custom data.\"}\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Set links",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/link?parent=terms/chr_LeafAreaIndex&predicate=_predicate_requires_indicator&direction=false&descriptors=true&save=false&inserted=true&updated=true&existing=true",
+              "query": [
+                {
+                  "key": "parent",
+                  "value": "terms/chr_LeafAreaIndex",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the parent to which the child nodes point to, or that points to the child nodes."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_requires_indicator",
+                  "disabled": false,
+                  "description": "This parameter represents the predicate of the current link. Here are a couple of examples:\n- _predicate_requires_indicator: Required indicator predicate.\n- _predicate_requires_metadata: Required metadata indicator predicate."
+                },
+                {
+                  "key": "direction",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "descriptors",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines whether all link nodes must be descriptors: true indicates that parent and children must be descriptors; false indicates that parent and children need not be descriptors"
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "inserted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of inserted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "updated",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of updated edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "existing",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of existing edges, if not set, the service will only return operation statistics."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/set/link"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nLinks are one-level graphs in which nodes are connected with subject-predicate-object links that contain a custom data record. Unlike edges, only one link can exist and there is no root or path concept. Linked items are either linked or unlinked, or their custom data updated.\n\nThis service allows creating new links, or updating the custom data of an existing link. The service expects the parent node, the link predicate, the direction of the predicate, a flag indicating whether all nodes must be descriptors, and a set of other flags governing the operation. The service will return the number of inserted, modified or ignored links.\n\nThe request body should hold an object containing the following elements:\n\n- `children`: A key/value dictionary in which the key represents the child node document handle, which represents the linked node, and the value represents custom data associated with the corresponding link.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `inserted`: The number of inserted edges.\n    - `updated`: The number of updated edges.\n    - `existing`: The number of ignored existing edges.\n  - `inserted`: The list of inserted edges, if the inserted parameter was set.\n  - `updated`: The list of updated edger, if the updated \\ parameter was set.\n  - `existing`: The list of existing edges, if the existing parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\n  \"children\": {\n    \"terms/std_date\": {\"_name\": \"Custom data.\"}\n  }\n}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Delete links",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/link?parent=terms/chr_LeafAreaIndex&predicate=_predicate_requires_indicator&direction=false&save=false&deleted=true&ignored=true",
+              "query": [
+                {
+                  "key": "parent",
+                  "value": "terms/chr_LeafAreaIndex",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the parent to which the child nodes point to, or that points to the child nodes."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_requires_indicator",
+                  "disabled": false,
+                  "description": "This parameter represents the predicate of the current link. Here are a couple of examples:\n- _predicate_requires_indicator: Required indicator predicate.\n- _predicate_requires_metadata: Required metadata indicator predicate."
+                },
+                {
+                  "key": "direction",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that children point to the parent, false indicates that the parent points to the children. By default this parameter assumes many to one relationships, true. *Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "save",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "If set, the edges will be created, updated or deleted; if not set, the service will only return information on potential operations."
+                },
+                {
+                  "key": "deleted",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of deleted edges, if not set, the service will only return operation statistics."
+                },
+                {
+                  "key": "ignored",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "If set, the the service will return the list of ignored edges, if not set, the service will only return operation statistics."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/graph/del/link"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "*In order to use this service, the current user must have the `dict` role*.\n\nLinks are one-level graphs in which nodes are connected with subject-predicate-object links that contain a custom data record. Unlike edges, only one link can exist and there is no root or path concept. Linked items are eikther linked or unlinked, or their custom data updated.\n\nThis service will delete a link between two nodes The service expects the parent node, the link predicate, the direction of the predicate, a flag indicating whether all nodes must be descriptors, and a set of other flags governing the operation. The service will return the number of inserted, modified or ignored links.\n\nThe request body is an array containing the child node document handles. If a link exists between the parent, the current child and the predicate, the service will delete the link.\n\nIf the service is successful, [`200`], it will return an object containign the following properties:\n\n  - `stats`:\n    - `deleted`: The number of deleted edges.\n    - `ignored`: The number of ignored edges.\n  - `deleted`: The list of deleted edges, if the deleted parameter was set.\n  - `ignored`: The list of ignored edges, if the ignored parameter was set.\n\n\nIf the operation does not succeed, the service will return:\n\n- `400`: **Invalid reference**: the service will return this code if any provided term reference is invalid.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n   \"terms/std_date\",\n   \"terms/_type\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "LINKED TYPES",
+      "item": [
+        {
+          "name": "Get linked keys",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/keys?predicate=_predicate_requires_indicator",
+              "query": [
+                {
+                  "key": "predicate",
+                  "value": "_predicate_requires_indicator",
+                  "disabled": false,
+                  "description": "Link predicate, here are some examples:\n_predicate_requires_indicator: Requires indicator.\n_predicate_requires_metadata: Required metadata indicator."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service if you want to retrieve the flattened list of document keys linked to the provided list of global identifiers with the provided predicate.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the link predicate as a path query parameter, and the list of descriptor global identifiers in the request body. The service will return the list of all the elements linked to the provided list of keys with the provided predicate.\n\nYou can try providing `_predicate_requires_indicator` as the predicate, and `chr_EffPopSize` in the list of nodes to get the list of additional descriptors you should add to a dataset that features the `chr_EffPopSize` descriptor.\n\n*Note that the structure is recursive, so selected required descriptors might, in turn, require other descriptors*.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[ \"chr_EffPopSize\" ]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Get linked terms",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/terms?predicate=_predicate_requires_indicator",
+              "query": [
+                {
+                  "key": "predicate",
+                  "value": "_predicate_requires_indicator",
+                  "disabled": false,
+                  "description": "Link predicate, here are some examples:\n_predicate_requires_indicator: Requires indicator.\n_predicate_requires_metadata: Required metadata indicator."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service if you want to retrieve the flattened list of terms linked to the provided list of global identifiers with the provided predicate.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the link predicate as a path query parameter, and the list of descriptor global identifiers in the request body. The service will return the list of all the term records linked to the provided list of keys with the provided predicate.\n\nYou can try providing `_predicate_requires_indicator` as the predicate, and `chr_EffPopSize` in the list of nodes to get the list of additional descriptors you should add to a dataset that features the `chr_EffPopSize` descriptor.\n\n*Note that the structure is recursive, so selected required descriptors might, in turn, require other descriptors*.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[ \"chr_EffPopSize\" ]"
             },
             "auth": null
           },
@@ -610,7 +1183,7 @@
       "name": "ENUMERATED TYPES",
       "item": [
         {
-          "name": "Enumeration path flat list of keys ",
+          "name": "Flat list of keys",
           "request": {
             "method": "GET",
             "url": {
@@ -643,17 +1216,23 @@
           "response": []
         },
         {
-          "name": "Enumeration path flat list of terms ",
+          "name": "Flat list of terms",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/terms?path=_type",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/terms?path=_type&lang=iso_639_3_eng",
               "query": [
                 {
                   "key": "path",
                   "value": "_type",
                   "disabled": false,
                   "description": "Enumeration root term global identfier."
+                },
+                {
+                  "key": "lang",
+                  "value": "iso_639_3_eng",
+                  "disabled": false,
+                  "description": "Language code, @ for all languages"
                 }
               ],
               "protocol": null,
@@ -676,15 +1255,15 @@
           "response": []
         },
         {
-          "name": "Enumeration keys tree ",
+          "name": "Enumeration tree ",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/tree/keys?path=_type&levels=10",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/tree/keys?path=_predicate&levels=10",
               "query": [
                 {
                   "key": "path",
-                  "value": "_type",
+                  "value": "_predicate",
                   "disabled": false,
                   "description": "Enumeration root term global identfier."
                 },
@@ -715,17 +1294,17 @@
           "response": []
         },
         {
-          "name": "Get enumeration key by code, field and path",
+          "name": "Match enumeration keys by code, field and path",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/keys?field=_aid&code=en&type=iso_639_1",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/keys?path=iso_639_1&code=en&field=_aid",
               "query": [
                 {
-                  "key": "field",
-                  "value": "_aid",
+                  "key": "path",
+                  "value": "iso_639_1",
                   "disabled": false,
-                  "description": "Name of the code section property on which to match the code."
+                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
                 },
                 {
                   "key": "code",
@@ -734,10 +1313,10 @@
                   "description": "The code value to be matched."
                 },
                 {
-                  "key": "type",
-                  "value": "iso_639_1",
+                  "key": "field",
+                  "value": "_aid",
                   "disabled": false,
-                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
+                  "description": "Name of the code section property on which to match the code."
                 }
               ],
               "protocol": null,
@@ -760,17 +1339,17 @@
           "response": []
         },
         {
-          "name": "Get enumeration term by code, field and path",
+          "name": "Get enumeration terms by code, field and path",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/terms?field=_aid&code=en&type=iso_639_1",
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/terms?path=iso_639_1&code=en&field=_aid",
               "query": [
                 {
-                  "key": "field",
-                  "value": "_aid",
+                  "key": "path",
+                  "value": "iso_639_1",
                   "disabled": false,
-                  "description": "Name of the code section property on which to match the code."
+                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
                 },
                 {
                   "key": "code",
@@ -779,10 +1358,10 @@
                   "description": "The code value to be matched."
                 },
                 {
-                  "key": "type",
-                  "value": "iso_639_1",
+                  "key": "field",
+                  "value": "_aid",
                   "disabled": false,
-                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
+                  "description": "Name of the code section property on which to match the code."
                 }
               ],
               "protocol": null,
@@ -850,84 +1429,6 @@
           "response": []
         },
         {
-          "name": "Enumeration path by local identifier ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/path?path=iso_639_1&code=eng",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                },
-                {
-                  "key": "code",
-                  "value": "eng",
-                  "disabled": false,
-                  "description": "Enumeration element local identifier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/lid/path"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration path from root to matching local identifier element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *local identifier*\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element local identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose local identifier (`_lid` property) matches the provided code. If there is a match, [`200`], the service will return the path starting from the enumeration root element to the term whose `_lid` property contains a match for the identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Enumeration path by global identifier ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/path?path=iso_639_1&code=iso_639_1_en",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration root global identifier."
-                },
-                {
-                  "key": "code",
-                  "value": "iso_639_1_en",
-                  "disabled": false,
-                  "description": "Target enumeration global identifier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/gid/path"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration path from root to matching global identifier element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *global identifier*\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element global identifier to match.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided code. If there is a match, [`200`], the service will return the path starting from the enumeration root element to the term whose `_gid` property contains a match for the identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
           "name": "Check enumeration element global identifiers ",
           "request": {
             "method": "POST",
@@ -949,18 +1450,11 @@
               "path": null
             },
             "description": "Use this service if you want to check if a list of term global identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term global identifiers* matching the provided *global identifier* in a specific *enumeration graph*.\n\nThe service expects the enumeration graph root term global identifier in the `path` path query parameter and the array of global identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided identifier. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "disabled": false,
-                "description": null
-              }
-            ],
+            "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "[\"iso_639_1_en\",\"iso_639_1_fr\",\"UNKNOWN\"]"
+              "raw": "[\n  \"iso_639_1_en\",\n  \"iso_639_1_fr\",\n  \"UNKNOWN\"\n]"
             },
             "auth": null
           },
@@ -1019,180 +1513,8 @@
       "response": []
     },
     {
-      "name": "LINKED TYPES",
-      "item": [
-        {
-          "name": "Required descriptor keys",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/keys",
-              "query": null,
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/keys"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the flattened list of required properties.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *descriptors* required by the provided *list* of *property* global identifiers.\n\nIn *linked descriptor graphs* it is possible to *link* a *first descriptor* to *one or more other descriptors*, signalling that whenever the *first descriptor* is is used in a dataset, one is *required* to also *include* the *linked required descriptors* along with it. This is useful to have the complete list of variables that should be included in a dataset.\n\n*Note that the structure is recursive, so selected required descriptors might, in turn, require other descriptors*.\n\nThe service expects an *array* of *term global identifiers* in the *request body* that represent the *main descriptors selection*. If the service is successful, [`200`], it will return the *additional descriptors* that *must be added* to the *provided list*, in the form of *term global identifiers*.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "disabled": false,
-              "raw": "[ \"chr_EffPopSize\" ]"
-            },
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Required descriptor records",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/terms",
-              "query": null,
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/link/required/terms"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the flattened list of required properties.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *descriptors* required by the provided *list* of *property* global identifiers.\n\nIn *linked descriptor graphs* it is possible to *link* a *first descriptor* to *one or more other descriptors*, signalling that whenever one *includes the first descriptor* in a dataset, it is *required* to also *include* the *linked required descriptors* along with it. This is useful when selecting the variables to be included in a dataset: by probing the linked descriptor graph with the selected variables we can have the complete list of variables that should be included in the dataset.\n\n*Note that the structure is recursive, so selected required descriptors might, in turn, require other descriptors*.\n\nThe service expects an *array* of *term global identifiers* in the *request body* that represent the *main descriptors selection*. If the service is successful, [`200`], it will return the *additional descriptors* that *must be added* to the *provided list*, in the form of *term records*.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "disabled": false,
-              "raw": "[ \"chr_EffPopSize\" ]"
-            },
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        }
-      ],
-      "protocolProfileBehavior": null,
-      "response": []
-    },
-    {
       "name": "DESCRIPTOR TYPES",
       "item": [
-        {
-          "name": "Descriptor enumeration flat list of keys ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/key?key=_type",
-              "query": [
-                {
-                  "key": "key",
-                  "value": "_type",
-                  "disabled": false,
-                  "description": "Enumeration descriptor term global identfier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/key"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the flattened list of elements of the provided descriptor enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term global identifiers* belonging to the *provided descriptor enumeration*, this implies that the *provided descriptor must be a controlled vocabulary*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the global identifier of the descriptor as the query path parameter, `key`.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided descriptor. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `204`: **Not an enumeration**: the service will return this code if the provided descriptor is not an enumeration.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Not a descriptor**: the service will return this code if the provided term is not a descriptor.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Descriptor enumeration flat list of records ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/term?key=_type",
-              "query": [
-                {
-                  "key": "key",
-                  "value": "_type",
-                  "disabled": false,
-                  "description": "Enumeration descriptor term global identfier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/term"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the flattened list of elements of the provided descriptor enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term records* belonging to the *provided descriptor enumeration*, this implies that the *provided descriptor must be a controlled vocabulary*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the following path query parameters:\n\n- `key`: The descriptor global identifier.\n- `lang`: The language code for the description texts; the field will be set with the default language, or pass `@` to get the result in all languages.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided descriptor. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `204`: **Not an enumeration**: the service will return this code if the provided descriptor is not an enumeration.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Not a descriptor**: the service will return this code if the provided term is not a descriptor.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Descriptor enumeration tree of keys ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/tree?key=_type&levels=10",
-              "query": [
-                {
-                  "key": "key",
-                  "value": "_type",
-                  "disabled": false,
-                  "description": "Enumeration descriptor term global identfier."
-                },
-                {
-                  "key": "levels",
-                  "value": "10",
-                  "disabled": false,
-                  "description": "Number of levels to traverse."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/enum/tree"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration tree of element global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided descriptor enumeration*, this implies that the *provided descriptor must be a controlled vocabulary*..\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the following path query parameters:\n\n- `key`: the descriptor global identifier.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `key` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `204`: **Not an enumeration**: the service will return this code if the provided descriptor is not an enumeration.\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `404`: **Not a descriptor**: the service will return this code if the provided term is not a descriptor.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
         {
           "name": "Descriptor categories ",
           "request": {
@@ -1235,28 +1557,70 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor/value?descriptor=_term&cache=true&miss=true&terms=true&types=false&defns=false&resolve=true&resfld=_aid",
+              "query": [
+                {
+                  "key": "descriptor",
+                  "value": "_term",
+                  "disabled": false,
+                  "description": "Descriptor.\nProvide the global identifier of the descriptor associated with the provided value."
+                },
+                {
+                  "key": "cache",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Use cache.\nCache all terms used in the validation procedure. This can speed the .execution when validating large lists of values."
+                },
+                {
+                  "key": "miss",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Cache unresolved references.\nThis option is only relevant if the use cache flag is set. If set, also unresolved term references will be cached, this can be useful if the data contains a large number of incorrect references with the same value."
+                },
+                {
+                  "key": "terms",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Expect all object properties to be part of the data dictionary.\nBy default, if a property matches a descriptor, then the value must conform to the descriptor's data definition; if the property does not match a term in the data dictionary, then it will be ignored and assumed correct. If you set this flag, all object properties must correspond to a descriptor, failing to do so will be considered an error."
+                },
+                {
+                  "key": "types",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Expect all descriptors to have a data type.\nBy default, an empty descriptor data definition section means that it can take any value: if you set this flag, all descriptors are required to have a data type."
+                },
+                {
+                  "key": "defns",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Allow referencing default namespace.\nThe default namespace is reserved to terms that constitute the dictionary engine. User-defined terms should not reference the default namespace. If this option is set, it will be possible to create terms that have the default namespace as their namespace."
+                },
+                {
+                  "key": "resolve",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Attempt to resolve unmatched term references.\nThis option is relevant to enumerated values. If this flag is set, when a provided value does not resolve into a term global identifier, the value will be tested against the terms code section property indicated in the resfld parameter: if there is a single match, the original value will be replaced by the matched global identifier. This way one can use the local identifier as the reference and let the validator resolve the global identifier.\nWhen this happens the status code will be zero, if no errors have occurred, but the response will feature a property named changes in the status report, which contains the list of resolved values.\nBe aware that to successfully use this feature the local identifiers must be unique."
+                },
+                {
+                  "key": "resfld",
+                  "value": "_aid",
+                  "disabled": false,
+                  "description": "Terms code section field used to resolve term references.\nThis option is relevant if the resolve flag was set. This parameter corresponds to the name of a property in the descriptor's code section: the unresolved value will be matched against the value contained in that field and if there is a single match, the matched term global identifier will replace the provided value.\nBy default this parameter is set to the local identifier, you could set it, for instance, to the list of official identifiers in order to have a larger choice."
+                }
+              ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor/value"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to check a data value matched to a descriptor.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta**.\n\nThis service can be used to *check* if a *data value* matches the *rules* of a *descriptor*. The value will be validated against the data definition associated with the descriptor and the service will return an object describing the status of the validation and eventual additional information describing the outcome.\n\nOptionally, it is possible to indicate in which language the status message should be returned.\n\nThe service expects the following properties in the request body:\n\n- `descriptor`: The descriptor global identifier.\n- `value`: The value to be tested against the descriptor's data definition.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe first two parameters are required, the last parameter is optional.\n\nThe `language` code is used to select the language of the status message:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return the following properties:\n\n- `descriptor`: The provided descriptor global identifier.\n- `value`: The tested value.\n- `result`: The status, including the code and message.\n\nWarning and error reports are objects with two elements:\n\n- `value`: The data element value.\n- `status`: The list of status messages one per property.\n\nEach data element is processed separately: if the data is valid, the data element will be stored in the `valid` report property; if there is at least one error, the data element and all the corresponding status reports will be stored in the `errors` report property; if there is at least one warning, the data element and all the corresponding status reports will be stored in the `warnings` report property.\n\nThe returned value, `value`, may be different than the provided value, because enumerations\ncan be resolved: if the enumeration code is not a term global identifier, the full\nenumeration graph will be traversed and the first element whose local identifier matches the provided\nvalue will be considered the valid choice. Try entering `_type` as descriptor and `string` as the\nvalue: you will see that the value will be resolved to the full code value, `_type_string`.\n\nThe `status` objects indicate the outcome of the validation, they record any warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\nAdditional properties may be included in the result, depending on the eventual error, or in the event\nthat an enumeration was resolved:\n\n- `resolved`: It is an object whose properties represent the unresolved enumeration terms. Try entering `_type` as descriptor and `string` as the value: the top level `value` will hold the resolved value, while the `value` array in this object will hold the provided enumeration code.\n- `ignored`: It is an object whose properties represent the descriptors that were not recognised.\nUnknown descriptors will not be validated, this is not considered an error, but such descriptors will\nbe logged, so that it is possible to catch eventual errors. Try entering `UNKNOWN` as descriptor.\n- `error`: In the event of unexpected database errors, this property will host the specific error message generated by the database engine.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "disabled": false,
-                "description": null
-              }
-            ],
+            "description": "Use this service to check a data value matched to a descriptor.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to *check* if a *data value* matches the *rules* of a *descriptor*. The value will be validated against the data definition associated with the descriptor and the service will return an object describing the status of the validation and eventual additional information describing the outcome.\n\nThe service expects the *descriptor global identifier* among the path query parameters and the *value* in the request body.\nThe service also expects a series of path query parameters that can be used to customise the conditions condidered in the validation.\n\nIf the service is successful, [`200`], it will return an object with a single property, `status`, whose value will be *zero*.\n\nIf the `resolve` parameter was set and the validation encountered no errors, bu at least one value got resolved, the service will return the [`202`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *one*.\n- `report`: The validation report:\n    - `status`: The status report:\n      - `code`: The status code, that will be zero.\n      - `message`: The status report message.\n    - `changes`: The list of resolved values:\n      - *hash*: This will be a hash used to disambiguate and group resolved values.\n      - `field`: The property name.\n      - `original`: The original value.\n      - `resolved`: The resolved value.\n- `value`: The provided value with modifications applied.\n\nIf the value did not pass the validation, the service will return a [`400`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *minus one*.\n- `report`: The validation report:\n    - `status`: The status report:\n      - `code`: The status code, that will be *non-zero*.\n      - `message`: The status report message.\n    - `descriptor`: The name of the property that triggered the error.\n    - `value`: the value that triggered the error.\n- `value`: The provided value with modifications applied.\n\n\nIf the operation does not succeed, the service may also return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\"descriptor\":\"_type\",\"value\":\"string\",\"language\":\"all\"}"
+              "raw": "{\n    \"_key\": \"TEST-03\",\n    \"_code\": {\n        \"_lid\": \"TEST-03\",\n        \"_gid\": \"TEST-03\",\n        \"_aid\": [ \"TEST-03\" ],\n        \"_name\": \"My test object descriptor\"\n    },\n    \"_info\": {\n        \"_title\": {\"en\": \"Test descriptor.\"}\n    },\n    \"_data\": {\n        \"_scalar\": {\n            \"_type\": \"object\",\n            \"_kind\": [\"TEST-03\"]\n        }\n    }\n}"
             },
             "auth": null
           },
@@ -1268,25 +1632,74 @@
           "response": []
         },
         {
-          "name": "Validate value by data definition",
+          "name": "Validate values by descriptor",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/definition",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor/values?descriptor=_type&cache=true&miss=true&terms=true&types=false&defns=false&resolve=true&resfld=_aid",
+              "query": [
+                {
+                  "key": "descriptor",
+                  "value": "_type",
+                  "disabled": false,
+                  "description": "Descriptor.\nProvide the global identifier of the descriptor associated with the provided value."
+                },
+                {
+                  "key": "cache",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Use cache.\nCache all terms used in the validation procedure. This can speed the .execution when validating large lists of values."
+                },
+                {
+                  "key": "miss",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Cache unresolved references.\nThis option is only relevant if the use cache flag is set. If set, also unresolved term references will be cached, this can be useful if the data contains a large number of incorrect references with the same value."
+                },
+                {
+                  "key": "terms",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Expect all object properties to be part of the data dictionary.\nBy default, if a property matches a descriptor, then the value must conform to the descriptor's data definition; if the property does not match a term in the data dictionary, then it will be ignored and assumed correct. If you set this flag, all object properties must correspond to a descriptor, failing to do so will be considered an error."
+                },
+                {
+                  "key": "types",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Expect all descriptors to have a data type.\nBy default, an empty descriptor data definition section means that it can take any value: if you set this flag, all descriptors are required to have a data type."
+                },
+                {
+                  "key": "defns",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Allow referencing default namespace.\nThe default namespace is reserved to terms that constitute the dictionary engine. User-defined terms should not reference the default namespace. If this option is set, it will be possible to create terms that have the default namespace as their namespace."
+                },
+                {
+                  "key": "resolve",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Attempt to resolve unmatched term references.\nThis option is relevant to enumerated values. If this flag is set, when a provided value does not resolve into a term global identifier, the value will be tested against the terms code section property indicated in the resfld parameter: if there is a single match, the original value will be replaced by the matched global identifier. This way one can use the local identifier as the reference and let the validator resolve the global identifier.\nWhen this happens the status code will be zero, if no errors have occurred, but the response will feature a property named changes in the status report, which contains the list of resolved values.\nBe aware that to successfully use this feature the local identifiers must be unique."
+                },
+                {
+                  "key": "resfld",
+                  "value": "_aid",
+                  "disabled": false,
+                  "description": "Terms code section field used to resolve term references.\nThis option is relevant if the resolve flag was set. This parameter corresponds to the name of a property in the descriptor's code section: the unresolved value will be matched against the value contained in that field and if there is a single match, the matched term global identifier will replace the provided value.\nBy default this parameter is set to the local identifier, you could set it, for instance, to the list of official identifiers in order to have a larger choice."
+                }
+              ],
               "protocol": null,
               "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/definition"
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/descriptor/values"
               ],
               "port": null,
               "path": null
             },
-            "description": "Use this service to check a data value matched to a descriptor data definition.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta**.\n\nThis service can be used to *check* if a *data value* matches the provided *data definition*.\n\nThe service expects the following properties in the request body:\n\n- `definition`: The `_data` section of a descriptor term record.\n- `value`: The value to be tested against the data definition.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe first two parameters are required, the last parameter is optional.\n\nThe `definition` parameter is an object that represents the `_data` section\nof a descriptor term. You can use this to test data definitions against values.\n\nThe `language` code is used to select the language of the status messages:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return the following properties:\n\n- `definition`: The provided `_data` section of a descriptor.\n- `value`: The tested value.\n- `result`: The status, including the code and message.\n\nThe returned value, `value`, may be different than the provided value, because enumerations\ncan be resolved: if the enumeration code is not a term global identifier, the full\nenumeration graph will be traversed and the first element whose local identifier matches the provided\nvalue will be considered the valid choice. Try entering `_type` as descriptor and `string` as the\nvalue: you will see that the value will be resolved to the full code value, `_type_string`.\n\nThe `status` objects indicate the outcome of the validation, they record any warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\nAdditional properties may be included in the result, depending on the eventual error, or in the event\nthat an enumeration was resolved:\n\n- `resolved`: It is an object whose properties represent the unresolved enumeration terms. Try entering `_type` as descriptor and `string` as the value: the top level `value` will hold the resolved value, while the `value` array in this object will hold the provided enumeration code.\n- `ignored`: It is an object whose properties represent the descriptors that were not recognised.\nUnknown descriptors will not be validated, this is not considered an error, but such descriptors will\nbe logged, so that it is possible to catch eventual errors. Try entering `UNKNOWN` as descriptor.\n- `error`: In the event of unexpected database errors, this property will host the specific error message generated by the database engine.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "Use this service to check a data value matched to a descriptor.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to *check* if a list of *data values* matches the *rules* of a *descriptor*. Each value will be validated against the data definition associated with the descriptor and the service will return an object describing the status of the validation and eventual additional information describing the outcome.\n\nThe service expects the *descriptor global identifier* among the path query parameters and the list of *values* in the request body.\nThe service also expects a series of path query parameters that can be used to customise the conditions condidered in the validation.\n\nIf the service is successful, [`200`], it will return an object with the following properties:\n\n- `status`: The status of the operation, will be *zero*.\n- `descriptor`: The descriptor global identifier.\n- `valid`: Number of valid items.\n- `warnings`: Number of items with resolved values, will be *zero*.\n- `errors`: Number of incorrect items, will be *zero*.\n\nIf the `resolve` parameter was set and the validation encountered no errors, bu at least one value got resolved, the service will return the [`202`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *one*.\n- `descriptor`: The descriptor provided to the service.\n- `valid`: Number of valid items.\n- `warnings`: Number of items with resolved values.\n- `errors`: Number of invalid items, will be *none*.\n- `reports`: The list of validation reports, one for each item with resolved values:\n  - `status`: The status of the current report, will be *one*.\n  - `report`: The status report:\n    - `status`: The status report:\n      - `code`: The status code, that will be *zero*.\n      - `message`: The status report message.\n    - `changes`: The list of resolved values:\n      - *hash*: This will be a hash used to disambiguate and group resolved values.\n      - `field`: The property name.\n      - `original`: The original value.\n      - `resolved`: The resolved value.\n- `values`: The list of provided items that has resolved values.\n\nIf any of the items did not pass the validation, the service will return a [`400`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *minus one*.\n- `descriptor`: The descriptor provided to the service.\n- `valid`: Number of valid items.\n- `warnings`: Number of items with resolved values.\n- `errors`: Number of invalid items.\n- `reports`: The list of validation reports, one for each item with resolved values:\n  - `status`: The status of the current report, will be *one* or *minus one*.\n  - `report`: The status report:\n    - `status`: The status report:\n      - `code`: The status code.\n      - `message`: The status report message.\n    - `descriptor`: The descriptor that triggered the error.\n    - `value`: The incorrect value.\n- `values`: The list of provided items that has resolved values or that were incorrect.\n\nIf the operation does not succeed, the service may also return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"definition\": {\n    \"_class\": \"_class_category\",\n    \"_scalar\": {\n      \"_type\": \"_type_string_enum\",\n      \"_kind\": [\n        \"_type\"\n      ]\n    }\n  },\n  \"value\": \"string\",\n  \"language\": \"all\"\n}"
+              "raw": "[\n  \"_type_string_enum\",\n  12,\n  \"object\"\n]"
             },
             "auth": null
           },
@@ -1302,8 +1715,51 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/object",
-              "query": null,
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/object?cache=true&miss=true&terms=false&types=false&defns=false&resolve=true&resfld=_aid",
+              "query": [
+                {
+                  "key": "cache",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Use cache.\nCache all terms used in the validation procedure. This can speed the .execution when validating large lists of values."
+                },
+                {
+                  "key": "miss",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Cache unresolved references.\nThis option is only relevant if the use cache flag is set. If set, also unresolved term references will be cached, this can be useful if the data contains a large number of incorrect references with the same value."
+                },
+                {
+                  "key": "terms",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Expect all object properties to be part of the data dictionary.\nBy default, if a property matches a descriptor, then the value must conform to the descriptor's data definition; if the property does not match a term in the data dictionary, then it will be ignored and assumed correct. If you set this flag, all object properties must correspond to a descriptor, failing to do so will be considered an error."
+                },
+                {
+                  "key": "types",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Expect all descriptors to have a data type.\nBy default, an empty descriptor data definition section means that it can take any value: if you set this flag, all descriptors are required to have a data type."
+                },
+                {
+                  "key": "defns",
+                  "value": "false",
+                  "disabled": false,
+                  "description": "Allow referencing default namespace.\nThe default namespace is reserved to terms that constitute the dictionary engine. User-defined terms should not reference the default namespace. If this option is set, it will be possible to create terms that have the default namespace as their namespace."
+                },
+                {
+                  "key": "resolve",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "Attempt to resolve unmatched term references.\nThis option is relevant to enumerated values. If this flag is set, when a provided value does not resolve into a term global identifier, the value will be tested against the terms code section property indicated in the resfld parameter: if there is a single match, the original value will be replaced by the matched global identifier. This way one can use the local identifier as the reference and let the validator resolve the global identifier.\nWhen this happens the status code will be zero, if no errors have occurred, but the response will feature a property named changes in the status report, which contains the list of resolved values.\nBe aware that to successfully use this feature the local identifiers must be unique."
+                },
+                {
+                  "key": "resfld",
+                  "value": "_aid",
+                  "disabled": false,
+                  "description": "Terms code section field used to resolve term references.\nThis option is relevant if the resolve flag was set. This parameter corresponds to the name of a property in the descriptor's code section: the unresolved value will be matched against the value contained in that field and if there is a single match, the matched term global identifier will replace the provided value.\nBy default this parameter is set to the local identifier, you could set it, for instance, to the list of official identifiers in order to have a larger choice."
+                }
+              ],
               "protocol": null,
               "host": [
                 "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/check/object"
@@ -1311,12 +1767,12 @@
               "port": null,
               "path": null
             },
-            "description": "Use this service to check the provided object.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta**.\n\nThis service can be used to *check* the *properties* of the provided *object*. It will *scan all properties* and *validate* any property that *corresponds* to a *descriptor* of the *data dictionary*.\n\nThe service expects the following properties in the request body:\n\n- `value`: The object to be validated.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe `language` code is used to select the language of the status messages:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return two properties:\n\n- `value`: The tested value.\n- `result`: A *key/value dictionary* in which the key is the name of any property that was considered by the parser, and the value is a `status` property with the status of the operation.\n\nThe `status` objects indicate the outcome of the validation, they record any success, warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\nAdditional properties may be included in the result, depending on the eventual error, or in the event\nthat an enumeration was resolved:\n\n- `resolved`: It is an object whose properties represent the unresolved enumeration terms. Try entering `_type` as descriptor and `string` as the value: the top level `value` will hold the resolved value, while the `value` array in this object will hold the provided enumeration code.\n- `ignored`: It is an object whose properties represent the descriptors that were not recognised.\nUnknown descriptors will not be validated, this is not considered an error, but such descriptors will\nbe logged, so that it is possible to catch eventual errors. Try entering `UNKNOWN` as descriptor.\n- `error`: In the event of unexpected database errors, this property will host the specific error message generated by the database engine.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "Use this service to check the provided object.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to *check* the *properties* of the provided *object*. It will *scan all properties* and *validate* any property that *corresponds* to a *descriptor* of the *data dictionary*.\n\nThe service expects the objects in the request body and it also expects a series of path query parameters that can be used to customise the conditions condidered in the validation.\n\nIf the service is successful, [`200`], it will return an object with a single property, `status`, whose value will be *zero*.\n\nIf the `resolve` parameter was set and the validation encountered no errors, bu at least one value got resolved, the service will return the [`202`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *one*.\n- `report`: The validation report:\n    - `status`: The status report:\n      - `code`: The status code, that will be zero.\n      - `message`: The status report message.\n    - `changes`: The list of resolved values:\n      - *hash*: This will be a hash used to disambiguate and group resolved values.\n      - `field`: The property name.\n      - `original`: The original value.\n      - `resolved`: The resolved value.\n- `value`: The provided value with modifications applied.\n\nIf the value did not pass the validation, the service will return a [`400`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *minus one*.\n- `report`: The validation report:\n    - `status`: The status report:\n      - `code`: The status code, that will be *non-zero*.\n      - `message`: The status report message.\n    - `descriptor`: The name of the property that triggered the error.\n    - `value`: the value that triggered the error.\n- `value`: The provided value with modifications applied.\n\n\nIf the operation does not succeed, the service may also return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"value\": {\n    \"_code\": {\n      \"_lid\": \"test-01\",\n      \"_gid\": \"test-01\",\n      \"_aid\": [\n        \"test-01\"\n      ]\n    },\n    \"_info\": {\n      \"_title\": {\n        \"iso_639_3_eng\": \"Test term 1\"\n      }\n    },\n    \"_data\": {\n      \"_scalar\": {\n        \"_type\": \"_type_object\"\n      }\n    },\n    \"custom_value\": 42\n  },\n  \"language\": \"iso_639_3_eng\"\n}"
+              "raw": "{\n  \"_info\": {\n    \"_title\": {\n      \"en\": \"Test term 1\"\n    }\n  },\n  \"_data\": {\n    \"_scalar\": {\n      \"_type\": \"object\"\n    }\n  },\n  \"language\": \"eng\",\n  \"custom_value\": 42\n}"
             },
             "auth": null
           },
@@ -1341,12 +1797,12 @@
               "port": null,
               "path": null
             },
-            "description": "Use this service to check a list provided objects.\n\n*In order to use this service, the current user must have the `read` role*.\n\n**Validation is still in beta*+.\n\nThis service can be used to *check* the *properties* of the provided list of *objects*. It will *scan all properties* and *validate* any property that *corresponds* to an *element of the data dictionary*.\n\nThe service expects the following properties in the request body:\n\n- `value`: An array containing the objects to be validated.\n- `language`: The `iso_396_3` language code for status messages.\n\nThe `language` code is used to select the language of the status messages:\n\n- if the language code is `all`, the message will be returned in\nall available languages,\n- if the language code is wrong, or there is no message in that language,\nthe message will be returned in English.\n\nLanguage codes are in the form: `iso_639_3_` followed by the three letter ISO language code.\nUse `iso_639_3_eng` for English.\n\nIf the service is successful, [`200`], it will return three properties:\n\n- `valid`: An array containing the list of valid objects.\n- `warnings`: An array containing the report for objects containing warnings, such as resolved values.\n- `errors`: An array containing the report for objects containing errors.\n\nThe elements returned for warnings and errors are structured as follows:\n\n- `value`: The tested value, with eventual resolved enumerations.\n- `status`: An array of status reports.\n\nThe `status` objects indicate the outcome of the validation, they record any warning or error.\nThis status has two default elements: a `code` that is a numeric code, `0` means success,\nand a `message` string that describes the outcome. Depending on the eventual error, the status may\ninclude other properties such as:\n\n- `value`: the value that caused the error.\n- `descriptor`: the descriptor involved in the error.\n- `elements`: in case an array has too little or too much elements.\n- `property`: missing required property, in case of incorrect data definition.\n- `block`: data definition section.\n- `type`: unimplemented or invalid data type, or data definition section name.\n- `required`: list of required properties, in case one is missing.\n- `range`: valid range, in the case of out of range values.\n- `regexp`: regular expression, in case a string does not match.\n\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "description": "Use this service to check a list provided objects.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to *check* the *properties* of the provided list of *objects*. It will *scan all properties* and *validate* any property that *corresponds* to an *element of the data dictionary*.\n\nThe service expects the list of objects in the request body and a set of path query parameters that provide options to the validation process.\n\nIf the service is successful, [`200`], it will return an object with the following properties:\n\n- `status`: The status of the operation, will be *zero*.\n- `descriptor`: The descriptor global identifier.\n- `valid`: Number of valid items.\n- `warnings`: Number of items with resolved values, will be *zero*.\n- `errors`: Number of incorrect items, will be *zero*.\n\nIf the `resolve` parameter was set and the validation encountered no errors, bu at least one value got resolved, the service will return the [`202`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *one*.\n- `valid`: Number of valid items.\n- `warnings`: Number of items with resolved values.\n- `errors`: Number of invalid items, will be *none*.\n- `reports`: The list of validation reports, one for each item with resolved values:\n  - `status`: The status of the current report, will be *one*.\n  - `report`: The status report:\n    - `status`: The status report:\n      - `code`: The status code, that will be *zero*.\n      - `message`: The status report message.\n    - `changes`: The list of resolved values:\n      - *hash*: This will be a hash used to disambiguate and group resolved values.\n      - `field`: The property name.\n      - `original`: The original value.\n      - `resolved`: The resolved value.\n- `values`: The list of provided items that has resolved values.\n\nIf any of the items did not pass the validation, the service will return a [`400`] status and an object structured as follows:\n\n- `status`: The validation status which will be the number *minus one*.\n- `valid`: Number of valid items.\n- `warnings`: Number of items with resolved values.\n- `errors`: Number of invalid items.\n- `reports`: The list of validation reports, one for each item with resolved values:\n  - `status`: The status of the current report, will be *one* or *minus one*.\n  - `report`: The status report:\n    - `status`: The status report:\n      - `code`: The status code.\n      - `message`: The status report message.\n    - `descriptor`: The descriptor that triggered the error.\n    - `value`: The incorrect value.\n- `values`: The list of provided items that has resolved values or that were incorrect.\n\nIf the operation does not succeed, the service may also return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
             "header": [],
             "body": {
               "mode": "raw",
               "disabled": false,
-              "raw": "{\n  \"value\": [\n    {\n      \"_code\": {\n        \"_lid\": \"test-01\",\n        \"_gid\": \"test-01\",\n        \"_aid\": [\n          \"test-01\"\n        ]\n      },\n      \"_info\": {\n        \"_title\": {\n          \"iso_639_3_eng\": \"Test term 1\"\n        }\n      },\n      \"_data\": {\n        \"_scalar\": {\n          \"_type\": \"_type_object\"\n        }\n      }\n    },\n    {\n      \"_code\": {\n        \"_gid\": \"test-01\",\n        \"_aid\": [\n          \"test-01\"\n        ]\n      }\n    },\n    {\n      \"_type\": \"UNKNOWN\"\n    },\n    {\n      \"CUSTOM\": \"VALUE\"\n    },\n    {\n      \"_type\": \"string\"\n    }\n  ],\n  \"language\": \"iso_639_3_eng\"\n}"
+              "raw": "[\n    {\n        \"_info\": {\n            \"_title\": {\"iso_639_3_eng\": \"Test term 1\"}\n        },\n        \"_data\": {\n            \"_scalar\": {\"_type\": \"_type_object\"}\n        },\n        \"language\": \"eng\",\n        \"custom_value\": 42\n    },\n    {\n        \"_info\": {\n            \"_title\": {\"iso_639_3_eng\": \"Test term 2\"}\n        },\n        \"_data\": {\n            \"_scalar\": {\"_type\": \"_type_string\"}\n        }\n    }\n]"
             },
             "auth": null
           },
