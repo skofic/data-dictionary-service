@@ -94,23 +94,6 @@ module.exports = Object.freeze({
                 }
             ]
         },
-        topo: {
-            name: module.context.configuration.collectionTopo,
-            type: 'E',
-            index: [
-                {
-                    type: 'persistent',
-                    fields: [
-                        module.context.configuration.predicate,
-                        `${module.context.configuration.predicate}[*]`
-                    ],
-                    deduplicate: true,
-                    estimates: true,
-                    name: "idx-topo-path-predicate",
-                    unique: false
-                }
-            ]
-        },
         user: {
             name: module.context.configuration.collectionUser,
             type: 'D',

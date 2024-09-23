@@ -67,12 +67,6 @@
             "required": true,
             "default": "links"
         },
-        "collectionTopo": {
-            "description": "Topography collection name",
-            "type": "string",
-            "required": true,
-            "default": "topos"
-        },
         "collectionUser": {
             "description": "Users collection name",
             "type": "string",
