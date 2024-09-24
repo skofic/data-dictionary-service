@@ -16,7 +16,6 @@ At this point the service will do the following actions:
     - The *terms* document collection that will hold all terms.
     - The *edges* edge collection to store relationships between terms.
     - The *links* edge collection to keep track of term dependencies.
-    - The *topo* edge collection that holds the knowledge graph.
 
 You will see that in the `Services` *left tab* there is a *top tab* called `Settings`: this can be used to *customise* the general *settings*:
 
@@ -32,7 +31,6 @@ You will see that in the `Services` *left tab* there is a *top tab* called `Sett
     - `collectionTerm`: Terms document collection.
     - `collectionEdge`: Relationships edge collection.
     - `collectionLink`: Dependency edge collection.
-    - `collectionTopo`: Knowledge graph edge collection.
     - `collectionUser`: Users document collection.
     - `collectionSession`: Sessions document collection.
     - `collectionSettings`: Settings document collection.
