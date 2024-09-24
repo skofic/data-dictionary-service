@@ -349,7 +349,6 @@ function getEnumerationDescriptorKeys(theRoot, theLevels)
     //
     const result =
         K.db._query( aql`
-            WITH ${collection_terms}
             LET tree = (
                 MERGE_RECURSIVE(
                     FOR vertex, edge IN 0..${theLevels}

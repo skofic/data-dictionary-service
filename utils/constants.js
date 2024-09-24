@@ -77,6 +77,18 @@ module.exports = Object.freeze({
                     estimates: true,
                     name: "idx_from_predicate_path",
                     unique: false
+                },
+                {
+                    type: 'persistent',
+                    fields: [
+                        '_to',
+                        module.context.configuration.predicate,
+                        `${module.context.configuration.predicate}[*]`
+                    ],
+                    deduplicate: true,
+                    estimates: true,
+                    name: "idx_to_predicate_path",
+                    unique: false
                 }
             ]
         },

@@ -38,7 +38,7 @@ const ErrorModel = require("../models/error_generic");
 const createRouter = require('@arangodb/foxx/router');
 const router = createRouter();
 module.exports = router;
-router.tag('Linked types');
+router.tag('Link graphs');
 
 
 //
