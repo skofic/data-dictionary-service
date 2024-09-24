@@ -148,6 +148,12 @@ const StringArrayModel = joi.array()
 		joi.string()
 	)
 
+// Genetic object array model.
+const ObjectArrayModel = joi.array()
+	.items(
+		joi.object()
+	)
+
 // Generic required string model.
 const StringModel = joi.string()
 	.required()
@@ -315,6 +321,7 @@ module.exports = {
 	
 	ArrayModel,
 	StringArrayModel,
+	ObjectArrayModel,
 	StringModel,
 	LevelsModel,
 	TreeModel,
