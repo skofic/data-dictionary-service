@@ -90,7 +90,10 @@ const SectionPredicatesModel = joi.array()
 		module.context.configuration.predicateBridge
 	])
 	.required()
-const ChildrenModel = joi.object({
+const ChildrenModel = joi.array()
+	.items(joi.string())
+	.required()
+const ChildrenSectionsModel = joi.object({
 	children: joi.array()
 		.items(joi.string())
 		.required(),
@@ -124,6 +127,74 @@ const router = createRouter();
 module.exports = router;
 router.tag('Edge graphs');
 
+
+/**
+ * Return handles tree.
+ *
+ * This service will traverse the graph identified by the provided root node
+ * handle up to the provided number of levels: the service will return the
+ * many-to-one, or one-to-many relationships depending on the graph direction.
+ *
+ * The service expects the graph root, the graph direction and the number of
+ * depth levels to traverse. The result will be a list of objects each having
+ * one property structured as follows:
+ *
+ * - `property`: An object containing one property named as the parent node
+ *   document handle. Parent nodes are those closer to the graph root.
+ *   - `predicate`: An object with a single property named as the predicate
+ *     relating the parent with its children, with as value an array.
+ *     - `array`: The array of child node handles related to the parent with
+ *       the predicate represented in the property name. Child nodes are those
+ *       closer to the graph's leaf nodes.
+ *
+ * The whole graph, down to the provided number of depth levels, is serialised
+ * in a list of the above described structures. This list can be used by a
+ * client to traverse the graph: start with the structure featuring the root
+ * node handle as the structure top property.
+ */
+router.post(
+	'test',
+	(request, response) => {
+		const roles = [K.environment.role.read]
+		if(Session.hasPermission(request, response, roles)) {
+			test(request, response)
+		}
+	},
+	'test'
+)
+	.summary('Test service')
+	.description(dd`
+        **Test service**
+
+    `)
+	.queryParam('root', RootModel)
+	.queryParam('target', TargetModel)
+	.queryParam('predicate', PredicateModel)
+	.queryParam('direction', DirectionModel)
+	.body(SectionPredicatesModel, dd`
+		The array should feature all the container and bridge predicates used \
+		in the graph, in order to select all relevant edges.
+	`)
+	.response(200, joi.array(), dd`Whatever...`)
+	.response(401, ErrorModel, dd
+		`
+            **No user registered**
+            
+            There is no active session.
+        `
+	)
+	.response(403, ErrorModel, dd
+		`
+            **User unauthorised**
+            
+            The current user is not authorised to perform the operation.
+        `
+	)
+
+
+//
+// ACTUAL SERVICES
+//
 
 /**
  * Return all graph subject keys by path and predicate.
@@ -434,75 +505,56 @@ router.post(
 //
 
 /**
- * Match node handle by code in graph.
+ * Return preferred graph document by target document handle.
  *
- * The service will check if the provided code matches the provided field in terms
- * and if any of the matched terms belong to the graph identified by the provided
- * root node handle.
- *
- * The service will return an array of term document handles.
+ * The service will return the preferred graph node record matching the provided
+ * target document handle.
  */
-router.get(
-	'match/code/handles',
+router.post(
+	'match/node',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			matchNodeHandlesByCode(request, response)
+			matchGraphNode(request, response)
 		}
 	},
-	'match-code-handles'
+	'match-node'
 )
-	.summary('Get graph node handles by term code')
-	.description(dd
-		`
-            **Check if provided code matches a graph node**
-            
-            Use this service if you have a term code and you want to check if \
-            this code corresponds to a term belonging to the graph identified \
-            by the provided root node handle and predicate.
-            
-            ***To use this service, the current user must have the \`read\` role.***
-            
-            The service expects the graph root node document handle, the graph \
-            functional predicate, the relationship direction, the code value to \
-            check and the terms field in which to match the code. The service \
-            will return the list of eventual matched graph nodes as document handles.
-            
-            You can try providing:
-            
-            - \`terms/iso_639_1\` as the \`root\` parameter.
-            - \`_predicate_enum-of\` as the \`predicate\` parameter.
-            - \`true\` as the predicate direction: *many-to-one*.
-            - \`en\` as the \`code\` parameter.
-            - \`_aid\` as the \`field\` parameter (list of official codes).
-            
-            You should get \`iso_639_3_eng\` as the result.
-            This means that \`en\` is matched in the list of *official codes*,  \
-            \`_aid\`, of the *preferred enumeration element*, \`iso_639_3_eng\` \
-            belonging to the \`iso_639_1\` controlled vocabulary.
-        `
-	)
+	.summary('Return preferred node record by handle')
+	.description(dd`
+        **Get preferred node by document handle**
+        
+        ***To use this service, the current user must have the \`read\` role.***
+        
+        The service expects the graph root, the target node document handle, \
+        the functional predicate, the relationships direction and the list of \
+        container and bridge predicates for traversing the graph.
+        
+        You can try providing:
+        
+        \`terms/iso_639_1\` as the graph root.
+        \`terms/iso_639_1_it\` as the target node handle.
+        \`_predicate_enum-of\` as the predicate.
+        \`true\` as the relationships direction, (many-to-one)
+        \`["_predicate_section-of", "_predicate_bridge-of"]\` as the container \
+        and bridge predicates.
+        
+        The service will return the matched node record, or an empty object if \
+        a match was not found.
+    `)
 	.queryParam('root', RootModel)
+	.queryParam('target', TargetModel)
 	.queryParam('predicate', PredicateModel)
 	.queryParam('direction', DirectionModel)
-	.queryParam('code', Models.StringModel, "Target enumeration identifier")
-	.queryParam('field', ArrayIdentifierFields, dd`
-        Code section field name where the code should be matched:
-        - \`_lid\`: Local identifier. Match the local identifier code.
-        - \`_gid\`: Global identifier. Match the global identifier code.
-        - \`_aid\`: List of official codes. Match the official code.
-        - \`_pid\`: List of provider codes. Match the provided code.
-        - \`_nid\`: Namespace. Match the namespace code.
-    `
-	)
-	.response(200, joi.array().items(joi.string()), dd
-		`
-            **Check status**
-            
-            The service will return an array of global identifiers representing \
-            enumeration elements, if there was no match, the array will be empty.
-        `
-	)
+	.body(SectionPredicatesModel, dd`
+       The list of container and bridge predicates to traverse.
+	`)
+	.response(200, joi.object(), dd`
+       **Check status**
+        
+        The service will return the record matching the preferred node for the \
+        target in the graph, or an empty object if there was no match.
+    `)
 	.response(401, ErrorModel, dd
 		`
             **No user registered**
@@ -519,57 +571,49 @@ router.get(
 	)
 
 /**
- * Match node document by code in graph.
+ * Return preferred graph document by target term code.
  *
- * The service will check if the provided code matches the provided field in terms
- * and if any of the matched terms belong to the graph identified by the provided
- * root node handle.
- *
- * The service will return an array of term documents.
+ * The service will return the preferred graph node record matching the provided
+ * target term code.
  */
-router.get(
-	'match/code/terms',
+router.post(
+	'match/code',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			matchNodeRecordsByCode(request, response)
+			matchGraphCode(request, response)
 		}
 	},
-	'match-code-terms'
+	'match-code'
 )
-	.summary('Get graph node document by term code')
-	.description(dd
-		`
-            **Check if provided code matches a graph node**
-            
-            Use this service if you have a term code and you want to check if \
-            this code corresponds to a term belonging to the graph identified \
-            by the provided root node handle and predicate.
-            
-            ***To use this service, the current user must have the \`read\` role.***
-            
-            The service expects the graph root node document handle, the graph \
-            functional predicate, the relationship direction, the code value to \
-            check and the terms field in which to match the code. The service \
-            will return the list of eventual matched graph nodes as documents.
-            
-            You can try providing:
-            
-            - \`terms/iso_639_1\` as the \`root\` parameter.
-            - \`_predicate_enum-of\` as the \`predicate\` parameter.
-            - \`true\` as the predicate direction: *many-to-one*.
-            - \`en\` as the \`code\` parameter.
-            - \`_aid\` as the \`field\` parameter (list of official codes).
-            
-            You should get the \`iso_639_3_eng\` term record as the result.
-            This means that \`en\` is matched in the list of *official codes*,  \
-            \`_aid\`, of the *preferred enumeration element*, \`iso_639_3_eng\` \
-            belonging to the \`iso_639_1\` controlled vocabulary.
-        `
-	)
+	.summary('Get graph node handles by term code')
+	.summary('Return preferred node record by code')
+	.description(dd`
+        **Get preferred node by code**
+        
+        ***To use this service, the current user must have the \`read\` role.***
+        
+        The service expects the graph root, the target node code, the code \
+        section field used for matching the code, the functional predicate, \
+        the relationships direction and the list of container and bridge \
+        predicates for traversing the graph.
+        
+        *The service expects the codes to be stored in the
+        
+        You can try providing:
+        
+        \`terms/iso_639_1\` as the graph root.
+        \`it\` as the target code.
+        \`_lid\` as the codes section field to match.
+        \`_predicate_enum-of\` as the predicate.
+        \`true\` as the relationships direction, (many-to-one)
+        \`["_predicate_section-of", "_predicate_bridge-of"]\` as the container \
+        and bridge predicates.
+        
+        The service will return the matched node record, or an empty object if \
+        a match was not found.
+    `)
 	.queryParam('root', RootModel)
-	.queryParam('predicate', PredicateModel)
-	.queryParam('direction', DirectionModel)
 	.queryParam('code', Models.StringModel, "Target enumeration identifier")
 	.queryParam('field', ArrayIdentifierFields, dd`
         Code section field name where the code should be matched:
@@ -578,15 +622,18 @@ router.get(
         - \`_aid\`: List of official codes. Match the official code.
         - \`_pid\`: List of provider codes. Match the provided code.
         - \`_nid\`: Namespace. Match the namespace code.
-    `
-	)
-	.response(200, joi.array().items(joi.object()), dd
+    `)
+	.queryParam('predicate', PredicateModel)
+	.queryParam('direction', DirectionModel)
+	.body(SectionPredicatesModel, dd`
+       The list of container and bridge predicates to traverse.
+	`)
+	.response(200, joi.array().items(joi.string()), dd
 		`
             **Check status**
             
-            The service will return an array of term records whose field values \
-            match the nodes of the graph identified by the provided root, predicate \
-            and direction; if there was no match, the array will be empty.
+            The service will return an array of global identifiers representing \
+            enumeration elements, if there was no match, the array will be empty.
         `
 	)
 	.response(401, ErrorModel, dd
@@ -628,7 +675,7 @@ router.post(
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			getPathsByLevel(request, response)
+			traverseGraphByLevel(request, response)
 		}
 	},
 	'path-levels'
@@ -699,31 +746,30 @@ router.post(
 /**
  * Return path to target node.
  *
- * The service will return the path from the origin node to the target node.
+ * The service will return the path from the root node to the target node.
  */
 router.post(
 	'path/node',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			traverseToTarget(request, response)
+			traverseGraphToTargetHandle(request, response)
 		}
 	},
 	'path-node'
 )
-	.summary('Return path from origin to target node')
+	.summary('Return path from root to target node')
 	.description(dd`
         **Get path from parent to target node**
         
         ***To use this service, the current user must have the \`read\` role.***
         
         This service will traverse the graph identified by the root node \
-        until it matches a target node: the service will return the path \
+        until it matches the target node: the service will return the path \
         from the parent node to the target node.
             
         The service expects the graph root node handle, the document handle of \
-        the node from which to start the search, the document handle of the \
-        target node to reach in the traversal, the functional predicate of \
+        the target node to reach in the traversal, the functional predicate of \
         the graph, the direction of the relationships, the maximum depth level \
         and the list of container and bridge predicates to consider during the \
         traversal.
@@ -731,8 +777,7 @@ router.post(
         You can try providing:
         
         \`terms/_predicate\` as the graph root.
-        \`terms/_predicate_edge\` as the origin node.
-        \`terms/terms/iso_3166_2_type_autonomous-republic\` as the target node.
+        \`terms/iso_3166_2_type_autonomous-republic\` as the target node.
         \`_predicate_enum-of\` as the predicate.
         \`true\` as the relationships direction, (many-to-one)
         \`10\` as the maximum depth level.
@@ -743,7 +788,6 @@ router.post(
         the *autonomous republic* none in the predicates enumeration path.
     `)
 	.queryParam('root', RootModel)
-	.queryParam('parent', ParentModel)
 	.queryParam('target', TargetModel)
 	.queryParam('predicate', PredicateModel)
 	.queryParam('direction', DirectionModel)
@@ -884,57 +928,61 @@ router.post(
 //
 
 /**
- * Return list of matching graph nodes by document handle.
+ * Return list of matching graph nodes by term code.
  *
  * The service will return a key/value dictionary whose keys are the provided
- * node document handles, and the values will be the matched preferred nodes.
+ * term codes, and the values will be the matched preferred nodes.
  */
 router.post(
-	'check/node',
+	'check/code',
 	(request, response) => {
 		const roles = [K.environment.role.read]
 		if(Session.hasPermission(request, response, roles)) {
-			checkGraphNodes(request, response)
+			checkGraphCodes(request, response)
 		}
 	},
-	'check-node'
+	'check-code'
 )
-	.summary('Return preferred nodes by document handle')
+	.summary('Return preferred nodes by code')
 	.description(dd`
-        **Get preferred node by document handle**
+        **Get preferred node by codes**
         
         ***To use this service, the current user must have the \`read\` role.***
         
-        The service expects the graph root document handle, the document handles \
-        of the target nodes, the functional predicate of the graph, the direction \
-        of the relationships, the maximum depth level and the list of container \
-        and bridge predicates to consider during the traversal.
+        The service expects the graph root document handle, the functional \
+        predicate of the graph, the direction of the relationships, the codes \
+        section field of the term where to match the codes and the \
+        list of codes in the body.
         
         You can try providing:
         
         \`terms/iso_639_1\` as the graph root.
         \`_predicate_enum-of\` as the predicate.
         \`true\` as the relationships direction, (many-to-one)
-        \`10\` as the maximum depth level.
-        \`["terms/iso_639_1_en", "terms/iso_639_1_fr", "UNKNOWN"]\` as the children targets.
-        \`["_predicate_section-of", "_predicate_bridge-of"]\` as the list of \
-          container and bridge predicates to consider.
+        \`_lid\` as the terms field for matching the code.
+        \`["en", "fr", "ita", "UNKNOWN"]\` as the body.
         
-        The returned dictionary will have as keys the provided document keys and \
-        as values the matched nodes. You will notice that the first two elements \
-        match a different graph, because these elements point to a preferred \
-        enumeration, while the last element we assume doesn't exist, and it has \
-        the \`false\` value.
+        The returned dictionary will have as keys the provided codes and \
+        as values the list matched nodes. You will notice that the first two \
+        elements match a different graph, this is because these elements point \
+        to a preferred enumeration. The third element doesn't match any node, \
+        although \`ita\` is a valid code in the *official codes* field, but \
+        not in the *local identifier* field. The last element we assume doesn't \
+        exist, and it has an empty array value.
     `)
 	.queryParam('root', RootModel)
 	.queryParam('predicate', PredicateModel)
 	.queryParam('direction', DirectionModel)
-	.queryParam('max_level', joi.number().integer().min(0).default(10), "Maximum depth level")
+	.queryParam('field', ArrayIdentifierFields, dd`
+        Code section field name where the code should be matched:
+        - \`_lid\`: Local identifier. Match the local identifier code.
+        - \`_gid\`: Global identifier. Match the global identifier code.
+        - \`_aid\`: List of official codes. Match the official code.
+        - \`_pid\`: List of provider codes. Match the provided code.
+        - \`_nid\`: Namespace. Match the namespace code.
+    `)
 	.body(ChildrenModel, dd`
-       It is an object with two arrays:
-       
-       - \`children\`: The list of document handles to check.
-       - \`sections\`: The list of container and bridge predicates used in the graph.
+       The list of codes to check.
 	`)
 	.response(200, joi.object(), dd`
        **Check status**
@@ -958,112 +1006,249 @@ router.post(
         `
 	)
 
-/**
- * Return path to target code.
- *
- * The service will return the path from the origin node to the first target
- * term node that features a field matching a provided code.
- */
-router.post(
-	'check/code',
-	(request, response) => {
-		const roles = [K.environment.role.read]
-		if(Session.hasPermission(request, response, roles)) {
-			doCheckEnumsByCodes(request, response)
-		}
-	},
-	'check-code'
-)
-	.summary('Return path from origin to term matching code')
-	.description(dd`
-        **Get path from origin node to term matching code**
-        
-        ***To use this service, the current user must have the \`read\` role.***
-        
-        This service will traverse the graph identified by the root node \
-        from the parent node until it matches a node featuring a field \
-        matching the provided code: the service will return the path \
-        from the parent node to the found node.
-        
-        The service expects the graph root node handle, the document handle of \
-        the node from which to start the search, the code to match, the terms \
-        field in which to match the code, the functional predicate of \
-        the graph, the direction of the relationships, the maximum depth level \
-        and the list of container and bridge predicates to consider during the \
-        traversal.
-        
-        You can try providing:
-        
-        \`terms/_predicate\` as the graph root.
-        \`terms/_predicate_edge\` as the origin node.
-        \`autonomous-republic\` as the code.
-        \`_lid\` as the terms field for matching the code.
-        \`_predicate_enum-of\` as the predicate.
-        \`true\` as the relationships direction, (many-to-one)
-        \`10\` as the maximum depth level.
-        \`["_predicate_section-of", "_predicate_bridge-of"]\` as the list of \
-          container and bridge predicates to consider.
-        
-        This should return the path starting from the edge predicates node to \
-        the first node whose provided field matches the *autonomous-republic* \
-        local identifier in the predicates enumeration graph.
-    `)
-	.queryParam('root', RootModel)
-	.queryParam('parent', ParentModel)
-	.queryParam('code', Models.StringModel, "Target enumeration identifier")
-	.queryParam('field', ArrayIdentifierFields, dd`
-        Code section field name where the code should be matched:
-        - \`_lid\`: Local identifier. Match the local identifier code.
-        - \`_gid\`: Global identifier. Match the global identifier code.
-        - \`_aid\`: List of official codes. Match the official code.
-        - \`_pid\`: List of provider codes. Match the provided code.
-        - \`_nid\`: Namespace. Match the namespace code.
-    `)
-	.queryParam('predicate', PredicateModel)
-	.queryParam('direction', DirectionModel)
-	.queryParam('max_level', joi.number().integer().min(0).default(10), "Maximum depth level")
-	.body(SectionPredicatesModel, dd`
-		The array should feature all the container and bridge predicates used \
-		in the graph, in order to select all relevant edges.
-	`)
-	.response(200, Models.GraphPathsModel, dd`
-        **Path to first matched code**
-        
-        If there are terms, in the enumeration defined by the \`root\` parameter, \
-        starting at the \`parent\` node, that matches the identifier provided in the \
-        \`code\` parameter, for the terms field provided in the \`field\` parameter,\
-        the service will return the path starting from the \`parent\` element \
-        to the node whose terms \`field\` property matches the identifier rovided \
-        in the \`code\` parameter; if there is no match, the service will \
-        return an empty array.
-        
-        The result is an array of paths structured as follows:
-     
-        - \`vertices\`: The list of nodes in the path.
-        - \`edges\`: The list of edges in the path.
-        
-        If there is no matches, the path will be an empty array.
-    `)
-	.response(401, ErrorModel, dd
-		`
-            **No user registered**
-            
-            There is no active session.
-        `
-	)
-	.response(403, ErrorModel, dd
-		`
-            **User unauthorised**
-            
-            The current user is not authorised to perform the operation.
-        `
-	)
-
 
 //
 // Functions.
 //
 
+
+/**
+ * Return preferred node record for provided document handle match.
+ *
+ * The function will perform the following operations:
+ *
+ * - Check if there is an edge matching the graph root and the provided target
+ *   node document handle.
+ *   - If the edge was found:
+ *     - If the edge predicate matches the provided predicate:
+ *       - Return the record matching the subject or object handle, depending
+ *         on the provided relationship direction.
+ *     - If the edge predicate does not match the provided predicate:
+ *       - It means that the target node is not the preferred node: traverse
+ *         the graph starting from the target node in the opposite direction
+ *         until we get an edge whose predicate matches the provided functional
+ *         predicate.
+ *   - If the edge was not found:
+ *     - Return an empty object.
+ *
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchGraphNode(request, response)
+{
+	///
+	// Init local storage.
+	///
+	let match = {}
+	
+	///
+	// Init direction variables.
+	///
+	const bound = (request.queryParams.direction) ? aql`INBOUND` : aql`OUTBOUND`
+	const target = (request.queryParams.direction) ? aql`_from` : aql`_to`
+	const field = (request.queryParams.direction) ? '_from' : '_to'
+	
+	///
+	// Set list of predicates to traverse.
+	///
+	const predicates = request.body.slice()
+	if(!predicates.includes(request.queryParams.predicate)) {
+		predicates.push(request.queryParams.predicate)
+	}
+	
+	//
+	// Find connected edge.
+	//
+	const edges = K.db._query(aql`
+		FOR edge IN edges
+			FILTER ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath}
+			FILTER edge.${target} == ${request.queryParams.target}
+		RETURN edge
+	`).toArray()
+	
+	///
+	// Handle target node not in graph.
+	///
+	if(edges.length === 0)
+	{
+		response.send(match)
+		return                                                          // ==>
+		
+	} // Target not in graph.
+	
+	///
+	// Save edge.
+	///
+	const edge = edges[0]
+	
+	///
+	// Handle functional edge.
+	///
+	if(edge[module.context.configuration.predicate] === request.queryParams.predicate)
+	{
+		match = K.db._query(aql`
+			RETURN DOCUMENT(${edge[field]})
+		`).toArray()
+		
+		response.send(
+			(match.length === 0)
+				? {}
+				: match[0]
+		)
+		return                                                          // ==>
+		
+	} // Functional predicate edge.
+	
+	///
+	// Traverse graph from target node to leaf node.
+	///
+	match = K.db._query(aql`
+		FOR vertex, edge, path
+		IN 0..10
+			${bound} ${edge[field]}
+			${collection_edge}
+
+			PRUNE NOT ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath} OR
+			      NOT edge.${module.context.configuration.predicate} IN ${predicates}
+
+			OPTIONS {
+			    "uniqueVertices": "path"
+			}
+
+			FILTER ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath}
+			FILTER edge.${module.context.configuration.predicate} == ${request.queryParams.predicate}
+
+		RETURN
+			vertex
+	`).toArray()
+	
+	response.send(
+		(match.length === 0)
+			? {}
+			: match[0]
+	)
+	
+} // matchGraphNode)
+
+/**
+ * Return preferred node record for provided target code.
+ *
+ * The function will perform the following operations:
+ *
+ * - Check if there is an edge matching the graph root and the provided target
+ *   node document handle.
+ *   - If the edge was found:
+ *     - If the edge predicate matches the provided predicate:
+ *       - Return the record matching the subject or object handle, depending
+ *         on the provided relationship direction.
+ *     - If the edge predicate does not match the provided predicate:
+ *       - It means that the target node is not the preferred node: traverse
+ *         the graph starting from the target node in the opposite direction
+ *         until we get an edge whose predicate matches the provided functional
+ *         predicate.
+ *   - If the edge was not found:
+ *     - Return an empty object.
+ *
+ * @param request: API request.
+ * @param response: API response.
+ */
+function matchGraphCode(request, response)
+{
+	///
+	// Init direction variables.
+	///
+	const match = {}
+	const bound = (request.queryParams.direction) ? aql`INBOUND` : aql`OUTBOUND`
+	const target = (request.queryParams.direction) ? aql`_from` : aql`_to`
+	const field = (request.queryParams.direction) ? '_from' : '_to'
+	
+	///
+	// Set list of predicates to traverse.
+	///
+	const predicates = request.body.slice()
+	if(!predicates.includes(request.queryParams.predicate)) {
+		predicates.push(request.queryParams.predicate)
+	}
+	
+	//
+	// Find connected edge.
+	//
+	const edges = K.db._query(aql`
+        LET terms = (
+          FOR term IN ${view_reference}
+            SEARCH term.${module.context.configuration.sectionCode}.${request.queryParams.field} == ${request.queryParams.code}
+          RETURN term._id
+        )
+        
+        FOR edge IN ${collection_edge}
+          FILTER edge.${target} IN terms
+          FILTER ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath}
+        RETURN edge
+	`).toArray()
+	
+	///
+	// Handle target node not in graph.
+	///
+	if(edges.length === 0)
+	{
+		response.send([])
+		return                                                          // ==>
+		
+	} // Target not in graph.
+	
+	///
+	// Iterate found edges.
+	///
+	edges.forEach( (edge) =>
+	{
+		///
+		// Handle functional edge.
+		///
+		if(edge[module.context.configuration.predicate] === request.queryParams.predicate)
+		{
+			const handle = edge[field]
+			const result = K.db._query(aql`
+				RETURN DOCUMENT(${handle})
+			`).toArray()
+			
+			if(result.length > 0) {
+				match[handle] = result[0]
+			}
+			
+			return                                                  // =>
+		}
+		
+		///
+		// Traverse for preferred target.
+		///
+		const result = K.db._query(aql`
+			FOR vertex, edge, path
+			IN 0..10
+				${bound} ${edge[field]}
+				${collection_edge}
+	
+				PRUNE NOT ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath} OR
+				      NOT edge.${module.context.configuration.predicate} IN ${predicates}
+	
+				OPTIONS {
+				    "uniqueVertices": "path"
+				}
+	
+				FILTER ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath}
+				FILTER edge.${module.context.configuration.predicate} == ${request.queryParams.predicate}
+	
+			RETURN
+				vertex
+		`).toArray()
+		
+		if(result.length > 0) {
+			match[edge[field]] = result[0]
+		}
+	})
+	
+	response.send(Object.values(match))
+	
+} // matchGraphCode)
 
 /**
  * Get flattened list of functional node handles.
@@ -1169,7 +1354,7 @@ function getFunctionalNodeDocuments(request, response)
  * @param request: API request.
  * @param response: API response.
  */
-function getPathsByLevel(request, response)
+function traverseGraphByLevel(request, response)
 {
 	//
 	// Init local storage.
@@ -1208,7 +1393,7 @@ function getPathsByLevel(request, response)
 	
 	response.send(result);                                                      // ==>
 	
-} // getPathsByLevel()
+} // traverseGraphByLevel()
 
 /**
  * Get all property names belonging to provided term.
@@ -1336,8 +1521,14 @@ function traverseFieldTerms(request, response)
  * @param request: API request.
  * @param response: API response.
  */
-function traverseToTarget(request, response)
+function traverseGraphToTargetHandle(request, response)
 {
+	///
+	// Set relationship terms.
+	///
+	const bound = (request.queryParams.direction) ? aql`INBOUND` : aql`OUTBOUND`
+	const target = (request.queryParams.direction) ? aql`_from` : aql`_to`
+	
 	//
 	// Init predicates.
 	//
@@ -1346,39 +1537,33 @@ function traverseToTarget(request, response)
 		predicates.push(request.queryParams.predicate)
 	}
 	
-	///
-	// Set relationship terms.
-	///
-	const bound = (request.queryParams.direction) ? aql`INBOUND` : aql`OUTBOUND`
-	const parent = (request.queryParams.direction) ? aql`edge._to` : aql`edge._from`
-	
 	//
 	// Query schema.
 	//
 	const result =
 		K.db._query( aql`
-			FOR vertex, edge, path IN 0..${request.queryParams.max_level}
-			    ${bound} ${request.queryParams.parent}
-			    ${collection_edge}
-			    
-			    PRUNE ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath} AND
-			          edge.${module.context.configuration.predicate} == ${request.queryParams.predicate} AND
-			          vertex._id == ${request.queryParams.target}
-			          
-			    OPTIONS {
-			        "uniqueVertices": "path"
-			    }
-			    
-			    FILTER ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath} AND
-			           edge.${module.context.configuration.predicate} == ${request.queryParams.predicate} AND
-			           vertex._id == ${request.queryParams.target}
-			           
-			RETURN path
+			FOR vertex, edge, path
+			IN 0..${request.queryParams.max_level}
+				${bound} ${request.queryParams.root}
+				${collection_edge}
+				
+				PRUNE NOT ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath} OR
+				      NOT edge.${module.context.configuration.predicate} IN ${predicates}
+				      
+				OPTIONS {
+				    "uniqueVertices": "path"
+				}
+				
+				FILTER edge.${target} == ${request.queryParams.target}
+				FILTER ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath}
+				
+			RETURN
+				path
         `).toArray()
 	
 	response.send(result)                                               // ==>
 	
-} // traverseToTarget()
+} // traverseGraphToTargetHandle()
 
 /**
  * Get path from enumeration root to target node by code.
@@ -1489,6 +1674,7 @@ function matchEnumerationTermPath(request, response)
 
 /**
  * Check if list of term keys belong to an enumeration.
+ *
  * @param request: API request.
  * @param response: API response.
  */
@@ -1506,7 +1692,7 @@ function checkGraphNodes(request, response)
 	const result =
 		K.db._query( aql`
             LET result = (
-                FOR term IN ${request.body.children}
+                FOR term IN ${request.body}
                 
                     LET selection = (
                         FOR edge IN ${collection_edge}
@@ -1522,12 +1708,57 @@ function checkGraphNodes(request, response)
                 )
                 
             RETURN
-                ZIP(${request.body.children}, result)
+                ZIP(${request.body}, result)
         `).toArray()
 	
-	response.send(result)                                                 // ==>
+	response.send(result)                                               // ==>
 	
 } // checkGraphNodes()
+
+/**
+ * Check if list of term codes belong to an enumeration.
+ *
+ * @param request: API request.
+ * @param response: API response.
+ */
+function checkGraphCodes(request, response)
+{
+	///
+	// Select relationship target edge field.
+	///
+	const target = (request.queryParams.direction) ? aql`edge._from` : aql`edge._to`
+	
+	//
+	// Query schema.
+	//
+	const result =
+		K.db._query( aql`
+            LET result = (
+                FOR code IN ${request.body}
+                
+                    LET selection = (
+                        FOR term IN ${view_reference}
+                            SEARCH term.${module.context.configuration.sectionCode}.${request.queryParams.field} == code
+                
+                        FOR edge IN ${collection_edge}
+                            FILTER ${target} == term._id
+                            FILTER edge.${module.context.configuration.predicate} == ${request.queryParams.predicate}
+                            FILTER ${request.queryParams.root} IN edge.${module.context.configuration.sectionPath}
+                        RETURN
+                            ${target}
+                    )
+                
+                RETURN
+                    selection
+            )
+            
+            RETURN
+                ZIP(${request.body}, result)
+        `).toArray()
+	
+	response.send(result)                                               // ==>
+	
+} // checkGraphCodes()
 
 /**
  * Check if list of term keys belong to an enumeration.
