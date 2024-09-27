@@ -449,6 +449,60 @@ class ValidationStatus
 			"statusMessage": {
 				"iso_639_3_eng": "Invalid edge or link document key."
 			}
+		},
+		"kVALUE_NOT_A_TUPLE_ARRAY": {
+			"statusCode": 44,
+			"statusMessage": {
+				"iso_639_3_eng": "The tuple should be an array."
+			}
+		},
+		"kTUPLE_HAS_TOO_FEW_ELEMENTS": {
+			"statusCode": 45,
+			"statusMessage": {
+				"iso_639_3_eng": "Array does not have enough elements."
+			}
+		},
+		"kTUPLE_HAS_TOO_MANY_ELEMENTS": {
+			"statusCode": 46,
+			"statusMessage": {
+				"iso_639_3_eng": "Array has too many elements."
+			}
+		},
+		"kTUPLE_TYPES_NOT_ARRAY": {
+			"statusCode": 47,
+			"statusMessage": {
+				"iso_639_3_eng": "Tuple types is not an array."
+			}
+		},
+		"kTUPLE_MISSING_TYPES": {
+			"statusCode": 48,
+			"statusMessage": {
+				"iso_639_3_eng": "Tuple is missing its types list property."
+			}
+		},
+		"kTUPLE_FIXED_ELEMENTS": {
+			"statusCode": 49,
+			"statusMessage": {
+				"iso_639_3_eng": "Tuple must have as many elements as its types."
+			}
+		},
+		"kTUPLE_MIN_ELEMENTS_OVERFLOW": {
+			"statusCode": 50,
+			"statusMessage": {
+				"iso_639_3_eng": "Tuple minimum elements larger than tuple types."
+			}
+		},
+		"kTUPLE_MAXELEMENTS_OVERFLOW": {
+			"statusCode": 51,
+			"statusMessage": {
+				"iso_639_3_eng": "Tuple maximum elements larger than tuple types."
+			}
+		},
+		"kELEMENTS_COUNT_NOT_OBJECT": {
+			"statusCode": 52,
+			"statusMessage": {
+				"iso_639_3_eng": "Tuple elements count not an object."
+			}
 		}
 	}
 

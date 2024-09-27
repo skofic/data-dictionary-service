@@ -739,6 +739,13 @@ class Validator
 				theSection[module.context.configuration.sectionSet],
 				theReportIndex
 			)                                                           // ==>
+		} else if(theSection.hasOwnProperty(module.context.configuration.sectionTuple)) {
+			return this.doValidateTuple(
+				theContainer,
+				theKey,
+				theSection[module.context.configuration.sectionTuple],
+				theReportIndex
+			)                                                           // ==>
 		} else if(theSection.hasOwnProperty(module.context.configuration.sectionDict)) {
 			return this.doValidateDict(
 				theContainer,
@@ -1145,6 +1152,72 @@ class Validator
 		)                                                               // ==>
 
 	} // doValidateSet()
+	
+	/**
+	 * doValidateTuple
+	 *
+	 * This method will check if the value is an array, and then it will
+	 * iterate its types and validate its elements.
+	 *
+	 * The method will return `true` if there were no errors, or `false`.
+	 *
+	 * @param theContainer {Object}: The value container.
+	 * @param theKey {String|Number|null}: The key to the value in the container.
+	 * @param theSection {Object}: Data or array term section.
+	 * @param theReportIndex {Number}: Container key for value, defaults to null.
+	 *
+	 * @return {Boolean}: `true` if valid, `false` if not.
+	 */
+	doValidateTuple(
+		theContainer,
+		theKey,
+		theSection,
+		theReportIndex)
+	{
+		///
+		// Init local storage.
+		///
+		const value = (theKey !== null)
+			? theContainer[theKey]
+			: theContainer
+		
+		///
+		// Check if array.
+		///
+		if(Validator.IsArray(value))
+		{
+			///
+			// Assert number of elements.
+			///
+			if(!this.checkTupleElements(
+				theContainer, theKey, theSection, theReportIndex
+			)) {
+				return false                                            // ==>
+			}
+			
+			///
+			// Iterate tuple types.
+			///
+			for(let i = 0; i < value.length; i++) {
+				
+				// TODO: Get descriptor and validate value.
+				
+				// if(!this.doValidateDataSection(
+				// 	value, i, theSection, theReportIndex
+				// )) {
+				// 	return false                                        // ==>
+				// }
+			}
+			
+			return true                                                 // ==>
+			
+		} // Is an array.
+		
+		return this.setStatusReport(
+			'kVALUE_NOT_A_TUPLE_ARRAY', theKey, value, theReportIndex
+		)                                                               // ==>
+		
+	} // doValidateTuple()
 
 	/**
 	 * doValidateSetElement
@@ -3605,7 +3678,7 @@ class Validator
 		return true                                                     // ==>
 
 	} // checkDateRange()
-
+	
 	/**
 	 * checkArrayElements
 	 *
@@ -3647,7 +3720,7 @@ class Validator
 				const value = (theKey !== null)
 					? theContainer[theKey]
 					: theContainer
-
+				
 				///
 				// Minimum elements.
 				///
@@ -3659,9 +3732,9 @@ class Validator
 						theKey, value, theReportIndex,
 						{ "section": theSection }
 					)                                                   // ==>
-
+					
 				} // Too few elements.
-
+				
 				///
 				// Maximum elements.
 				///
@@ -3673,16 +3746,180 @@ class Validator
 						theKey, value, theReportIndex,
 						{ "section": theSection }
 					)                                                   // ==>
-
+					
 				} // Too many elements.
-
+				
 			} // Number of elements is an object.
-
+			
 		} // Has number of required elements.
-
+		
 		return true                                                     // ==>
-
+		
 	} // checkArrayElements()
+	
+	/**
+	 * checkTupleElements
+	 *
+	 * This method will assert if the provided tuple has the correct number of
+	 * elements.
+	 *
+	 * The method will first check if the section has the tuple types list, if
+	 * that is the case, it will validate the number of elements.
+	 *
+	 * The method will return `true` if there were no errors, or `false`.
+	 *
+	 * @param theContainer {Object}: The value.
+	 * @param theKey {String|Number|null}: The key to the value in the container.
+	 * @param theSection {Object}: Data or array term section.
+	 * @param theReportIndex {Number}: Container key for value, defaults to null.
+	 *
+	 * @return {Boolean}: `true` if valid, `false` if not.
+	 */
+	checkTupleElements(
+		theContainer,
+		theKey,
+		theSection,
+		theReportIndex)
+	{
+		///
+		// Assert tuple types list is there.
+		///
+		if(theSection.hasOwnProperty(module.context.configuration.tupleTypes))
+		{
+			///
+			// Assert property is an array.
+			///
+			const types = theSection[module.context.configuration.tupleTypes]
+			if(Validator.IsArray(types))
+			{
+				///
+				// Check if elements are checked.
+				///
+				if(theSection.hasOwnProperty(module.context.configuration.arrayElements))
+				{
+					///
+					// Check elements count.
+					///
+					const elements = theSection[module.context.configuration.arrayElements]
+					if(Validator.IsObject(elements))
+					{
+						///
+						// Init local storage.
+						///
+						const value = (theKey !== null)
+							? theContainer[theKey]
+							: theContainer
+						
+						///
+						// Minimum elements.
+						///
+						if(elements.hasOwnProperty(module.context.configuration.arrayMinElements))
+						{
+							///
+							// Minimum overflow.
+							///
+							const minElements = elements[module.context.configuration.arrayMinElements]
+							if(minElements > types.length) {
+								return this.setStatusReport(
+									'kTUPLE_MIN_ELEMENTS_OVERFLOW',
+									theKey, value, theReportIndex,
+									{ "section": theSection }
+								)                                       // ==>
+							}
+							
+							///
+							// Too few elements.
+							///
+							if(value.length < minElements) {
+								return this.setStatusReport(
+									'kTUPLE_HAS_TOO_FEW_ELEMENTS',
+									theKey, value, theReportIndex,
+									{ "section": theSection }
+								)                                       // ==>
+							}
+							
+						} // Has minimum elements.
+						
+						///
+						// Maximum elements.
+						///
+						if(elements.hasOwnProperty(module.context.configuration.arrayMaxElements))
+						{
+							///
+							// Minimum overflow.
+							///
+							const maxElements = elements[module.context.configuration.arrayMaxElements]
+							if(maxElements > types.length) {
+								return this.setStatusReport(
+									'kTUPLE_MAX_ELEMENTS_OVERFLOW',
+									theKey, value, theReportIndex,
+									{ "section": theSection }
+								)                                       // ==>
+							}
+							
+							///
+							// Too many elements.
+							///
+							if(value.length > maxElements) {
+								return this.setStatusReport(
+									'kTUPLE_HAS_TOO_MANY_ELEMENTS',
+									theKey, value, theReportIndex,
+									{ "section": theSection }
+								)                                       // ==>
+							}
+							
+						} // Has maximum elements.
+						
+					} // Number of elements is an object.
+					
+					else {
+						return this.setStatusReport(
+							'kELEMENTS_COUNT_NOT_OBJECT',
+							theKey, value, theReportIndex,
+							{ "section": theSection }
+						)                                               // ==>
+					}
+					
+				} // Has number of required elements.
+				
+				///
+				// No elements, so fixed number.
+				///
+				else
+				{
+					if(value.length !== types.length) {
+						return this.setStatusReport(
+							'kTUPLE_FIXED_ELEMENTS',
+							theKey, value, theReportIndex,
+							{ "section": theSection }
+						)                                               // ==>
+					}
+					
+				} // Must have same number of elements as types.
+				
+			} // Tuple types list is an array.
+			
+			else {
+				return this.setStatusReport(
+					'kTUPLE_TYPES_NOT_ARRAY',
+					theKey, value, theReportIndex,
+					{ "section": theSection }
+				)                                                       // ==>
+			}
+			
+		} // Has tuple types list
+		
+		else {
+			return this.setStatusReport(
+				'kTUPLE_MISSING_TYPES',
+				theKey, value, theReportIndex,
+				{ "section": theSection }
+			)                                                           // ==>
+		}
+		
+		return true                                                     // ==>
+		
+	} // checkTupleElements()
 	
 	/**
 	 * checkRegexp
