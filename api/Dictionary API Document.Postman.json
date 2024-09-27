@@ -1099,7 +1099,527 @@
       "response": []
     },
     {
-      "name": "LINKED TYPES",
+      "name": "EDGE GRAPHS",
+      "item": [
+        {
+          "name": "Flat list of functional document handles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/all/handles?root=terms/_type&predicate=_predicate_enum-of&direction=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\nNote that the direction should be consistent with all predicates used in the graph."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/all/handles"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the flattened list of functional node document handles.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *node document handles*, belonging to the *graph identified by the provided root node document handle*, that are *connected* by the *provided functional predicate*.\n\n*Note: this service will return all the functional nodes of the graph, this means that large graphs may block the service, so use this service with caution.*\n\nThe service expects the document handle of the graph root node, the functional predicate of the graph and the direction of the graph relationships.\n\nIf the service is successful, [`200`], it will return an array of document handles representing the graph nodes connected with the provided functional predicate.\n\nNote that no hierarchy or order is maintained, it is a flat list of document handles from indeterminate depth levels.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Flat list of functional document records",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/all/docs?root=terms/_type&predicate=_predicate_enum-of&direction=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/all/docs"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the flattened list of functional node document records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *node document records*, belonging to the *graph identified by the provided root node document handle*, that are *connected* by the *provided functional predicate*.\n\n*Note: this service will return all the functional nodes of the graph, this means that large graphs may block the service, so use this service with caution.*\n\nThe service expects the document handle of the graph root node, the functional predicate of the graph and the direction of the graph relationships.\n\nIf the service is successful, [`200`], it will return an array of document records representing the graph nodes connected with the provided functional predicate.\n\nNote that no hierarchy or order is maintained, it is a flat list of records from indeterminate depth levels.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Flat list of functional edges",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/all/edges?root=terms/_type&predicate=_predicate_enum-of&direction=true",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/all/edges"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the flattened list of functional edge records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *edge records*, belonging to the *graph identified by the provided root node document handle*, that are *connected* by the *provided functional predicate*.\n\n*Note: this service will return all the edges of the graph, this means that large graphs may block the service, so use this service with caution.*\n\nThe service expects the document handle of the graph root node, the functional predicate of the graph and the direction of the graph relationships.\n\nIf the service is successful, [`200`], it will return an array of edge records from the graph identified by the root node that use the provided predicate.\n\nNote that no hierarchy or order is maintained, it is a flat list of records from indeterminate depth levels.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": null,
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Flat list of graph relationships",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/tree/handles?root=terms/_predicate&predicate=_predicate_enum-of&direction=true&levels=10",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_predicate",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "levels",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Maximum tree depth level for traversal."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/tree/handles"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get a list of records containing all relationship groups expressed as document handles.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the graph root node document handle, the functional predicate of the graph, the direction of the relationships and the maximum number of depth levels to traverse. The request body should contain the list of non-functional predicates to consider while traversing the graph, by default it contains the default section and bridge predicates.\n\nIf the service is successful, [`200`], it will return an *array* of *subject-predicate-object* groups featuring the parent node handle, the predicate and the list of related nodes as document handles. Each group is structured as follows:\n\n- `<one>`: The property name is the document handle of the *one* part of the *one-to-many* or *many-to-one* related nodes.\n    - `<predicate>`: The property name is the predicate that connects the nodes.\n      - `<array>`: The value of the above predicate property is an array containing the list of nodes connected by the predicate, representing the *many* part of the *one-to-many* or *many-to-one* related nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `root` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Match preferred node by document handle",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/match/node?root=terms/iso_639_1&target=terms/iso_639_1_it&predicate=_predicate_enum-of&direction=true&levels=10",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/iso_639_1",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "target",
+                  "value": "terms/iso_639_1_it",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the target of the graph traversal"
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "levels",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Maximum depth level for traversals when node is not functional."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/match/node"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the *preferred node record* corresponding to the provided *node document handle*.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the graph root node document handle, the document handle of the target node, the functional predicate of the graph, the direction of the relationships and the maximum number of levels to traverse when looking for the preferred node. The request body should contain the list of non-functional predicates to consider while traversing the graph, by default it contains the default section and bridge predicates.\n\nThe service will first locate the edge containing the target node: if found, it will check whether the target node is related by the functional predicate, or not. If the node is related by the provided predicate the search is over. If that is not the case, it means that the target node is not a valid choice for the graph: the service will traverse the graph starting from the target node until it finds a node related by the provided functional predicate, that will be the preferred node.\n\nIf the service is successful, [`200`], it will return the preferred node record, which can be the provided target node, or another node. The service will return an empty object if there was no match.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Match preferred node by code",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/match/code?root=terms/iso_639_1&code=it&field=_lid&predicate=_predicate_enum-of&direction=true&levels=10",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/iso_639_1",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "code",
+                  "value": "it",
+                  "disabled": false,
+                  "description": "Target code to be matched."
+                },
+                {
+                  "key": "field",
+                  "value": "_lid",
+                  "disabled": false,
+                  "description": "Code section field name where the code should be matched:\n_lid: Local identifier. Match the local identifier code.\n_gid: Global identifier. Match the global identifier code.\n_aid: List of official codes. Match the official code.\n_pid: List of provider codes. Match the provided code.\n_nid: Namespace. Match the namespace code."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "levels",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Maximum depth level for traversals when node is not functional."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/match/code"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to get the *preferred node record* corresponding to the provided *node code*.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the graph root node document handle, the code to be matched, the term codes section field in which to match the code, the functional predicate of the graph, the direction of the relationships and the maximum number of levels to traverse when looking for the preferred node. The request body should contain the list of non-functional predicates to consider while traversing the graph, by default it contains the default section and bridge predicates.\n\n*Codes are searched by default in the terms collection documents.*\n\nThe service will first search for all terms that feature the provided code in the provided field. Then the service will filter the found terms by selecting only those matching the subject or object fields of the edge, depending on the relationships direction, and selecting only those edges that belong to the graph identified by the provided root node handle. If the matched node is related by the provided predicate the search is over. If that is not the case, the service will traverse the graph starting from the target node until it finds a node related by the provided functional predicate, that will be the preferred node.\n\nIf the service is successful, [`200`], it will return the list of preferred node records, which can be the terms matched by the provided code, or other nodes. The service will return an empty array if there was no match.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Traverse graph levels",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/path/levels?root=terms/_type&parent=terms/_type_string&predicate=_predicate_enum-of&direction=true&min_level=0&max_level=10",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_type",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "parent",
+                  "value": "terms/_type_string",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the starting node for the traversal."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "min_level",
+                  "value": "0",
+                  "disabled": false,
+                  "description": "Starting depth level of traversal."
+                },
+                {
+                  "key": "max_level",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Maximum depth level for traversals when node is not functional."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/path/levels"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to *traverse a graph* starting from a *specific node* and *depth level*, until a *maximum level* has been reached.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the graph root node document handle, the document handle of the traversal starting node, the functional predicate of the graph, the direction of the relationships, the starting depth level of the traversal and the maximum number of levels to traverse. The request body should contain the list of non-functional predicates to consider while traversing the graph, by default it contains the default section and bridge predicates.\n\nIf the service is successful, [`200`], it will return the graph paths corresponding to the provided starting and ending depth levels. It will be an array of paths each structured as follows:\n\n- `vertices`: An array of vertex document records corresponding to the traversed nodes.\n- `edges`: An array of edge document records connecting the above nodes.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Traverse graph to matching node",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/path/node?root=terms/_predicate&target=terms/iso_3166_2_type_autonomous-republic&predicate=_predicate_enum-of&direction=true&max_level=10",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_predicate",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "target",
+                  "value": "terms/iso_3166_2_type_autonomous-republic",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the node that represents the target of the graph traversal."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "max_level",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Maximum depth level for traversals when node is not functional."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/path/node"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to *traverse a graph* starting from the *root node* until a *target node* has been matched.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the graph root node document handle, the document handle of the node to match, the functional predicate of the graph, the direction of the relationships and the maximum number of levels to traverse. The request body should contain the list of non-functional predicates to consider while traversing the graph, by default it contains the default section and bridge predicates.\n\nIf the service is successful, [`200`], it will return the path from the graph root node to the matched target node. It will be an array of paths each structured as follows:\n\n- `vertices`: An array of vertex document records corresponding to the traversed nodes.\n- `edges`: An array of edge document records connecting the above nodes.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Traverse graph to matching code",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/path/code?root=terms/_predicate&code=autonomous-republic&field=_lid&predicate=_predicate_enum-of&direction=true&max_level=10",
+              "query": [
+                {
+                  "key": "root",
+                  "value": "terms/_predicate",
+                  "disabled": false,
+                  "description": "This parameter represents the document handle of the graph root node. The root, along with the functional predicate, identifies the path that traverses the current edge."
+                },
+                {
+                  "key": "code",
+                  "value": "autonomous-republic",
+                  "disabled": false,
+                  "description": "The code to match in the field."
+                },
+                {
+                  "key": "field",
+                  "value": "_lid",
+                  "disabled": false,
+                  "description": "Code section field name where the code should be matched:\n_lid: Local identifier. Match the local identifier code.\n_gid: Global identifier. Match the global identifier code.\n_aid: List of official codes. Match the official code.\n_pid: List of provider codes. Match the provided code.\n_nid: Namespace. Match the namespace code."
+                },
+                {
+                  "key": "predicate",
+                  "value": "_predicate_enum-of",
+                  "disabled": false,
+                  "description": "This parameter represents the functional predicate of the current edge. A functional predicate determines what function the child node has. Here are a couple of examples:\n- _predicate_enum-of: Valid enumeration element.\n- _predicate_field-of: Valid field element.\n- _predicate_property-of: Valid property element."
+                },
+                {
+                  "key": "direction",
+                  "value": "true",
+                  "disabled": false,
+                  "description": "This parameter determines the direction of relationships for the provided predicate: true indicates that the relationship direction starts from the leaf nodes and points to the root node, this represents a many-to-one relationship; false indicates that the relationship direction starts from the graph root and points to the leaf nodes, this represents a one-to-many relationship. By default this parameter assumes many-to-one relationships, true.\n*Note that the direction should be consistent with all predicates used in the graph."
+                },
+                {
+                  "key": "max_level",
+                  "value": "10",
+                  "disabled": false,
+                  "description": "Maximum depth level for traversals when node is not functional."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/edge/path/code"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to *traverse a graph* starting from the *root node* until a *target node* has been matched *featuring the provided code*.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the graph root node document handle, the code to be matched, the term codes section field in which to match the code, the functional predicate of the graph, the direction of the relationships and the maximum number of levels to traverse. The request body should contain the list of non-functional predicates to consider while traversing the graph, by default it contains the default section and bridge predicates.\n\nIf the service is successful, [`200`], it will return the path from the graph root node to the node that matches the provided code in the provided field. It will be an array of paths each structured as follows:\n\n- `vertices`: An array of vertex document records corresponding to the traversed nodes.\n- `edges`: An array of edge document records connecting the above nodes.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    },
+    {
+      "name": "LINK GRAPHS",
       "item": [
         {
           "name": "Get linked keys",
@@ -1165,339 +1685,6 @@
               "mode": "raw",
               "disabled": false,
               "raw": "[ \"chr_EffPopSize\" ]"
-            },
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        }
-      ],
-      "protocolProfileBehavior": null,
-      "response": []
-    },
-    {
-      "name": "ENUMERATED TYPES",
-      "item": [
-        {
-          "name": "Flat list of keys",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/keys?path=_predicate",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "_predicate",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/keys"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration flattened list of element global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the global identifier of that term as the query path parameter, `path`.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided path parameter. The elements are returned as term global identifiers.\n\nNote that no hierarchy or order is maintained, it is a flat list of term global identifiers. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Flat list of terms",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/terms?path=_type&lang=iso_639_3_eng",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "_type",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                },
-                {
-                  "key": "lang",
-                  "value": "iso_639_3_eng",
-                  "disabled": false,
-                  "description": "Language code, @ for all languages"
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/all/terms"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration flattened list of element records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *flattened list* of *term records* belonging to the *provided graph path term global identifier*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the global identifier of that term as the query path parameter, `path`.\n\nIf the service is successful, [`200`], it will return the list of all the enumeration elements belonging to the provided path parameter. The elements are returned as term records.\n\nNote that no hierarchy or order is maintained, it is a flat list of term records. Also, only items representing active elements of the enumeration will be selected: this means that terms used as sections or bridges will not be returned.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Enumeration tree ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/tree/keys?path=_predicate&levels=10",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "_predicate",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                },
-                {
-                  "key": "levels",
-                  "value": "10",
-                  "disabled": false,
-                  "description": "Number of levels to traverse in the tree."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/tree/keys"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration tree of element global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *list of trees* of *term global identifiers* belonging to the *provided graph path term global identifier*.\n\n*Enumerations* are *a graph of nested trees* that represent *controlled vocabularies* whose *elements* are *terms*. At the *root* of the graph is a *term* that represents the *type* or *definition* of this *controlled vocabulary*: the `path` parameter is the *global identifier* of this *term*.\n\nThe service expects the following path query parameters:\n\n- `path`: the term global identifier of the graph root node.\n- `levels`: the number of nested tree levels to traverse.\n\nIf the service is successful, [`200`], it will return an *array* of all *parent/predicate/child tree branches* that comprise the graph, each element will have the following structure:\n\n- `<parent>`: The property name is the parent node *term global identifier*, the value is:\n    - `<predicate>`: The property name is the edge predicate term global identifier, the value is an array of term global identifiers that represent the parent's child nodes.\n\nTo rebuild the nested tree you should take the element whose root property corresponds to the provided `path` parameter, then recursively iterate each child member matching the elements of the returned list.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Match enumeration keys by code, field and path",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/keys?path=iso_639_1&code=en&field=_aid",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
-                },
-                {
-                  "key": "code",
-                  "value": "en",
-                  "disabled": false,
-                  "description": "The code value to be matched."
-                },
-                {
-                  "key": "field",
-                  "value": "_aid",
-                  "disabled": false,
-                  "description": "Name of the code section property on which to match the code."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/keys"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the *global identifier* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term global identifiers that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Get enumeration terms by code, field and path",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/terms?path=iso_639_1&code=en&field=_aid",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration type or root global identifier to which the matched enumeration element must belong."
-                },
-                {
-                  "key": "code",
-                  "value": "en",
-                  "disabled": false,
-                  "description": "The code value to be matched."
-                },
-                {
-                  "key": "field",
-                  "value": "_aid",
-                  "disabled": false,
-                  "description": "Name of the code section property on which to match the code."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/match/field/terms"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get the *term record* of the *enumeration element* by code section *field name*, *value* to match and *enumeration type* or root.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the following path query parameters:\n\n- `field`: *Name* of the code section *property* on which to *match* the *code*.\n- `code`: The code *value to be matched*.\n- `type`: Enumeration *type* or *root global identifier* to which the matched *enumeration element must belong*.\n\nGood choices for the `field` parameter are:\n\n- `_gid`: The term global identifier.\n- `_lid`: The term local identifier.\n- `_aid`: The list of term official identifiers.\n- `_pid`: The list of term provider identifiers.\n\nThe service will first select all terms whose provided field value matches the provided code. Then it will determine which, if any, of the selected terms is an enumeration element belonging to the provided enumeration type.\n\nThe result of the service will be an array of term records that are enumeration elements of the provided controlled vocabulary type. The result should be an array of one element, or no elements if there were no matches or if none of the matches belong to the provided vontrolled vocabulary. You could have many elements in the result if you experiment with other fields, such as namespace.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Get enumeration path by code, field and path ",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/traverse/field/path?path=iso_639_1&code=en&field=_aid",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                },
-                {
-                  "key": "code",
-                  "value": "en",
-                  "disabled": false,
-                  "description": "Enumeration element local identifier."
-                },
-                {
-                  "key": "field",
-                  "value": "_aid",
-                  "disabled": false,
-                  "description": null
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/traverse/field/path"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service to get an enumeration path from root to matching code element.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *path* between the *enumeration root node* and a first *term* that matches the provided *code* in the provided *field*.\n\nThe service expects the following path query parameters:\n\n- `path`: The enumeration graph root term global identifier.\n- `code`: The element code value to match.\n- `field`: The element code section property name.\n\nThe field parameter can take two values: `_aid` corresponding to the *list of official term identifiers*, or `_pid` corresponding to the *list of provider identifiers*.\n\nThe service will traverse the enumeration graph until it finds a term whose code section field value matches the provided code. If there are terms, in the enumeration defined by the path parameter, that match the identifier provided in the code parameter, [`200`], the service will return the path starting from the enumeration root element to the terms whose `_aid` property contains a match for the local identifier provided in the `code` parameter. The result is an array in which each element is an object representing a path constituted by a list of edges and a list of vertices.\n\n- `vertices`: List of vertice terms.\n- `edges`: List of edge records.\n- `weights`: List of vertex weights.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": null,
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Check enumeration element global identifiers ",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/keys?path=iso_639_1",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/keys"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service if you want to check if a list of term global identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThis service can be used to retrieve the *term global identifiers* matching the provided *global identifier* in a specific *enumeration graph*.\n\nThe service expects the enumeration graph root term global identifier in the `path` path query parameter and the array of global identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose global identifier (`_gid` property) matches the provided identifier. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "disabled": false,
-              "raw": "[\n  \"iso_639_1_en\",\n  \"iso_639_1_fr\",\n  \"UNKNOWN\"\n]"
-            },
-            "auth": null
-          },
-          "protocolProfileBehavior": {
-            "followRedirects": false,
-            "followOriginalHttpMethod": false,
-            "followAuthorizationHeader": false
-          },
-          "response": []
-        },
-        {
-          "name": "Check enumeration element local identifiers ",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/codes?path=iso_639_1&field=_aid",
-              "query": [
-                {
-                  "key": "path",
-                  "value": "iso_639_1",
-                  "disabled": false,
-                  "description": "Enumeration root term global identfier."
-                },
-                {
-                  "key": "field",
-                  "value": "_aid",
-                  "disabled": false,
-                  "description": "Term code section firld name."
-                }
-              ],
-              "protocol": null,
-              "host": [
-                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/enum/check/codes"
-              ],
-              "port": null,
-              "path": null
-            },
-            "description": "Use this service if you want to check if a list of term local identifiers belong to an enumeration.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the enumeration root term global identifier provided in the `path` path query parameter, the code section field name in the `field` path query parameter and the list of term  identifiers to match in the request body.\n\nThe service will traverse the enumeration graph until it finds a term whose identifier matches the provided code in the provided field. If there is a match, [`200`], the service will return a key/value dictionary whose key will be the provided global identifier and the value the matched global identifier; if not, the value will be `false`.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.\n\n**Note that this service will honour preferred enumerations, this means that if a term is matched that has a preferred alternative, the latter will be returned, regardless if the preferred term does not belong to the provided path**.",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "disabled": false,
-              "raw": "[\n  \"en\",\n  \"fr\",\n  \"UNKNOWN\"\n]"
             },
             "auth": null
           },

@@ -867,6 +867,465 @@
     console.log('BODY:', body);
 });
 
+// request Flat list of functional document handles 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/all/handles?root=terms%2F_type&predicate=_predicate_enum-of&direction=true',
+        method: 'GET',
+        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Flat list of functional document records 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/all/docs?root=terms%2F_type&predicate=_predicate_enum-of&direction=true',
+        method: 'GET',
+        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Flat list of functional edges 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/all/edges?root=terms%2F_type&predicate=_predicate_enum-of&direction=true',
+        method: 'GET',
+        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Flat list of graph relationships 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/tree/handles?root=terms%2F_predicate&predicate=_predicate_enum-of&direction=true&levels=10',
+        method: 'POST',
+        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Match preferred node by document handle 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/match/node?root=terms%2Fiso_639_1&target=terms%2Fiso_639_1_it&predicate=_predicate_enum-of&direction=true&levels=10',
+        method: 'POST',
+        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Match preferred node by code 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/match/code?root=terms%2Fiso_639_1&code=it&field=_lid&predicate=_predicate_enum-of&direction=true&levels=10',
+        method: 'POST',
+        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Traverse graph levels 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/path/levels?root=terms%2F_type&parent=terms%2F_type_string&predicate=_predicate_enum-of&direction=true&min_level=0&max_level=10',
+        method: 'POST',
+        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Traverse graph to matching node 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/path/node?root=terms%2F_predicate&target=terms%2Fiso_3166_2_type_autonomous-republic&predicate=_predicate_enum-of&direction=true&max_level=10',
+        method: 'POST',
+        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Traverse graph to matching code 
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/edge/path/code?root=terms%2F_predicate&code=autonomous-republic&field=_lid&predicate=_predicate_enum-of&direction=true&max_level=10',
+        method: 'POST',
+        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("[\n  \"_predicate_section-of\",\n  \"_predicate_bridge-of\"\n]")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
 // request Get linked keys 
 (function(callback) {
     'use strict';
@@ -959,414 +1418,6 @@
         callback(error);
     });
     request.write("[ \"chr_EffPopSize\" ]")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Flat list of keys 
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/all/keys?path=_predicate',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Flat list of terms 
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/all/terms?path=_type&lang=iso_639_3_eng',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Enumeration tree  
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/tree/keys?path=_predicate&levels=10',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Match enumeration keys by code, field and path 
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/match/field/keys?path=iso_639_1&code=en&field=_aid',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Get enumeration terms by code, field and path 
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/match/field/terms?path=iso_639_1&code=en&field=_aid',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Get enumeration path by code, field and path  
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/traverse/field/path?path=iso_639_1&code=en&field=_aid',
-        method: 'GET',
-        headers: {"Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Check enumeration element global identifiers  
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/check/keys?path=iso_639_1',
-        method: 'POST',
-        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("[\n  \"iso_639_1_en\",\n  \"iso_639_1_fr\",\n  \"UNKNOWN\"\n]")
-    request.end();
-    
-
-})((error, statusCode, headers, body) => {
-    console.log('ERROR:', error); 
-    console.log('STATUS:', statusCode);
-    console.log('HEADERS:', JSON.stringify(headers));
-    console.log('BODY:', body);
-});
-
-// request Check enumeration element local identifiers  
-(function(callback) {
-    'use strict';
-        
-    const httpTransport = require('http');
-    const responseEncoding = 'utf8';
-    const httpOptions = {
-        hostname: 'localhost',
-        port: '8529',
-        path: '/_db/EUFGIS/dict/enum/check/codes?path=iso_639_1&field=_aid',
-        method: 'POST',
-        headers: {"Content-Type":"text/plain; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
-    };
-    httpOptions.headers['User-Agent'] = 'node ' + process.version;
- 
-    // Paw Store Cookies option is not supported
-
-    const request = httpTransport.request(httpOptions, (res) => {
-        let responseBufs = [];
-        let responseStr = '';
-        
-        res.on('data', (chunk) => {
-            if (Buffer.isBuffer(chunk)) {
-                responseBufs.push(chunk);
-            }
-            else {
-                responseStr = responseStr + chunk;            
-            }
-        }).on('end', () => {
-            responseStr = responseBufs.length > 0 ? 
-                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
-            
-            callback(null, res.statusCode, res.headers, responseStr);
-        });
-        
-    })
-    .setTimeout(0)
-    .on('error', (error) => {
-        callback(error);
-    });
-    request.write("[\n  \"en\",\n  \"fr\",\n  \"UNKNOWN\"\n]")
     request.end();
     
 
