@@ -223,6 +223,12 @@
             "required": true,
             "default": "_set"
         },
+        "sectionTuple": {
+            "description": "Term tuple data definition section key",
+            "type": "string",
+            "required": true,
+            "default": "_tuple"
+        },
         "sectionDict": {
             "description": "Term dictionary data definition section key",
             "type": "string",
@@ -354,6 +360,12 @@
             "type": "string",
             "required": true,
             "default": "_type_key"
+        },
+        "tupleTypes": {
+            "description": "Tuple types list descriptor key",
+            "type": "string",
+            "required": true,
+            "default": "_tuple_types"
         },
         "typeBoolean": {
             "description": "Boolean data type key",
