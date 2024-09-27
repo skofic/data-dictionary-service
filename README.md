@@ -35,6 +35,8 @@ You will see that in the `Services` *left tab* there is a *top tab* called `Sett
     - `collectionSession`: Sessions document collection.
     - `collectionSettings`: Settings document collection.
 
+There are many more settings that we will not describe here.
+
 Some services require users to be authenticated, for this purpose you should install the [authentication services](https://github.com/skofic/authentication-services) and follow the instructions for creating the default users.
 
 Note that the authentication services only use the `admin` role code, tis set of services requires the following additional roles:
@@ -79,13 +81,14 @@ A term may be all of the above.
 
 In order to use these services *The current user must have the `read` role* to consult the dictionary and the `dict` role to make any changes, such as creating and deleting.
 
-#### Create term
+#### Insert term
 
 Use this service to create a new term.
 
 *The current user must have the `dict` role*.
 
 Provide the term in the request body, if the service succeeds, [`200`], it will return the newly created term.
+The service may return the [`202`] status: in that case there are no actual errors, but the validation procedure has modified the record, which means it has to be checked by the sender.
 
 The service may return the following errors:
 
@@ -102,6 +105,7 @@ Use this service to create a set of new terms.
 *The current user must have the `dict` role*.
 
 Provide an array of term records in the request body, if the service succeeds, [`200`], it will return the newly created terms. When inserting the records, the operation is executed transactionally in an all-or-nothing fashion.
+The service may return the [`202`] status: in that case there are no actual errors, but the validation procedure has modified some records, which means it has to be checked by the sender.
 
 The service may return the following errors:
 
