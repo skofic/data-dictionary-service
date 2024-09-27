@@ -13,7 +13,6 @@ module.context.use('/terms', require('./routes/terms'), 'terms')
 module.context.use('/graph', require('./routes/graphs'), 'graphs')
 module.context.use('/edge', require('./routes/edges'), 'edges')
 module.context.use('/link', require('./routes/links'), 'link')
-module.context.use('/enum', require('./routes/enumerations'), 'enum')
 module.context.use('/descr', require('./routes/descriptors'), 'descr')
 module.context.use('/check', require('./routes/validation'), 'check')
 
