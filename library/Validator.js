@@ -1188,6 +1188,7 @@ class Validator
 		{
 			///
 			// Assert number of elements.
+			// Also assert presence of tuple types.
 			///
 			if(!this.checkTupleElements(
 				theContainer, theKey, theSection, theReportIndex
@@ -1198,15 +1199,34 @@ class Validator
 			///
 			// Iterate tuple types.
 			///
-			for(let i = 0; i < value.length; i++) {
-				
-				// TODO: Get descriptor and validate value.
-				
-				// if(!this.doValidateDataSection(
-				// 	value, i, theSection, theReportIndex
-				// )) {
-				// 	return false                                        // ==>
-				// }
+			const types = theSection[module.context.configuration.tupleTypes]
+			for(let i = 0; i < value.length; i++)
+			{
+				///
+				// Set iteration references.
+				///
+				const term =
+					this.cache.getTerm(
+						types[i], this.useCache, this.cacheMissing
+					)
+				if(term === false)
+				{
+					return this.setStatusReport(
+						'kVALUE_NOT_TERM',
+						types[i],
+						theSection[module.context.configuration.tupleTypes],
+						theReportIndex,
+						{ section: theSection}
+					)                                                   // ==>
+				}
+				if(!this.doValidateDataSection(
+					value,
+					i,
+					term[module.context.configuration.sectionData],
+					theReportIndex)
+				) {
+					return false                                        // ==>
+				}
 			}
 			
 			return true                                                 // ==>
@@ -1214,7 +1234,11 @@ class Validator
 		} // Is an array.
 		
 		return this.setStatusReport(
-			'kVALUE_NOT_A_TUPLE_ARRAY', theKey, value, theReportIndex
+			'kVALUE_NOT_A_TUPLE_ARRAY',
+			theKey,
+			value,
+			theReportIndex,
+			{section: theSection}
 		)                                                               // ==>
 		
 	} // doValidateTuple()
@@ -3782,6 +3806,13 @@ class Validator
 		theReportIndex)
 	{
 		///
+		// Init local storage.
+		///
+		const value = (theKey !== null)
+			? theContainer[theKey]
+			: theContainer
+		
+		///
 		// Assert tuple types list is there.
 		///
 		if(theSection.hasOwnProperty(module.context.configuration.tupleTypes))
@@ -3793,6 +3824,43 @@ class Validator
 			if(Validator.IsArray(types))
 			{
 				///
+				// Assert all types are descriptors.
+				///
+				for(let i = 0; i < types.length; i++)
+				{
+					///
+					// Assert value matches a term.
+					///
+					const term =
+						this.cache.getTerm(
+							types[i], this.useCache, this.cacheMissing
+						)
+					if(term === false)
+					{
+						return this.setStatusReport(
+							'kVALUE_NOT_TERM',
+							types[i],
+							theSection[module.context.configuration.tupleTypes],
+							theReportIndex,
+							{ section: theSection}
+						)                                               // ==>
+					}
+					
+					///
+					// Assert term is a descriptor.
+					///
+					if(!Validator.IsDescriptor(term)) {
+						return this.setStatusReport(
+							'kNOT_A_DESCRIPTOR',
+							types[i],
+							theSection[module.context.configuration.tupleTypes],
+							theReportIndex,
+							{ section: theSection}
+						)                                               // ==>
+					}
+				}
+				
+				///
 				// Check if elements are checked.
 				///
 				if(theSection.hasOwnProperty(module.context.configuration.arrayElements))
@@ -3803,13 +3871,6 @@ class Validator
 					const elements = theSection[module.context.configuration.arrayElements]
 					if(Validator.IsObject(elements))
 					{
-						///
-						// Init local storage.
-						///
-						const value = (theKey !== null)
-							? theContainer[theKey]
-							: theContainer
-						
 						///
 						// Minimum elements.
 						///
