@@ -1479,6 +1479,108 @@
     console.log('BODY:', body);
 });
 
+// request Descriptor keys  
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/descr/query/keys?op=AND',
+        method: 'POST',
+        headers: {"Content-Type":"application/json; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("{\"start\":0,\"limit\":25,\"_subject\":[\"chr_subject_target\"],\"_class\":[\"_class_quantity\"],\"_domain\":[\"chr_fore\"],\"_tag\":[\"chr_tag_diversity\"]}")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
+// request Descriptor terms  
+(function(callback) {
+    'use strict';
+        
+    const httpTransport = require('http');
+    const responseEncoding = 'utf8';
+    const httpOptions = {
+        hostname: 'localhost',
+        port: '8529',
+        path: '/_db/EUFGIS/dict/descr/query/terms?op=AND',
+        method: 'POST',
+        headers: {"Content-Type":"application/json; charset=utf-8","Cookie":"FOXXSID=null; FOXXSID.sig=659130347e9eb043443995f5b9aef83b6238df078ef297696fdd33b56bd7b0cb"}
+    };
+    httpOptions.headers['User-Agent'] = 'node ' + process.version;
+ 
+    // Paw Store Cookies option is not supported
+
+    const request = httpTransport.request(httpOptions, (res) => {
+        let responseBufs = [];
+        let responseStr = '';
+        
+        res.on('data', (chunk) => {
+            if (Buffer.isBuffer(chunk)) {
+                responseBufs.push(chunk);
+            }
+            else {
+                responseStr = responseStr + chunk;            
+            }
+        }).on('end', () => {
+            responseStr = responseBufs.length > 0 ? 
+                Buffer.concat(responseBufs).toString(responseEncoding) : responseStr;
+            
+            callback(null, res.statusCode, res.headers, responseStr);
+        });
+        
+    })
+    .setTimeout(0)
+    .on('error', (error) => {
+        callback(error);
+    });
+    request.write("{\"start\":0,\"limit\":25,\"_subject\":[\"chr_subject_target\"],\"_class\":[\"_class_quantity\"],\"_domain\":[\"chr_fore\"],\"_tag\":[\"chr_tag_diversity\"]}")
+    request.end();
+    
+
+})((error, statusCode, headers, body) => {
+    console.log('ERROR:', error); 
+    console.log('STATUS:', statusCode);
+    console.log('HEADERS:', JSON.stringify(headers));
+    console.log('BODY:', body);
+});
+
 // request Validate value by descriptor 
 (function(callback) {
     'use strict';

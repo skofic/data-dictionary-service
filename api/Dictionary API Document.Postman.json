@@ -1731,6 +1731,94 @@
             "followAuthorizationHeader": false
           },
           "response": []
+        },
+        {
+          "name": "Descriptor keys ",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/query/keys?op=AND",
+              "query": [
+                {
+                  "key": "op",
+                  "value": "AND",
+                  "disabled": false,
+                  "description": "Chaining operator for query filters."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/query/keys"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to query descriptors and retrieve the list of matching global identifiers.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the selection criteria in the request body:\n\n- `start`: *Start position* in results, provide an integer greater or equal to 0. *This property is required*, if omitted it will defult to `0`.\n- `limit`: *Number of elements* to be returned, provide an integer. *This property is required*, if omitted it will defult to `25`.\n- `_subject`: Provide the list of *subject* enumerations to match.\n- `_class`: Provide the list of *class* enumerations to match.\n- `_domain`: Provide the list of *domain* enumerations to match.\n- `_list`: Provide the selection of *list* enumerations to match.\n- `_tag`: Provide the list of *tag* enumerations to match.\n\nThe first two parameters are required, if you want to ignore any of the other ones, remove the property.\n\nA query parameter, `op`, is used to join the query filters. It can have the value of `AND` or `OR`.\n\nIf the service is successful, [`200`], it will return the list of matching descriptor global identifiers.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "description": null
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\"start\":0,\"limit\":25,\"_subject\":[\"chr_subject_target\"],\"_class\":[\"_class_quantity\"],\"_domain\":[\"chr_fore\"],\"_tag\":[\"chr_tag_diversity\"]}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
+        },
+        {
+          "name": "Descriptor terms ",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/query/terms?op=AND",
+              "query": [
+                {
+                  "key": "op",
+                  "value": "AND",
+                  "disabled": false,
+                  "description": "Chaining operator for query filters."
+                }
+              ],
+              "protocol": null,
+              "host": [
+                "{{Protocol}}://{{Host}}:{{Port}}/_db/{{Db}}/{{Path}}/descr/query/terms"
+              ],
+              "port": null,
+              "path": null
+            },
+            "description": "Use this service to query descriptors and retrieve the list of matching term records.\n\n*In order to use this service, the current user must have the `read` role*.\n\nThe service expects the selection criteria in the request body:\n\n- `start`: *Start position* in results, provide an integer greater or equal to 0. *This property is required*, if omitted it will defult to `0`.\n- `limit`: *Number of elements* to be returned, provide an integer. *This property is required*, if omitted it will defult to `25`.\n- `_subject`: Provide the list of *subject* enumerations to match.\n- `_class`: Provide the list of *class* enumerations to match.\n- `_domain`: Provide the list of *domain* enumerations to match.\n- `_list`: Provide the selection of *list* enumerations to match.\n- `_tag`: Provide the list of *tag* enumerations to match.\n\nThe first two parameters are required, if you want to ignore any of the other ones, remove the property.\n\nA query parameter, `op`, is used to join the query filters. It can have the value of `AND` or `OR`.\n\nIf the service is successful, [`200`], it will return the list of matching descriptor term records.\n\nIf the operation does not succeed, the service will return:\n\n- `401`: **No current user**: the service will return this code if no user is currently logged in.\n- `403`: **Unauthorised user**: the service will return this code if the current user is not an administrator.\n- `500`: For other types of error.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false,
+                "description": null
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "disabled": false,
+              "raw": "{\"start\":0,\"limit\":25,\"_subject\":[\"chr_subject_target\"],\"_class\":[\"_class_quantity\"],\"_domain\":[\"chr_fore\"],\"_tag\":[\"chr_tag_diversity\"]}"
+            },
+            "auth": null
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "followOriginalHttpMethod": false,
+            "followAuthorizationHeader": false
+          },
+          "response": []
         }
       ],
       "protocolProfileBehavior": null,

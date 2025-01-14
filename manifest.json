@@ -672,6 +672,12 @@
             "type": "string",
             "required": true,
             "default": "_tag"
+        },
+        "sectionDataList": {
+            "description": "Data section list",
+            "type": "string",
+            "required": true,
+            "default": "_list"
         }
     },
     "tests": [

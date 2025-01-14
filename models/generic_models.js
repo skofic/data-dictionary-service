@@ -302,6 +302,17 @@ const DescriptorQualifications = joi.object({
 	subjects: joi.array().items(joi.string())
 })
 
+// Descriptors query model.
+const DescriptorsQuery = joi.object({
+	start: joi.number().integer().min(0).default(0).required(),
+	limit: joi.number().integer().min(0).default(25).required(),
+	_subject: joi.array().items(joi.string()),
+	_class: joi.array().items(joi.string()),
+	_domain: joi.array().items(joi.string()),
+	_list: joi.array().items(joi.string()),
+	_tag: joi.array().items(joi.string())
+})
+
 
 module.exports = {
 	TermModel,
@@ -340,5 +351,7 @@ module.exports = {
 	AddLinksResponse,
 	DelLinksResponse,
 	
-	DescriptorQualifications
+	DescriptorQualifications,
+	
+	DescriptorsQuery
 }

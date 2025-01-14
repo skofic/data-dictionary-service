@@ -245,6 +245,7 @@ module.exports = Object.freeze({
                                     [module.context.configuration.sectionDataSubject]: {},
                                     [module.context.configuration.sectionDataClass]: {},
                                     [module.context.configuration.sectionDataDomain]: {},
+                                    [module.context.configuration.sectionDataList]: {},
                                     [module.context.configuration.sectionDataTag]: {
                                         "analyzers": [
                                             "identity",
