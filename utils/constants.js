@@ -51,7 +51,7 @@ module.exports = Object.freeze({
             name: module.context.configuration.collectionTerm,
             type: 'D'
         },
-        schema: {
+       schema: {
             name: module.context.configuration.collectionEdge,
             type: 'E',
             index: [
@@ -260,6 +260,8 @@ module.exports = Object.freeze({
                                         "fields": {
                                             [module.context.configuration.selectionDescriptorsAny]: {},
                                             [module.context.configuration.selectionDescriptorsOne]: {},
+                                            [module.context.configuration.selectionDescriptorsOneNone]: {},
+                                            [module.context.configuration.selectionDescriptorsOneNoneSet]: {},
                                             [module.context.configuration.selectionDescriptorsAll]: {}
                                         }
                                     },
@@ -269,6 +271,8 @@ module.exports = Object.freeze({
                                         "fields": {
                                             [module.context.configuration.selectionDescriptorsAny]: {},
                                             [module.context.configuration.selectionDescriptorsOne]: {},
+                                            [module.context.configuration.selectionDescriptorsOneNone]: {},
+                                            [module.context.configuration.selectionDescriptorsOneNoneSet]: {},
                                             [module.context.configuration.selectionDescriptorsAll]: {}
                                         }
                                     }

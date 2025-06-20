@@ -617,7 +617,7 @@
             "description": "Providers information section field",
             "type": "string",
             "required": true,
-            "default": "_providers"
+            "default": "_provider"
         },
         "termObjectDefinition": {
             "description": "Term object definition",
