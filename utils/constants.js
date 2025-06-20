@@ -139,7 +139,7 @@ module.exports = Object.freeze({
             "type": "arangosearch",
             "properties": {
                 "links": {
-                    [module.context.configuration.collectionTerm]: {
+                    "terms": {
                         "analyzers": [
                             "identity"
                         ],
