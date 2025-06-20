@@ -1,0 +1,960 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "GeoService API Document.paw",
+    "version": "v0.0.0"
+  },
+  "host": "localhost:8529",
+  "schemes": [
+    "http"
+  ],
+  "basePath": "/_db/GeoService/env",
+  "paths": {
+    "/chelsa/click": {
+      "get": {
+        "summary": "Contains point",
+        "description": "The service will return the *Chelsa climate record* that contains the *provided point coordinates*.\n\nProvide the decimal *latitude* and *longitude* respectively in the **lat** and **lon** *query path required parameters*.\n\nThe resulting record will contain the following properties:\n\n- `geometry_hash`: The *MD5 hash* of the *measurement area's rect*; corresponding to the `geometry_bounds` property.\n- `geometry_point`: The *GeoJSON point geometry* corresponding to the *center* of the *measurement area*.\n- `geometry_bounds`: The *GeoJSON polygon geometry* corresponding to the *measurement area's rect*.\n- `properties`: Chelsa climate data subdivided into the following historical and modelled time periods: `1981-2010`, `2011-2040`, `2041-2070` and `2071-2100`.",
+        "operationId": "458d3efd-5b68-45f2-86c4-56456cf9c423",
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "46.30140",
+            "name": "lat",
+            "description": "Reference point latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "7.50134",
+            "name": "lon",
+            "description": "Reference point longitude",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/chelsa/dist": {
+      "post": {
+        "summary": "Is within distance",
+        "description": "The service will *select* all *Chelsa records* that lie within a *distance range* from the provided *reference geometry*. The distance is calculated from the *wgs84 centroids* of both the *reference geometry* and the Chelsa *measurement geometries*.\n\nThe service expects the following *query path* parameters:\n\n- **what**: This *required* parameter determines the type of service result: `KEY`, `SHAPE` or `DATA` to return a *selection of records*; `MIN`, `AVG`, `MAX`, `STD` or `VAR` for the *data aggregation* of the selection's *quantitative data*.\n- **min**: This *required* parameter represents the *minimum distance*. The value is expressed in *meters* and is *inclusive*.\n- **max**: This *required* parameter represents the *maximum distance*. The value is expressed in *meters* and is *inclusive*.\n- **sort**: This *optional* parameter determines whether results should be *sorted* and in what order. `NO` means no sorting, `ASC` means ascending order and `DESC` means descending order. The parameter is required only when the `what` parameter is `KEY`, `SHAPE` or `DATA`. The *sort order* is determined by the *distance*.\n\nThe service also expects the following body parameters:\n\n- **geometry**: The *GeoJSON geometry* used to calculate the *distance*. It may be a *Point*, *MultiPoint*, *LineString*, *MultiLineString*, *Polygon* or *MultiPolygon*. *This parameter is required*.\n- **start**: The zero-based start index of the returned selection. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`, if omitted it defaults to 0.\n- **limit**: The number of records to return. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`. If omitted the full selection will be returned, so it is advisable to use it.\n\nThe result of the service depends on the value of the `what` parameter:\n\n`KEY` will return only the *MD5 hash* of the *measurement area's rect*; corresponding to the `geometry_bounds` property.\n\n`SHAPE` will return the geometries of the selected measurement areas:\n- `geometry_hash`: The *MD5 hash* of the *measurement area's rect*.\n- `distance`: The *distance in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the Chelsa *measurement geometries*.\n- `geometry_point`: The *GeoJSON point geometry* corresponding to the *centroid* of the *measurement area*.\n- `geometry_bounds`: The *GeoJSON polygon geometry* corresponding the *measurement area*.\n\n`DATA` will return the full selected records, corresponding to the elements of the `DATA` option, plus:\n- `properties`: Chelsa climate data subdivided into the following historical and modelled time periods: `1981-2010`, `2011-2040`, `2041-2070` and `2071-2100`.\n\n`MIN`, `AVG`, `MAX`, `STD` or `VAR` will respectively return the aggregated *minimuum*, *average*, *maximum*, *standard deviation* or *variance* of the selection's *quantitative data*. The service will return a single record containing:\n- `count`: The number of selected records.\n- `distance`: The *distances in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the Chelsa *measurement geometries*, *aggregated* according to the *selected aggregation function*.\n- `properties`: Chelsa *quantitative data* subdivided into the following historical and modelled time periods: `1981-2010`, `2011-2040`, `2041-2070` and `2071-2100`, *aggregated* according to the *selected aggregation function*.\n",
+        "operationId": "2270b3cd-6b12-42fa-bf8f-295278d1fbf2",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "default": "KEY",
+            "enum": [
+              "KEY",
+              "SHAPE",
+              "DATA",
+              "MIN",
+              "AVG",
+              "MAX",
+              "STD",
+              "VAR"
+            ],
+            "name": "what",
+            "description": "Selection result type: KEY, SHAPE, DATA, MIN, AVG, MAX, STD, VAR",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "minimum": 0,
+            "default": "0",
+            "name": "min",
+            "description": "Minimum distance",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "minimum": 0,
+            "default": "10000",
+            "name": "max",
+            "description": "Maximum distance",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "NO",
+              "ASC",
+              "DESC"
+            ],
+            "name": "sort",
+            "description": "Sort order: NO, ASC, DESC",
+            "required": false,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"geometry\":{\"type\":\"Point\",\"coordinates\":[7.50134,46.30140]},\"start\":0,\"limit\":10}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/chelsa/contain": {
+      "post": {
+        "summary": "Intersects",
+        "description": "The service will *select* all *Chelsa records* whose *measurement area* intersects the provided *reference geometry*.\n\nThe service expects the following *query path* parameters:\n\n- **what**: This *required* parameter determines the type of service result: `KEY`, `SHAPE` or `DATA` to return a *selection of records*; `MIN`, `AVG`, `MAX`, `STD` or `VAR` for the *data aggregation* of the selection's *quantitative data*.\n\nThe service also expects the following body parameters:\n\n- **geometry**: The *GeoJSON geometry* that is used to *elect* all records whose *measurement area intersects* with it. It may be a *Point*, *MultiPoint*, *LineString*, *MultiLineString*, *Polygon* or *MultiPolygon*. *This parameter is required*.\n- **start**: The zero-based start index of the returned selection. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`, if omitted it defaults to 0.\n- **limit**: The number of records to return. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`. If omitted the full selection will be returned, so it is advisable to use it.\n\nThe result of the service depends on the value of the `what` parameter:\n\n`KEY` will return only the *MD5 hash* of the *measurement area's rect*; corresponding to the `geometry_bounds` property.\n\n`SHAPE` will return the geometries of the selected measurement areas:\n- `geometry_hash`: The *MD5 hash* of the *measurement area's rect*.\n- `distance`: The *distance in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the Chelsa *measurement geometries*.\n- `geometry_point`: The *GeoJSON point geometry* corresponding to the *centroid* of the *measurement area*.\n- `geometry_bounds`: The *GeoJSON polygon geometry* corresponding the *measurement area*.\n\n`DATA` will return the full selected records, corresponding to the elements of the `DATA` option, plus:\n- `properties`: Chelsa climate data subdivided into the following historical and modelled time periods: `1981-2010`, `2011-2040`, `2041-2070` and `2071-2100`.\n\n`MIN`, `AVG`, `MAX`, `STD` or `VAR` will respectively return the aggregated *minimuum*, *average*, *maximum*, *standard deviation* or *variance* of the selection's *quantitative data*. The service will return a single record containing:\n- `count`: The number of selected records.\n- `distance`: The *distances in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the Chelsa *measurement geometries*, *aggregated* according to the *selected aggregation function*.\n- `properties`: Chelsa *quantitative data* subdivided into the following historical and modelled time periods: `1981-2010`, `2011-2040`, `2041-2070` and `2071-2100`, *aggregated* according to the *selected aggregation function*.\n",
+        "operationId": "ec151f7d-b473-4168-a83b-977202bfb770",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "default": "KEY",
+            "enum": [
+              "KEY",
+              "SHAPE",
+              "DATA",
+              "MIN",
+              "AVG",
+              "MAX",
+              "STD",
+              "VAR"
+            ],
+            "name": "what",
+            "description": "Selection result type: KEY, SHAPE, DATA, MIN, AVG, MAX, STD, VAR",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[7.495,46.307],[7.495,46.294],[7.51,46.294],[7.51,46.307],[7.495,46.307]]]},\"start\":0,\"limit\":10}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/worldclim/click": {
+      "get": {
+        "summary": "Contains point",
+        "description": "The service will return the *WorldClim climate record* that contains the *provided point coordinates*.\n\nProvide the decimal *latitude* and *longitude* respectively in the **lat** and **lon** *query path required parameters*.\n\nThe resulting record will contain the following properties:\n\n- `geometry_hash`: The *MD5 hash* of the *measurement area's rect*; corresponding to the `geometry_bounds` property.\n- `geometry_point`: The *GeoJSON point geometry* corresponding to the *center* of the *measurement area*.\n- `geometry_bounds`: The *GeoJSON polygon geometry* corresponding to the *measurement area's rect*.\n- `properties`: Chelsa climate data subdivided into the following historical and modelled time periods: `1970-2000`, `2021-2040`, `2041-2060`, `2061-2080` and `2081-2100`.",
+        "operationId": "9d15eeb6-133e-4230-876a-e0d1dc4c4545",
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "46.30140",
+            "name": "lat",
+            "description": "Reference point latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "7.50134",
+            "name": "lon",
+            "description": "Reference point longitude",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/worldclim/dist": {
+      "post": {
+        "summary": "Is within distance",
+        "description": "The service will *select* all *WorldClim records* that lie within a *distance range* from the provided *reference geometry*. The distance is calculated from the *wgs84 centroids* of both the *reference geometry* and the WorldClim *measurement geometries*.\n\nThe service expects the following *query path* parameters:\n\n- **what**: This *required* parameter determines the type of service result: `KEY`, `SHAPE` or `DATA` to return a *selection of records*; `MIN`, `AVG`, `MAX`, `STD` or `VAR` for the *data aggregation* of the selection's *quantitative data*.\n- **min**: This *required* parameter represents the *minimum distance*. The value is expressed in *meters* and is *inclusive*.\n- **max**: This *required* parameter represents the *maximum distance*. The value is expressed in *meters* and is *inclusive*.\n- **sort**: This *optional* parameter determines whether results should be *sorted* and in what order. `NO` means no sorting, `ASC` means ascending order and `DESC` means descending order. The parameter is required only when the `what` parameter is `KEY`, `SHAPE` or `DATA`. The *sort order* is determined by the *distance*.\n\nThe service also expects the following body parameters:\n\n- **geometry**: The *GeoJSON geometry* used to calculate the *distance*. It may be a *Point*, *MultiPoint*, *LineString*, *MultiLineString*, *Polygon* or *MultiPolygon*. *This parameter is required*.\n- **start**: The zero-based start index of the returned selection. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`, if omitted it defaults to 0.\n- **limit**: The number of records to return. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`. If omitted the full selection will be returned, so it is advisable to use it.\n\nThe result of the service depends on the value of the `what` parameter:\n\n`KEY` will return only the *MD5 hash* of the *measurement area's rect*; corresponding to the `geometry_bounds` property.\n\n`SHAPE` will return the geometries of the selected measurement areas:\n- `geometry_hash`: The *MD5 hash* of the *measurement area's rect*.\n- `distance`: The *distance in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the Chelsa *measurement geometries*.\n- `geometry_point`: The *GeoJSON point geometry* corresponding to the *centroid* of the *measurement area*.\n- `geometry_bounds`: The *GeoJSON polygon geometry* corresponding the *measurement area*.\n\n`DATA` will return the full selected records, corresponding to the elements of the `DATA` option, plus:\n- `properties`: WorldClim climate data subdivided into the following historical and modelled time periods: `1970-2000`, `2021-2040`, `2041-2060`, `2061-2080` and `2081-2100`.\n\n`MIN`, `AVG`, `MAX`, `STD` or `VAR` will respectively return the aggregated *minimuum*, *average*, *maximum*, *standard deviation* or *variance* of the selection's *quantitative data*. The service will return a single record containing:\n- `count`: The number of selected records.\n- `distance`: The *distances in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the WorldClim *measurement geometries*, *aggregated* according to the *selected aggregation function*.\n- `properties`: WorldClim *quantitative data* subdivided into the following historical and modelled time periods: `1970-2000`, `2021-2040`, `2041-2060`, `2061-2080` and `2081-2100`, *aggregated* according to the *selected aggregation function*.\n",
+        "operationId": "f27f4bfb-104b-47f6-9947-2b89f8ee6875",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "default": "KEY",
+            "enum": [
+              "KEY",
+              "SHAPE",
+              "DATA",
+              "MIN",
+              "AVG",
+              "MAX",
+              "STD",
+              "VAR"
+            ],
+            "name": "what",
+            "description": "Selection result type: KEY, SHAPE, DATA, MIN, AVG, MAX, STD, VAR",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "minimum": 0,
+            "default": "0",
+            "name": "min",
+            "description": "Minimum distance",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "minimum": 0,
+            "default": "10000",
+            "name": "max",
+            "description": "Maximum distance",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "NO",
+              "ASC",
+              "DESC"
+            ],
+            "name": "sort",
+            "description": "Sort order: NO, ASC, DESC",
+            "required": false,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"geometry\":{\"type\":\"Point\",\"coordinates\":[7.50134,46.30140]},\"start\":0,\"limit\":10}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/worldclim/contain": {
+      "post": {
+        "summary": "Intersects",
+        "description": "The service will *select* all *WorldClim records* whose *measurement area* intersects the provided *referWorldClimence geometry*.\n\nThe service expects the following *query path* parameters:\n\n- **what**: This *required* parameter determines the type of service result: `KEY`, `SHAPE` or `DATA` to return a *selection of records*; `MIN`, `AVG`, `MAX`, `STD` or `VAR` for the *data aggregation* of the selection's *quantitative data*.\n\nThe service also expects the following body parameters:\n\n- **geometry**: The *GeoJSON geometry* that is used to *elect* all records whose *measurement area intersects* with it. It may be a *Point*, *MultiPoint*, *LineString*, *MultiLineString*, *Polygon* or *MultiPolygon*. *This parameter is required*.\n- **start**: The zero-based start index of the returned selection. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`, if omitted it defaults to 0.\n- **limit**: The number of records to return. The property is relevant only when the `what` parameter is `KEY`, `SHAPE` or `DATA`. If omitted the full selection will be returned, so it is advisable to use it.\n\nThe result of the service depends on the value of the `what` parameter:\n\n`KEY` will return only the *MD5 hash* of the *measurement area's rect*; corresponding to the `geometry_bounds` property.\n\n`SHAPE` will return the geometries of the selected measurement areas:\n- `geometry_hash`: The *MD5 hash* of the *measurement area's rect*.\n- `distance`: The *distance in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the WorldClim *measurement geometries*.\n- `geometry_point`: The *GeoJSON point geometry* corresponding to the *centroid* of the *measurement area*.\n- `geometry_bounds`: The *GeoJSON polygon geometry* corresponding the *measurement area*.\n\n`DATA` will return the full selected records, corresponding to the elements of the `DATA` option, plus:\n- `properties`: WorldClim climate data subdivided into the following historical and modelled time periods: `1981-2010`, `2011-2040`, `2041-2070` and `2071-2100`.\n\n`MIN`, `AVG`, `MAX`, `STD` or `VAR` will respectively return the aggregated *minimuum*, *average*, *maximum*, *standard deviation* or *variance* of the selection's *quantitative data*. The service will return a single record containing:\n- `count`: The number of selected records.\n- `distance`: The *distances in meters* between the *wgs84 centroid* of the *reference geometry* and the *wgs84 centroid* of the WorldClim *measurement geometries*, *aggregated* according to the *selected aggregation function*.\n- `properties`: WorldClim *quantitative data* subdivided into the following historical and modelled time periods: `1981-2010`, `2011-2040`, `2041-2070` and `2071-2100`, *aggregated* according to the *selected aggregation function*.\n",
+        "operationId": "c283c7e4-8ea3-414e-b15d-2cf08112d272",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "default": "KEY",
+            "enum": [
+              "KEY",
+              "SHAPE",
+              "DATA",
+              "MIN",
+              "AVG",
+              "MAX",
+              "STD",
+              "VAR"
+            ],
+            "name": "what",
+            "description": "Selection result type: KEY, SHAPE, DATA, MIN, AVG, MAX, STD, VAR",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[7.495,46.307],[7.495,46.294],[7.51,46.294],[7.51,46.307],[7.495,46.307]]]},\"start\":0,\"limit\":10}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/hash": {
+      "get": {
+        "summary": "Point",
+        "description": "The service will return the *shape hash* related to the provided point coordinates.\n\nThe service expects two *query parameters*:\n\n- `lat`: The *latitude* of the point.\n- `lon`: The *longitude* of the point.\n\nThe service will return the following object:\n\n- `geometry`: The *GeoJSON* representation of the point.\n- `geometry_hash`: The *hash* for the point.",
+        "operationId": "5768bbe7-e8f3-47ee-aa50-5704f101da7e",
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "42",
+            "name": "lat",
+            "description": "Coordinates latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "12",
+            "name": "lon",
+            "description": "Coordinates longitde",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/hash/poly": {
+      "post": {
+        "summary": "Polygon",
+        "description": "The service will return the *shape hash* related to the provided polygon coordinates.\n\nThe service expects a `oordinates` *body parameter* containing the polygon coordinates.\nThe polygon shape should be provided at least as one array representing a *linear ring*.\nEach linear ring should consist of an array with at least *four longitude/latitude pairs*.\nThe *first* linear ring must be the *outermost*, while any *subsequent* linear rings will be interpreted as *holes*.\nThe *order* of the sequence of coordinates is important: *counter-clock* means the polygon *area* is *inside*, *clockwise* means the *area* of the polygon is *outside*.\n\nThe service will return the following object:\n\n- `geometry`: The *GeoJSON* representation of the polygon.\n- `geometry_hash`: The *hash* for the polygon.",
+        "operationId": "e95f1620-610e-4897-a571-2489e0176caa",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"coordinates\":[[[35,10],[45,45],[15,40],[10,20],[35,10]],[[20,30],[30,20],[35,35],[20,30]]]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/hash/multipoly": {
+      "post": {
+        "summary": "MultiPolygon",
+        "description": "The service will return the *shape hash* related to the provided multi-polygon coordinates.\n\nThe MultiPolygon shape should be provided as an *array* of *Polygon shapes*.\nThe polygon shape should be provided at least as *one array* representing a *linear ring*.\nEach linear ring should consist of an array with at least *four longitude/latitude pairs*.\nThe *first* linear ring must be the *outermost*, while any *subsequent* linear ring will be interpreted as *holes*.\nThe *order* of the sequence of coordinates is important: *ounter-clock* means the polygon area is *inside*, *clockwise* means the are of the polygon is *outside*.\n\nThe service will return the following object:\n\n- `geometry`: The *GeoJSON* representation of the multi-polygon.\n- `geometry_hash`: The *hash* for the multi-polygon.",
+        "operationId": "184bf6ce-7511-4de4-af57-8590e1c64db9",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\n\"coordinates\": [ [ [[40, 40], [20, 45], [45, 30], [40, 40]] ], [ [[20, 35], [10, 30], [10, 10], [30, 5], [45, 20], [20, 35]], [[30, 20], [20, 15], [20, 25], [30, 20]] ] ]\n}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/gcu/shape": {
+      "get": {
+        "summary": "Unit by unit ID",
+        "description": "The service will return the *unit record* and the *list* of *unit shape references* related to the *provided unit ID*.\n\nThe service expects the `gcu_id_number` query parameter containing a unit number.\n\nThe service will return the following object:\n\n- `gcu_id_number`: The *unit number* associated with the *provided unit ID*.\n- `geometry_hash_list`: The *list* of *shape references* associated with the *provided unit ID*.\n\nThe record may also contain the following fields:\n\n- `geometry`: The unit geometries.\n- `geometry_bounds`: The unit geometries bounding box.\n- `properties`: Topographic property averages for the unit shapes.\n",
+        "operationId": "571d5e41-d1b3-4a23-af71-807200e790a2",
+        "parameters": [
+          {
+            "type": "string",
+            "default": "CHE00006",
+            "name": "gcu_id_number",
+            "description": "Conservation unit number",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/gcu/rec": {
+      "get": {
+        "summary": "Unit by geometry reference",
+        "description": "The service will return the *unit number* associated with the provided *shape reference* and the *full* list of related shape identifiers.\n\nThe service expects the `geometry_hash` query parameter containing a *unit shape geometry reference*.\n\nThe service will return the following object:\n\n- `gcu_id_number`: The *unit number* associated with the *provided unit ID*.\n- `geometry_hash_list`: The *list* of *shape references* associated with the *provided unit ID*.\n\nThe record may also contain the following fields:\n\n- `geometry`: The unit geometries.\n- `geometry_bounds`: The unit geometries bounding box.\n- `properties`: Topographic property averages for the unit shapes.\n",
+        "operationId": "8ebe0f0f-bdc5-4829-a62c-b45e989b7dd4",
+        "parameters": [
+          {
+            "type": "string",
+            "default": "46164fdefc87fad25fc55e0146bae752",
+            "name": "geometry_hash",
+            "description": "Geometry MD5 hash",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/gcu/click": {
+      "get": {
+        "summary": "Unit by point",
+        "description": "The service will return the *unit record* whose shape intersects with the *provided point* coordinate.\n\nThe service expects the `lat` and `lon` query parameters representing respectively the *latitude* and *longitude* of the point coordinate.",
+        "operationId": "57e2d0a5-16e9-4b51-bf1b-fb4cc1f00991",
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "41.83",
+            "name": "lat",
+            "description": "Coordinate latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "16.02",
+            "name": "lon",
+            "description": "Coordinate longitude",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/shape/search": {
+      "post": {
+        "summary": "Geometry search",
+        "description": "The service will return shape records according to a set of provided query parameters.\n\nThe selection criteria is structured as follows:\n\n- `geometry_hash_list`: List of shape geometry hashes.\n- `std_dataset_ids`: List of dataset identifiers.\n- `geo_shape_area`: Shape area range, limits included.\n- `chr_AvElevation`: Shape average elevation range, limits included.\n- `chr_StdElevation`: Shape average elevation standard deviation range, limits included.\n- `chr_AvSlope`: Shape average slope range, limits included.\n- `chr_AvAspect`: Shape average area range, limits included.\n- `intersects`: GeoJSON geometry that intersects shape bounding boxes.\n- `distance`: Provide the GeoJSON shape in reference and the distance range in range.\n- `paging`: Paging: provide `offset` and `limit` properties, or omit the property to return all available data.\n\nWhen filling the search criteria either provide a value or omit the corresponding property.\nRange values are included in the expected range, it is also possible to omit one of the terms.\nDistance and elevation ranges are expected to be expressed in meters.\n",
+        "operationId": "07d3ee03-91b6-4ae4-9f65-aae121675f20",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"geometry_hash_list\":[\"02f184cfb58d5d8cb3b0769cb2631c94\",\"3bb8b24468aa2ddee2941a7455dcbc81\"],\"std_dataset_ids\":[\"814b4937-3bbd-47c7-99d5-2cd51a0f3469\"],\"geo_shape_area\":{\"min\":32922692,\"max\":39275174},\"chr_AvElevation\":{\"min\":220,\"max\":930},\"chr_StdElevation\":{\"min\":5,\"max\":450},\"chr_AvSlope\":{\"min\":1,\"max\":30},\"chr_AvAspect\":{\"min\":150,\"max\":190},\"intersects\":{\"type\":\"Polygon\",\"coordinates\":[[[19.172351,50.399665],[11.205682,50.399665],[11.205682,45.511248],[19.172351,45.511248],[19.172351,50.399665]]]},\"distance\":{\"reference\":{\"type\":\"Point\",\"coordinates\":[15.407384,48.150157]},\"range\":{\"min\":0,\"max\":500000000}},\"paging\":{\"offset\":0,\"limit\":100}}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/shape": {
+      "get": {
+        "summary": "Geometry by reference",
+        "description": "The service will return the *shape record* identified by the *provided geometry hash*.\n\nThe service expects the `geometry_hash` query parameter with the *shape reference*.\n\nThe `geometry_hash` property of the returned record corresponds to the `_key` property of the shape record.",
+        "operationId": "0a34efec-a7a8-43e0-a37c-a2ed7786941a",
+        "parameters": [
+          {
+            "type": "string",
+            "default": "0df76d46196094c8bade10e30faf6ae0",
+            "name": "geometry_hash",
+            "description": "Geometry MD5 hash",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/shape/click": {
+      "get": {
+        "summary": "Geometry by point",
+        "description": "The service will return the *shape record* whose bounds intersect with the *provided point* coordinate.\n\nThe service expects the `lat` and `lon` query parameters representing respectively the *latitude* and *longitude* of the point coordinate.\n\nThe `geometry_hash` property of the returned record corresponds to the `_key` property of the shape record.",
+        "operationId": "e34797a0-0576-42f0-a89d-323eea8e1e9d",
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "41.83",
+            "name": "lat",
+            "description": "Coordinate latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "16.02",
+            "name": "lon",
+            "description": "Coordinate longitude",
+            "required": true,
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/rs/meta/span/shape": {
+      "post": {
+        "summary": "Shape metadata by time span",
+        "description": "This service will return the *summary* of *all data measurements* selected by the provided search parameters *grouped by date span*.\n\nThe service expects a series of search parameters in the body object:\n\n- `geometry_hash_list`: *Required* list of GCU shape references, as MD5 hash of geometry.\n- `std_date_span`: *Optional* list of requested date spans.\n- `std_date_start`: *Optional* minimum date.\n- `std_date_end`: *Optional* end date.\n- `std_terms`: *Optional* list of requested variable names.\n- `std_dataset_ids`: *Optional* list of requested dataset references.\n\nThe resulting data will contain one record for each date span:\n\n- `count`: The number of selected data records.\n- `std_date_span`: Date span: daily, monthly or yearly.\n- `std_date_start`: Dates range minimum.\n- `std_date_end`: Dates range maximum.\n- `std_terms`: List of featured variable names.\n- `std_dataset_ids`: List of featured dataset references.",
+        "operationId": "d7fc2260-724a-4bbc-9223-e8b95602ec71",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"geometry_hash_list\":[\"5884f50ccde8024a30d84cf29c12c3ed\",\"6117b4b921bbe98c0ee8c5a253132634\"],\"std_date_span\":[\"std_date_span_day\",\"std_date_span_month\",\"std_date_span_year\"],\"std_date_start\":\"2000\",\"std_date_end\":\"2023\",\"std_terms\":[\"chr_RelHumid\",\"env_climate_temp-2m\",\"chr_LandSurfTemp\",\"chr_AvLeafAreaIdx\",\"chr_AvBiomass\"],\"std_dataset_ids\":[\"5f9c61fc-8a82-41b5-b2ae-42c0068cfb6e\",\"9f0b933b-a6e7-435d-a1ba-c49c10c94c52\",\"647be387-4dda-4257-a7c8-e5c47e90ccc9\",\"750b614a-8dbc-49e0-85e2-8279c2b80269\",\"08e0810c-c259-409b-8626-e8699540cfaa\",\"d9f9676f-d31e-4f31-80d7-fd00909039aa\",\"5161a461-1fb1-46df-89de-fd1caab906e7\",\"cfe881bd-65f3-4c4c-a0fb-c0b9fd35ea51\",\"2a9ca201-0b15-495f-ad65-c138886986df\"]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/rs/meta/span/unit": {
+      "post": {
+        "summary": "Unit metadata by time span",
+        "description": "This service will return the *summary* of *all data measurements* selected by the provided search parameters *grouped by date span*.\n\nThe service expects a series of search parameters in the body object:\n\n- `gcu_id_number_list`: *Required* list of GCU unit numbers.\n- `std_date_span`: *Optional* list of requested date spans.\n- `std_date_start`: *Optional* minimum date.\n- `std_date_end`: *Optional* end date.\n- `std_terms`: *Optional* list of requested variable names.\n- `std_dataset_ids`: *Optional* list of requested dataset references.\n\nThe resulting data will contain one record for each date span:\n\n- `count`: The number of selected data records.\n- `std_date_span`: Date span: daily, monthly or yearly.\n- `std_date_start`: Dates range minimum.\n- `std_date_end`: Dates range maximum.\n- `std_terms`: List of featured variable names.\n- `std_dataset_ids`: List of featured dataset references.",
+        "operationId": "3d617397-50e3-41c4-a00e-b3483eec34f8",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"gcu_id_number_list\":[\"ITA00001\",\"AUT00001\"],\"std_date_span\":[\"std_date_span_day\",\"std_date_span_month\",\"std_date_span_year\"],\"std_date_start\":\"2000\",\"std_date_end\":\"2023\",\"std_terms\":[\"chr_RelHumid\",\"env_climate_temp-2m\",\"chr_LandSurfTemp\",\"chr_AvLeafAreaIdx\",\"chr_AvBiomass\"],\"std_dataset_ids\":[\"5f9c61fc-8a82-41b5-b2ae-42c0068cfb6e\",\"9f0b933b-a6e7-435d-a1ba-c49c10c94c52\",\"647be387-4dda-4257-a7c8-e5c47e90ccc9\",\"750b614a-8dbc-49e0-85e2-8279c2b80269\",\"08e0810c-c259-409b-8626-e8699540cfaa\",\"d9f9676f-d31e-4f31-80d7-fd00909039aa\",\"5161a461-1fb1-46df-89de-fd1caab906e7\",\"cfe881bd-65f3-4c4c-a0fb-c0b9fd35ea51\",\"2a9ca201-0b15-495f-ad65-c138886986df\"]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/rs/meta/shape": {
+      "post": {
+        "summary": "Shape metadata by geometry and time span",
+        "description": "This service will return the *summary* of *all data measurements* selected by the provided search parameters grouped by *shape* and *date span*.\n\nThe service expects a series of search parameters in the body object:\n\n- `geometry_hash_list`: *Required* list of GCU shape references, as MD5 hash of geometry.\n- `std_date_span`: *Optional* list of requested date spans.\n- `std_date_start`: *Optional* minimum date.\n- `std_date_end`: *Optional* end date.\n- `std_terms`: *Optional* list of requested variable names.\n- `std_dataset_ids`: *Optional* list of requested dataset references.\n\nThe resulting data will contain one record for each shape:\n\n- `geometry_hash`: The shape reference.\n- `properties`: Shape summary data grouped by date span, described below:\n- `count`: The number of selected data records.\n- `std_date_span`: Date span: daily, monthly or yearly.\n- `std_date_start`: Dates range minimum.\n- `std_date_end`: Dates range maximum.\n- `std_terms`: List of featured variable names.\n- `std_dataset_ids`: List of featured dataset references.",
+        "operationId": "d64a4a3f-3744-4da3-80cf-13b8be9bddc5",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"geometry_hash_list\":[\"5884f50ccde8024a30d84cf29c12c3ed\",\"6117b4b921bbe98c0ee8c5a253132634\"],\"std_date_span\":[\"std_date_span_day\",\"std_date_span_month\",\"std_date_span_year\"],\"std_date_start\":\"2000\",\"std_date_end\":\"2023\",\"std_terms\":[\"chr_RelHumid\",\"env_climate_temp-2m\",\"chr_LandSurfTemp\",\"chr_AvLeafAreaIdx\",\"chr_AvBiomass\"],\"std_dataset_ids\":[\"5f9c61fc-8a82-41b5-b2ae-42c0068cfb6e\",\"9f0b933b-a6e7-435d-a1ba-c49c10c94c52\",\"647be387-4dda-4257-a7c8-e5c47e90ccc9\",\"750b614a-8dbc-49e0-85e2-8279c2b80269\",\"08e0810c-c259-409b-8626-e8699540cfaa\",\"d9f9676f-d31e-4f31-80d7-fd00909039aa\",\"5161a461-1fb1-46df-89de-fd1caab906e7\",\"cfe881bd-65f3-4c4c-a0fb-c0b9fd35ea51\",\"2a9ca201-0b15-495f-ad65-c138886986df\"]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/rs/meta/unit": {
+      "post": {
+        "summary": "Unit metadata by geometry and time span",
+        "description": "This service will return the *summary* of *all data measurements* selected by the provided search parameters grouped by *unit number* and *date span*.\n\nThe service expects a series of search parameters in the body object:\n\n- `gcu_id_number_list`: *Required* list of GCU unit numbers.\n- `std_date_span`: *Optional* list of requested date spans.\n- `std_date_start`: *Optional* minimum date.\n- `std_date_end`: *Optional* end date.\n- `std_terms`: *Optional* list of requested variable names.\n- `std_dataset_ids`: *Optional* list of requested dataset references.\n\nThe resulting data will contain one record for each shape:\n\n- `gcu_id_number`: The unit number.\n- `properties`: Shape summary data grouped by date span, described below:\n- `count`: The number of selected data records.\n- `std_date_span`: Date span: daily, monthly or yearly.\n- `std_date_start`: Dates range minimum.\n- `std_date_end`: Dates range maximum.\n- `std_terms`: List of featured variable names.\n- `std_dataset_ids`: List of featured dataset references.",
+        "operationId": "f5235fc7-2bf2-419f-acc7-78df4db8b613",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"gcu_id_number_list\":[\"ITA00001\",\"AUT00001\"],\"std_date_span\":[\"std_date_span_day\",\"std_date_span_month\",\"std_date_span_year\"],\"std_date_start\":\"2000\",\"std_date_end\":\"2023\",\"std_terms\":[\"chr_RelHumid\",\"env_climate_temp-2m\",\"chr_LandSurfTemp\",\"chr_AvLeafAreaIdx\",\"chr_AvBiomass\"],\"std_dataset_ids\":[\"5f9c61fc-8a82-41b5-b2ae-42c0068cfb6e\",\"9f0b933b-a6e7-435d-a1ba-c49c10c94c52\",\"647be387-4dda-4257-a7c8-e5c47e90ccc9\",\"750b614a-8dbc-49e0-85e2-8279c2b80269\",\"08e0810c-c259-409b-8626-e8699540cfaa\",\"d9f9676f-d31e-4f31-80d7-fd00909039aa\",\"5161a461-1fb1-46df-89de-fd1caab906e7\",\"cfe881bd-65f3-4c4c-a0fb-c0b9fd35ea51\",\"2a9ca201-0b15-495f-ad65-c138886986df\"]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/rs/data/shape": {
+      "post": {
+        "summary": "Data by geometry and time span",
+        "description": "This service will return *all data measurements* selected by the required *geometry hash* in the query path and *search parameters* in the body. The results will be grouped by *date span* and *measurement date*.\n\nThe service *requires* the shape reference to be provided in the query path and an *optional* series of search parameters in the body object:\n\n- `std_date_span`: *Optional* list of requested date spans.\n- `std_date_start`: *Optional* minimum date.\n- `std_date_end`: *Optional* end date.\n- `std_terms`: *Optional* list of requested variable names.\n- `std_dataset_ids`: *Optional* list of requested dataset references.\n\nThe resulting data will contain one record for each selected date span, and within the span, one element for each measurement date:\n\n- `std_date_span`: Date span: daily, monthly or yearly.\n- `std_date_series`: Shape data measurments for current date span:\n- `std_date`: Measurement date.\n- `properties`: Measurement variables.",
+        "operationId": "e56b916f-7711-4262-a380-dc65bc8aa731",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "default": "5884f50ccde8024a30d84cf29c12c3ed",
+            "name": "geometry_hash",
+            "description": "Geometry MD5 hash",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"std_date_span\":[\"std_date_span_day\",\"std_date_span_month\",\"std_date_span_year\"],\"std_date_start\":\"2010\",\"std_date_end\":\"20101231\",\"std_terms\":[\"chr_RelHumid\",\"env_climate_temp-2m\",\"chr_LandSurfTemp\",\"chr_AvLeafAreaIdx\",\"chr_AvBiomass\"],\"std_dataset_ids\":[\"5f9c61fc-8a82-41b5-b2ae-42c0068cfb6e\",\"9f0b933b-a6e7-435d-a1ba-c49c10c94c52\",\"647be387-4dda-4257-a7c8-e5c47e90ccc9\",\"750b614a-8dbc-49e0-85e2-8279c2b80269\",\"08e0810c-c259-409b-8626-e8699540cfaa\",\"d9f9676f-d31e-4f31-80d7-fd00909039aa\",\"5161a461-1fb1-46df-89de-fd1caab906e7\",\"cfe881bd-65f3-4c4c-a0fb-c0b9fd35ea51\",\"2a9ca201-0b15-495f-ad65-c138886986df\"]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/rs/data/unit": {
+      "post": {
+        "summary": "Data by unit and time span",
+        "description": "This service will return *all data measurements* selected by the required *unit number* in the query path and *search parameters* in the body. The results will be grouped by *date span* and *measurement date*.\n\nThe service *requires* the unit number to be provided in the query path and an *optional* series of search parameters in the body object:\n\n- `std_date_span`: *Optional* list of requested date spans.\n- `std_date_start`: *Optional* minimum date.\n- `std_date_end`: *Optional* end date.\n- `std_terms`: *Optional* list of requested variable names.\n- `std_dataset_ids`: *Optional* list of requested dataset references.\n\nThe resulting data will contain one record for each selected date span, and within the span, one element for each measurement date:\n\n- `std_date_span`: Date span: daily, monthly or yearly.\n- `std_date_series`: Shape data measurments for current date span:\n- `std_date`: Measurement date.\n- `properties`: Measurement variables.",
+        "operationId": "27b17d96-2107-41f5-bd41-d637f7f588ab",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "default": "GBR00001",
+            "name": "gcu_id_number",
+            "description": "Unit number",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"std_date_span\":[\"std_date_span_day\",\"std_date_span_month\",\"std_date_span_year\"],\"std_date_start\":\"2010\",\"std_date_end\":\"20101231\",\"std_terms\":[\"chr_RelHumid\",\"env_climate_temp-2m\",\"chr_LandSurfTemp\",\"chr_AvLeafAreaIdx\",\"chr_AvBiomass\"],\"std_dataset_ids\":[\"5f9c61fc-8a82-41b5-b2ae-42c0068cfb6e\",\"9f0b933b-a6e7-435d-a1ba-c49c10c94c52\",\"647be387-4dda-4257-a7c8-e5c47e90ccc9\",\"750b614a-8dbc-49e0-85e2-8279c2b80269\",\"08e0810c-c259-409b-8626-e8699540cfaa\",\"d9f9676f-d31e-4f31-80d7-fd00909039aa\",\"5161a461-1fb1-46df-89de-fd1caab906e7\",\"cfe881bd-65f3-4c4c-a0fb-c0b9fd35ea51\",\"2a9ca201-0b15-495f-ad65-c138886986df\"]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/do/meta": {
+      "post": {
+        "summary": "Metadata for coordinates",
+        "description": "This service will return the *summary* of *all data measurements* available for the *provided coordinate* and *data filters*.\n\nThe service *requires* the *latitude*, `lat`, and *longitude*, `lon`, as *query parameters* and an *object* in the *body* containing further *optional selection criteria*:\n\n- `std_date_start`: Start date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_date_end`: End date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_terms`: The list of required variables, as variable names.\n- `std_dataset_ids`: The list of required datasets, as dataset identifiers.\n- `geometry_point_radius`: The list of required resolution points, as the area radius expressed in decimal degrees.\n\nTo *ignore* the *selection criteria* just *omit* the *property*.\n\nThe resulting data will contain a single record:\n\n- `count`: The number of selected records.\n- `std_date_start`: Dates range minimum.\n- `std_date_end`: Dates range maximum.\n- `std_terms`: List of featured variable names.\n- `std_dataset_ids`: List of featured dataset references.\n- `geometry_point_radius`: List of featured measurement area radius.\n- `geometry_point`: List of featured measurement points.\n- `geometry_bounds`: List of featured measurement geometries.",
+        "operationId": "9bf737a1-c8bd-47a6-93c3-72b302f1e283",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "42",
+            "name": "lat",
+            "description": "Coordinate latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "12",
+            "name": "lon",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"std_date_start\":\"2004\",\"std_date_end\":\"2005\",\"std_terms\":[\"env_climate_fapar\",\"env_climate_fapan\",\"env_climate_sma\",\"env_climate_smi\"],\"std_dataset_ids\":[\"056e569a-66ef-4033-8d15-5c4c3c36c1bb\",\"9eda6111-c840-4862-9759-4a805cd6fc35\"],\"geometry_point_radius\":[0.020833335,0.031752945]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/do/meta/shape": {
+      "post": {
+        "summary": "Metadata by geometry for coordinates",
+        "description": "This service will return the *summary* of *all data measurements* available for the *provided coordinate* and *data filters* *grouped by measurement area*.\n\nThe service *requires* the *latitude*, `lat`, and *longitude*, `lon`, as *query parameters* and an *object* in the *body* containing further *optional selection criteria*:\n\n- `std_date_start`: Start date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_date_end`: End date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_terms`: The list of required variables, as variable names.\n- `std_dataset_ids`: The list of required datasets, as dataset identifiers.\n- `geometry_point_radius`: The list of required resolution points, as the area radius expressed in decimal degrees.\n\nTo *ignore* the *selection criteria* just *omit* the *property*.\n\nThe resulting data will contain one record for each matched grid cell:\n\n- `count`: The number of selected records.\n- `std_date_start`: Dates range minimum.\n- `std_date_end`: Dates range maximum.\n- `std_terms`: List of featured variable names.\n- `std_dataset_ids`: List of featured dataset references.\n- `geometry_point_radius`: List of featured measurement area radius.\n- `geometry_point`: List of featured measurement points.\n- `geometry_bounds`: List of featured measurement geometries.",
+        "operationId": "cbe34618-acea-444d-880c-e4ae397b74b9",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "42",
+            "name": "lat",
+            "description": "Coordinates latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "12",
+            "name": "lon",
+            "description": "Coordinates longitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"std_date_start\":\"2004\",\"std_date_end\":\"2005\",\"std_terms\":[\"env_climate_fapar\",\"env_climate_fapan\",\"env_climate_sma\",\"env_climate_smi\"],\"std_dataset_ids\":[\"056e569a-66ef-4033-8d15-5c4c3c36c1bb\",\"9eda6111-c840-4862-9759-4a805cd6fc35\"],\"geometry_point_radius\":[0.020833335,0.031752945]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/do/data/shape": {
+      "post": {
+        "summary": "Data by geometry",
+        "description": "The service will return *European Drought Observatory* data *grouped by resolution*.\n\nThe service *requires* the *latitude*, `lat`, and *longitude*, `lon`, as *query parameters* and an *object* in the *body* containing further *optional selection criteria*:\n\n- `std_date_start`: Start date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_date_end`: End date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_terms`: The list of required variables, as variable names.\n- `std_dataset_ids`: The list of required datasets, as dataset identifiers.\n- `geometry_point_radius`: The list of required resolution points, as the area radius expressed in decimal degrees.\n\nTo *ignore* the *selection criteria* just *omit* the *property*.\n\nThe resulting data is sorted ascending by date and will be *grouped* by *resolution*, which is expressed by the *area radius*. Each record will contain *all* properties satisfying the query parameters.",
+        "operationId": "54a20b15-f48a-4772-bb35-e93ad55b4093",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "42",
+            "name": "lat",
+            "description": "Coordinates latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "12",
+            "name": "lon",
+            "description": "Coordinates longitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"std_date_start\":\"2004\",\"std_date_end\":\"2005\",\"std_terms\":[\"env_climate_fapar\",\"env_climate_fapan\",\"env_climate_sma\",\"env_climate_smi\"],\"std_dataset_ids\":[\"056e569a-66ef-4033-8d15-5c4c3c36c1bb\",\"9eda6111-c840-4862-9759-4a805cd6fc35\"],\"geometry_point_radius\":[0.020833335,0.031752945]}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/do/data/date": {
+      "post": {
+        "summary": "Data by date",
+        "description": "The service will return *European Drought Observatory* data *grouped by date*.\n\nThe service *requires* the *latitude*, `lat`, and *longitude*, `lon`, as *query parameters* and an *object* in the *body* containing further *optional selection criteria*:\n\n- `std_date_start`: Start date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_date_end`: End date as a `YYYYMMDD`, `YYYYMM`, or `YYYY` string.\n- `std_terms`: The list of required variables, as variable names.\n- `std_dataset_ids`: The list of required datasets, as dataset identifiers.\n- `geometry_point_radius`: The list of required resolution points, as the area radius expressed in decimal degrees.\n- `paging`: Results paging information. It is an object expecting `offset` and `limit`.\n\nTo *ignore* the *selection criteria* just *omit* the *property*.\n\nThe resulting data will be *grouped* and *sorted* by *date*, properties will be *merged by date*, so the records will *not contain geometry information*.\n\nIf you *omit* the `std_terms` selector, each record will *feature* the list of *dataset references*, `std_dataset_ids`, if you *select specific variables*, the *dataset references will be omitted*.\n",
+        "operationId": "dabd8a18-f4cb-4706-a23d-75cafdd38174",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "maximum": 90,
+            "minimum": -90,
+            "default": "42",
+            "name": "lat",
+            "description": "Coordinates latitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "maximum": 180,
+            "minimum": -180,
+            "default": "12",
+            "name": "lon",
+            "description": "Coordinates longitude",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"std_date_start\":\"2004\",\"std_date_end\":\"2005\",\"std_terms\":[\"env_climate_fapar\",\"env_climate_fapan\",\"env_climate_sma\",\"env_climate_smi\"],\"std_dataset_ids\":[\"056e569a-66ef-4033-8d15-5c4c3c36c1bb\",\"9eda6111-c840-4862-9759-4a805cd6fc35\"],\"geometry_point_radius\":[0.020833335,0.031752945],\"paging\":{\"offset\":0,\"limit\":10}}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    },
+    "/dataset/query": {
+      "post": {
+        "summary": "Query datasets",
+        "description": "The service will return *dataset records* satisfying a set of *query parameters*.\n\nThe service *requires* the `op` query parameter that indicates how to *combine the search parameters*: `AND` means that *all* query parameters must be satisfied and `OR` means *at least one* query parameter must match.\n\nThe body contains a set of *optional selection criteria*:\n\n- `_key`: List of matching dataset keys.\n- `_collection_list`: List of matching collection names where data is stored.\n- `std_project`: List of matching project codes.\n- `std_dataset`: Select dataset code by space-separated acronym or wildcard.\n- `std_dataset_group`: List of matching dataset group codes.\n- `std_date_submission`: Provide submission date start and end range, included.\n- `std_date`: Provide date start and end range, included.\n- `_title`: Provide space-separated list of tokens for searching in English title.\n- `_description`: Provide space-separated list of tokens for searching in English description.\n- `_citation`: Provide space-separated list of tokens for searching in citations.\n- `count`: Provide minimum and maximum record count range.\n- `std_terms`: List of matching variables; set `doAll` to `false` for matching at least one element, set it to `true` for matching all elements.\n- `std_terms_key`: List of matching key variables; set `doAll` to `false` for matching at least one element, set it to `true` for matching all elements.\n- `std_terms_quant`: List of matching quantitative variables; set `doAll` to `false` for matching at least one element, set it to `true` for matching all elements.\n\nTo *ignore* the *selection criteria* just *omit* the *property*.\n\nThe resulting data is *not sorted*.",
+        "operationId": "0afc4b34-14a0-43a5-b5cb-38c816002d7c",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "default": "AND",
+            "enum": [
+              "AND",
+              "OR"
+            ],
+            "name": "op",
+            "description": "Query filters chaining operator (AND/OR)",
+            "required": true,
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "{\"_key\":[\"056e569a-66ef-4033-8d15-5c4c3c36c1bb\"],\"_collection_list\":{\"items\":[\"DroughtObservatory\"],\"doAll\":false},\"std_project\":[\"EUFGIS\"],\"std_dataset\":\"EDO_FAPAR\",\"std_dataset_group\":[\"EDO\"],\"std_date\":{\"std_date_start\":\"1990\",\"std_date_end\":\"2023\"},\"std_date_submission\":{\"min\":\"2020\",\"max\":\"2023\"},\"_title\":\"drought radiation index\",\"_description\":\"drought moisture temperature anomaly\",\"std_terms\":{\"items\":[\"env_climate_fapar\",\"env_climate_fapan\"],\"doAll\":true},\"std_terms_quant\":{\"items\":[\"env_climate_fapar\",\"env_climate_fapan\"],\"doAll\":false},\"std_terms_key\":{\"items\":[\"geometry_hash\",\"std_date\"],\"doAll\":true}}"
+            },
+            "in": "body",
+            "name": "body"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "no response description was provided for this operation"
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

@@ -5,6 +5,7 @@
 //
 const K = require("./constants")
 const createAuth = require("@arangodb/foxx/auth")
+const crypto = require('@arangodb/crypto')
 
 //
 // Creare authentication.
